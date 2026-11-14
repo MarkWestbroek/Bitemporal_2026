@@ -18,6 +18,9 @@ package handlers
 // Fouten: 404 bij een gewoon project (geen basis) of een verdwenen ouder (reden "ouder_weg"),
 // 403 zonder leesrecht op de ouder, 413 als het verzoek groter is dan vergelijkMaxBytes, 502
 // met reden "sidecar" als de sidecar onbereikbaar of te oud is.
+//
+// De drie standen en de aanroep van de sidecar (`leesDrieStanden`, `vraagSidecar`) deelt deze
+// route met POST …/samenvoegen (studio_project_samenvoegen.go).
 
 import (
 	"context"
@@ -69,6 +72,121 @@ func standVanProject(ctx context.Context, db bun.IDB, p *model.StudioProject) (v
 	return vergelijkKant{Profiel: p.Inhoud, Ops: b}, laatste, nil
 }
 
+// drieStanden: een branch, zijn ouder, en het verzoek voor de sidecar met de drie standen.
+type drieStanden struct {
+	tak, ouder              *model.StudioProject
+	takLaatste, mainLaatste int64
+	verzoek                 []byte
+}
+
+// leesDrieStanden leest branch, basis en ouder en stelt het sidecar-verzoek samen. Bij een fout
+// staat het antwoord al in c en is ok false. `ouderRecht` is het recht dat nodig is op de ouder
+// (lezen voor vergelijken, schrijven voor samenvoegen).
+func leesDrieStanden(c *gin.Context, id string, ouderRecht ProjectRecht) (*drieStanden, bool) {
+	ctx := c.Request.Context()
+	tak, err := leesStudioProject(ctx, DB, id)
+	if errors.Is(err, sql.ErrNoRows) {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Project niet gevonden."})
+		return nil, false
+	}
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Project lezen mislukt: " + err.Error()})
+		return nil, false
+	}
+	basis := new(model.StudioProjectBasis)
+	err = DB.NewSelect().Model(basis).Where("project_id = ?", id).Scan(ctx)
+	if errors.Is(err, sql.ErrNoRows) || tak.OuderProjectID == "" {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Dit project is geen afgeleid project; er is niets om mee te vergelijken.", "reden": "geen_branch"})
+		return nil, false
+	}
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Basis lezen mislukt: " + err.Error()})
+		return nil, false
+	}
+	ouder, err := leesStudioProject(ctx, DB, tak.OuderProjectID)
+	if errors.Is(err, sql.ErrNoRows) {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Het ouderproject bestaat niet meer.", "reden": "ouder_weg"})
+		return nil, false
+	}
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ouderproject lezen mislukt: " + err.Error()})
+		return nil, false
+	}
+	// Het recht op de branch regelt de middleware; op de ouder controleren we hier.
+	if recht, err := projectRechtVan(c, ouder.ID, ouder.Eigenaar); err != nil || recht < ouderRecht {
+		woord := "leesrecht"
+		if ouderRecht >= RechtSchrijven {
+			woord = "schrijfrecht"
+		}
+		c.JSON(http.StatusForbidden, gin.H{"error": "Je hebt geen " + woord + " op het ouderproject."})
+		return nil, false
+	}
+
+	takStand, takLaatste, err := standVanProject(ctx, DB, tak)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Operaties van de branch lezen mislukt: " + err.Error()})
+		return nil, false
+	}
+	mainStand, mainLaatste, err := standVanProject(ctx, DB, ouder)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Operaties van de ouder lezen mislukt: " + err.Error()})
+		return nil, false
+	}
+	verzoek, err := json.Marshal(map[string]any{
+		"basis": vergelijkKant{Profiel: basis.Inhoud, Ops: basis.Ops},
+		"tak":   takStand,
+		"main":  mainStand,
+		"mapId": tak.MapID,
+	})
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Verzoek samenstellen mislukt: " + err.Error()})
+		return nil, false
+	}
+	if len(verzoek) > vergelijkMaxBytes {
+		c.JSON(http.StatusRequestEntityTooLarge, gin.H{"reden": "te_groot",
+			"error": fmt.Sprintf("Basis, branch en ouder samen zijn %d bytes; de sidecar neemt hooguit %d aan.", len(verzoek), vergelijkMaxBytes)})
+		return nil, false
+	}
+	return &drieStanden{tak: tak, ouder: ouder, takLaatste: takLaatste, mainLaatste: mainLaatste, verzoek: verzoek}, true
+}
+
+// vraagSidecar POST het verzoek naar de sidecar (pad "/vergelijk" of "/samenvoegen") en geeft
+// het JSON-object terug. Bij een fout staat het antwoord al in c en is ok false.
+func vraagSidecar(c *gin.Context, pad string, verzoek []byte) (map[string]json.RawMessage, bool) {
+	resp, err := vergelijkClient.Post(renderSvcURL()+pad, "application/json", strings.NewReader(string(verzoek)))
+	if err != nil {
+		fmt.Printf("ERROR: render-svc onbereikbaar (%s): %v\n", renderSvcURL(), err)
+		c.JSON(http.StatusBadGateway, gin.H{"reden": "sidecar", "error": "De render-sidecar is onbereikbaar."})
+		return nil, false
+	}
+	defer resp.Body.Close()
+	// Ruim: /samenvoegen geeft naast de ops ook het samengevoegde werkbestand terug.
+	uit, err := io.ReadAll(io.LimitReader(resp.Body, 100<<20))
+	if err != nil {
+		c.JSON(http.StatusBadGateway, gin.H{"reden": "sidecar", "error": "Antwoord van de sidecar lezen mislukt: " + err.Error()})
+		return nil, false
+	}
+	switch {
+	case resp.StatusCode == http.StatusOK:
+	case resp.StatusCode == http.StatusNotFound:
+		c.JSON(http.StatusBadGateway, gin.H{"reden": "sidecar", "error": "De render-sidecar kent " + pad + " niet (te oud)."})
+		return nil, false
+	case resp.StatusCode == http.StatusUnprocessableEntity:
+		c.Data(http.StatusUnprocessableEntity, "application/json; charset=utf-8", uit)
+		return nil, false
+	default:
+		c.JSON(http.StatusBadGateway, gin.H{"reden": "sidecar",
+			"error": fmt.Sprintf("render-svc %s gaf %d: %s", pad, resp.StatusCode, strings.TrimSpace(string(uit)))})
+		return nil, false
+	}
+	var antw map[string]json.RawMessage
+	if err := json.Unmarshal(uit, &antw); err != nil || antw == nil {
+		c.JSON(http.StatusBadGateway, gin.H{"reden": "sidecar", "error": "Het antwoord van de sidecar is geen JSON-object."})
+		return nil, false
+	}
+	return antw, true
+}
+
 // MaakStudioProjectVergelijkHandler — GET /api/studio/projecten/:id/vergelijk
 func MaakStudioProjectVergelijkHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -77,99 +195,16 @@ func MaakStudioProjectVergelijkHandler() gin.HandlerFunc {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Ongeldig project-id."})
 			return
 		}
-		ctx := c.Request.Context()
-		tak, err := leesStudioProject(ctx, DB, id)
-		if errors.Is(err, sql.ErrNoRows) {
-			c.JSON(http.StatusNotFound, gin.H{"error": "Project niet gevonden."})
+		d, ok := leesDrieStanden(c, id, RechtLezen)
+		if !ok {
 			return
 		}
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Project lezen mislukt: " + err.Error()})
+		antw, ok := vraagSidecar(c, "/vergelijk", d.verzoek)
+		if !ok {
 			return
 		}
-		basis := new(model.StudioProjectBasis)
-		err = DB.NewSelect().Model(basis).Where("project_id = ?", id).Scan(ctx)
-		if errors.Is(err, sql.ErrNoRows) || tak.OuderProjectID == "" {
-			c.JSON(http.StatusNotFound, gin.H{"error": "Dit project is geen afgeleid project; er is niets om mee te vergelijken.", "reden": "geen_branch"})
-			return
-		}
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Basis lezen mislukt: " + err.Error()})
-			return
-		}
-		ouder, err := leesStudioProject(ctx, DB, tak.OuderProjectID)
-		if errors.Is(err, sql.ErrNoRows) {
-			c.JSON(http.StatusNotFound, gin.H{"error": "Het ouderproject bestaat niet meer.", "reden": "ouder_weg"})
-			return
-		}
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Ouderproject lezen mislukt: " + err.Error()})
-			return
-		}
-		// Leesrecht op de branch regelt de middleware; op de ouder controleren we hier.
-		if recht, err := projectRechtVan(c, ouder.ID, ouder.Eigenaar); err != nil || recht < RechtLezen {
-			c.JSON(http.StatusForbidden, gin.H{"error": "Je hebt geen leesrecht op het ouderproject."})
-			return
-		}
-
-		takStand, takLaatste, err := standVanProject(ctx, DB, tak)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Operaties van de branch lezen mislukt: " + err.Error()})
-			return
-		}
-		mainStand, mainLaatste, err := standVanProject(ctx, DB, ouder)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Operaties van de ouder lezen mislukt: " + err.Error()})
-			return
-		}
-		verzoek, err := json.Marshal(map[string]any{
-			"basis": vergelijkKant{Profiel: basis.Inhoud, Ops: basis.Ops},
-			"tak":   takStand,
-			"main":  mainStand,
-			"mapId": tak.MapID,
-		})
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Verzoek samenstellen mislukt: " + err.Error()})
-			return
-		}
-		if len(verzoek) > vergelijkMaxBytes {
-			c.JSON(http.StatusRequestEntityTooLarge, gin.H{"reden": "te_groot",
-				"error": fmt.Sprintf("Basis, branch en ouder samen zijn %d bytes; de sidecar neemt hooguit %d aan.", len(verzoek), vergelijkMaxBytes)})
-			return
-		}
-
-		resp, err := vergelijkClient.Post(renderSvcURL()+"/vergelijk", "application/json", strings.NewReader(string(verzoek)))
-		if err != nil {
-			fmt.Printf("ERROR: render-svc onbereikbaar (%s): %v\n", renderSvcURL(), err)
-			c.JSON(http.StatusBadGateway, gin.H{"reden": "sidecar", "error": "De render-sidecar is onbereikbaar."})
-			return
-		}
-		defer resp.Body.Close()
-		uit, err := io.ReadAll(io.LimitReader(resp.Body, 50<<20))
-		if err != nil {
-			c.JSON(http.StatusBadGateway, gin.H{"reden": "sidecar", "error": "Antwoord van de sidecar lezen mislukt: " + err.Error()})
-			return
-		}
-		switch {
-		case resp.StatusCode == http.StatusOK:
-		case resp.StatusCode == http.StatusNotFound:
-			c.JSON(http.StatusBadGateway, gin.H{"reden": "sidecar", "error": "De render-sidecar kent /vergelijk niet (te oud)."})
-			return
-		case resp.StatusCode == http.StatusUnprocessableEntity:
-			c.Data(http.StatusUnprocessableEntity, "application/json; charset=utf-8", uit)
-			return
-		default:
-			c.JSON(http.StatusBadGateway, gin.H{"reden": "sidecar",
-				"error": fmt.Sprintf("render-svc /vergelijk gaf %d: %s", resp.StatusCode, strings.TrimSpace(string(uit)))})
-			return
-		}
-		var antw map[string]json.RawMessage
-		if err := json.Unmarshal(uit, &antw); err != nil || antw == nil {
-			c.JSON(http.StatusBadGateway, gin.H{"reden": "sidecar", "error": "Het antwoord van de sidecar is geen JSON-object."})
-			return
-		}
-		antw["main"], _ = json.Marshal(gin.H{"projectId": ouder.ID, "laatsteVolgnummer": mainLaatste})
-		antw["tak"], _ = json.Marshal(gin.H{"projectId": tak.ID, "laatsteVolgnummer": takLaatste})
+		antw["main"], _ = json.Marshal(gin.H{"projectId": d.ouder.ID, "laatsteVolgnummer": d.mainLaatste})
+		antw["tak"], _ = json.Marshal(gin.H{"projectId": d.tak.ID, "laatsteVolgnummer": d.takLaatste})
 		c.JSON(http.StatusOK, antw)
 	}
 }

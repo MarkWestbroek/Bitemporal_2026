@@ -281,6 +281,18 @@ werkbestanden passen niet onder de standaardgrens van 5 MB (`RENDER_SVC_MAX_BYTE
 heeft daarom een eigen grens, `RENDER_SVC_MAX_BYTES_VERGELIJK` (standaard 32 MB), zodat er in
 compose of k8s niets ingesteld hoeft te worden.
 
+### `POST /samenvoegen` (sidecar): branch samenvoegen met MAIN — ✅ gebouwd (14-11, nog niet uitgebracht)
+
+Branch terugmergen, stap 1 (plan "2026-11-14 Branch terugmergen"). Zelfde body en grens als
+`/vergelijk`. De sidecar speelt de drie kanten na, voegt per eenheid samen (drieweg,
+`studio/takken/samenvoegen.js`: wat alleen in de branch veranderde gaat mee, de rest volgt MAIN) en
+maakt de patch-operaties die MAIN en de branch in de samengevoegde stand brengen. Die speelt hij
+daarna zelf na op de echte stores; wijkt de uitkomst af, dan 422. Antwoord 200:
+`{conflicten: [{soort, profielId, id}], buitenMap: [verschil], opsMain: [{store, op, args}], opsTak:
+[…], basis: werkbestand|null, telling, verschillen, meldingen, renderVersie}`. Bij conflicten zijn de
+ops leeg en `basis` is `null`. Ook als `/api/samenvoegen`. De API roept hem aan voor
+`POST /api/studio/projecten/:id/samenvoegen` en schrijft het resultaat weg.
+
 ### `POST /materialiseer` (sidecar): één profiel nagespeeld — ✅ gebouwd (10-11, nog niet uitgebracht)
 
 Voor `GET /api/studio/projecten/:id/model/:profiel` (BACKEND) en laag 2 van de werkplaats op

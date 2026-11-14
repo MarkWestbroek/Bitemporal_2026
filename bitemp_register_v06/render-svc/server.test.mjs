@@ -160,6 +160,47 @@ test("POST /vergelijk: fouten in de invoer als problem+json", async () => {
   assert.equal((await post("/vergelijk", { basis: p, tak: { profiel: {}, ops: "x" }, main: p })).status, 400);
 });
 
+// ── Branch terugmergen, stap 1 (14-11) ───────────────────────────────────────────────────────
+
+test("POST /samenvoegen: de branch gaat naar MAIN, de branch haalt MAIN op, de basis is de uitkomst", async () => {
+  const el = (id, naam) => ({ id, naam, elementType: "entiteit", compartimenten: [], data: {} });
+  const werkbestand = {
+    formaat: "studio-project",
+    versie: 3,
+    structuur: { mappen: { dienst: { id: "dienst", naam: "Dienst", ouderId: null } }, plaatsing: { "el::diagram05::D": "dienst", "el::diagram05::G": "dienst" } },
+    profielen: { diagram05: { diagramTypeId: "diagram05", elements: { D: el("D", "D"), G: el("G", "G") }, diagrams: {}, meta: {} } },
+  };
+  const op = (volgnummer, zet, wis = []) => ({ volgnummer, store: "model:diagram05", op: "patchElementen", args: [{ zet, wis }] });
+  const plaats = (volgnummer, sleutel) => ({ volgnummer, store: "structuur", op: "patchStructuur", args: [{ zetPlaatsing: { [sleutel]: "dienst" } }] });
+  const basis = { profiel: werkbestand, ops: [] };
+  const tak = { profiel: werkbestand, ops: [op(1, { D: el("D", "D'") }), op(2, { H: el("H", "Nieuw") }), plaats(3, "el::diagram05::H")] };
+  const main = { profiel: werkbestand, ops: [op(1, { G: el("G", "G'") })] };
+  const r = await post("/samenvoegen", { basis, tak, main, mapId: "dienst" });
+  assert.equal(r.status, 200);
+  const uit = await r.json();
+  assert.deepEqual(uit.conflicten, []);
+  assert.deepEqual(uit.buitenMap, []);
+  const zetMain = uit.opsMain.filter((o) => o.op === "patchElementen").flatMap((o) => Object.keys(o.args[0].zet)).sort();
+  assert.deepEqual(zetMain, ["D", "H"], "naar MAIN: D' en H");
+  const zetTak = uit.opsTak.filter((o) => o.op === "patchElementen").flatMap((o) => Object.keys(o.args[0].zet));
+  assert.deepEqual(zetTak, ["G"], "naar de branch: G' van MAIN");
+  assert.equal(uit.basis.profielen.diagram05.elements.D.naam, "D'");
+  assert.equal(uit.basis.profielen.diagram05.elements.G.naam, "G'");
+  assert.equal(uit.basis.structuur.plaatsing["el::diagram05::H"], "dienst");
+});
+
+test("POST /samenvoegen: een conflict geeft geen ops", async () => {
+  const el = (id, naam) => ({ id, naam, elementType: "entiteit", compartimenten: [], data: {} });
+  const werkbestand = { formaat: "studio-project", versie: 3, structuur: { mappen: {}, plaatsing: {} }, profielen: { diagram05: { diagramTypeId: "diagram05", elements: { E: el("E", "E") }, diagrams: {}, meta: {} } } };
+  const op = (zet) => ({ volgnummer: 1, store: "model:diagram05", op: "patchElementen", args: [{ zet, wis: [] }] });
+  const r = await post("/samenvoegen", { basis: { profiel: werkbestand }, tak: { profiel: werkbestand, ops: [op({ E: el("E", "E'") })] }, main: { profiel: werkbestand, ops: [op({ E: el("E", "E(b)") })] } });
+  const uit = await r.json();
+  assert.deepEqual(uit.conflicten, [{ soort: "element", profielId: "diagram05", id: "E" }]);
+  assert.deepEqual(uit.opsMain, []);
+  assert.deepEqual(uit.opsTak, []);
+  assert.equal(uit.basis, null);
+});
+
 // ── Eén profiel nagespeeld (10-11, laag 2 van de werkplaats) ─────────────────────────────────
 
 test("POST /materialiseer: blob-deel + alleen de ops op het eigen profiel", async () => {

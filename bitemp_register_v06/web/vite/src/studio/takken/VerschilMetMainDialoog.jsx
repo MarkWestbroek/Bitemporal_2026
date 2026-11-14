@@ -2,7 +2,11 @@
  * VerschilMetMainDialoog — "Verschil met MAIN…" van een branch (afgeleid project; 09-11, branch
  * stap 1, werkplaats-plan §4B). Toont per status (conflict, nieuw, gewijzigd, weg, alleen op MAIN)
  * de elementen, diagrammen, mappen en koppelingen die verschillen, met de velden en of ze buiten de
- * afgesplitste map liggen. Mergen gaat in stap 1 nog met de hand.
+ * afgesplitste map liggen.
+ *
+ * Samenvoegen naar MAIN (14-11, plan "Branch terugmergen", stap 1): alles uit de branch gaat mee,
+ * een conflict blokkeert, en daarna haalt de branch MAIN op (POST …/samenvoegen). Kiezen per
+ * wijziging (vinkjes in een boom) is stap 2.
  *
  * De API doet het werk (GET …/vergelijk → render-sidecar POST /vergelijk, verschilMetMain.js).
  * Een diagram opent met een klik; een element opent het eerste diagram waarop het staat.
@@ -12,7 +16,8 @@
  */
 import React, { useEffect, useMemo, useState } from "react";
 import { create } from "zustand";
-import { vergelijkMetMain } from "../activities/projectSync.js";
+import { vergelijkMetMain, samenvoegenMetMain } from "../activities/projectSync.js";
+import { useSyncStore } from "../sync/verzender.js";
 import { getProfieltype } from "../profieltypeRegistry";
 import { openVerwijzing } from "../doorklik.js";
 import { STATUS_LABEL, STATUS_UITLEG, SOORT_LABEL } from "./herkomst.js";
@@ -25,8 +30,11 @@ export const useVerschilMetMainStore = create((set, get) => ({
   projectId: null,
   regel: "",
   teVerzenden: 0,
+  /** Samenvoegen naar MAIN: bezig, en de uitkomst (melding) van de laatste poging. */
+  samenvoegBezig: false,
+  samenvoegMelding: null,
   openen: ({ projectId, regel = "", teVerzenden = 0 }) => {
-    set({ open: true, projectId, regel, teVerzenden, uitkomst: null, fout: null });
+    set({ open: true, projectId, regel, teVerzenden, uitkomst: null, fout: null, samenvoegMelding: null });
     get().ververs();
   },
   sluiten: () => set({ open: false }),
@@ -45,6 +53,42 @@ export const useVerschilMetMainStore = create((set, get) => ({
             : e?.message || String(e);
       set({ fout, laden: false, uitkomst: null });
     }
+  },
+  /**
+   * Alles uit de branch naar MAIN; daarna haalt de branch MAIN op. `ookBuitenMap` = de gebruiker
+   * heeft bevestigd dat wijzigingen buiten de map mee mogen.
+   */
+  samenvoegen: async ({ ookBuitenMap = false } = {}) => {
+    const { projectId } = get();
+    set({ samenvoegBezig: true, samenvoegMelding: null });
+    try {
+      const r = await samenvoegenMetMain(projectId, { ookBuitenMap });
+      const naarMain = r?.main?.ops?.aantal || 0, naarTak = r?.tak?.ops?.aantal || 0;
+      set({
+        samenvoegBezig: false,
+        samenvoegMelding: {
+          soort: "ok",
+          tekst: naarMain || naarTak
+            ? `Samengevoegd: ${naarMain} wijziging(en) naar MAIN, ${naarTak} van MAIN naar deze branch. Branch en MAIN zijn nu gelijk.`
+            : "Er was niets samen te voegen; branch en MAIN waren al gelijk.",
+        },
+      });
+    } catch (e) {
+      const tekst =
+        e?.reden === "conflicten"
+          ? `Niet samengevoegd: ${e.conflicten.length} conflict(en). Los die eerst op in de branch (of op MAIN).`
+          : e?.reden === "buiten_map"
+            ? "Niet samengevoegd: de branch wijzigt ook iets buiten zijn map."
+            : e?.reden === "volgnummer_verschoven"
+              ? "Niet samengevoegd: er is intussen verder gewerkt. Bekijk het verschil opnieuw en probeer het nog eens."
+              : e?.status === 502
+                ? "Niet samengevoegd: de render-sidecar is niet bereikbaar, of te oud (zonder /samenvoegen)."
+                : e?.status === 404
+                  ? "Niet samengevoegd: de server kent samenvoegen nog niet, of dit project is geen branch."
+                  : `Niet samengevoegd: ${e?.message || e}`;
+      set({ samenvoegBezig: false, samenvoegMelding: { soort: "fout", tekst } });
+    }
+    await get().ververs();
   },
 }));
 
@@ -65,7 +109,9 @@ function openRegel(v) {
 }
 
 export default function VerschilMetMainDialoog() {
-  const { open, laden, fout, uitkomst, regel, teVerzenden, sluiten, ververs } = useVerschilMetMainStore();
+  const { open, laden, fout, uitkomst, regel, sluiten, ververs, samenvoegen, samenvoegBezig, samenvoegMelding } = useVerschilMetMainStore();
+  // Live (niet de stand bij het openen): na verzenden mag samenvoegen alsnog.
+  const teVerzenden = useSyncStore((s) => s.teVerzenden || 0);
   const [metMain, setMetMain] = useState(true);
   const [alleenScope, setAlleenScope] = useState(false);
 
@@ -84,6 +130,18 @@ export default function VerschilMetMainDialoog() {
   if (!open) return null;
   const t = uitkomst?.telling || {};
   const buiten = (uitkomst?.verschillen || []).filter((v) => v.status !== "main" && !v.inScope).length;
+  const vanTak = (t.nieuw || 0) + (t.gewijzigd || 0) + (t.weg || 0);
+  const kanSamenvoegen = !!uitkomst && !laden && !samenvoegBezig && !(t.conflict > 0) && teVerzenden === 0 && vanTak + (t.main || 0) > 0;
+  const waaromNiet = !uitkomst || laden ? "" : t.conflict > 0 ? "Eerst de conflicten oplossen." : teVerzenden > 0 ? "Eerst je eigen wijzigingen verzenden." : vanTak + (t.main || 0) === 0 ? "Er is niets samen te voegen." : "";
+  const vraagSamenvoegen = () => {
+    const regels = [
+      `${vanTak} wijziging(en) uit deze branch gaan naar MAIN.`,
+      t.main ? `${t.main} wijziging(en) die alleen op MAIN zijn gedaan, komen daarna in deze branch.` : null,
+      buiten ? `Let op: ${buiten} wijziging(en) liggen buiten de afgesplitste map en gaan ook mee.` : null,
+      "Daarna zijn branch en MAIN gelijk. Doorgaan?",
+    ].filter(Boolean);
+    if (window.confirm(regels.join("\n\n"))) samenvoegen({ ookBuitenMap: buiten > 0 });
+  };
   const knop = { font: "inherit", fontSize: 12, padding: "3px 10px", border: "1px solid var(--s-border, #cbd5e1)", borderRadius: 6, background: "transparent", color: "var(--s-fg)", cursor: "pointer" };
 
   return (
@@ -100,18 +158,37 @@ export default function VerschilMetMainDialoog() {
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
           <h2 style={{ margin: 0, fontSize: 16 }}>Verschil met MAIN</h2>
           <div style={{ display: "flex", gap: 6 }}>
+            <button
+              type="button"
+              onClick={vraagSamenvoegen}
+              disabled={!kanSamenvoegen}
+              title={waaromNiet || "Alles uit deze branch naar MAIN; daarna haalt de branch MAIN op."}
+              data-testid="samenvoegen-naar-main"
+              style={{ ...knop, opacity: kanSamenvoegen ? 1 : 0.5, cursor: kanSamenvoegen ? "pointer" : "default" }}
+            >
+              {samenvoegBezig ? "Samenvoegen…" : "Samenvoegen naar MAIN"}
+            </button>
             <button type="button" onClick={ververs} style={knop} disabled={laden}>Ververs</button>
             <button type="button" onClick={sluiten} style={{ ...knop, padding: "2px 8px" }} aria-label="Sluiten">×</button>
           </div>
         </div>
         {regel && <p style={{ margin: "0 0 6px", fontSize: 12, opacity: 0.8 }}>{regel}</p>}
         <p style={{ margin: "0 0 10px", fontSize: 12, opacity: 0.8 }}>
-          Vergeleken met de stand bij het afsplitsen. Mergen gaat nog met de hand.
+          Vergeleken met de stand bij het afsplitsen of de laatste samenvoeging. Samenvoegen neemt nu nog alles
+          mee; kiezen per wijziging volgt.
           {uitkomst?.main?.laatsteVolgnummer != null && <> MAIN staat op #{uitkomst.main.laatsteVolgnummer}.</>}
         </p>
         {teVerzenden > 0 && (
           <div style={{ fontSize: 12, marginBottom: 8, color: "var(--s-warn, #b45309)" }}>
             Nog {teVerzenden} wijziging(en) van jou niet op de server; die tellen pas mee na verzenden.
+          </div>
+        )}
+        {samenvoegMelding && (
+          <div
+            data-testid="samenvoeg-melding"
+            style={{ fontSize: 13, marginBottom: 8, color: samenvoegMelding.soort === "ok" ? "var(--s-ok, #16a34a)" : "var(--s-danger, #dc2626)" }}
+          >
+            {samenvoegMelding.tekst}
           </div>
         )}
         {fout && <div style={{ color: "var(--s-danger, #dc2626)", fontSize: 13, marginBottom: 8 }}>{fout}</div>}
@@ -131,8 +208,8 @@ export default function VerschilMetMainDialoog() {
             </div>
             {buiten > 0 && (
               <div style={{ fontSize: 12, marginBottom: 8, color: "var(--s-warn, #b45309)" }}>
-                {buiten} wijziging(en) in deze branch liggen buiten de afgesplitste map. Dat mag nu nog; bij het mergen
-                krijgen die extra aandacht.
+                {buiten} wijziging(en) in deze branch liggen buiten de afgesplitste map. Dat mag nu nog; bij samenvoegen
+                vraagt de Studio of die mee mogen.
               </div>
             )}
             {(uitkomst.meldingen || []).length > 0 && (
