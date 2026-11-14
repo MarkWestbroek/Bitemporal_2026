@@ -6,8 +6,8 @@
  * (docs/TRANSFORMATIES.md §11.12).
  *
  * Wat de schrijver per kolom nodig heeft:
- * - input: `naam` (de variabele die de engine aanbiedt), `expressie` (FEEL,
- *   standaard = naam), `type` (typeRef) en `label`;
+ * - input: `naam` (de variabele die de engine aanbiedt), `expressie` (CEL in
+ *   het model, hier omgezet naar FEEL; standaard = naam), `type` (typeRef) en `label`;
  * - output: `naam`, `type` en `label`;
  * - regel: per kolom-id de tekst van de cel (FEEL unary test of expressie;
  *   leeg = "-", elke waarde), en `toelichting` (description).
@@ -18,6 +18,7 @@
  *
  * Puur: geen DOM nodig, de uitvoer is tekst.
  */
+import { celNaarFeel } from "./celOmzetting.js";
 
 const NS = {
   dmn: "https://www.omg.org/spec/DMN/20191111/MODEL/",
@@ -77,7 +78,16 @@ export function schrijfDmn({ beslissing, namespace = "http://bpmn.io/schema/dmn"
     if (!naam && !c.expressie) meld(`Input-kolom ${i + 1} heeft geen naam of expressie`, c.id);
     r.push(`      <dmn:input${attrs({ id: c.id, label: c.label || naam })}>`);
     r.push(`        <dmn:inputExpression${attrs({ id: `${c.id}-expressie`, typeRef: typeRef(c.type) })}>`);
-    r.push(`          <dmn:text>${esc(c.expressie || naam || "")}</dmn:text>`);
+    // De invoerexpressie is CEL in het model; de engine krijgt FEEL (besluit Mark 12-11,
+    // celOmzetting.js). Is het geen geldige CEL, dan is het nog FEEL: ongewijzigd door, met een melding.
+    let expressie = c.expressie || "";
+    if (expressie) {
+      const om = celNaarFeel(expressie);
+      if (om.tekst) expressie = om.tekst;
+      else if (om.geenCel) meld(`Input-kolom "${c.label || naam}": de expressie is geen CEL en gaat ongewijzigd door als FEEL`, c.id);
+      else diagnostics.push({ severity: "error", code: "DMN-EXPRESSIE", message: `Input-kolom "${c.label || naam}": ${om.fout}`, sourceId: c.id, path: null });
+    }
+    r.push(`          <dmn:text>${esc(expressie || naam || "")}</dmn:text>`);
     r.push(`        </dmn:inputExpression>`);
     r.push(`      </dmn:input>`);
   });

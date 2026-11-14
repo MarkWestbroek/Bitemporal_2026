@@ -33,6 +33,7 @@ import statemachineActivity from "./statemachineActivity";
 import usecaseActivity from "./usecaseActivity";
 import activityActivity from "./activityActivity";
 import bpmnMotorActivity from "./bpmnMotorActivity";
+import simulatieActivity from "./simulatieActivity";
 import archimateActivity from "./archimateActivity";
 import sequenceActivity from "./sequenceActivity";
 import erdActivity from "./erdActivity";
@@ -108,6 +109,7 @@ registreerActiviteiten([
   // modelleren
   modellerenActivity, // fase 2: één ingang — projectbrowser + diagram-tabs over alle profielen
   koppelingenActivity, // fase 4 v0: kruisverbanden tussen profieltypen (matrix)
+  simulatieActivity, // "Simulatie" — een BPMN-proces met beslistabellen doorlopen met cm-objecten (preview)
   umlActivity,
   diagramActivity, // "Canoniek model" — canoniek-uml op de generieke motor (preview)
   puurUmlActivity, // "UML" — tweede profiel (preview)

@@ -110,6 +110,14 @@ const SOORT_VELD = { key: "soort", label: "soort", datatype: "keuze", opties: SO
 // moet engine-breed uniek zijn, bv. "<proces-id>-gevraagd".
 // Een werpend event mag ook een variabele noemen (${beoordelingsbericht}, 08-11).
 const BERICHT_VELD = { key: "bericht", label: "berichtnaam", datatype: "string", placeholder: "bv. gehandicaptenparkeerkaart-beoordelen-gevraagd of ${variabele}", zichtbaarAls: { key: "soort", waarde: "bericht" } };
+// Signaal-events (13-11, besluit Mark via FUNSIM): een signaal is een omroep. Wie werpt kent de
+// ontvangers niet; elk vangend event met dezelfde signaalnaam reageert, en kiest met zijn filter
+// welke gebeurtenissen voor hem zijn. Zo werkt ZGW Notificaties: kanaal + kenmerken, het filter
+// zit bij de abonnee. De lading is de zaak (in de simulatie: het object van de afhandeling).
+const SIGNAAL_VELD = { key: "signaal", label: "signaalnaam", datatype: "string", placeholder: "bv. zaak-in-werkbak", zichtbaarAls: { key: "soort", waarde: "signaal" } };
+// Het filter (CEL over de lading): alleen bij een vangend signaal. Geen BPMN 2.0; de transformatie
+// maakt er een abonnement van (Open Notificaties) of een omweg in de engine.
+const SIGNAAL_FILTER_VELD = { key: "filter", label: "filter op de lading (CEL)", datatype: "string", placeholder: "bv. zaaktype == 'GPK' (de lading is de zaak)", zichtbaarAls: { key: "soort", waarde: "signaal" } };
 
 // Sequence flow: wat kan hem verlaten/bereiken. Start alleen bron, eind
 // alleen doel; een boundary event alleen bron (het uitzonderingspad).
@@ -134,7 +142,15 @@ const elementTypes = [
     shape: "bpmn-event",
     naamLabel: "buiten",
     resizebaar: false,
-    properties: [SOORT_VELD, BERICHT_VELD],
+    properties: [
+      SOORT_VELD,
+      BERICHT_VELD,
+      SIGNAAL_VELD,
+      SIGNAAL_FILTER_VELD,
+      // Eén instantie per zaak (13-11): start niet als er voor deze zaak al een instantie van dit
+      // proces loopt. Hoort bij een start op een omroep; een dubbele start is dan een fout.
+      { key: "eenPerZaak", label: "één lopende instantie per zaak", datatype: "boolean", zichtbaarAls: { key: "soort", waarde: "signaal" } },
+    ],
   },
   {
     id: "taak",
@@ -168,6 +184,9 @@ const elementTypes = [
       // Gebruikerstaak (05-11): het formulier waarmee de behandelaar de taak doet (identifier
       // van een dossierformulier van de e-dienst); wordt de formulierkoppeling in de proceskoppeling.
       { key: "formulier", label: "formulier bij de taak", datatype: "string", placeholder: "bv. aanvraag-beoordelen (portaaltaak: het portaalformulier)", zichtbaarAls: { key: "taakSoort", waarde: "user" } },
+      // Kandidaatgroep (13-11, werkbak vorm 2): de groep die de taak ziet (afdeling of soort zaak);
+      // één medewerker claimt hem. In de engine candidateGroups.
+      { key: "kandidaatgroep", label: "kandidaatgroep (wie de taak ziet)", datatype: "string", placeholder: "bv. behandelaars-gpk", zichtbaarAls: { key: "taakSoort", waarde: "user" } },
       // Servicetaak (05-11): wat de taak doet. Bij "rol koppelen" en "zaakstatus zetten" hoort
       // de rol of status erbij, op naam: een roltype of statustype van het zaaktype in de e-dienst.
       { key: "actie", label: "actie", datatype: "keuze", opties: ACTIE_OPTIES, zichtbaarAls: { key: "taakSoort", waarde: ["service", "user"] } },
@@ -211,7 +230,7 @@ const elementTypes = [
     resizebaar: false,
     // Rand-element (§3.1): woont op de rand van een activiteit.
     randElement: { ouderTypes: ACTIVITEITEN },
-    properties: [SOORT_VELD, { key: "onderbrekend", label: "onderbrekend", datatype: "boolean" }],
+    properties: [SOORT_VELD, BERICHT_VELD, SIGNAAL_VELD, SIGNAAL_FILTER_VELD, { key: "onderbrekend", label: "onderbrekend", datatype: "boolean" }],
   },
   {
     id: "tussen-event",
@@ -228,6 +247,8 @@ const elementTypes = [
       SOORT_VELD,
       { key: "richting", label: "richting", datatype: "keuze", opties: [{ waarde: "", label: "vangt (catch)" }, { waarde: "werpt", label: "werpt (throw)" }] },
       BERICHT_VELD,
+      SIGNAAL_VELD,
+      SIGNAAL_FILTER_VELD,
     ],
   },
   {
@@ -363,7 +384,7 @@ const elementTypes = [
     shape: "bpmn-event",
     naamLabel: "buiten",
     resizebaar: false,
-    properties: [SOORT_VELD, BERICHT_VELD],
+    properties: [SOORT_VELD, BERICHT_VELD, SIGNAAL_VELD],
   },
   {
     id: "notitie",
@@ -468,6 +489,10 @@ const elementTypes = [
 export const bpmnMotorDiagramType = {
   id: BPMN_ID,
   label: "BPMN",
+  // Profielversie (STUDIO.md "Profielversie in het project"). 1.1.0 (13-11, Simulatie):
+  // signaalnaam, filter en eenPerZaak op events, kandidaatgroep op gebruikerstaken — alleen
+  // velden erbij, dus minor.
+  versie: "1.1.0",
   // Beschrijving: wat de EA-import vóór 2026-10-12 als "notes" bewaarde → M3 data.beschrijving.
   oudeBeschrijvingSleutels: ["notes"],
   style: "uml-klassiek",

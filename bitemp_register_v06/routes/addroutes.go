@@ -50,7 +50,12 @@ func corsMiddleware() gin.HandlerFunc {
 
 		if c.Request.Method == http.MethodOptions {
 			c.Header("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS")
-			c.Header("Access-Control-Allow-Headers", "Content-Type, Authorization")
+			// X-Omnium-Client: de Studio stuurt zijn client-id mee bij het opslaan van een project
+			// (api 0.20.0, 409 project_in_gebruik). Zonder deze header in de lijst weigerde de
+			// browser in dev (Vite :5174 → API :8082, cross-origin) de PUT na de preflight:
+			// "Naar server sturen mislukt: Failed to fetch" (gemeld door Mark 13-11). In productie
+			// is het één origin, dus geen preflight.
+			c.Header("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Omnium-Client")
 			c.AbortWithStatus(http.StatusNoContent)
 			return
 		}

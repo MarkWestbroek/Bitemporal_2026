@@ -1,0 +1,47 @@
+{
+  "versie": "0.1",
+  "naam": "GPK 2: zonder pasfoto",
+  "beschrijving": "Een aanvraag zonder pasfoto in de bijlagen. Niet ontvankelijk volgens de beslistabel; het oppakproces eindigt bij Aanvraag niet opgepakt.",
+  "_toelichting": "Scenario 2 uit cg-stack-voor-simulatie.md §8 (Fundament). Verzonnen gegevens.",
+  "start": {
+    "proces": "aanvraag-oppakken",
+    "type": "GehandicaptenparkeerkaartAanvraag",
+    "id": "aanvraag-1",
+    "object": {
+      "aanvraagnummer": "GPK-2026-0001",
+      "ingediendOp": "2026-11-12T09:00:00Z",
+      "status": "ingediend",
+      "aanvraagtype": {
+        "code": "GPK",
+        "omschrijving": "Gehandicaptenparkeerkaart"
+      },
+      "partijen": [
+        {
+          "partijrol": "aanvrager",
+          "partij": {
+            "bsn": "999990019"
+          }
+        }
+      ],
+      "bijlagen": [],
+      "soort": "passagier",
+      "eerdereKaart": false
+    },
+    "variabelen": {
+      "bsn": "999990019",
+      "documentUrls": []
+    }
+  },
+  "vulwijze": {
+    "standaard": "fixture",
+    "perSoort": {
+      "dienst": "willekeurig"
+    }
+  },
+  "antwoorden": {},
+  "zaadje": 1,
+  "verwacht": {
+    "einde": "Aanvraag niet opgepakt",
+    "reden": "Geen pasfoto bijgevoegd"
+  }
+}

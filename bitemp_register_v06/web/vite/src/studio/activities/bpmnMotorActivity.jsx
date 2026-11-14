@@ -3,6 +3,10 @@
  * naast de klassieke bpmn.io-activiteit ("BPMN-processen"). Boundary events
  * op het rand-primitief, subproces-doorklik via de gedragsverwijzing.
  * Descriptor + fabriek, verder niets — zie diagramprofielen/bpmn/.
+ *
+ * Simuleren doe je in de activiteit Simulatie (simulatieActivity.jsx); loopt
+ * daar een run, dan staat het token ook hier op het diagram (simulatieRun.js
+ * zet daarvoor een stijlblok in de pagina, de motor weet er niets van).
  */
 import { IconBPMN } from "../icons";
 import { registreerBpmnMotor, bpmnMotorDiagramType, maakElement } from "../../diagramprofielen/bpmn/index.js";

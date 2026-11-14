@@ -45,6 +45,7 @@
  */
 
 import { kebab } from "./sleutel.js";
+import { celNaarJuel, isJuel } from "./celOmzetting.js";
 
 const TAAK_TAG = {
   "": "task",
@@ -421,8 +422,16 @@ export function schrijfBpmn({ model, diagramId, proces, targetNamespace = "http:
     const a = { id: ids.get(e.id), name: e.naam || undefined, sourceRef: ids.get(e.source), targetRef: ids.get(e.target) };
     if (e.data?.conditie) {
       xsi = true;
+      // De conditie is CEL in het model; de engine krijgt JUEL (besluit Mark 12-11, celOmzetting.js).
+      // Een conditie die al met ${ begint is nog JUEL en gaat ongewijzigd door.
+      let conditie = e.data.conditie;
+      if (!isJuel(conditie)) {
+        const om = celNaarJuel(conditie);
+        if (om.tekst) conditie = om.tekst;
+        else diagnostics.push({ severity: "error", code: "BPMN-CONDITIE", message: `Conditie "${conditie}" op "${e.naam || ids.get(e.id)}": ${om.fout}`, sourceId: e.id, path: null });
+      }
       r.push(`    <bpmn:sequenceFlow${attrs(a)}>`);
-      r.push(`      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${esc(e.data.conditie)}</bpmn:conditionExpression>`);
+      r.push(`      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${esc(conditie)}</bpmn:conditionExpression>`);
       r.push(`    </bpmn:sequenceFlow>`);
     } else r.push(`    <bpmn:sequenceFlow${attrs(a)} />`);
   }

@@ -1598,6 +1598,18 @@ Nog niet: de beslistabel bewerken in de Studio (de tabeleditor
 `dmn/DmnTableEditor.jsx` hangt nog niet aan het element), en de reden in het
 dossier bewaren (vraagt een veld in het dossierschema).
 
+**CEL in het model, JUEL en FEEL als uitvoer (besluit Mark 12-11).** De conditie op een sequence flow en de
+invoerexpressie van een beslistabel staan in het model in CEL, net als de afgeleide velden van het canonieke model.
+De schrijvers zetten om met `transformatie/celOmzetting.js`: `bpmnXmlSchrijver` schrijft `${…}` (`celNaarJuel`),
+`dmnXmlSchrijver` schrijft FEEL (`celNaarFeel`: `==` wordt `=`, `&&`/`||`/`!` worden `and`/`or`/`not()`,
+`l.exists(x, p)` wordt `some x in l satisfies p`, `l.all` wordt `every`, `size` wordt `count`, `? :` wordt
+`if then else`). Wat de doeltaal niet kan uitdrukken is een fout op het element (`BPMN-CONDITIE`, `DMN-EXPRESSIE`):
+een lambda of functie in een conditie kan JUEL hier niet. Overgang: een conditie die al met `${` begint gaat
+ongewijzigd door; een invoerexpressie die geen geldige CEL is gaat door als FEEL, met een waarschuwing. De cellen van
+een beslistabel blijven een waarde of een lijst van waarden. De GPK-fixtures zijn omgezet; de XML is gelijk gebleven.
+Nog JUEL in het model: `zetVariabelen` en een berichtnaam als variabele, en wat `bpmnXmlImport` uit XML leest.
+Ontwerp: `docs/plans/2026-11-12 Simulatie van BPMN en DMN met cm-objecten (ontwerp).md` §3.6.
+
 ### 11.13 Proceskoppeling: wat de engine aan een taak hangt (2026-11-05)
 
 De process-link van GZAC zegt per taak van een proces wat eraan hangt: een

@@ -1,0 +1,74 @@
+{
+  "versie": "0.1",
+  "naam": "GPK 5: aanvulling, daarna afgewezen",
+  "beschrijving": "Een volledige aanvraag; de behandelaar vraagt eerst om aanvulling (medische verklaring), beoordeelt daarna opnieuw en wijst af: twee keer beoordelen, eindigt bij Beschikt via Wijs af.",
+  "_toelichting": "Scenario 5 uit cg-stack-voor-simulatie.md §8 (Fundament). Verzonnen gegevens.",
+  "start": {
+    "proces": "aanvraag-oppakken",
+    "type": "GehandicaptenparkeerkaartAanvraag",
+    "id": "aanvraag-1",
+    "object": {
+      "aanvraagnummer": "GPK-2026-0001",
+      "ingediendOp": "2026-11-12T09:00:00Z",
+      "status": "ingediend",
+      "aanvraagtype": {
+        "code": "GPK",
+        "omschrijving": "Gehandicaptenparkeerkaart"
+      },
+      "partijen": [
+        {
+          "partijrol": "aanvrager",
+          "partij": {
+            "bsn": "999990019"
+          }
+        }
+      ],
+      "bijlagen": [
+        {
+          "naam": "pasfoto",
+          "documentUrl": "https://stub.example/documenten/1"
+        }
+      ],
+      "soort": "passagier",
+      "eerdereKaart": false
+    },
+    "variabelen": {
+      "bsn": "999990019",
+      "documentUrls": [
+        "https://stub.example/documenten/1"
+      ]
+    }
+  },
+  "vulwijze": {
+    "standaard": "fixture",
+    "perSoort": {
+      "dienst": "willekeurig"
+    }
+  },
+  "antwoorden": {
+    "zaak-kiezen": {
+      "behandelaar": "medewerker-gpk-1"
+    },
+    "aanvraag-beoordelen": [
+      {
+        "beoordeling": "aanvulling",
+        "beoordelingToelichting": "Medische verklaring ontbreekt."
+      },
+      {
+        "beoordeling": "afgewezen",
+        "beoordelingToelichting": "Voldoet niet aan de criteria."
+      }
+    ],
+    "aanvulling-vragen": {
+      "aanvulling": "Medische verklaring toegevoegd."
+    },
+    "afwijzing-opstellen": {
+      "afwijzingReden": "Loopafstand groter dan 100 meter."
+    }
+  },
+  "zaadje": 1,
+  "verwacht": {
+    "einde": "Beschikt",
+    "via": "Wijs af"
+  }
+}
