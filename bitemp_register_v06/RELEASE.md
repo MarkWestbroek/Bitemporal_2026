@@ -8,6 +8,34 @@
 
 ---
 
+## studio 0.41.0 / render 0.4.5 / api 0.26.0 / devloop 0.29.0 (2026-11-14)
+
+Akkoord Mark 14-11. Neemt studio 0.40.0 / render 0.4.4 mee: die zijn getagd, maar er zijn geen
+images van gebouwd. Deze release is dus de eerste die de simulatie uitrolt.
+
+- **Branch samenvoegen naar MAIN, stap 1** (plan `docs/plans/2026-11-14 Branch terugmergen …`):
+  knop *Samenvoegen naar MAIN* in *Verschil met MAIN…*. Alles uit de branch gaat naar main, een
+  conflict blokkeert, daarna haalt de branch main op en wordt die stand de nieuwe basis.
+  Wijzigingen buiten de afgesplitste map gaan alleen na bevestiging mee.
+  - api 0.26.0: `POST /api/studio/projecten/:id/samenvoegen` schrijft de ops voor main en branch
+    in één transactie en vervangt de basis; 409 met reden `conflicten`, `buiten_map` of
+    `volgnummer_verschoven`. Ook de CORS-header `X-Omnium-Client` (al op main, alleen voor dev).
+  - render 0.4.5: `POST /samenvoegen` rekent het samengevoegde model en de ops uit en speelt ze
+    ter controle na. Een oudere sidecar geeft 502 met reden `sidecar`.
+- **Uit studio 0.40.0:** simulatie van BPMN en DMN met cm-objecten, BPMN-profiel 1.1.0, JUEL naar
+  CEL; Modelleren, Koppelingen en Profielontwerp geen preview meer; zie de 0.40.0-entry hieronder.
+- devloop 0.29.0 = api 0.26.0 met studio 0.41.0.
+
+Getest: Studio-unit 1667/1667, render-svc 17/17, `go test ./handlers/` (samenvoegen ook als
+integratietest tegen Postgres), e2e 63 en 58; lokaal door Mark met echte API en sidecar.
+
+Uitrol:
+- App: `bitemp-go-api:0.26.0`, `bitemp-render-svc:0.4.5` en `viz-frontend:0.41.0` via `update.sh`.
+  Geen schemawijziging.
+- Fundament: `bitemp-devloop:0.29.0` (met de frontend 0.41.0 en render 0.4.5), door FUNDAMENT.
+
+---
+
 ## studio 0.40.0 / render 0.4.4 (2026-11-14)
 
 Akkoord Mark 14-11. api blijft 0.25.0.
