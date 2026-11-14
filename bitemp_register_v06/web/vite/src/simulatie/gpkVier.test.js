@@ -7,7 +7,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import { maakSimulatie } from "./simulatie.js";
 import { metProcessen } from "./procesmodel.js";
-import { objectenVanType, PROCESINSTANTIE } from "./store.js";
+import { objectenVanType, versiesVan, PROCESINSTANTIE } from "./store.js";
 
 const CG = new URL("../diagramprofielen/canoniek-uml/fixtures/cg-test/", import.meta.url);
 const lees = (naam, basis = CG) => JSON.parse(fs.readFileSync(new URL(naam, basis), "utf8"));
@@ -61,6 +61,25 @@ test("vier processen, scenario 4: oppakken eindigt bij de werkbak; kiezen, behan
   // Beoordelen is een kind van behandelen.
   const beoordelen = objectenVanType(t, PROCESINSTANTIE).find((i) => i.data.proces === "gehandicaptenparkeerkaart-beoordelen");
   assert.ok(beoordelen.data.ouderToken);
+});
+
+test("versies van de aanvraag (Mark 14-11): elke stap die het object raakt is een versie", () => {
+  const { sim } = draai(scenario(4));
+  const v = versiesVan(sim.log, "aanvraag-1");
+  assert.deepEqual(
+    v.map((x) => [x.versie, x.wat, x.velden.length > 5 ? "alles" : x.velden, x.relaties]),
+    [
+      [1, sim.log[0].wat, "alles", []],
+      [2, "Zaak aanmaken", [], ["+aanvraag ← zaak"]],
+      [3, "Kies zaak om te behandelen", ["behandelaar"], []],
+      [4, "Aanvraag beoordelen", ["beoordeling", "beoordelingToelichting"], []],
+      [5, "Stel beschikking op", ["beschikkingToelichting"], []],
+    ],
+  );
+  // De toestand na de stap van een versie is die versie van het object.
+  const derde = sim.toestand(v[2].nr).objecten["aanvraag-1"].data;
+  assert.equal(derde.behandelaar, "medewerker-gpk-1");
+  assert.equal(derde.beoordeling, undefined);
 });
 
 test("vier processen, scenario 5: aanvulling, twee keer beoordelen (twee kindinstanties), afgewezen", () => {

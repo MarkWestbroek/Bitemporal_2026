@@ -976,6 +976,60 @@ het model. Het model verandert nooit; het stijlblok leeft in één browsertab.
 | 8 (ZGW-acties, de zaak) | **Zaak hoort in het cm.** Geen spiegel van Open Zaak: de zaak is een cm-object met status, rollen (aanvrager, behandelaar na het claimen) en documenten; zaak aanmaken, rol koppelen, document koppelen en zaakstatus zetten worden `maak`, `verbind` en overgangen in de store. De stub-url blijft als verwijzing naar het externe register. |
 | 14 (de vorm van een object) | **De cm-vorm, met de state erbij.** Een object in de store is de entiteit met haar gegevenselementen zoals het cm ze kent, plus de toestand (state) van het object. De platte vorm van het objecttype wordt een afgeleide (via de traceregels), voor de beslistabel en de formulieren. |
 
+**State (Mark 14-11, toelichting):** de state is simpelweg de verzameling velden met een
+waarde: de totale objecttoestand als M0. Verplichte velden hebben altijd een waarde,
+optionele mogen leeg zijn. Een element zonder velden: dan is het bestaan de state. Een
+GE (compositie) en een relatie vanuit de entiteit zijn ook state; een relatie mag
+optioneel zijn, maar als ze er is moet het doel bekend zijn, en de verplichte velden op
+de relatie. Geen toestandsmachine. Andere talen kunnen het anders doen; we beginnen bij
+het cm.
+
+**POC (14-11), vóór het model van Zaak en Beslissing klaar is:** de GPK-aanvraag in de
+cm-vorm in het objectenpaneel (`simulatie/cmVorm.js`). De store blijft plat; de cm-vorm
+is de omkering van de traceregels van het objecttype-artefact (modelpad → plek in de
+platte vorm), met de structuur uit `v3Graaf`. Velden die niet in het objecttype staan
+zijn *onbekend*; relaties die de e-dienst niet inbedt (GpkAanvraagMedischAdvies) staan
+erbij als niet in het objecttype. De toets: verplicht veld zonder waarde, verplichte
+relatie die ontbreekt, relatie zonder bekend doel; de GE's van een Partij zijn
+alternatieven (verplicht telt alleen als het GE er is). Wat op het object staat maar
+nergens in het cm (beoordeling, behandelaar) staat apart als *buiten het cm*. Volgende
+stap: de store zelf in de cm-vorm, met de platte vorm als afgeleide, zodra Zaak en
+Beslissing in het cm staan.
+
+**Versies (14-11, Mark: "zo volgt het wat in een bitemporeel Omnium-register zou
+gebeuren"):** elke stap die een object raakt is een versie, zoals een registratie met
+wijzigingen. De store bewaart geen kopie per stap: de versie is het log tot en met die
+stap, opnieuw afgespeeld. In het objectenpaneel: het versienummer, de velden die in de
+getoonde versie veranderden (gemarkeerd), en een oude versie bekijken zonder de run terug
+te zetten. Buiten beschouwing (Mark): data-hubs, correctie en ongedaanmaking.
+
+### 11.8 Idee (Mark 15-11): de objecten in het procesdiagram, via een data-element (voorstel)
+
+Mark wil de objecten later ook in het BPMN-diagram zien, als hij de gegevens daar tekent. In
+BPMN is dat een data object of data store; liever wil hij daar een element uit een taal die
+gegevens draagt: een cm-entiteit, een UML-klasse, een MIM-objecttype (OAS liever niet), maar
+geen activiteit of ander gedragselement.
+
+Voorstel:
+
+1. **Het data object blijft het BPMN-anker en krijgt een type** dat naar dat element wijst: een
+   kruisverband tussen talen (M2 → M2, koppelingen-matrix), geen vervanging. Zo blijft de
+   BPMN-export geldig (`dataObjectReference` met `itemSubjectRef`) en weet de simulatie welk
+   object erbij hoort.
+2. **Welke elementen mogen:** alles wat gegevens draagt. Dat is een eigenschap op M3, geen
+   lijst per profiel: een `aard` "gegevens" (naast begin, eind, baan) voor elementtypen met
+   velden. Profielen zetten die aard op entiteit, klasse, objecttype; de keuzelijst bij het data
+   object leest de aard.
+3. **Weergave:** het data object tekent naar keuze als zichzelf (het BPMN-symbool) of als het
+   element waarnaar het wijst (een compacte doos met de velden), via de ene tekenaar.
+4. **In de simulatie:** op het data object de state van het object (velden met waarde, de
+   accenten van de laatste stap, het versienummer). De data-associaties (taak → data object)
+   zeggen welke taak welk object schrijft; de simulatie kan toetsen dat een taak die een object
+   wijzigt ook een associatie heeft, en omgekeerd.
+
+Dit overlapt met §11.2 (objecten als objectdiagram): het procesdiagram zelf wordt de plek waar
+je de objecten ziet. Volgorde: na de store in de cm-vorm (§11.7).
+
 Stap 2, in volgorde: main binnenhalen met Beslissing en beschikking (vraag 12);
 Zaak in het cm en in de simulatie; de store naar de cm-vorm met state; objecten als
 objectdiagram (§11.2); een run als sequence diagram en daarna naspelen en

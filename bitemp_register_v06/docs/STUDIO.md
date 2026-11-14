@@ -2304,6 +2304,20 @@ dag vervangen).
   (`diagramprofielen/bpmn/conditiesNaarCel.js`, `juelNaarCel` in `transformatie/celOmzetting.js`); wat geen CEL
   wordt (bv. `empty x`) blijft JUEL, met een melding.
 - **Rechts, objecten**: de objecten met hun state, de procesvariabelen en wat buiten het cm gebeurde.
+  **Cm-vorm (POC 14-11):** een object waarvan het type een objecttype van het e-dienstmodel is (de GPK-aanvraag)
+  staat in de vorm van het canonieke model: de entiteit, *erft van* de ouder, de GE's met hun velden (`*` =
+  verplicht; *onbekend* = niet in het objecttype), relaties met hun velden en doel (een leeg alternatief, zoals
+  de andere GE's van een Partij, op één regel). Bovenaan de toets op de state: verplichte velden ingevuld,
+  relaties met een bekend doel. Onderaan *Buiten het cm*: velden op het object die nergens in het cm staan (de
+  behandelvelden). Knop *JSON* toont de platte vorm. De structuur komt uit het canonieke model van het project
+  als de bron-entiteit daarin staat, anders uit het cg-test-model. Code: `simulatie/cmVorm.js` (de omkering van
+  de traceregels van het objecttype-artefact, met `v3Graaf`), `studio/activities/simulatieCmVorm.jsx`.
+  **Versies (14-11):** elke stap die een object raakt (maak, zet, overgang, verbind) is een versie, zoals een
+  registratie met een wijziging in het bitemporele register; het nummer staat naast de naam (`v5`). Wat in de
+  laatste stap veranderde is geel gemarkeerd. Klik op een versie (`v1` … `v5`) om het object te zien zoals het na
+  die stap was, met de velden van die stap gemarkeerd; *nu* gaat terug. De run zelf blijft staan (dat is Terug of
+  een klik in het log). Geen kopieën per stap: de versie is het log tot en met die stap, opnieuw afgespeeld
+  (`store.js`, `versiesVan`). Correctie en ongedaanmaking (formele tijd) doet de simulatie niet.
 - **Token**: een rand en een bolletje op het element waar het token staat (indigo = kan verder, oranje = wacht
   op invoer, cyaan = wacht op een bericht of ander proces, rood = vastgelopen); waar het geweest is blijft een
   dunne cyaan rand staan. Op het BPMN-canvas in Modelleren staat het token alleen als je **ook op het
