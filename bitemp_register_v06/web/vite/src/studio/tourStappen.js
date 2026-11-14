@@ -42,7 +42,9 @@ export const TOUR_STAPPEN = [
     anker: "paneel-left",
     titel: "Het project",
     tekst:
-      "De projectboom: mappen, diagrammen en per taal (profiel) de elementen. Rechtsklik geeft de acties; " +
+      "De projectboom. Bovenaan staan de bundels: een bundel is een benoemde set diagrammen die je in één " +
+      "keer opent (rechtsklik op een tab → Bewaar open tabs als bundel; 👥 = gedeeld met het project). " +
+      "Daaronder mappen, diagrammen en per taal (profiel) de elementen. Rechtsklik geeft de acties; " +
       "een element sleep je zo naar een diagram.",
   },
   {
