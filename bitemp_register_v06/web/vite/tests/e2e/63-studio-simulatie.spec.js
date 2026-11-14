@@ -131,6 +131,17 @@ test("GPK: eigen activiteit, token op het diagram, gat met de hand, doorlopen to
   await expect(cm.locator('[data-pad="Aanvraag.Aanvraagidentificatie.aanvraagnummer"]')).toContainText("GPK-2026-0001");
   await expect(cm.getByTestId("sim-cm-buiten")).toContainText("toegekend");
   await foto(page, "5b-cm-vorm");
+  // Versies (Mark 14-11): elke stap die het object raakt; een oude versie bekijken markeert wat er toen veranderde.
+  const aanvraag = page.locator('[data-testid="sim-object"][data-object="aanvraag-1"]');
+  await expect(aanvraag.getByTestId("sim-object-versie")).toHaveText("v5");
+  await aanvraag.getByTestId("sim-versie-3").click();
+  await expect(aanvraag.getByTestId("sim-object-versie")).toHaveText("v3 van 5");
+  await expect(aanvraag.getByTestId("sim-versie-wat")).toContainText("Kies zaak om te behandelen");
+  await expect(aanvraag.getByTestId("sim-cm-buiten").locator('[data-gewijzigd="ja"]')).toHaveText(/behandelaar/);
+  await expect(aanvraag.getByTestId("sim-cm-buiten")).not.toContainText("toegekend"); // toen nog niet beoordeeld
+  await foto(page, "5c-versie-3");
+  await aanvraag.getByTestId("sim-versie-nu").click();
+  await expect(aanvraag.getByTestId("sim-object-versie")).toHaveText("v5");
   await page.getByTestId("sim-cm-json").first().click();
   await expect(page.getByTestId("sim-objecten")).toContainText('"beoordeling": "toegekend"');
   await page.getByTestId("sim-cm-vorm").first().click();

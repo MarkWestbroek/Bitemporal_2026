@@ -996,6 +996,13 @@ nergens in het cm (beoordeling, behandelaar) staat apart als *buiten het cm*. Vo
 stap: de store zelf in de cm-vorm, met de platte vorm als afgeleide, zodra Zaak en
 Beslissing in het cm staan.
 
+**Versies (14-11, Mark: "zo volgt het wat in een bitemporeel Omnium-register zou
+gebeuren"):** elke stap die een object raakt is een versie, zoals een registratie met
+wijzigingen. De store bewaart geen kopie per stap: de versie is het log tot en met die
+stap, opnieuw afgespeeld. In het objectenpaneel: het versienummer, de velden die in de
+getoonde versie veranderden (gemarkeerd), en een oude versie bekijken zonder de run terug
+te zetten. Buiten beschouwing (Mark): data-hubs, correctie en ongedaanmaking.
+
 Stap 2, in volgorde: main binnenhalen met Beslissing en beschikking (vraag 12);
 Zaak in het cm en in de simulatie; de store naar de cm-vorm met state; objecten als
 objectdiagram (§11.2); een run als sequence diagram en daarna naspelen en

@@ -110,7 +110,8 @@ export function cmVorm(beeld, plat) {
   function bouwVeld(k, ctx, basis) {
     const segs = paden.get(k.id) || null;
     const waarde = segs ? lees(ctx, relatief(segs, basis)) : undefined;
-    return { soort: "veld", id: k.id, naam: k.eigenschappen.veldnaam || naamUit(k.id), verplicht: k.eigenschappen.verplicht === true, inObjecttype: !!segs, inDoel: k.inDoel === true, waarde };
+    // platSleutel: het veld op het hoogste niveau van de platte vorm waar dit cm-veld onder valt (voor de markering van een wijziging).
+    return { soort: "veld", id: k.id, naam: k.eigenschappen.veldnaam || naamUit(k.id), verplicht: k.eigenschappen.verplicht === true, inObjecttype: !!segs, inDoel: k.inDoel === true, waarde, platSleutel: segs?.[0] || null };
   }
 
   function bouwKinderen(g, ctx, basis) {

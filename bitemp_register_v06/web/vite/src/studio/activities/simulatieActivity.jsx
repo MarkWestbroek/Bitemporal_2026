@@ -23,10 +23,10 @@ import { getProfieltype } from "../profieltypeRegistry";
 import { tekenDiagram } from "../gedeeldeBeelden.js";
 import { vraagBevestiging, toonMelding } from "../naamDialog.jsx";
 import { willekeurig } from "../../simulatie/gaten.js";
-import { PROCESINSTANTIE } from "../../simulatie/store.js";
+import { PROCESINSTANTIE, versiesVan } from "../../simulatie/store.js";
 import { tokenBeeld, standTekst, mutatieTekst, TOKEN_KLEUR } from "../../simulatie/weergave.js";
 import { beeldVoor } from "../../simulatie/cmVorm.js";
-import { CmObject } from "./simulatieCmVorm.jsx";
+import { CmObject, PlatJson } from "./simulatieCmVorm.jsx";
 import {
   BPMN_PROFIEL,
   VOORBEELDEN,
@@ -528,6 +528,65 @@ function Main() {
   );
 }
 
+/**
+ * Eén object met zijn versies (Mark 14-11): elke stap die het object raakt is een versie, zoals
+ * een registratie met een wijziging in het bitemporele register. Het nummer staat naast de naam;
+ * de velden die in de getoonde versie veranderden zijn gemarkeerd. Klik op een versie om het
+ * object te zien zoals het na die stap was (de run zelf blijft staan); "nu" gaat terug.
+ */
+function ObjectKaart({ o, S }) {
+  const [bekijk, setBekijk] = useState(null);
+  const versies = versiesVan(S.sim.log, o.id);
+  const getoond = (bekijk && versies.find((v) => v.nr === bekijk)) || null;
+  const laatste = versies[versies.length - 1];
+  // Zonder gekozen versie: markeer wat in de laatste stap van de run veranderde.
+  const markeer = getoond || (laatste && laatste.nr === S.sim.log.length ? laatste : null);
+  const gewijzigd = new Set(markeer?.velden || []);
+  const data = getoond ? S.sim.toestand(getoond.nr).objecten[o.id]?.data || {} : o.data;
+  const beeld = o.type !== PROCESINSTANTIE ? beeldVoor(S.cm?.beelden, o.type) : null;
+  const chip = (actief) => ({ fontSize: 10, padding: "0 5px", borderRadius: 8, cursor: "pointer", border: "1px solid var(--s-border, #cbd5e1)", background: actief ? "var(--s-accent, #6366f1)" : "transparent", color: actief ? "#fff" : "inherit" });
+  return (
+    <details open={o.type !== PROCESINSTANTIE} style={{ marginBottom: 4 }} data-testid="sim-object" data-object={o.id}>
+      <summary style={{ cursor: "pointer" }}>
+        <b>{o.type === PROCESINSTANTIE ? o.data.naam || o.data.proces : o.id}</b> <span style={gedempt}>{o.type}</span>
+        {(data.state || data.status) && (
+          <span style={{ marginLeft: 6, padding: "0 6px", borderRadius: 8, background: data.state === "lopend" ? TOKEN_KLEUR.klaar : data.state === "afgebroken" ? TOKEN_KLEUR.vast : "#64748b", color: "#fff", fontSize: 11 }}>{data.state || data.status}</span>
+        )}
+        <span style={{ ...gedempt, marginLeft: 6, fontSize: 11 }} title="Elke stap die dit object raakte is een versie" data-testid="sim-object-versie">
+          v{getoond ? getoond.versie : versies.length}
+          {getoond ? ` van ${versies.length}` : ""}
+        </span>
+      </summary>
+      {versies.length > 1 && (
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 3, alignItems: "center", margin: "2px 0 2px 12px" }} data-testid="sim-versies">
+          <span style={{ ...gedempt, fontSize: 10 }}>versies:</span>
+          {versies.map((v) => (
+            <button key={v.nr} style={chip(getoond?.nr === v.nr)} onClick={() => setBekijk(getoond?.nr === v.nr ? null : v.nr)} title={`stap ${v.nr}: ${v.wat}${v.velden.length ? `\nvelden: ${v.velden.join(", ")}` : ""}${v.relaties.length ? `\nrelaties: ${v.relaties.join(", ")}` : ""}`} data-testid={`sim-versie-${v.versie}`}>
+              v{v.versie}
+            </button>
+          ))}
+          <button style={chip(!getoond)} onClick={() => setBekijk(null)} data-testid="sim-versie-nu">
+            nu
+          </button>
+        </div>
+      )}
+      {markeer && (
+        <div style={{ ...gedempt, fontSize: 10, margin: "0 0 2px 12px" }} data-testid="sim-versie-wat">
+          v{markeer.versie}, stap {markeer.nr}: {markeer.wat}
+          {markeer.relaties.length ? ` · ${markeer.relaties.join(", ")}` : ""}
+        </div>
+      )}
+      {beeld ? (
+        <CmObject beeld={beeld} data={data} bron={S.cm.bron} gewijzigd={gewijzigd} />
+      ) : (
+        <div style={{ margin: "2px 0 0 12px" }}>
+          <PlatJson data={data} gewijzigd={gewijzigd} />
+        </div>
+      )}
+    </details>
+  );
+}
+
 /** Inspector: de objecten met hun state, de procesvariabelen en wat buiten het cm gebeurde. */
 function Inspector() {
   const S = useRun();
@@ -538,19 +597,7 @@ function Inspector() {
       <p style={kop}>Objecten</p>
       {!objecten.length && <div style={gedempt}>Nog geen objecten. Na Start staat hier het startobject, en elke procesinstantie.</div>}
       {objecten.map((o) => (
-        <details key={o.id} open={o.type !== PROCESINSTANTIE} style={{ marginBottom: 4 }}>
-          <summary style={{ cursor: "pointer" }}>
-            <b>{o.type === PROCESINSTANTIE ? o.data.naam || o.data.proces : o.id}</b> <span style={gedempt}>{o.type}</span>
-            {(o.data.state || o.data.status) && (
-              <span style={{ marginLeft: 6, padding: "0 6px", borderRadius: 8, background: o.data.state === "lopend" ? TOKEN_KLEUR.klaar : o.data.state === "afgebroken" ? TOKEN_KLEUR.vast : "#64748b", color: "#fff", fontSize: 11 }}>{o.data.state || o.data.status}</span>
-            )}
-          </summary>
-          {o.type !== PROCESINSTANTIE && beeldVoor(S.cm?.beelden, o.type) ? (
-            <CmObject beeld={beeldVoor(S.cm.beelden, o.type)} data={o.data} bron={S.cm.bron} />
-          ) : (
-            <pre style={{ ...mono, margin: "2px 0 0 12px", padding: 0, whiteSpace: "pre-wrap", wordBreak: "break-word", background: "transparent", color: "inherit", border: "none" }}>{JSON.stringify(o.data, null, 1)}</pre>
-          )}
-        </details>
+        <ObjectKaart key={o.id} o={o} S={S} />
       ))}
       {toestand && Object.keys(toestand.variabelen).length > 0 && (
         <>

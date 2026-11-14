@@ -18,11 +18,14 @@ function ietsBekend(kinderen) {
   return kinderen.some((k) => (k.soort === "veld" ? heeftWaarde(k.waarde) : k.voorkomens.some(ietsBekend)));
 }
 const toon = (w) => (typeof w === "string" ? w : JSON.stringify(w));
+/** Markering van een veld dat in de getoonde versie veranderde. */
+export const GEWIJZIGD = { background: "rgba(250, 204, 21, 0.28)", borderRadius: 3 };
 
-function Veld({ k, fout }) {
+function Veld({ k, fout, gewijzigd }) {
   const leeg = !heeftWaarde(k.waarde);
+  const nieuw = k.platSleutel && gewijzigd?.has(k.platSleutel);
   return (
-    <div style={{ ...mono, display: "flex", gap: 6 }} data-testid="sim-cm-veld" data-pad={k.id}>
+    <div style={{ ...mono, display: "flex", gap: 6, ...(nieuw ? GEWIJZIGD : {}) }} data-testid="sim-cm-veld" data-pad={k.id} data-gewijzigd={nieuw ? "ja" : undefined} title={nieuw ? "veranderd in deze versie" : undefined}>
       <span style={{ minWidth: 120, color: fout ? ROOD : undefined }}>
         {k.naam}
         {k.verplicht && <span title="verplicht">*</span>}
@@ -41,7 +44,7 @@ function Veld({ k, fout }) {
 }
 
 /** Eén knoop (GE, relatie, doel, ouder) met zijn voorkomens. */
-function Knoop({ k, pad, fouten, binnenDoel }) {
+function Knoop({ k, pad, fouten, binnenDoel, gewijzigd }) {
   const hier = `${pad}.${k.naam}`;
   const bekend = k.voorkomens.some(ietsBekend);
   // Wat niets bekends heeft en niet in het objecttype zit, of een leeg alternatief binnen een doel: één regel.
@@ -70,9 +73,9 @@ function Knoop({ k, pad, fouten, binnenDoel }) {
             {k.meervoudig && <div style={{ ...gedempt, fontSize: 10 }}>#{i + 1}</div>}
             {kinderen.map((c, j) =>
               c.soort === "veld" ? (
-                <Veld key={j} k={c} fout={fouten.includes(`${vPad}.${c.naam}`)} />
+                <Veld key={j} k={c} fout={fouten.includes(`${vPad}.${c.naam}`)} gewijzigd={gewijzigd} />
               ) : (
-                <Knoop key={j} k={c} pad={vPad} fouten={fouten} binnenDoel={binnenDoel || k.soort === "doel"} />
+                <Knoop key={j} k={c} pad={vPad} fouten={fouten} binnenDoel={binnenDoel || k.soort === "doel"} gewijzigd={gewijzigd} />
               ),
             )}
           </div>
@@ -82,8 +85,21 @@ function Knoop({ k, pad, fouten, binnenDoel }) {
   );
 }
 
+/** De platte vorm, per veld op het hoogste niveau, met de gewijzigde velden gemarkeerd. */
+export function PlatJson({ data, gewijzigd = new Set() }) {
+  return (
+    <div style={{ ...mono, marginTop: 2 }}>
+      {Object.entries(data || {}).map(([naam, w]) => (
+        <div key={naam} style={{ whiteSpace: "pre-wrap", wordBreak: "break-word", ...(gewijzigd.has(naam) ? GEWIJZIGD : {}) }} data-gewijzigd={gewijzigd.has(naam) ? "ja" : undefined}>
+          "{naam}": {JSON.stringify(w, null, 1)}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 /** Het object in de cm-vorm, met een knop terug naar de platte vorm (JSON). */
-export function CmObject({ beeld, data, bron }) {
+export function CmObject({ beeld, data, bron, gewijzigd = new Set() }) {
   const [alsJson, setAlsJson] = useState(false);
   // Geen memo: de store wijzigt het object ter plekke (zelfde referentie); de omzetting is goedkoop.
   const { boom, problemen, buitenCm } = cmVorm(beeld, data);
@@ -108,7 +124,7 @@ export function CmObject({ beeld, data, bron }) {
     return (
       <div style={{ margin: "2px 0 0 12px" }}>
         {wissel}
-        <pre style={{ ...mono, margin: "2px 0 0", padding: 0, whiteSpace: "pre-wrap", wordBreak: "break-word", background: "transparent", color: "inherit", border: "none" }}>{JSON.stringify(data, null, 1)}</pre>
+        <PlatJson data={data} gewijzigd={gewijzigd} />
       </div>
     );
   return (
@@ -130,7 +146,7 @@ export function CmObject({ beeld, data, bron }) {
       </div>
       <div style={{ fontWeight: 700, fontSize: 11 }}>{boom.naam}</div>
       {boom.voorkomens[0].map((c, j) => (
-        <Knoop key={j} k={c} pad={boom.naam} fouten={foutPaden} binnenDoel={false} />
+        <Knoop key={j} k={c} pad={boom.naam} fouten={foutPaden} binnenDoel={false} gewijzigd={gewijzigd} />
       ))}
       {Object.keys(buitenCm).length > 0 && (
         <div style={{ marginTop: 6 }} data-testid="sim-cm-buiten">
@@ -139,7 +155,7 @@ export function CmObject({ beeld, data, bron }) {
           </div>
           <div style={{ marginLeft: 10, paddingLeft: 6, borderLeft: "1px dashed var(--s-border, #cbd5e1)" }}>
             {Object.entries(buitenCm).map(([naam, w]) => (
-              <div key={naam} style={{ ...mono, display: "flex", gap: 6 }}>
+              <div key={naam} style={{ ...mono, display: "flex", gap: 6, ...(gewijzigd.has(naam) ? GEWIJZIGD : {}) }} data-gewijzigd={gewijzigd.has(naam) ? "ja" : undefined}>
                 <span style={{ minWidth: 120 }}>{naam}</span>
                 <span style={{ wordBreak: "break-word" }}>{toon(w)}</span>
               </div>
