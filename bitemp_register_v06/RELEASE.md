@@ -8,6 +8,27 @@
 
 ---
 
+## studio 0.40.0 / render 0.4.4 (2026-11-14)
+
+Akkoord Mark 14-11. api blijft 0.25.0.
+
+- Simulatie van BPMN en DMN met cm-objecten (activiteit *Simulatie*), met het GPK-voorbeeld in vier
+  processen, signalen met een filter over de zaak, Stap/Afspelen/Doorlopen en JUEL naar CEL.
+- BPMN-profiel (M2) 1.1.0: signaalnaam, filter en één instantie per zaak op events, kandidaatgroep op
+  gebruikerstaken. Een Studio 0.39.0 meldt bij een project dat met 1.1.0 is bewaard dat er velden
+  kunnen ontbreken; bewerken mag.
+- Studio: Modelleren, Koppelingen en Profielontwerp zijn geen preview meer; de rondleiding noemt de
+  diagrambundels.
+- Render 0.4.4: de profielen van studio 0.40.0 in de bundel (BPMN 1.1.0).
+- Op main, nog niet in een api-release: CORS staat de header `X-Omnium-Client` toe (alleen nodig voor
+  de Studio op een Vite-poort in dev).
+
+Uitrol:
+- App: `bitemp-render-svc:0.4.4` en `viz-frontend:0.40.0` via `update.sh`.
+- Fundament: een devloop met studio 0.40.0 is niet gebouwd; op verzoek.
+
+---
+
 ## studio 0.39.0 / render 0.4.3 / devloop 0.28.4 (2026-11-12)
 
 Akkoord Mark 12-11. api blijft 0.25.0; devloop 0.28.4 is api 0.25.0 met studio 0.39.0.
