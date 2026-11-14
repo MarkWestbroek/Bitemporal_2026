@@ -67,15 +67,20 @@ export const LEEG_SCENARIO = {
  * startProces: de keuze bij "Start bij"; toonProces: het proces waarvan het diagram getoond wordt
  * (null = volg het token).
  */
-const S = { sim: null, m1: null, scenarioTekst: null, edienst: null, gpk: null, startProces: null, toonProces: null, fout: null, versie: 0 };
+// opCanvas (Mark 14-11): toon het token ook op het modelcanvas (het M1-diagram). Standaard uit:
+// de run hoort bij de simulatie, niet bij het model. Er wordt nooit iets in het model geschreven;
+// het is alleen een stijlblok in deze browsertab (andere tabs en gebruikers zien niets), maar
+// zolang het aan staat neemt een PNG/SVG-export van het canvas het token mee — handig als je een
+// plaatje van de stand van een procesinstantie wilt.
+const S = { sim: null, m1: null, scenarioTekst: null, edienst: null, gpk: null, startProces: null, toonProces: null, opCanvas: false, fout: null, versie: 0 };
 const luisteraars = new Set();
 const STIJL_ID = "sim-token-stijl";
 
-/** Het stijlblok voor het BPMN-canvas bijwerken: aanwezig zolang er een run is. */
+/** Het stijlblok voor het BPMN-canvas bijwerken: aanwezig zolang er een run is en opCanvas aan staat. */
 function werkTokenStijlBij() {
   if (typeof document === "undefined") return;
   let stijl = document.getElementById(STIJL_ID);
-  if (!S.sim) {
+  if (!S.sim || !S.opCanvas) {
     stijl?.remove();
     return;
   }

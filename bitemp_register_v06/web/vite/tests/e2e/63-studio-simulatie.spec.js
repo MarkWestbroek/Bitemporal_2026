@@ -1,7 +1,7 @@
 // Studio — simulatie van BPMN en DMN met cm-objecten (13-11): de activiteit
 // Simulatie. GPK-voorbeeld laden, starten, het token op het diagram, een gat
 // met de hand vullen, doorlopen tot het einde, terugspoelen; en het token op
-// het BPMN-canvas in Modelleren zolang de run loopt.
+// het BPMN-canvas in Modelleren als je dat aanzet.
 // Ontwerp: docs/plans/2026-11-12 Simulatie van BPMN en DMN met cm-objecten.
 import { test, expect } from "@playwright/test";
 import { openStudio, zetModel, node, wachtOpNode } from "./helpers/studio.js";
@@ -75,7 +75,11 @@ test("GPK: eigen activiteit, token op het diagram, gat met de hand, doorlopen to
     expect(ligtErOm, id).toBe("");
   }
 
-  // Het token staat ook op het BPMN-canvas in Modelleren, en verdwijnt daar niet door te wisselen.
+  // Op het modelcanvas alleen als je dat aanzet (Mark 14-11: de run hoort bij de simulatie, niet
+  // bij het model); dan staat het token in Modelleren en verdwijnt het niet door te wisselen.
+  await expect(page.locator("#sim-token-stijl")).toHaveCount(0);
+  await page.getByTestId("sim-op-canvas").check();
+  await expect(page.locator("#sim-token-stijl")).toHaveCount(1);
   await naar(page, "Modelleren");
   await page.evaluate(async () => {
     const { menuBus } = await import(location.origin + "/viz/react/src/studio/menuBus.js");

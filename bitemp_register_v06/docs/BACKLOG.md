@@ -2106,6 +2106,8 @@ Open:
   zaken-notificatie als trigger in GZAC (regelset bpmn → GZAC; TRANSFORMATIES via FUNSIM). Een router-proces als
   tweede luisteraar in het voorbeeld. De nieuwe velden brachten het profiel bpmnMotor05 naar versie 1.1.0
   (minor, alleen uitbreiding; `render-svc/profielVersies.vast.json` bijgewerkt).
+- "Naar CEL" (JUEL-condities omzetten) zit nu in Simulatie; een vaste plek bij de BPMN-eigenschappen of de
+  modelcontrole ligt meer voor de hand (Mark 14-11: "zit een beetje verstopt, goed voor nu").
 - Een run als sequence diagram, en daarna een sequence diagram naspelen en vergelijken (ontwerp §11.3).
 - De vragen 1, 3 tot 6 en 8 tot 14 uit het ontwerp; vraag 12 (Beslissing en beschikking als cm-objecten) na het
   binnenhalen van main.

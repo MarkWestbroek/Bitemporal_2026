@@ -14,8 +14,8 @@
  *   Inspector  de objecten met hun state, de procesvariabelen, wat buiten het cm gebeurde
  *
  * Het diagram hier is een tekening (dezelfde tekenaar als de documenten), niet
- * het canvas: je bewerkt het proces in Modelleren. Daar blijft het token ook
- * zichtbaar zolang de run loopt.
+ * het canvas: je bewerkt het proces in Modelleren. Het token staat daar alleen
+ * als je "ook op het modeldiagram" aanzet (Mark 14-11); het model verandert nooit.
  */
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { IconSimulatie } from "../icons";
@@ -437,6 +437,12 @@ function Main() {
                 ■ Stop
               </button>
             </>
+          )}
+          {sim && (
+            <label style={{ display: "inline-flex", alignItems: "center", gap: 4, color: "var(--s-fg-muted, #64748b)" }} title="Laat het token ook op het modeldiagram zien (alleen in deze tab; een PNG/SVG-export van het diagram neemt het dan mee). Het model zelf verandert niet.">
+              <input type="checkbox" checked={!!S.opCanvas} onChange={(e) => zet({ opCanvas: e.target.checked })} data-testid="sim-op-canvas" />
+              ook op het modeldiagram
+            </label>
           )}
           <span style={{ fontWeight: 600, color: standKleur, marginLeft: 6 }} data-testid="sim-stand">
             {standTekst(stand)}

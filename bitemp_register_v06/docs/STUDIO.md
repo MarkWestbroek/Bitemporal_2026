@@ -2269,7 +2269,10 @@ dag vervangen).
 - **Rechts, objecten**: de objecten met hun state, de procesvariabelen en wat buiten het cm gebeurde.
 - **Token**: een rand en een bolletje op het element waar het token staat (indigo = kan verder, oranje = wacht
   op invoer, cyaan = wacht op een bericht of ander proces, rood = vastgelopen); waar het geweest is blijft een
-  dunne cyaan rand staan. Zolang de run loopt staat het token ook op het BPMN-canvas in Modelleren.
+  dunne cyaan rand staan. Op het BPMN-canvas in Modelleren staat het token alleen als je **ook op het
+  modeldiagram** aanvinkt (standaard uit, Mark 14-11: de run hoort bij de simulatie, niet bij het model). Het
+  model verandert nooit; het is een stijlblok in die ene browsertab, dus andere tabs en gebruikers zien niets.
+  Zolang het aan staat neemt een PNG/SVG-export van het canvas het token mee (een plaatje van de stand).
 
 Code: `web/vite/src/studio/activities/simulatieActivity.jsx` (scherm), `web/vite/src/studio/simulatieRun.js`
 (de run, gedeeld door de activiteit en het canvas) en `web/vite/src/simulatie/` (de kern, pure modules). Het
