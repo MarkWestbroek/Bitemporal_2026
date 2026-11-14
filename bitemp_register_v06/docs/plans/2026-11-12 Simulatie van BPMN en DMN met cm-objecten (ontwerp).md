@@ -386,7 +386,7 @@ open. Fase 1 bouwt op het advies waar Mark nog niet beslist heeft.
 | 5 | De GPK-casus als demo, of een kleinere, verzonnen casus die los staat van GZAC? | **Aangescherpt advies:** GPK, op het model met drie processen (`inrichten-bpmn.bpmn-model.json`), geijkt tegen de vijf scenario's van FUNDAMENT. Wat niet in cm-termen te lezen is, staat in vraag 8, 10 en 11. |
 | 6 | Waar komt het scherm: een eigen activiteit, of een stand van de bestaande BPMN-activiteit op de motor? | Een stand van de bestaande activiteit: het token hoort op het diagram dat je al open hebt. |
 | 7 | FEEL in de beslistabel: de GPK-tabel heeft een invoerexpressie in FEEL. | **Besloten (Mark 12-11): CEL in het model, FEEL als uitvoer van een transformatie** (§3.6). Nog open, als detail: de cellen. Advies: die blijven een waarde of een lijst van waarden (`"bestuurder"`, `null, ""`); dat is geen expressie en het is in beide talen hetzelfde. |
-| 8 | **ZGW-acties.** De servicetaken zijn zaak aanmaken, rol koppelen, document koppelen en zaakstatus zetten. Het cm kent geen Zaak, Rol of Document (§9.5). Hoe leest de simulatie ze? | Voor de demo als gat met een stub die een verwijzing teruggeeft (een url, zoals de stack), en de stap in het log met de naam van de actie. Dan blijft het cm zoals het is. Komen Zaak en Rol later in het cm, dan worden het maak en verbind. Alleen `dossierstatus` is nu al een echte overgang op de aanvraag. |
+| 8 | **ZGW-acties.** De servicetaken zijn zaak aanmaken, rol koppelen, document koppelen en zaakstatus zetten. Het cm kent geen Zaak, Rol of Document (§9.5). Hoe leest de simulatie ze? | **Besloten (Mark 14-11): Zaak hoort in het cm** (§11.7). Eerder, voor de demo als gat met een stub die een verwijzing teruggeeft (een url, zoals de stack), en de stap in het log met de naam van de actie. Dan blijft het cm zoals het is. Komen Zaak en Rol later in het cm, dan worden het maak en verbind. Alleen `dossierstatus` is nu al een echte overgang op de aanvraag. |
 | 9 | **Het formulier bij een user task** (uitgangspunt 9). De taak noemt `aanvraag-beoordelen`. Dat is in het e-dienstmodel een dossierformulier (form.io voor GZAC). Formulier-neutraal bestaat alleen voor het formulier van de inwoner, en de voorbeeldweergave daarvan zit in de werkplaats (IMPRINT-CORE), niet in de Studio (§9.7). | Eerste versie: het gat leest de invulbare velden van het dossierformulier uit het e-dienstmodel (naam, label, keuzes, verplicht) en toont ze rudimentair naar type. Dat is wat een behandelaar invult, zonder nieuwe weergave. Formulier-neutraal ook voor dossierformulieren maken en de voorbeeldweergave in de Studio halen is een eigen stuk werk voor later. Akkoord, of is formulier-neutraal met de voorbeeldweergave juist het punt? |
 | 10 | **Multi-instance.** "Documenten koppelen" loopt parallel over `documentUrls`. Multi-instance staat bij "nog niet". | Lezen als één stap die de actie per element uitvoert: één token, meerdere regels in het log. Geen tokens per element. |
 | 11 | **Het dossier lezen en `${variabele}` buiten condities.** "Uitkomst vastleggen" zet `uitkomst` met `${documentDelegateService.findValueByJsonPointerOrDefault("/beoordeling", …)}`. Dat is GZAC-techniek, maar betekent: lees het veld `beoordeling` van het object van deze afhandeling. Het werpende event noemt zijn bericht met `${beoordelingsbericht}`. | In de lijn van vraag 2: in het model CEL (`uitkomst=beoordeling`), en de regelset voor GZAC schrijft de aanroep van de bean. Dat raakt `bpmnGzacRegels.js` en hoort bij de afspraak met FUNDAMENT. Tot dan herkent de simulatie dit ene patroon en leest het als cm-pad; elke andere aanroep van een bean is een gat. Een berichtnaam in `${…}` leest zij als variabele. |
@@ -603,7 +603,7 @@ Deze volgen niet uit §8 en staan hier zodat Mark ze kan terugdraaien.
 
 | # | Vraag | Advies |
 |---|---|---|
-| 14 | **De vorm van een object in de store**: plat zoals het objecttype (nu), of zoals het cm met gegevenselementen? | Plat laten zolang de beslistabel en de formulieren die namen gebruiken; het is de vorm waarin FUNDAMENT de objecten van de echte keten kan aanleveren. De cm-vorm wordt nodig bij de adapter naar een register (later). |
+| 14 | **De vorm van een object in de store**: plat zoals het objecttype (nu), of zoals het cm met gegevenselementen? | **Besloten (Mark 14-11): de cm-vorm, met de state erbij** (§11.7). Eerder advies: plat laten zolang de beslistabel en de formulieren die namen gebruiken; het is de vorm waarin FUNDAMENT de objecten van de echte keten kan aanleveren. De cm-vorm wordt nodig bij de adapter naar een register (later). |
 
 ### 10.5 Fase 2: het scherm (13-11)
 
@@ -962,6 +962,25 @@ het GPK-voorbeeld.
 Voor de simulatie volgt daaruit: signal-start (omroep, business key mee), een
 werkbak als data store met filter waaruit een none-start een zaak kiest, en een
 claim die een tweede kandidaat laat afvallen.
+
+### 11.7 Derde ronde gebruik (14-11) en besluiten voor stap 2
+
+Gebouwd: het token staat alleen op het modeldiagram (canvas in Modelleren) als je
+*ook op het modeldiagram* aanvinkt. Mark: de run hoort bij de simulatie, niet bij
+het model. Het model verandert nooit; het stijlblok leeft in één browsertab.
+
+**Besluiten Mark (14-11):**
+
+| Vraag | Besluit |
+|---|---|
+| 8 (ZGW-acties, de zaak) | **Zaak hoort in het cm.** Geen spiegel van Open Zaak: de zaak is een cm-object met status, rollen (aanvrager, behandelaar na het claimen) en documenten; zaak aanmaken, rol koppelen, document koppelen en zaakstatus zetten worden `maak`, `verbind` en overgangen in de store. De stub-url blijft als verwijzing naar het externe register. |
+| 14 (de vorm van een object) | **De cm-vorm, met de state erbij.** Een object in de store is de entiteit met haar gegevenselementen zoals het cm ze kent, plus de toestand (state) van het object. De platte vorm van het objecttype wordt een afgeleide (via de traceregels), voor de beslistabel en de formulieren. |
+
+Stap 2, in volgorde: main binnenhalen met Beslissing en beschikking (vraag 12);
+Zaak in het cm en in de simulatie; de store naar de cm-vorm met state; objecten als
+objectdiagram (§11.2); een run als sequence diagram en daarna naspelen en
+vergelijken (§11.3). Ernaast, via TRANSFORMATIES: de export van signaalnaam, filter
+en kandidaatgroep.
 
 ## Referenties
 
