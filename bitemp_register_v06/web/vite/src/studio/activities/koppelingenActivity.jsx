@@ -859,7 +859,7 @@ export default {
   label: "Koppelingen",
   icon: <IconKoppeling />,
   groep: "modelleren",
-  status: "preview",
+  // Geen status meer (Mark 13-11): uit preview, dus geen stip en ook zichtbaar met Labs uit.
   Sidebar,
   Main,
   Inspector,

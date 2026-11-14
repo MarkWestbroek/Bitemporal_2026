@@ -4651,7 +4651,7 @@ export default {
   label: "Modelleren",
   icon: <IconModelleren />,
   groep: "modelleren",
-  status: "preview",
+  // Geen status meer (Mark 13-11): uit preview, dus geen stip en ook zichtbaar met Labs uit.
   Provider,
   Sidebar,
   Main,

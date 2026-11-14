@@ -8,6 +8,10 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
 
+### Gewijzigd
+- **Modelleren, Koppelingen en Profielontwerp zijn geen preview meer** (Mark 13-11): geen oranje stip in de
+  activiteitenbalk, en ze staan er ook als Labs uit staat.
+
 ## [studio/v0.39.0] — 2026-11-12
 
 Samen met render 0.4.3 en devloop 0.28.4 (api 0.25.0).
