@@ -61,7 +61,9 @@ dat, en forceert `git branch -D` het (met opzet).
 ## 6. Huidige stand
 
 - Generatie **v06**; Studio-release = `web/vite/package.json` (bron van waarheid),
-  getagd met prefix `studio/` (§7). Laatst getagd: **`studio/v0.40.0`**
+  getagd met prefix `studio/` (§7). Laatst getagd: **`studio/v0.41.0`**
+  (2026-11-14: branch samenvoegen naar MAIN, stap 1; samen met render 0.4.5, api 0.26.0 en
+  devloop 0.29.0), na **`studio/v0.40.0`**
   (2026-11-14: simulatie van BPMN en DMN met cm-objecten, BPMN-profiel 1.1.0, JUEL naar CEL;
   samen met render 0.4.4), na **`studio/v0.39.0`**
   (2026-11-12: versie per profiel genoteerd in het project, klembord over projecten en tabs,
@@ -144,7 +146,8 @@ dat, en forceert `git branch -D` het (met opzet).
   **`studio/v0.14.0`** (2026-10-07: project op de server, operatielaag, projectboom-fixes) en
   **`studio/v0.13.0`** (2026-10-07: canvas-bediening — inline hernoemen, verbind-modus, kaders,
   taakbalken op een rij); zie `web/vite/CHANGELOG.md`.
-- Backend: **`api/v0.25.0`** (2026-11-10: `GET …/model/:profiel` via de render-sidecar, één branch
+- Backend: **`api/v0.26.0`** (2026-11-14: `POST …/samenvoegen` — branch naar main in één
+  transactie, via de render-sidecar; devloop-image 0.29.0). Daarvoor **`api/v0.25.0`** (2026-11-10: `GET …/model/:profiel` via de render-sidecar, één branch
   per ouder + map; devloop-image 0.28.0; 0.28.1 = dezelfde api met studio 0.38.1; 0.28.2 met studio 0.38.2; 0.28.3 met studio 0.38.3; 0.28.4 met studio 0.39.0). Daarvoor **`api/v0.24.0`** (2026-11-10: `GET …/vergelijk` via de render-sidecar en `namens` op het
   operatielog; devloop-image 0.27.0; 0.27.1 = dezelfde api met studio 0.37.0; 0.27.2 met studio 0.37.1; 0.27.3 met studio 0.38.0). Daarvoor **`api/v0.23.0`** (2026-11-10: afgeleide projecten — afsplitsen, basis en herkomst;
   `verwachtLaatsteVolgnummer` op `/ops`; devloop-image 0.26.0). Daarvoor **`api/v0.22.3`** (2026-11-08, patch: de startup-rebuild genereert het
@@ -182,7 +185,8 @@ dat, en forceert `git branch -D` het (met opzet).
   brekende wijzigingen). Daarvoor **`api/v0.11.0`** (2026-10-07: Studio-projecten op de server,
   tabel `studio_projecten`); zie `RELEASE.md`.
 - Generator: **`codegen/v0.1.0`**; sindsdien geen release.
-- Render-sidecar: **`render/v0.4.4`** (2026-11-14: de code van studio 0.40.0 — BPMN-profiel 1.1.0
+- Render-sidecar: **`render/v0.4.5`** (2026-11-14: `POST /samenvoegen` met naspeel-controle;
+  image `bitemp-render-svc:0.4.5`), na **`render/v0.4.4`** (2026-11-14: de code van studio 0.40.0 — BPMN-profiel 1.1.0
   in de bundel; image `bitemp-render-svc:0.4.4`), na **`render/v0.4.3`** (2026-11-12: de code van studio 0.39.0 — profielen met hun
   versie in de bundel, dezelfde tekenaar; image `bitemp-render-svc:0.4.3`), na **`render/v0.4.2`** (2026-11-10: `POST /materialiseer` — één profiel
   nagespeeld, voor `GET …/model/:profiel`; image `bitemp-render-svc:0.4.2`), na **`render/v0.4.1`** (2026-11-10, patch: deterministische mapvolgorde bij het

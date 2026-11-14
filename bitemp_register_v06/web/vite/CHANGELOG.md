@@ -8,6 +8,10 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
 
+## [studio/v0.41.0] — 2026-11-14
+
+Samen met render 0.4.5, api 0.26.0 en devloop 0.29.0.
+
 ### Toegevoegd
 - **Samenvoegen naar MAIN** (branch terugmergen, stap 1; Mark 14-11): in *Verschil met MAIN…* van een
   branch. Alles uit de branch gaat naar MAIN, een conflict blokkeert, en daarna haalt de branch MAIN
