@@ -18,6 +18,11 @@ De single source of truth voor het nummer is `package.json` `"version"`.
   (M3-aard `gegevens`: cm-entiteit, UML-klasse, MIM-objecttype, ERD-entiteit); rol invoer/uitvoer (Data Input /
   Data Output, met pijltje), toestand (dataState, onder de naam als *[ingediend]*); op de data-associatie
   "lezen en schrijven" (pijl aan beide kanten). Profielversies: BPMN 1.2.0; canoniek, puur-UML, MIM, ERD 1.1.0.
+- **Het type is ook de tracering** (Mark 15-11): uit het type volgt een afgeleide koppeling «traceert naar»
+  (M3 `koppelsoort` op een element-verwijzing; niet los bewaard). **Gerelateerde elementen toevoegen** volgt nu ook
+  kruisverbanden naar een andere taal: zo zet je de cm-Aanvraag naast het data-object, met de lijn erbij.
+  En daar verder: vanaf de cm-Aanvraag komen ook de andere cm-entiteiten erbij. Een dubbelklik op het data-object
+  zonder eigen *verwijst naar* opent het cm-diagram waarop zijn type staat. De titel van het venster noemt de naam.
 
 ### Opgelost
 - **Donker thema** (Mark 15-11): de naam onder een BPMN-data-object of -data store (en de band van een pool of

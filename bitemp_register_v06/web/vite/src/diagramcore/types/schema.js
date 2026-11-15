@@ -57,6 +57,11 @@
  *   de inspector toont deze eigenschap pas als eigenschap `key` aan staat (of gelijk is aan
  *   `waarde`, of één van een lijst). Alleen weergave; een gevulde eigenschap blijft zichtbaar.
  *   Bv. canoniek `tijdprecisie` met `{key: "materieel"}`. Zie diagramcore/model/zichtbaarAls.js.
+ * @property {string} [aard]              - bij datatype "element-verwijzing": alleen elementen
+ *   waarvan het type deze M3-aard heeft (bv. "gegevens" voor het type van een BPMN-data-object)
+ * @property {string} [koppelsoort]       - bij datatype "element-verwijzing" (15-11): de waarde
+ *   is ook een kruisverband van deze soort (bv. "traceert naar"), afgeleid en niet los bewaard.
+ *   Zie diagramcore/model/afgeleideKoppelingen.js.
  * @property {string[]} [referenceTypes]   - ReferenceType-ids; kandidaten via resolvers
  * @property {"afgeleid"|"kardinaliteit"|"standaardwaarde"|"geordend"|"nietUniek"|"alleenLezen"|"id"|"zichtbaarheid"|"beschrijving"|"verwijzing"} [betekenis]
  *   ("verwijzing", 2026-10-20: deze diagram-verwijzing ís de doorklik van het element — de

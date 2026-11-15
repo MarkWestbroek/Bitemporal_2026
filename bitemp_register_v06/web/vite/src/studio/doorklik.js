@@ -46,6 +46,29 @@ export function naamVanVerwijzing(verw) {
   return d ? d.naam || d.id : null;
 }
 
+/**
+ * Doorklik via het type (Mark 15-11, "autoklik"): heeft een element geen eigen `verwijst naar`, maar
+ * wel een element-verwijzing met een koppelsoort (het type van een BPMN-data-object), dan zijn de
+ * diagrammen waarop dat element staat de doorklik. Gesorteerd op naam; de eerste opent bij
+ * dubbelklik, het contextmenu biedt ze allemaal.
+ * @param {any} element
+ * @param {any} elementType
+ * @returns {{profielId: string, diagramId: string, naam: string}[]}
+ */
+export function diagrammenViaType(element, elementType) {
+  const uit = [];
+  for (const p of elementType?.properties || []) {
+    if (!p?.koppelsoort || p.datatype !== "element-verwijzing") continue;
+    const ref = element?.data?.[p.key];
+    if (!ref?.profielId || !ref?.elementId) continue;
+    const diagrams = getProfieltype(ref.profielId)?.useStore?.getState?.().diagrams || {};
+    for (const d of Object.values(diagrams)) {
+      if ((d?.nodes || []).some((n) => n?.elementId === ref.elementId)) uit.push({ profielId: ref.profielId, diagramId: d.id, naam: d.naam || d.id });
+    }
+  }
+  return uit.sort((a, b) => String(a.naam).localeCompare(String(b.naam)));
+}
+
 /** De profielen uit de registry in de vorm die `verwezenDoor` leest. */
 export function profielenUitRegistry() {
   return getProfieltypen().map((p) => {
