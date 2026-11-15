@@ -784,7 +784,8 @@
           "signaal": "medewerker-gekoppeld",
           "onderbrekend": true,
           "randVan": "bp_1794147740492_6",
-          "bpmnId": "al-gekoppeld"
+          "bpmnId": "al-gekoppeld",
+          "filter": "url == ontvanger.zaakUrl"
         }
       },
       "bp_kies_al_toegewezen": {
@@ -1024,6 +1025,28 @@
           "sourceHandle": null,
           "targetHandle": null
         }
+      },
+      "bp_do_kies_zaak": {
+        "id": "bp_do_kies_zaak",
+        "naam": "Zaak",
+        "elementType": "data-object",
+        "compartimenten": [],
+        "data": {
+          "rol": "invoer",
+          "toestand": "in werkbak"
+        }
+      },
+      "conn_do_kies_zaak": {
+        "id": "conn_do_kies_zaak",
+        "naam": "",
+        "elementType": "data-associatie",
+        "source": "bp_do_kies_zaak",
+        "target": "bp_1794147740492_6",
+        "compartimenten": [],
+        "data": {
+          "sourceHandle": null,
+          "targetHandle": null
+        }
       }
     },
     "diagrams": {
@@ -1223,7 +1246,11 @@
               "x": 520.3764038085938,
               "y": 346.56390380859375
             },
-            "elementId": "bp_1794147740492_6"
+            "elementId": "bp_1794147740492_6",
+            "size": {
+              "width": 210,
+              "height": 56
+            }
           },
           {
             "position": {
@@ -1242,15 +1269,22 @@
           {
             "elementId": "bp_kies_al_gekoppeld",
             "position": {
-              "x": 616.3764038085938,
-              "y": 392.56390380859375
+              "x": 178,
+              "y": 43
             }
           },
           {
             "elementId": "bp_kies_al_toegewezen",
             "position": {
-              "x": 740.3764038085938,
-              "y": 466.56390380859375
+              "x": 840,
+              "y": 480
+            }
+          },
+          {
+            "elementId": "bp_do_kies_zaak",
+            "position": {
+              "x": 560,
+              "y": 225
             }
           }
         ],

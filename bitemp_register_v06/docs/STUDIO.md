@@ -2342,6 +2342,8 @@ dag vervangen).
   gestippeld als de toestand van het object (`state`/`status`) niet klopt met de toestand op het model
   (*[ingediend]*). Een klik toont het object (cm-vorm, versies) onder het diagram; de tooltip noemt id, type,
   versie en toestand. Puur: `simulatie/dataObjecten.js` (`objectenBijDataObjecten`, `typeNamen`). E2E: spec 63.
+- **Pijltjestoetsen (16-11):** → is een stap, ← een regel terug; niet in een invoerveld en niet tijdens het
+  afspelen. Alleen als het paneel Simulatie in beeld is.
 - **Token**: een rand en een bolletje op het element waar het token staat (indigo = kan verder, oranje = wacht
   op invoer, cyaan = wacht op een bericht of ander proces, rood = vastgelopen); waar het geweest is blijft een
   dunne cyaan rand staan. Op het BPMN-canvas in Modelleren staat het token alleen als je **ook op het

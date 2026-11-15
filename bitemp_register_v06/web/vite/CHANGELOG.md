@@ -23,6 +23,11 @@ De single source of truth voor het nummer is `package.json` `"version"`.
   tegen `schema.js` (`m3.test.js`) en tegen alle profielen (`render-svc/m3Dekking.test.mjs`). In `schema.js`
   zijn de gaten beschreven die de tests vonden (o.a. `DiagramType.hooks`, `shapeSets`, `PropertyType.aard`);
   vier hooks erbij in `handlerCatalogus.js`.
+- **Signaalfilter: alleen voor deze zaak** (Mark 16-11): een vangend tussen- of boundary event dat al loopt ziet in
+  zijn filter ook zichzelf als `ontvanger` (`ontvanger.zaakUrl`, `ontvanger.variabelen`). In het GPK-voorbeeld
+  heeft het boundary event op *Kies zaak om te behandelen* `url == ontvanger.zaakUrl`; het staat nu op de rand
+  van de taak. *Kies zaak* krijgt het data-object Zaak [in werkbak] als invoer.
+- **Simulatie met de pijltjestoetsen** (Mark 16-11): → een stap, ← een regel terug.
 
 ## [studio/v0.44.0] — 2026-11-15
 
