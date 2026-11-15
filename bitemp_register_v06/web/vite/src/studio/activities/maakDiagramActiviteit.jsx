@@ -77,8 +77,9 @@ import { metVreemdeElementen, ontleedVreemdeId, vreemdeId, vreemdeProfielen } fr
 import { useVreemdeSelectie, zetVreemdeSelectie, LosGetoondContext } from "../vreemdeSelectie.js";
 import { gebruikInHetProject } from "../gebruikInProject.js";
 import { metKoppelingen, isKoppelingId, isKoppelType, linkIdVan, refVanCanvasId } from "../../diagramcore/model/koppellijnen.js";
+import { afgeleideKoppelingen, isAfgeleideLink } from "../../diagramcore/model/afgeleideKoppelingen.js";
 import { useKruisStore, useKoppelsoorten } from "./koppelingenActivity.jsx";
-import { openVerwijzing, alleDiagrammen, naamVanVerwijzing } from "../doorklik.js";
+import { openVerwijzing, alleDiagrammen, naamVanVerwijzing, diagrammenViaType } from "../doorklik.js";
 import VerwezenDoorPaneel from "../VerwezenDoorPaneel.jsx";
 import { doorklikVan } from "../../diagramcore/model/verwijstNaar.js";
 import { lidConnectoren } from "../../diagramcore/types/containerVoor.js";
@@ -106,7 +107,7 @@ import RelatiesPaneel from "../../diagramcore/inspector/RelatiesPaneel.jsx";
 import GebruikPaneel from "../../diagramcore/inspector/GebruikPaneel.jsx";
 import { gebruikteIds } from "../../diagramcore/model/gebruik.js";
 import { relatiesVan, verborgenRelatiesVan } from "../../diagramcore/model/relaties.js";
-import { gerelateerdeElementen, ringPosities } from "../../diagramcore/model/gerelateerd.js";
+import { gerelateerdeElementen, ringPosities, kruisGraaf } from "../../diagramcore/model/gerelateerd.js";
 import { wijstNaarOuder } from "../../diagramcore/types/layoutStijl.js";
 import { boomLijn, boomKinderen } from "../../diagramcore/model/lijnvorm.js";
 import { TypeIcoon } from "../../diagramcore/shapes/typeIconen.jsx";
@@ -2176,7 +2177,10 @@ export function maakDiagramActiviteit(opties) {
     const koppelsoorten = useKoppelsoorten();
     const canvasModel = useMemo(() => {
       const v = metVreemdeElementen({ elements, descriptor, diagram, bron: vreemdeBron });
-      return metKoppelingen({ elements: v.elements, descriptor: v.descriptor, diagram, eigenProfielId: id, links: kruisLinks, soorten: koppelsoorten });
+      // Plus de afgeleide koppelingen (15-11): een eigenschap met een koppelsoort (het type van
+      // een BPMN-data-object «traceert naar» het cm-element) tekent als koppellijn.
+      const links = [...kruisLinks, ...afgeleideKoppelingen({ profielId: id, elements, elementTypes: descriptor.elementTypes })];
+      return metKoppelingen({ elements: v.elements, descriptor: v.descriptor, diagram, eigenProfielId: id, links, soorten: koppelsoorten });
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [elements, diagram, vreemdTik, kruisLinks, koppelsoorten]);
 
@@ -2388,7 +2392,15 @@ export function maakDiagramActiviteit(opties) {
                   const elDk = s.elements[voorkomenRef?.elementId || nodeId];
                   const verw = doorklikVan(elDk, elementTypesById[elDk?.elementType], id);
                   const naam = verw ? naamVanVerwijzing(verw) : null;
-                  return naam ? [{ id: "open-verwijzing", label: `Open ${naam}`, icoon: "⧉", onClick: () => openVerwijzing(verw) }] : [];
+                  if (naam) return [{ id: "open-verwijzing", label: `Open ${naam}`, icoon: "⧉", onClick: () => openVerwijzing(verw) }];
+                  // Zonder eigen doorklik: de diagrammen waarop het type staat (15-11).
+                  if (verw) return [];
+                  return diagrammenViaType(elDk, elementTypesById[elDk?.elementType]).map((d) => ({
+                    id: `open-via-type-${d.profielId}-${d.diagramId}`,
+                    label: `Open ${d.naam}`,
+                    icoon: "⧉",
+                    onClick: () => openVerwijzing(d),
+                  }));
                 })(),
                 {
                   id: "zoek-in-boom",
@@ -2934,9 +2946,18 @@ export function maakDiagramActiviteit(opties) {
       const dId = s0.actiefDiagramId;
       if (!dId || !startIds.length) return;
       const opDiagram = new Set((s0.diagrams[dId]?.nodes || []).map((n) => n.elementId));
+      // Kruisverbanden (de matrix én de afgeleide, 15-11) doen mee, en ook de verbindingen binnen
+      // die andere taal (Mark: "mag ook in een vreemde taal verder gaan"): een element daar komt
+      // als verwijzing (vreemd element) op dit diagram.
+      const { koppelingen, vreemdeKnopen } = kruisGraaf({
+        eigenProfielId: id,
+        startIds,
+        links: [...useKruisStore.getState().links, ...afgeleideKoppelingen({ profielId: id, elements: s0.elements, elementTypes: descriptor.elementTypes })],
+        bronVan: vreemdeBron,
+      });
       const kandidatenVoor = (diepte) =>
-        gerelateerdeElementen({ startIds, elements: s0.elements, opDiagram, elementTypesById, diepte });
-      const startNaam = startIds.length === 1 ? s0.elements[startIds[0]]?.naam || startIds[0] : `${startIds.length} elementen`;
+        gerelateerdeElementen({ startIds, elements: s0.elements, opDiagram, elementTypesById, diepte, koppelingen, vreemdeKnopen });
+      const startNaam = startIds.length === 1 ? s0.elements[startIds[0]]?.naam || vreemdeKnopen[startIds[0]]?.naam || startIds[0] : `${startIds.length} elementen`;
       const heeftLayout = (descriptor.layouts || []).length > 0;
       const uitkomst = await vraagReview({
         titel: `Gerelateerde elementen van ${startNaam}`,
@@ -3526,6 +3547,11 @@ export function maakDiagramActiviteit(opties) {
                     const etDk = element && (descriptor.elementTypes || []).find((t) => t.id === element.elementType);
                     const verw = doorklikVan(element, etDk, id);
                     if (verw && openVerwijzing(verw)) return true;
+                    // Zonder eigen doorklik: via het type (15-11) het eerste diagram waarop dat staat.
+                    if (!verw) {
+                      const viaType = diagrammenViaType(element, etDk)[0];
+                      if (viaType && openVerwijzing(viaType)) return true;
+                    }
                     const doelId = element?.data?.gedragDiagramId;
                     if (!doelId || !useStore.getState().diagrams[doelId]) {
                       // Uitwerking (M3 `uitwerking`, 15-10): de projectboom weet welke
@@ -3793,6 +3819,17 @@ export function maakDiagramActiviteit(opties) {
   function KoppelingInspector({ linkId, diagramId, onKlaar }) {
     const link = useKruisStore((s) => s.links.find((l) => l.id === linkId));
     const soorten = useKoppelsoorten();
+    if (isAfgeleideLink(linkId)) {
+      // Afgeleid uit een eigenschap (15-11): hier niets te wijzigen.
+      return (
+        <div className="studio-inspector-pad dc-inspector" data-testid="koppeling-afgeleid">
+          <h3>Koppeling (afgeleid)</h3>
+          <div className="dc-inspector-type">
+            Volgt uit een eigenschap van het element (bv. het type van een data-object). Wijzig of wis die eigenschap om de koppeling te veranderen.
+          </div>
+        </div>
+      );
+    }
     if (!link) {
       return <div className="studio-inspector-pad" style={{ color: "var(--s-fg-muted)" }}>Deze koppeling bestaat niet meer.</div>;
     }

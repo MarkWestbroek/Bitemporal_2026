@@ -6,6 +6,8 @@
  * - type: een verwijzing naar een element in een taal die gegevens draagt (M3-aard "gegevens":
  *   cm-entiteit, UML-klasse, MIM-objecttype, ERD-entiteit). In BPMN-XML: itemSubjectRef. De
  *   simulatie koppelt zo een data-object aan het object van dat type. Waarde: {profielId, elementId}.
+ *   Met `koppelsoort` leidt de Studio er een koppeling «traceert naar» uit af (lijn op het diagram,
+ *   Gerelateerde elementen; diagramcore/model/afgeleideKoppelingen.js).
  * - rol: Data Input / Data Output (BPMN ioSpecification), de parameters van het proces; een open
  *   of dicht pijltje in het dokje. Leeg = intern in het proces.
  * - toestand: BPMN dataState, onder de naam als "Aanvraag [ingediend]".
@@ -13,7 +15,7 @@
  *   schrijven" is één lijn met twee pijlen, en de export maakt er twee associaties van.
  */
 
-export const DATA_TYPE_VELD = { key: "type", label: "type (gegevens)", datatype: "element-verwijzing", aard: "gegevens" };
+export const DATA_TYPE_VELD = { key: "type", label: "type (gegevens)", datatype: "element-verwijzing", aard: "gegevens", koppelsoort: "traceert naar" };
 
 export const DATA_ROL_VELD = {
   key: "rol",

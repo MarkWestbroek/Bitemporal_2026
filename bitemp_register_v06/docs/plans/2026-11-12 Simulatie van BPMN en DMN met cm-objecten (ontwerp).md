@@ -1035,6 +1035,18 @@ als twee associaties). BPMN zelf: `dataObject` + `dataObjectReference`, `itemSub
 zijn de parameters van het proces (ioSpecification). Nog te doen: stap 3 en 4 (simulatie) en de
 XML-export/-import (TRANSFORMATIES).
 
+**Tracering (Mark 15-11, gebouwd):** het type ís de tracering; een losse dependency zou hetzelfde feit
+dubbel bewaren. Daarom een **afgeleide koppeling** «traceert naar» (M3 `koppelsoort` op de eigenschap), als
+lijn op het diagram en gevolgd door *Gerelateerde elementen toevoegen* (dat nu ook kruisverbanden naar een andere
+taal volgt). Niet automatisch op het diagram. Voor grote objecten (de gpk-aanvraag) een subdiagram: dat kan al
+met de vaste doorklik *verwijst naar*; zonder eigen doorklik opent het data-object het cm-diagram waarop zijn
+type staat (gebouwd). Gerelateerde elementen loopt ook in de andere taal verder (gebouwd).
+
+**Open (Mark 15-11): Ontvankelijkheid toetsen per aanvraagtype.** Verschillen alleen de regels, dan een
+beslistaak met een beslistabel per type (`decisionRef` als expressie); verschillen ook de stappen, dan een call
+activity met een subproces per type (`calledElement` als expressie). De inhoud is aan FUNSIM; wij zorgen dat
+Studio en simulatie een wisselend doel per type volgen.
+
 Dit overlapt met §11.2 (objecten als objectdiagram): het procesdiagram zelf wordt de plek waar
 je de objecten ziet. Volgorde: na de store in de cm-vorm (§11.7).
 

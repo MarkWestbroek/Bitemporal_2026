@@ -2351,3 +2351,20 @@ pijlen; BPMN kent alleen in- en uitvoerassociaties, de export maakt er twee van)
 `diagramprofielen/bpmn/dataVelden.js`. Profielversies: BPMN 1.2.0; canoniek, puur-UML, MIM en ERD 1.1.0 (de aard).
 Nog niet: de BPMN-XML-export en -import van type, rol, toestand en richting, en het gebruik in de simulatie
 (ontwerp Simulatie §11.8). E2E: `tests/e2e/64-studio-bpmn-dataobject.spec.js`.
+
+**Het type is ook de tracering (15-11).** Een eigenschap met datatype `element-verwijzing` en een `koppelsoort`
+(M3 PropertyType, `schema.js`) levert een **afgeleide koppeling** op: het type van het data-object
+«traceert naar» het cm-element (`diagramcore/model/afgeleideKoppelingen.js`). Niet los bewaard: de waarde van de
+eigenschap is de bron, dus lijn en type kunnen niet uit elkaar lopen; wijzigen of wissen gaat via de eigenschap
+(de inspector van de lijn zegt dat, `koppeling-afgeleid`). De koppeling tekent als paarse lijn zodra het
+cm-element als verwijzing op het diagram staat, en **Gerelateerde elementen toevoegen** volgt nu ook
+kruisverbanden (matrix én afgeleid) naar een andere taal: het andere uiteinde komt als verwijzing op het diagram
+(`gerelateerdeElementen({koppelingen, vreemdeKnopen})`). En **in die andere taal verder** (Mark 15-11):
+`kruisGraaf` (`diagramcore/model/gerelateerd.js`) neemt van elke taal die via een kruisverband meedoet alle
+elementen en verbindingen mee, dus vanaf de cm-Aanvraag op een BPMN-diagram komen Partij en verder erbij (ook
+als verwijzing). De titel noemt de naam, niet de canvas-id. Automatisch op het diagram zetten doen we bewust
+niet. De afgeleide koppelingen staan (nog) niet in de Koppelingen-matrix.
+
+**Doorklik via het type (15-11).** Zonder eigen *verwijst naar* opent een dubbelklik op het data-object het
+eerste cm-diagram (op naam) waarop zijn type staat; het contextmenu biedt *Open …* voor elk zo'n diagram
+(`diagrammenViaType` in `studio/doorklik.js`; geldt voor elke element-verwijzing met een koppelsoort).
