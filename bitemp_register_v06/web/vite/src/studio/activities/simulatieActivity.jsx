@@ -446,6 +446,31 @@ function Main() {
   const [snelheid, setSnelheid] = useState("gewoon");
   const sprong = sim ? laatsteSprong() : null;
   const standKleur = { loopt: TOKEN_KLEUR.klaar, gat: TOKEN_KLEUR.gat, vastgelopen: TOKEN_KLEUR.vast, uitzondering: TOKEN_KLEUR.vast, uitkomst: "#16a34a" }[stand.soort] || "var(--s-fg-muted, #64748b)";
+  // Pijltjestoetsen (Mark 16-11): → is een stap, ← een regel terug. Niet in een invoerveld, niet
+  // tijdens het afspelen, en alleen als dit paneel in beeld is (een verborgen activiteit luistert niet).
+  const paneelRef = useRef(null);
+  const toetsRef = useRef(null);
+  toetsRef.current = { sim, stand, log, afspelen };
+  useEffect(() => {
+    const opToets = (e) => {
+      if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
+      if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey || e.defaultPrevented) return;
+      const doel = /** @type {HTMLElement|null} */ (e.target);
+      if (doel && (doel.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(doel.tagName))) return;
+      if (!paneelRef.current || !paneelRef.current.offsetParent) return;
+      const { sim, stand, log, afspelen } = toetsRef.current;
+      if (!sim || afspelen) return;
+      if (e.key === "ArrowRight" && stand.soort === "loopt") {
+        e.preventDefault();
+        probeer(() => sim.stap());
+      } else if (e.key === "ArrowLeft" && log.length > 1) {
+        e.preventDefault();
+        probeer(() => sim.spoelTerug(log.length - 1));
+      }
+    };
+    window.addEventListener("keydown", opToets);
+    return () => window.removeEventListener("keydown", opToets);
+  }, []);
   let zaadje = 0;
   try {
     zaadje = JSON.parse(scenarioTekst()).zaadje ?? 0;
@@ -453,7 +478,7 @@ function Main() {
     /* het scenario is nog geen geldige JSON */
   }
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "100%", minHeight: 0, fontSize: 12, color: "var(--s-fg, #1f2937)" }} data-testid="sim-paneel">
+    <div style={{ display: "flex", flexDirection: "column", height: "100%", minHeight: 0, fontSize: 12, color: "var(--s-fg, #1f2937)" }} data-testid="sim-paneel" ref={paneelRef}>
       {/* De tekenaar geeft een buitenlabel dezelfde klasse als het canvas (dc-buitenlabel); de
           canvasregel verschuift het daar met een transform, en dat mag in de tekening niet meedoen. */}
       <style>{`@keyframes sim-puls { 0%, 100% { r: 9px; } 50% { r: 12px; } } .sim-puls { animation: sim-puls 1.2s ease-in-out infinite; }
@@ -466,7 +491,7 @@ function Main() {
             </button>
           ) : (
             <>
-              <button style={hoofdknop} onClick={() => probeer(() => sim.stap())} disabled={stand.soort !== "loopt" || afspelen} data-testid="sim-stap" title="Eén stap: het token gaat één element verder">
+              <button style={hoofdknop} onClick={() => probeer(() => sim.stap())} disabled={stand.soort !== "loopt" || afspelen} data-testid="sim-stap" title="Eén stap: het token gaat één element verder (→)">
                 Stap
               </button>
               {afspelen ? (
@@ -488,7 +513,7 @@ function Main() {
               <button style={knop} onClick={() => probeer(() => sim.loop())} disabled={stand.soort !== "loopt" || afspelen} data-testid="sim-loop" title="In één keer door tot het volgende gat of het einde">
                 ⏭ Doorlopen
               </button>
-              <button style={knop} onClick={() => probeer(() => sim.spoelTerug(Math.max(1, log.length - 1)))} disabled={log.length <= 1 || afspelen} title="Eén regel terug">
+              <button style={knop} onClick={() => probeer(() => sim.spoelTerug(Math.max(1, log.length - 1)))} disabled={log.length <= 1 || afspelen} title="Eén regel terug (←)">
                 ◀ Terug
               </button>
               <button style={knop} onClick={stop} data-testid="sim-stop" title="Stop de simulatie en haal het token van het diagram">

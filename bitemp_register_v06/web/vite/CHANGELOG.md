@@ -18,6 +18,11 @@ De single source of truth voor het nummer is `package.json` `"version"`.
   Aanvraag bij Beoordeel aanvraag en Aanvraag beoordelen, Beschikking (uitvoer) bij opstellen en afwijzen.
   Zaak en Beschikking nog zonder type: dat komt met het Zaak/Beslissing-model. De losse berichtenlijn van
   Vraag aanvulling bij klant naar de pool Klantportaal (per ongeluk ontstaan) is eruit.
+- **Signaalfilter: alleen voor deze zaak** (Mark 16-11): een vangend tussen- of boundary event dat al loopt ziet in
+  zijn filter ook zichzelf als `ontvanger` (`ontvanger.zaakUrl`, `ontvanger.variabelen`). In het GPK-voorbeeld
+  heeft het boundary event op *Kies zaak om te behandelen* `url == ontvanger.zaakUrl`; het staat nu op de rand
+  van de taak. *Kies zaak* krijgt het data-object Zaak [in werkbak] als invoer.
+- **Simulatie met de pijltjestoetsen** (Mark 16-11): → een stap, ← een regel terug.
 
 ## [studio/v0.44.0] — 2026-11-15
 

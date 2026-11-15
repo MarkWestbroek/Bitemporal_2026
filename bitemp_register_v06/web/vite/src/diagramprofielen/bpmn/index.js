@@ -117,8 +117,10 @@ const BERICHT_VELD = { key: "bericht", label: "berichtnaam", datatype: "string",
 // zit bij de abonnee. De lading is de zaak (in de simulatie: het object van de afhandeling).
 const SIGNAAL_VELD = { key: "signaal", label: "signaalnaam", datatype: "string", placeholder: "bv. zaak-in-werkbak", zichtbaarAls: { key: "soort", waarde: "signaal" } };
 // Het filter (CEL over de lading): alleen bij een vangend signaal. Geen BPMN 2.0; de transformatie
-// maakt er een abonnement van (Open Notificaties) of een omweg in de engine.
-const SIGNAAL_FILTER_VELD = { key: "filter", label: "filter op de lading (CEL)", datatype: "string", placeholder: "bv. zaaktype == 'GPK' (de lading is de zaak)", zichtbaarAls: { key: "soort", waarde: "signaal" } };
+// maakt er een abonnement van (Open Notificaties) of een omweg in de engine. Een ontvanger die al
+// loopt (tussen- of boundary event) ziet ook zichzelf: `url == ontvanger.zaakUrl` = alleen voor
+// deze zaak (Mark 16-11; simulatie.js, filterPast).
+const SIGNAAL_FILTER_VELD = { key: "filter", label: "filter op de lading (CEL)", datatype: "string", placeholder: "bv. zaaktype == 'GPK' (de lading is de zaak); op een boundary event: url == ontvanger.zaakUrl", zichtbaarAls: { key: "soort", waarde: "signaal" } };
 
 // Sequence flow: wat kan hem verlaten/bereiken. Start alleen bron, eind
 // alleen doel; een boundary event alleen bron (het uitzonderingspad).

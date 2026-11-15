@@ -53,6 +53,11 @@ test("GPK: eigen activiteit, token op het diagram, gat met de hand, doorlopen to
   await expect(getekend(page, "bp_start")).toHaveAttribute("data-sim-token", "klaar");
   await expect(scenario).toBeDisabled(); // tijdens de run ligt het scenario vast
   await foto(page, "1-gestart");
+  // Pijltjestoetsen (Mark 16-11): → een stap, ← een regel terug.
+  await page.keyboard.press("ArrowRight");
+  await expect(getekend(page, "bp_start")).not.toHaveAttribute("data-sim-token", "klaar");
+  await page.keyboard.press("ArrowLeft");
+  await expect(getekend(page, "bp_start")).toHaveAttribute("data-sim-token", "klaar");
 
   await page.getByTestId("sim-stap").click();
   await page.getByTestId("sim-stap").click();
