@@ -306,6 +306,8 @@ const elementTypes = [
   {
     id: "entiteit",
     label: "Entiteit",
+    // M3 aard (15-11): draagt gegevens; het type van een BPMN-data-object kan hiernaar wijzen.
+    aard: "gegevens",
     lidwoord: "de",
     kort: "ENT",
     erft: "representatie",
@@ -835,6 +837,9 @@ const referenceResolvers = {
 /** @type {import("../../diagramcore/types/schema.js").DiagramType} */
 export const canoniekUmlDiagramType = {
   id: CANONIEK_UML_ID,
+  // Profielversie (STUDIO.md "Profielversie in het project"). 1.1.0 (15-11): aard "gegevens" op
+  // de typen die data dragen (het type van een BPMN-data-object wijst ernaar); minor.
+  versie: "1.1.0",
   label: "Canoniek datamodel",
   // Beschrijving: vóór 2026-10-12 het profielveld "description" (de V3-naam) → M3 data.beschrijving; de adapter vertaalt naar V3 `description`.
   oudeBeschrijvingSleutels: ["description"],

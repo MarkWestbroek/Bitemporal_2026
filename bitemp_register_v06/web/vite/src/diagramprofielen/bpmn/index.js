@@ -56,6 +56,7 @@
  * kan zelf geen tekst dragen. Diagram-breed uit te zetten via Beeld →
  * Buitenlabels.
  */
+import { DATA_TYPE_VELD, DATA_ROL_VELD, DATA_TOESTAND_VELD, DATA_RICHTING_VELD, naamMetToestand, dataAssociatiePresentatie } from "./dataVelden.js";
 import { registreerDiagramType, getDiagramType } from "../../diagramcore/types/typeRegistry.js";
 import { registreerGedragTypeIconen } from "../gedragTypeIconen.jsx";
 import "./vormen.js"; // de ShapeTypes (één tekenaar, stap 4): canvas, documenten en render-svc
@@ -125,6 +126,7 @@ const ACTIVITEITEN = ["taak", "subproces"];
 const GATEWAYS = ["exclusief", "parallel", "inclusief", "complex", "event-gateway"];
 /** Gegevens die een data-associatie kan verbinden met een activiteit. */
 const DATA_DRAGERS = ["data-object", "data-store"];
+
 const SEQ_BRONNEN = ["start-event", "tussen-event", "boundary-event", ...ACTIVITEITEN, ...GATEWAYS];
 const SEQ_DOELEN = [...ACTIVITEITEN, ...GATEWAYS, "tussen-event", "eind-event"];
 
@@ -325,7 +327,13 @@ const elementTypes = [
     icoon: "gedrag-object",
     shape: "bpmn-data",
     resizebaar: false,
-    properties: [{ key: "verzameling", label: "verzameling (collection)", datatype: "boolean" }],
+    properties: [
+      { key: "verzameling", label: "verzameling (collection)", datatype: "boolean" },
+      DATA_TYPE_VELD,
+      DATA_ROL_VELD,
+      DATA_TOESTAND_VELD,
+    ],
+    hooks: { naamWeergave: naamMetToestand },
   },
   {
     id: "data-store",
@@ -336,7 +344,8 @@ const elementTypes = [
     icoon: "gedrag-object",
     shape: "bpmn-datastore",
     resizebaar: false,
-    properties: [],
+    properties: [DATA_TYPE_VELD, DATA_TOESTAND_VELD],
+    hooks: { naamWeergave: naamMetToestand },
   },
   {
     id: "pool",
@@ -447,9 +456,13 @@ const elementTypes = [
     ],
     // EA: een Dependency/Association met eigen stereotype («toekomst») tussen
     // activiteit en gegevens komt hier binnen; het stereotype staat op de lijn.
-    properties: [{ key: "stereotype", label: "stereotype", datatype: "string", placeholder: "bijv. toekomst" }],
+    properties: [
+      { key: "stereotype", label: "stereotype", datatype: "string", placeholder: "bijv. toekomst" },
+      DATA_RICHTING_VELD,
+    ],
     edgePresentatie: { lijn: "dash-4-4", vorm: "recht", kleur: "#94a3b8", markerEnd: "pijl-open" },
     hooks: {
+      edgePresentatie: dataAssociatiePresentatie,
       edgeLabels: (conn) =>
         conn?.data?.stereotype ? { kaal: [{ zijde: "midden", delen: [{ tekst: `«${conn.data.stereotype}»`, soort: "constraint" }] }] } : {},
     },
@@ -491,8 +504,9 @@ export const bpmnMotorDiagramType = {
   label: "BPMN",
   // Profielversie (STUDIO.md "Profielversie in het project"). 1.1.0 (13-11, Simulatie):
   // signaalnaam, filter en eenPerZaak op events, kandidaatgroep op gebruikerstaken — alleen
-  // velden erbij, dus minor.
-  versie: "1.1.0",
+  // velden erbij, dus minor. 1.2.0 (15-11): type, rol en toestand op data-object/-store,
+  // richting "lezen en schrijven" op de data-associatie.
+  versie: "1.2.0",
   // Beschrijving: wat de EA-import vóór 2026-10-12 als "notes" bewaarde → M3 data.beschrijving.
   oudeBeschrijvingSleutels: ["notes"],
   style: "uml-klassiek",

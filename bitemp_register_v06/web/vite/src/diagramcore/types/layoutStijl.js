@@ -48,8 +48,12 @@ export const STANDAARD_OMGEKEERD = ["generalisatie", "specialisatie", "subtype",
  */
 export const AARD_CONNECTOR = ["stroom", "specialisatie", "realisatie", "bericht", "associatie", "afhankelijkheid", "toewijzing", "insluiting", "annotatie"];
 
-/** Aard van een knoop-ElementType: begin (InitialNode, StartEvent), eind (FinalNode, EndEvent), baan (partitie, lane). */
-export const AARD_ELEMENT = ["begin", "eind", "baan"];
+/**
+ * Aard van een knoop-ElementType: begin (InitialNode, StartEvent), eind (FinalNode, EndEvent), baan
+ * (partitie, lane), gegevens (een type dat data draagt: cm-entiteit, UML-klasse, MIM-objecttype,
+ * ERD-entiteit; Mark 15-11 — het type van een BPMN-data-object wijst naar zo'n element).
+ */
+export const AARD_ELEMENT = ["begin", "eind", "baan", "gegevens"];
 
 /** Standaard leesrichting per connector-aard; de rest telt gewoon mee ("mee"). */
 export const STANDAARD_VOLGORDE = Object.freeze({

@@ -14,6 +14,11 @@ De single source of truth voor het nummer is `package.json` `"version"`.
   staat. **Versies per object**: elke stap die een object raakt is een versie; gewijzigde velden geel; oude
   versies bekijken.
 
+- **BPMN-data-object met een type** (Mark 15-11): het type wijst naar een element in een taal die gegevens draagt
+  (M3-aard `gegevens`: cm-entiteit, UML-klasse, MIM-objecttype, ERD-entiteit); rol invoer/uitvoer (Data Input /
+  Data Output, met pijltje), toestand (dataState, onder de naam als *[ingediend]*); op de data-associatie
+  "lezen en schrijven" (pijl aan beide kanten). Profielversies: BPMN 1.2.0; canoniek, puur-UML, MIM, ERD 1.1.0.
+
 ### Opgelost
 - **Donker thema** (Mark 15-11): de naam onder een BPMN-data-object of -data store (en de band van een pool of
   lane) was op het donkere canvas niet te lezen. Tekst op het canvas zelf gebruikt nu het token

@@ -166,6 +166,11 @@ const dataObject = figuurMetNaam(30, (ctx) => {
     vorm("path", { d: "M20 2 V10 H28", fill: "none", stroke: k, "stroke-width": 1.5, "stroke-linejoin": "round" }),
   ];
   if (ctx.element?.data?.verzameling) uit.push(vorm("path", { d: "M11 27 V33 M15 27 V33 M19 27 V33", fill: "none", stroke: k, "stroke-width": 1.6, "stroke-linecap": "round" }));
+  // Data Input (open pijltje) en Data Output (dicht pijltje) linksboven (BPMN; Mark 15-11).
+  const rol = ctx.element?.data?.rol;
+  if (rol === "invoer" || rol === "uitvoer") {
+    uit.push(vorm("path", { d: "M5 8 H10 V5 L15 10 L10 15 V12 H5 Z", fill: rol === "uitvoer" ? k : ctx.thema.vulling, stroke: k, "stroke-width": 1.2, "stroke-linejoin": "round", "data-dc-rol": rol }));
+  }
   return uit;
 });
 

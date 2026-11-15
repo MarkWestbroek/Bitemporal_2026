@@ -5,6 +5,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { BPMN_SHAPETYPES } from "./vormen.js";
+import { DATA_TYPE_VELD, DATA_ROL_VELD, DATA_TOESTAND_VELD, naamMetToestand, dataAssociatiePresentatie } from "./dataVelden.js";
 import { tekenbareVorm } from "../../diagramcore/types/shapeType.js";
 import { bouwVoorkomen, tekenVoorkomen, basisVanPalet } from "../../diagramcore/tekenaar/voorkomen.js";
 import { maakPalet } from "../../diagramsvg/thema.js";
@@ -89,6 +90,23 @@ test("data-object en data store: figuur bovenaan, naam eronder binnen de doos; v
   assert.equal(v.omtrek.kinderen.length, 3);
   const s = teken("bpmn-datastore", el("data-store", "Register"), { id: "data-store", shape: "bpmn-datastore" });
   assert.equal(s.omtrek.kinderen[1].tag, "ellipse");
+});
+
+test("data-object (15-11): pijltje voor Data Input (open) en Data Output (dicht); de toestand onder de naam; lezen en schrijven = pijl aan twee kanten", () => {
+  const dataType = { id: "data-object", shape: "bpmn-data", resizebaar: false, properties: [DATA_TYPE_VELD, DATA_ROL_VELD, DATA_TOESTAND_VELD], hooks: { naamWeergave: naamMetToestand } };
+  const pijl = (r) => JSON.stringify(r.omtrek).match(/"data-dc-rol":"(\w+)"/)?.[1] || "";
+  assert.equal(pijl(teken("bpmn-data", el("data-object", "Aanvraag", { rol: "invoer" }), dataType)), "invoer");
+  assert.equal(pijl(teken("bpmn-data", el("data-object", "Beschikking", { rol: "uitvoer" }), dataType)), "uitvoer");
+  assert.equal(pijl(teken("bpmn-data", el("data-object", "Intern"), dataType)), "", "intern: geen pijltje");
+  // De toestand (dataState) achter de naam; zonder toestand de gewone naam.
+  // De naam breekt af in het smalle vak: "Aanvraag" en "[ingediend]" op twee regels.
+  assert.match(teken("bpmn-data", el("data-object", "Aanvraag", { toestand: "ingediend" }), dataType).tekst, /\["Aanvraag"\].*\["\[ingediend\]"\]/);
+  assert.equal(naamMetToestand(el("data-object", "Aanvraag")), undefined);
+  assert.equal(naamMetToestand(el("data-store", "Zaakregister", { toestand: "open" })), "Zaakregister [open]");
+  // Het type wijst naar een element met aard "gegevens"; lezen en schrijven = ook een pijl aan het begin.
+  assert.equal(DATA_TYPE_VELD.aard, "gegevens");
+  assert.deepEqual(dataAssociatiePresentatie({ data: { richting: "beide" } }), { markerStart: "pijl-open" });
+  assert.deepEqual(dataAssociatiePresentatie({ data: {} }), {});
 });
 
 test("lane en pool: naamstrook boven resp. staande band links; leden ernaast", () => {

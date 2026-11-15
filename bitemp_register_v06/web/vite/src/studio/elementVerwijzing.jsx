@@ -75,22 +75,27 @@ const selectStijl = {
   color: "var(--s-fg, #1e293b)",
 };
 
-/** Picker profiel → element; waarde {profielId, elementId}. */
+/**
+ * Picker profiel → element; waarde {profielId, elementId}. Met `regel.aard` (M3-aard, bv.
+ * "gegevens" voor het type van een BPMN-data-object, 15-11) alleen profielen en elementen
+ * waarvan het elementtype die aard heeft.
+ */
 function ElementVerwijzingEditor({ regel, waarde, onChange }) {
   const ref = waarde || {};
+  const pastType = (profiel, el) => {
+    const t = getTypeVan(profiel, el);
+    return !t?.isConnector && (!regel.elementTypes || regel.elementTypes.includes(el.elementType)) && (!regel.aard || t?.aard === regel.aard);
+  };
   const profielen = getProfieltypen().filter(
-    (p) => p.useStore?.getState?.().elements && (!regel.profielen || regel.profielen.includes(p.id))
+    (p) =>
+      p.useStore?.getState?.().elements &&
+      (!regel.profielen || regel.profielen.includes(p.id)) &&
+      (!regel.aard || Object.values(p.useStore.getState().elements).some((el) => pastType(p, el)))
   );
   const profiel = ref.profielId ? getProfieltype(ref.profielId) : null;
-  const kandidaten = profiel
-    ? Object.values(profiel.useStore.getState().elements || {}).filter(
-        (el) =>
-          !getTypeVan(profiel, el)?.isConnector &&
-          (!regel.elementTypes || regel.elementTypes.includes(el.elementType))
-      )
-    : [];
+  const kandidaten = profiel ? Object.values(profiel.useStore.getState().elements || {}).filter((el) => pastType(profiel, el)) : [];
   return (
-    <div style={{ flex: 1, minWidth: 0, display: "flex", gap: 4 }}>
+    <div style={{ flex: 1, minWidth: 0, display: "flex", gap: 4 }} data-testid={`element-verwijzing-${regel.key}`}>
       <select
         value={ref.profielId || ""}
         title="profiel"
