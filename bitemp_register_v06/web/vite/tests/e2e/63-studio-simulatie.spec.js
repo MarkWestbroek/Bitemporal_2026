@@ -184,3 +184,46 @@ test("donker thema: de tekening volgt het thema, namen buiten de vorm zijn licht
   expect(label).not.toBe("rgb(15, 23, 42)");
   await foto(page, "7-donker");
 });
+
+test("data-object met een type toont het object van de run: versie, geel bij een wijziging, toets op de toestand, klik toont het object (Mark 15-11)", async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem("studio05-hints-gezien", JSON.stringify({ gezien: {}, uit: true })));
+  await openStudio(page);
+  // Het cm: Aanvraag (id "Aanvraag", zoals het type van het data-object in het voorbeeld) met het subtype van het scenario-object.
+  await zetModel(page, { profielId: "diagram05", diagramId: "d_cm", diagramNaam: "Aanvragen", open: false, elementen: [
+    { id: "Aanvraag", naam: "Aanvraag", type: "entiteit", pos: { x: 100, y: 100 } },
+    { id: "e_gpk", naam: "GehandicaptenparkeerkaartAanvraag", type: "entiteit", pos: { x: 100, y: 300 } },
+    { id: "g1", type: "generalisatie", source: "e_gpk", target: "Aanvraag" },
+  ] });
+  await naar(page, "Simulatie");
+  await page.getByTestId("sim-laad-gpk").click();
+  await expect(page.getByTestId("sim-scenario")).toHaveValue(/GPK 4: toegekend/);
+  // Het data-object "Aanvraag [ingediend]" boven Ontvankelijkheid toetsen staat in het voorbeeld (Mark 15-11).
+  const DO = "bp_1794782741400_1";
+  const toets = (toestand) =>
+    page.evaluate(async ({ DO, toestand }) => {
+      const reg = await import(location.origin + "/viz/react/src/studio/profieltypeRegistry.js");
+      const st = reg.getProfieltype("bpmnMotor05").useStore.getState();
+      st.updateElement(DO, { data: { ...st.elements[DO].data, toestand } });
+    }, { DO, toestand });
+  await page.getByTestId("sim-start").click();
+  const dobj = getekend(page, DO);
+  await expect(dobj).toHaveAttribute("data-sim-object", "aanvraag-1");
+  await expect(dobj).toHaveAttribute("data-sim-gewijzigd", "");
+  await expect(dobj).toHaveAttribute("data-sim-klopt", "true");
+  await expect(dobj.getByTestId("sim-dataobject-versie")).toHaveText("v1");
+  // Een stap die het object niet raakt: niet meer geel.
+  await page.getByTestId("sim-stap").click();
+  await expect(dobj).not.toHaveAttribute("data-sim-gewijzigd", "");
+  // Klik: het object in de cm-vorm onder het diagram.
+  await dobj.click();
+  await expect(page.getByTestId("sim-dataobject-object")).toContainText("aanvraag-1");
+  // Zet het model een andere toestand op het data-object, dan klopt het niet meer (rood gestippeld).
+  await toets("beoordeeld");
+  await expect(dobj).toHaveAttribute("data-sim-klopt", "false");
+  // Doorlopen tot het einde: de aanvraag heeft versies erbij (terug naar Aanvraag oppakken om het te zien).
+  await page.getByTestId("sim-loop").click();
+  await expect(page.getByTestId("sim-stand")).toHaveText(/^Klaar/);
+  await page.getByTestId("sim-processen").getByRole("button", { name: "Aanvraag oppakken" }).click();
+  await expect(dobj.getByTestId("sim-dataobject-versie")).not.toHaveText("v1");
+  await foto(page, "8-dataobject");
+});

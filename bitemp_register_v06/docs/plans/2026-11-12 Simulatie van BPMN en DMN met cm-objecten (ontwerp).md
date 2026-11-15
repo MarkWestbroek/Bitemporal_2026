@@ -1032,8 +1032,18 @@ en data store het type (bestaande `element-verwijzing` met `regel.aard`), de rol
 de toestand (onder de naam); op de data-associatie de richting "lezen en schrijven" (Mark: bestaat in BPMN
 als twee associaties). BPMN zelf: `dataObject` + `dataObjectReference`, `itemSubjectRef`, `isCollection`,
 `dataState`; `dataInputAssociation` = lezen, `dataOutputAssociation` = schrijven; Data Input / Data Output
-zijn de parameters van het proces (ioSpecification). Nog te doen: stap 3 en 4 (simulatie) en de
-XML-export/-import (TRANSFORMATIES).
+zijn de parameters van het proces (ioSpecification). Nog te doen: stap 4 en de XML-export/-import
+(TRANSFORMATIES).
+
+**Gebouwd (15-11), stap 3:** het data-object in de tekening van de simulatie toont het object van de run
+(type = naam van het type of van een subtype), met versie, geel bij een wijziging in de laatste stap, rood
+gestippeld als de toestand niet klopt met de modeltoestand, en een klik toont het object onder het diagram
+(`simulatie/dataObjecten.js`). Wat opviel: in GPK 4 blijft de status van de aanvraag de hele run *ingediend*;
+de status leeft nu op de Zaak (extern), niet op het object. Dat hoort bij het Zaak-model van Mark.
+Nog open in stap 4: de associaties toetsen (schrijft een taak een object zonder lijn met schrijven, en
+omgekeerd), het data-object met rol invoer als startobject (type van het scenario-object), en het object in de
+vorm van de cm-entiteit met de GE's erin (Mark 15-11: "die vorm kan nuttig zijn"), met waarden in plaats van
+typen.
 
 **Tracering (Mark 15-11, gebouwd):** het type ís de tracering; een losse dependency zou hetzelfde feit
 dubbel bewaren. Daarom een **afgeleide koppeling** «traceert naar» (M3 `koppelsoort` op de eigenschap), als

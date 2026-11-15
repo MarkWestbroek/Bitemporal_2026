@@ -23,6 +23,15 @@ De single source of truth voor het nummer is `package.json` `"version"`.
   kruisverbanden naar een andere taal: zo zet je de cm-Aanvraag naast het data-object, met de lijn erbij.
   En daar verder: vanaf de cm-Aanvraag komen ook de andere cm-entiteiten erbij. Een dubbelklik op het data-object
   zonder eigen *verwijst naar* opent het cm-diagram waarop zijn type staat. De titel van het venster noemt de naam.
+- **Simulatie: het data-object toont het object van de run** (Mark 15-11): bij een data-object met een type (ook
+  via een subtype) een kenmerk met de versie, geel als het object net veranderde, rood gestippeld als de
+  toestand niet klopt met die op het model; een klik toont het object onder het diagram.
+- **GPK-voorbeeld: layout van Mark** (15-11): *GPK-voorbeeld laden* geeft nu Marks uitlijning van Zaak behandelen
+  (bogen) en data-objecten in alle processen: Aanvraag [ingediend] (invoer, type cm-Aanvraag) bij
+  Ontvankelijkheid toetsen en Documenten koppelen, Zaak en Zaak [Ontvangen] (uitvoer) bij de servicetaken,
+  Aanvraag bij Beoordeel aanvraag en Aanvraag beoordelen, Beschikking (uitvoer) bij opstellen en afwijzen.
+  Zaak en Beschikking nog zonder type: dat komt met het Zaak/Beslissing-model. De losse berichtenlijn van
+  Vraag aanvulling bij klant naar de pool Klantportaal (per ongeluk ontstaan) is eruit.
 
 ### Opgelost
 - **Donker thema** (Mark 15-11): de naam onder een BPMN-data-object of -data store (en de band van een pool of

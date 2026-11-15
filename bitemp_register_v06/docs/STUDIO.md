@@ -2318,6 +2318,14 @@ dag vervangen).
   die stap was, met de velden van die stap gemarkeerd; *nu* gaat terug. De run zelf blijft staan (dat is Terug of
   een klik in het log). Geen kopieën per stap: de versie is het log tot en met die stap, opnieuw afgespeeld
   (`store.js`, `versiesVan`). Correctie en ongedaanmaking (formele tijd) doet de simulatie niet.
+- **Data-objecten in de tekening (15-11, ontwerp §11.8 stap 3):** een data-object of data store met een type
+  (zie *BPMN: het data-object met een type*) toont het object van de run dat bij dat type hoort: zijn type
+  heeft de naam van het type of van een subtype (generalisatie, ook over meer stappen; de
+  GehandicaptenparkeerkaartAanvraag hoort bij het data-object *Aanvraag*). Rechtsboven een kenmerk met de
+  versie (`v5`, `×2` bij meer objecten); geel omrand als het object in de laatste stap veranderde; rood
+  gestippeld als de toestand van het object (`state`/`status`) niet klopt met de toestand op het model
+  (*[ingediend]*). Een klik toont het object (cm-vorm, versies) onder het diagram; de tooltip noemt id, type,
+  versie en toestand. Puur: `simulatie/dataObjecten.js` (`objectenBijDataObjecten`, `typeNamen`). E2E: spec 63.
 - **Token**: een rand en een bolletje op het element waar het token staat (indigo = kan verder, oranje = wacht
   op invoer, cyaan = wacht op een bericht of ander proces, rood = vastgelopen); waar het geweest is blijft een
   dunne cyaan rand staan. Op het BPMN-canvas in Modelleren staat het token alleen als je **ook op het
