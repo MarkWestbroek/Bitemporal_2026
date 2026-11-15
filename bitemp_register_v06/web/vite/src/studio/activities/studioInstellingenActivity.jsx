@@ -32,6 +32,7 @@ import ExportInstellingen from "../ExportInstellingen.jsx";
 import SamenwerkenInstellingen from "../SamenwerkenInstellingen.jsx";
 import SneltoetsenInstellingen from "../SneltoetsenInstellingen.jsx";
 import useStudioStore from "../useStudioStore";
+import { useMagUuidsZien } from "../uuidZichtbaar.js";
 
 /** Taakbalk-voorkeuren: eigen tooltips (naam + uitleg) aan/uit. */
 function TaakbalkInstellingen() {
@@ -675,6 +676,8 @@ function ModelleerVoorkeuren() {
   const relatiesMeeTerug = useStudioStore((s) => s.relatiesMeeTerug);
   const relatiesPaneelOpen = useStudioStore((s) => s.relatiesPaneelOpen);
   const opRaster = useStudioStore((s) => s.opRaster);
+  const toonUuids = useStudioStore((s) => s.toonUuids);
+  const magUuids = useMagUuidsZien();
   const zet = useStudioStore((s) => s.zetVoorkeur);
   const rij = { display: "flex", flexDirection: "row", alignItems: "flex-start", gap: 8, padding: "4px 0", fontSize: 13 };
   const uitleg = { display: "block", color: "var(--s-fg-muted, #64748b)", fontSize: 12 };
@@ -701,6 +704,15 @@ function ModelleerVoorkeuren() {
           <span style={uitleg}>Ook aan/uit met de knop # in de taakbalk Uitlijnen of via rechtsklik op het canvas.</span>
         </span>
       </label>
+      {magUuids && (
+        <label style={rij}>
+          <input type="checkbox" checked={toonUuids} onChange={(e) => zet("toonUuids", e.target.checked)} data-testid="voorkeur-toon-uuids" />
+          <span>
+            Uuid's tonen in de eigenschappen (beheer)
+            <span style={uitleg}>De vaste identiteit van elementen en velden, alleen-lezen. De Studio kent hem toe zodra er een naam is (projectformaat 4); samenvoegen en toegangsregels koppelen erop.</span>
+          </span>
+        </label>
+      )}
     </div>
   );
 }

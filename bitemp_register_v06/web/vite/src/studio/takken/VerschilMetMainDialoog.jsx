@@ -121,9 +121,35 @@ function soortLabel(knoop) {
     const types = getProfieltype(profielId)?.descriptor?.elementTypes || [];
     return types.find((t) => t.id === elementType)?.label || elementType;
   };
+  if (knoop.soort === "eenheid" && v.soort === "veld") return v.compartiment ? "veld" : "eigenschap";
   if (knoop.soort === "eenheid") return (v.soort === "element" && typeVan(v.profielId, v.elementType)) || SOORT_LABEL[v.soort] || v.soort;
   if (knoop.context) return typeVan(knoop.context.profielId, knoop.context.elementType) || "element";
   return knoop.soort === "map" ? "map" : "";
+}
+
+/**
+ * Naam van een veld (stap 2b): het label van de eigenschap uit het profiel als dat er is
+ * (`data.<key>` → PropertyType.label), anders de sleutel; een compartiment en de plaatsing leesbaar.
+ */
+function veldLabel(v) {
+  const veld = String(v.id);
+  const et = (getProfieltype(v.profielId)?.descriptor?.elementTypes || []).find((t) => t.id === v.elementType);
+  // Een veld in een compartiment (bv. "veld1" in "velden"): zijn eigen naam, met het compartiment erbij.
+  if (v.compartiment) {
+    const c = (et?.compartments || []).find((x) => x.id === v.compartiment);
+    return `${v.naam} · ${c?.label || v.compartiment}`;
+  }
+  if (veld.startsWith("data.")) {
+    const key = veld.slice(5);
+    return (et?.properties || []).find((p) => p.key === key)?.label || key;
+  }
+  if (veld.startsWith("compartiment.")) {
+    const id = veld.slice(13);
+    const c = (et?.compartments || []).find((x) => x.id === id);
+    return `${c?.label || id} (compartiment)`;
+  }
+  if (veld === "map") return "map (plaatsing)";
+  return veld;
 }
 
 /** Open het diagram, of bij een element het eerste diagram waarop het in deze branch staat. */
@@ -206,7 +232,9 @@ function KnoopRij({ knoop, diepte, keuze, zetKeuze, heeftMap, dicht, wisselDicht
         {v && <span title={STATUS_UITLEG[v.status]} style={{ display: "inline-block", width: 8, height: 8, borderRadius: 4, background: KLEUR[v.status], flex: "none" }} />}
         <span style={{ opacity: 0.6, width: 110, flex: "none", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={soortLabel(knoop)} data-testid={`soort-${knoop.knoopId}`}>{soortLabel(knoop)}</span>
         <span style={{ flex: 1, minWidth: 0 }}>
-          {knoop.soort === "eenheid" && (v.soort === "element" || v.soort === "diagram") ? (
+          {knoop.soort === "eenheid" && v.soort === "veld" ? (
+            <span>{veldLabel(v)}</span>
+          ) : knoop.soort === "eenheid" && (v.soort === "element" || v.soort === "diagram") ? (
             <button type="button" onClick={() => openRegel(v) && sluiten()} title="Openen" style={{ ...knop, border: 0, padding: 0, textDecoration: "underline" }}>
               {knoop.label}
             </button>

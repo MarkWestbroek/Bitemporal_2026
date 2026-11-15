@@ -195,7 +195,7 @@ test("POST /samenvoegen: een conflict geeft geen ops", async () => {
   const op = (zet) => ({ volgnummer: 1, store: "model:diagram05", op: "patchElementen", args: [{ zet, wis: [] }] });
   const r = await post("/samenvoegen", { basis: { profiel: werkbestand }, tak: { profiel: werkbestand, ops: [op({ E: el("E", "E'") })] }, main: { profiel: werkbestand, ops: [op({ E: el("E", "E(b)") })] } });
   const uit = await r.json();
-  assert.deepEqual(uit.conflicten, [{ soort: "element", profielId: "diagram05", id: "E" }]);
+  assert.deepEqual(uit.conflicten, [{ soort: "element", profielId: "diagram05", id: "E", velden: ["naam"] }]);
   assert.deepEqual(uit.opsMain, []);
   assert.deepEqual(uit.opsTak, []);
   assert.equal(uit.basis, null);
@@ -216,7 +216,7 @@ test("POST /samenvoegen met keuze: conflict beslist, niet gekozen blijft in de b
   assert.equal(r.status, 200);
   let uit = await r.json();
   assert.deepEqual(uit.conflicten, []);
-  assert.deepEqual(uit.opgelost, [{ soort: "element", profielId: "diagram05", id: "E", gekozen: "tak" }]);
+  assert.deepEqual(uit.opgelost, [{ soort: "element", profielId: "diagram05", id: "E", velden: ["naam"], gekozen: "tak" }]);
   assert.equal(uit.basis.profielen.diagram05.elements.E.naam, "E'");
   assert.equal(uit.basis.profielen.diagram05.elements.F.naam, "F");
   assert.deepEqual(uit.opsTak, [], "de branch had E' al en houdt F'");

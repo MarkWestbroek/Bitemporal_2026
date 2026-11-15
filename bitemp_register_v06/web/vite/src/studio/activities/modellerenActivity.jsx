@@ -19,6 +19,7 @@ import React, { Fragment, useEffect, useState, useSyncExternalStore } from "reac
 import { create } from "zustand";
 import { menuBus } from "../menuBus";
 import { registreerMeldContext } from "../meldContext.js";
+import { zetUuidContext, planUuidAanvulling } from "../uuidAanvulling.js";
 import { veldCompartimenten } from "../assistent/assistentKern.js";
 import { vraagNaam, vraagBevestiging, vraagKeuze, toonMelding } from "../naamDialog.jsx";
 import { ELEMENT_REF_MIME } from "../../diagramcore/canvas/externDrop.js";
@@ -965,6 +966,14 @@ registreerMeldContext("modelleren", () => {
     uit.pad = meldPad(s.mapSelectie);
   }
   return uit;
+});
+
+// Projectformaat 4 (15-11): de uuid-aanvulling werkt in het open project. Stam = MAIN van een
+// branch (zelfde afgeleide uuid's), anders het project zelf; met alleen leesrecht niets aanvullen.
+const uuidContextVan = (p) => ({ stam: p?.herkomst?.ouderProject || p?.id || null, magSchrijven: p?.recht !== "lezen" });
+zetUuidContext(uuidContextVan(useModellerenStore.getState().project));
+useModellerenStore.subscribe((s, vorige) => {
+  if (s.project !== vorige.project) zetUuidContext(uuidContextVan(s.project));
 });
 
 // Projectsync (plan 2026-10-07, stap 2): structuuracties als operaties; de
@@ -3790,7 +3799,7 @@ function exporteerProject() {
  * Gedeeld door JSON-import en "Van server ophalen". Onbekende profielen worden
  * overgeslagen (de aanroeper heeft dat al gemeld).
  */
-function pasProjectToe(data, { serverVersie = null, laatsteVolgnummer = 0, herkomst = null } = {}) {
+function pasProjectToe(data, { serverVersie = null, laatsteVolgnummer = 0, herkomst = null, recht = null } = {}) {
   // Projectwissel eerst: zetProject laadt de werkruimte (tabs, open mappen) van
   // dit project uit zijn eigen sleutel. Bestaat die nog niet, dan zijn de tabs
   // uit een v1/v2-werkbestand de eerste werkruimte.
@@ -3805,6 +3814,8 @@ function pasProjectToe(data, { serverVersie = null, laatsteVolgnummer = 0, herko
     laatsteSync: null,
     // Branch (afgeleid project, 09-11): {ouderProject, basisVolgnummer, mapId, …} of null.
     herkomst,
+    // Jouw recht op het serverproject ("lezen" | "schrijven" | "beheren"; null = lokaal/onbekend).
+    recht,
     ouderNaam: null,
   });
   // Een snapshot laden is geen reeks handelingen: niets in de outbox, en de
@@ -3849,6 +3860,8 @@ function pasProjectToe(data, { serverVersie = null, laatsteVolgnummer = 0, herko
   // Boomregel (BOOM-1): wat op een geplaatst diagram staat, in die map (migratie van
   // bestaande projecten; idempotent, dus bij een tweede client niets te doen).
   ruimNietIngedeeldOp();
+  // Projectformaat 4: ontbrekende uuid's aanvullen (afgeleid, dus ook idempotent).
+  planUuidAanvulling();
 }
 
 /** Alles leeg en een nieuwe projectidentiteit (na "parkeren"). */
@@ -3857,7 +3870,7 @@ function leegProject({ naam = STANDAARD_PROJECTNAAM } = {}) {
   _geladenProfielVersies = {};
   // Eerst naar het nieuwe project, dan leegmaken: andersom zou het leegmaken in de werkkopie
   // van het vorige project landen (TAB-1, 11-11).
-  useModellerenStore.getState().zetProject({ id: nieuwProjectId(), naam, serverVersie: null, laatsteVolgnummer: 0, totVolgnummer: 0, liveSync: true, laatsteSync: null, herkomst: null, ouderNaam: null });
+  useModellerenStore.getState().zetProject({ id: nieuwProjectId(), naam, serverVersie: null, laatsteVolgnummer: 0, totVolgnummer: 0, liveSync: true, laatsteSync: null, herkomst: null, ouderNaam: null, recht: null });
   zonderVastleggen(() => {
     for (const p of getProfieltypen()) {
       if (p.klassiek) continue;
@@ -4347,7 +4360,7 @@ async function herlaadSnapshotStil() {
     const uit = normaliseerProjectData(rec.inhoud);
     if (!uit.ok) return;
     const data = { ...uit.data, project: { id: rec.id, naam: rec.naam } };
-    pasProjectToe(data, { serverVersie: rec.versie, laatsteVolgnummer: rec.tot_volgnummer || 0, herkomst: rec.herkomst ?? null });
+    pasProjectToe(data, { serverVersie: rec.versie, laatsteVolgnummer: rec.tot_volgnummer || 0, herkomst: rec.herkomst ?? null, recht: rec.recht ?? null });
     await haalBinnen({ inclusiefEigen: true });
     useModellerenStore.getState().zetProject({ laatsteSync: new Date().toISOString() });
     menuBus.emit("menu:ververs");
@@ -4396,10 +4409,12 @@ async function openServerProject(id) {
     if (onbekend.length) toonMelding({ tekst: `Profielen onbekend in deze Studio: ${onbekend.join(", ")}.
 Niet te zien of te bewerken hier, maar ze blijven bewaard en gaan ongewijzigd mee terug naar de server.` });
     meldProfielVersies(data);
-    pasProjectToe(data, { serverVersie: rec.versie, laatsteVolgnummer: rec.tot_volgnummer || 0, herkomst: rec.herkomst ?? null });
+    pasProjectToe(data, { serverVersie: rec.versie, laatsteVolgnummer: rec.tot_volgnummer || 0, herkomst: rec.herkomst ?? null, recht: rec.recht ?? null });
     // Snapshot + wat er daarna in het operatielog kwam (ook eigen oude operaties).
     const n = await haalBinnen({ inclusiefEigen: true });
     useModellerenStore.getState().zetProject({ laatsteSync: new Date().toISOString() });
+    // Ook wat er ná de snapshot in het log kwam (van een oudere Studio) krijgt zijn uuid's.
+    planUuidAanvulling();
     if (n) menuBus.emit("menu:ververs");
     return true;
   } catch (e) {

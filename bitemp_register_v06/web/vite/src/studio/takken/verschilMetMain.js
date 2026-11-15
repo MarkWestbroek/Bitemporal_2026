@@ -44,7 +44,7 @@ import { gelijk } from "../sync/operaties.js";
  * @typedef {{soort: "element"|"diagram"|"map"|"kruisverband"|"bundel", profielId: string|null, id: string,
  *            naam: string, status: VerschilStatus, velden: string[], inScope: boolean,
  *            kant?: "tak"|"main", sleutel: string, mapId: string|null, ouderId: string|null,
- *            elementType?: string}} Verschil
+ *            elementType?: string, veldDetails?: {veld: string, status: VerschilStatus, label?: string, compartiment?: string}[]}} Verschil
  *
  * Voor de keuze per eenheid (branch terugmergen stap 2, 14-11):
  *   - `sleutel`: vaste naam van de eenheid (`verschilSleutel`), ook de sleutel in `keuze` bij
@@ -52,11 +52,16 @@ import { gelijk } from "../sync/operaties.js";
  *   - `mapId`: de map waarin de eenheid in de branch ligt (anders op MAIN, anders in de basis);
  *   - `ouderId`: bij een element de bron (relatie) of de boomouder, om het in de keuzeboom onder
  *     zijn ouder te hangen; anders null;
+ *   - `veldDetails` (stap 2b): bij een element dat in alle drie bestaat, per veld (`veldenVan`) de
+ *     status. Het element is alleen een conflict als hetzelfde veld aan beide kanten anders
+ *     veranderde; verschillende velden aan beide kanten is "gewijzigd" (de MAIN-velden komen mee).
+ *     De plaatsing staat erin als veld `map`;
  *   - `elementType`: bij een element het type uit het profiel (M2), zodat de boom "entiteit",
  *     "gegevenselement", "domein" … kan tonen in plaats van "element" (Mark 14-11).
  */
 
 const leeg = Object.freeze({});
+const isObject = (v) => !!v && typeof v === "object" && !Array.isArray(v);
 
 /**
  * Vaste sleutel van een eenheid: `<soort>:<profielId>:<id>` (profielId leeg bij map en
@@ -65,6 +70,125 @@ const leeg = Object.freeze({});
  * @param {{soort: string, profielId?: string|null, id: string}} v
  */
 export const verschilSleutel = (v) => `${v.soort}:${v.profielId ?? ""}:${v.id}`;
+
+/** Type van een compartiment (sleuteldeel). */
+const compType = (c, i) => String(c?.compartmentType ?? c?.id ?? i);
+
+/**
+ * Uuid per (compartiment, veldnaam) uit een of meer versies van een element: zo krijgt een veld
+ * zonder uuid dezelfde sleutel als zijn tegenhanger die er (na een V3-export) wel een heeft.
+ * @param {...any} elementen
+ * @returns {Map<string, string>}
+ */
+export function uuidPerVeldnaam(...elementen) {
+  const kaart = new Map();
+  for (const el of elementen) {
+    (Array.isArray(el?.compartimenten) ? el.compartimenten : []).forEach((c, i) => {
+      for (const v of Array.isArray(c?.velden) ? c.velden : []) {
+        const naam = String(v?.naam || "").trim();
+        if (naam && v?.data?.uuid && !kaart.has(`${compType(c, i)}\u0000${naam}`)) kaart.set(`${compType(c, i)}\u0000${naam}`, String(v.data.uuid));
+      }
+    });
+  }
+  return kaart;
+}
+
+/**
+ * Lijn de velden van drie versies van een element uit (basis, tak, MAIN): veld-object → sleutel.
+ * Eerst op uuid (ook via een naamgenoot, `uuidPerVeldnaam`), dan op naam. Een veld zonder uuid
+ * met een naam die de basis niet kent, staand op dezelfde plek als een basisveld van hetzelfde
+ * type dat in deze versie niet meer voorkomt, is een **hernoeming** van dat basisveld en krijgt
+ * zijn sleutel (Mark 15-11: "ik heb alleen hernoemd" — zonder uuid leek dat op weg + nieuw).
+ * @returns {Map<any, string>}
+ */
+export function lijnVeldenUit(b, t, m) {
+  const kaart = uuidPerVeldnaam(m, t, b);
+  const uit = new Map();
+  const comps = (el) => (Array.isArray(el?.compartimenten) ? el.compartimenten : []);
+  const naamVan = (v) => String(v?.naam || "").trim();
+  const sleutelVan = (ct, v, j) => {
+    const naam = naamVan(v);
+    const uuid = v?.data?.uuid || (naam ? kaart.get(`${ct}\u0000${naam}`) : null);
+    return uuid ? `uuid:${uuid}` : naam ? `naam:${naam}` : `pos:${j}`;
+  };
+  /** @type {Map<string, {veld: any, sleutel: string, naam: string}[]>} */
+  const basis = new Map();
+  comps(b).forEach((c, i) => {
+    const ct = compType(c, i);
+    const lijst = (Array.isArray(c?.velden) ? c.velden : []).map((v, j) => ({ veld: v, sleutel: sleutelVan(ct, v, j), naam: naamVan(v) }));
+    basis.set(ct, lijst);
+    for (const x of lijst) uit.set(x.veld, x.sleutel);
+  });
+  for (const el of [t, m]) {
+    comps(el).forEach((c, i) => {
+      const ct = compType(c, i);
+      const vanBasis = basis.get(ct) || [];
+      const basisSleutels = new Set(vanBasis.map((x) => x.sleutel));
+      const velden = Array.isArray(c?.velden) ? c.velden : [];
+      const sleutels = velden.map((v, j) => sleutelVan(ct, v, j));
+      const gebruikt = new Set(sleutels);
+      velden.forEach((v, j) => {
+        let s = sleutels[j];
+        if (!s.startsWith("uuid:") && !basisSleutels.has(s)) {
+          const kand = vanBasis[j];
+          if (kand && !gebruikt.has(kand.sleutel) && kand.veld?.fieldType === v?.fieldType) {
+            s = kand.sleutel;
+            gebruikt.add(s);
+          }
+        }
+        uit.set(v, s);
+      });
+    });
+  }
+  return uit;
+}
+
+/**
+ * De velden van een element, plat (stap 2b): elke eigenschap bovenaan (behalve `id`), elke
+ * `data.*`-sleutel apart, en per compartiment de schil (`compartiment.<type>`, zonder velden)
+ * plus elk veld apart: `compartiment.<type>/uuid:<uuid>`, of `…/naam:<naam>` zonder uuid, of
+ * `…/pos:<i>` zonder naam (een veld in aanmaak). De uuid van een veld is `data.uuid` (canoniek
+ * model, gezet bij de V3-export; besluit Mark 31-10); `uuidPerNaam` (zie `uuidPerVeldnaam`) geeft
+ * een veld zonder uuid de uuid van zijn naamgenoot in een andere versie.
+ * @param {any} el
+ * @param {Map<string, string>} [uuidPerNaam]
+ * @param {Map<any, string>|null} [uitlijning] sleutel per veld-object (`lijnVeldenUit`): gaat voor
+ * @returns {Record<string, any>}
+ */
+export function veldenVan(el, uuidPerNaam = new Map(), uitlijning = null) {
+  const uit = {};
+  if (!isObject(el)) return uit;
+  for (const [k, v] of Object.entries(el)) {
+    if (k === "id" || v === undefined) continue;
+    if (k === "data" && isObject(v)) {
+      for (const [d, w] of Object.entries(v)) if (w !== undefined) uit[`data.${d}`] = w;
+    } else if (k === "compartimenten" && Array.isArray(v)) {
+      v.forEach((c, i) => {
+        const ct = compType(c, i);
+        if (!Array.isArray(c?.velden)) { uit[`compartiment.${ct}`] = c; return; }
+        const { velden, ...schil } = c;
+        uit[`compartiment.${ct}`] = schil;
+        const gezien = new Map();
+        velden.forEach((veld, j) => {
+          const naam = String(veld?.naam || "").trim();
+          const uuid = veld?.data?.uuid || (naam ? uuidPerNaam.get(`${ct}\u0000${naam}`) : null);
+          let s = uitlijning?.get(veld) ?? (uuid ? `uuid:${uuid}` : naam ? `naam:${naam}` : `pos:${j}`);
+          const n = (gezien.get(s) || 0) + 1;
+          gezien.set(s, n);
+          if (n > 1) s = `${s}~${n}`;
+          uit[`compartiment.${ct}/${s}`] = veld;
+        });
+      });
+    } else uit[k] = v;
+  }
+  return uit;
+}
+
+/** Is dit veld (uit `veldenVan`) één veld in een compartiment? Dan `{compartiment, sleutel}`. */
+export function compartimentVeld(veld) {
+  const m = /^compartiment\.([^/]+)\/(.+)$/.exec(String(veld));
+  return m ? { compartiment: m[1], sleutel: m[2] } : null;
+}
 
 /**
  * Wijst een plaatsing naar een element (`el::<profiel>::<id>`, element als ouder in de boom)?
@@ -109,6 +233,31 @@ export function drieweg(basis, tak, main) {
   if (basis === undefined) return { status: "nieuw", velden: [] };
   if (tak === undefined) return { status: "weg", velden: [] };
   return { status: "gewijzigd", velden: verschillendeVelden(basis, tak) };
+}
+
+/**
+ * Status van een element per veld (stap 2b). null = geen verschil dat telt.
+ * @returns {{status: VerschilStatus, velden: string[], kant?: "main", veldDetails: {veld: string, status: VerschilStatus}[]}|null}
+ */
+export function perVeldStatus(b, t, m) {
+  const kaart = uuidPerVeldnaam(m, t, b);
+  const lijn = lijnVeldenUit(b, t, m);
+  const vb = veldenVan(b, kaart, lijn), vt = veldenVan(t, kaart, lijn), vm = veldenVan(m, kaart, lijn);
+  const veldDetails = [];
+  for (const veld of new Set([...Object.keys(vm), ...Object.keys(vt), ...Object.keys(vb)])) {
+    const r = drieweg(vb[veld], vt[veld], vm[veld]);
+    if (!r) continue;
+    // Een veld in een compartiment: zijn naam als label (de sleutel kan een uuid zijn).
+    const cv = compartimentVeld(veld);
+    const naam = cv ? String((vt[veld] || vm[veld] || vb[veld])?.naam || "").trim() : "";
+    veldDetails.push({ veld, status: r.status, ...(cv ? { label: naam || "(zonder naam)", compartiment: cv.compartiment } : {}) });
+  }
+  if (!veldDetails.length) return null;
+  veldDetails.sort((x, y) => x.veld.localeCompare(y.veld));
+  const vanTak = veldDetails.filter((d) => d.status !== "main");
+  if (!vanTak.length) return { status: "main", kant: "main", velden: veldDetails.map((d) => d.veld), veldDetails };
+  const status = vanTak.some((d) => d.status === "conflict") ? "conflict" : "gewijzigd";
+  return { status, velden: vanTak.map((d) => d.veld), veldDetails };
 }
 
 /** Ids van de map en al zijn submappen (in een of meer standen). */
@@ -170,8 +319,10 @@ export function verschilMetMain({ basis, tak, main, mapId = null, ouderVan = nul
       const t = standen.tak.profielen?.[pid]?.[veld] || leeg;
       const m = standen.main.profielen?.[pid]?.[veld] || leeg;
       for (const id of new Set([...Object.keys(b), ...Object.keys(t), ...Object.keys(m)])) {
-        const r = drieweg(b[id], t[id], m[id]);
+        let r = drieweg(b[id], t[id], m[id]);
         if (!r) continue;
+        // Per veld (stap 2b): alleen voor een element dat in alle drie bestaat.
+        if (soort === "element" && b[id] && t[id] && m[id]) r = perVeldStatus(b[id], t[id], m[id]) || r;
         const inScope = soort === "element"
           ? inScopeVia((st) => mapVanElement(st, pid, id))
           : inScopeVia((st) => naarMap(st, st.structuur?.plaatsing?.[`${pid}::${id}`]));
@@ -202,9 +353,14 @@ export function verschilMetMain({ basis, tak, main, mapId = null, ouderVan = nul
       const soort = isEl ? "element" : "diagram";
       const al = verschillen.find((v) => v.soort === soort && v.profielId === pid && v.id === id);
       const inScope = scope.has(naarMap(standen.basis, b[sleutel])) || scope.has(naarMap(standen.tak, t[sleutel])) || scope.has(naarMap(standen.main, m[sleutel]));
+      const mapStatus = r.status === "nieuw" || r.status === "weg" ? "gewijzigd" : r.status;
       if (al) {
-        if (!al.velden.includes("map")) al.velden = [...al.velden, "map"].sort();
+        if (r.status !== "main" || al.status === "main") {
+          if (!al.velden.includes("map")) al.velden = [...al.velden, "map"].sort();
+        }
         if (r.status === "conflict") al.status = "conflict";
+        else if (r.status !== "main" && al.status === "main") { al.status = "gewijzigd"; delete al.kant; al.velden = ["map"]; }
+        if (al.veldDetails) al.veldDetails = [...al.veldDetails.filter((d) => d.veld !== "map"), { veld: "map", status: mapStatus }].sort((x, y) => x.veld.localeCompare(y.veld));
         al.inScope = al.inScope || inScope;
       } else {
         // Alleen verplaatst: status volgt de plaatsing; nieuw/weg van een plaatsing is een verplaatsing.

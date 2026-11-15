@@ -167,3 +167,27 @@ test("schuifje links (↶): keuze 'terug' in de POST, telt niet als gekozen, kno
   expect(vraag).not.toContain("gekozen wijziging(en) gaan naar MAIN");
   expect(bodies[0].keuze).toEqual({ "element:diagram05:E": false, "element:diagram05:D": "terug" });
 });
+
+test("per veld (stap 2b): veldregels onder het element, keuze per veld in de POST", async ({ page }) => {
+  await openStudio(page);
+  const metVelden = vergelijking();
+  metVelden.verschillen[0] = el("E", "conflict", { velden: ["data.kleur", "naam"], veldDetails: [
+    { veld: "data.beschrijving", status: "main" }, { veld: "data.kleur", status: "conflict" }, { veld: "naam", status: "gewijzigd" },
+  ] });
+  await page.route(`**/api/studio/projecten/${TAK}/vergelijk`, (r) => r.fulfill({ json: metVelden }));
+  const bodies = [];
+  await page.route(`**/api/studio/projecten/${TAK}/samenvoegen`, (r) => { bodies.push(r.request().postDataJSON()); r.fulfill({ json: okAntwoord }); });
+  await openDialoog(page);
+  const kleur = page.getByTestId("schuif-veld:element:diagram05:E#data.kleur");
+  const naam = page.getByTestId("schuif-veld:element:diagram05:E#naam");
+  await expect(kleur).toHaveAttribute("data-stand", "midden");
+  await expect(naam).toHaveAttribute("data-stand", "rechts");
+  await expect(page.getByTestId("schuif-eenheid:element:diagram05:E")).toHaveAttribute("data-stand", "gemengd");
+  await expect(page.getByTestId("soort-veld:element:diagram05:E#naam")).toHaveText("eigenschap");
+  await expect(page.locator('[data-knoop="veld:element:diagram05:E#data.beschrijving"]')).toHaveCount(0);
+  await page.getByTestId("schuif-veld:element:diagram05:E#data.kleur-links").click();
+  page.once("dialog", (d) => d.accept());
+  await page.getByTestId("samenvoegen-naar-main").click();
+  await expect(page.getByTestId("samenvoeg-melding")).toBeVisible();
+  expect(bodies[0].keuze).toMatchObject({ "element:diagram05:E#data.kleur": "terug", "element:diagram05:E#naam": true });
+});

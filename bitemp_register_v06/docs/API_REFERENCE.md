@@ -802,7 +802,10 @@ Rol `modelleur`, schrijven op de branch én de ouder (`403` zonder schrijfrecht 
 `{ookBuitenMap?: bool, keuze?: {<sleutel>: true|false|"terug"}}` (mag leeg; een andere waarde → `400`). Zonder `keuze` gaat alles mee en
 blokkeert een conflict (stap 1). Met `keuze` (stap 2, sleutel `<soort>:<profielId>:<id>` zoals
 `verschillen[].sleutel` van `/vergelijk`) gaat alleen het gekozene mee; bij een conflict wint de
-branch als hij gekozen is, anders MAIN; wat niet gekozen is blijft in de branch. `"terug"` zet de
+branch als hij gekozen is, anders MAIN; wat niet gekozen is blijft in de branch. Per veld van een
+element: sleutel `<sleutel>#<veld>` (bv. `element:diagram05:C#data.kleur`, `…#naam`, `…#map`), gaat voor
+de keuze op het element; een element wordt per veld samengevoegd, dus verschillende velden aan beide
+kanten zijn geen conflict (`conflicten[].velden` noemt de conflicterende velden). `"terug"` zet de
 eenheid in de branch terug naar de versie van MAIN (MAIN verandert niet). Een sleutel die
 ontbreekt: mee, behalve bij een conflict. Dezelfde drie kanten als `/vergelijk` gaan naar de sidecar
 (`POST /samenvoegen`), die alles uit de branch met MAIN samenvoegt en twee lijsten operaties

@@ -273,3 +273,51 @@ test("scenario 10 — diagrambundel (Mark 14-11): zichtbaar en kiesbaar; niet zo
   assert.equal(s.standMain().structuur.bundels.B1.naam, "Besluit en Evenement");
   assert.deepEqual(s.verschil(), []);
 });
+
+test("scenario 11 — per veld (Mark 14-11): naam en beschrijving van hetzelfde element aan twee kanten; kiezen per veld over twee rondes", () => {
+  const s = maakServer();
+  s.afsplitsen();
+  // Branch: naam en kleur van C. MAIN: beschrijving van C. Geen conflict: verschillende velden.
+  s.tak(zet(el("C", "C'", { data: { kleur: "#e6efe1" } })));
+  s.main(zet(el("C", "C", { data: { beschrijving: "op MAIN" } })));
+  assert.deepEqual(s.verschil(), [[S("C"), "gewijzigd"]]);
+  // Ronde 1: alleen de naam; de kleur blijft in de branch.
+  s.samenvoegen({ [`${S("C")}#naam`]: true, [`${S("C")}#data.kleur`]: false });
+  let m = s.standMain().profielen[P].elements.C, t = s.standTak().profielen[P].elements.C;
+  assert.deepEqual([m.naam, m.data], ["C'", { beschrijving: "op MAIN" }]);
+  assert.deepEqual([t.naam, t.data], ["C'", { beschrijving: "op MAIN", kleur: "#e6efe1" }], "de branch haalt de beschrijving op en houdt de kleur");
+  assert.deepEqual(s.verschil(), [[S("C"), "gewijzigd"]]);
+  // MAIN zet intussen ook een kleur: nu een conflict op precies dat veld.
+  s.main(zet(el("C", "C'", { data: { beschrijving: "op MAIN", kleur: "#000" } })));
+  assert.deepEqual(s.verschil(), [[S("C"), "conflict"]]);
+  // Ronde 2: kleur terug naar MAIN.
+  s.samenvoegen({ [`${S("C")}#data.kleur`]: "terug" });
+  t = s.standTak().profielen[P].elements.C;
+  assert.equal(t.data.kleur, "#000");
+  assert.deepEqual(s.verschil(), []);
+});
+
+test("scenario 12 — velden in een compartiment (Mark 15-11): toevoegen aan twee kanten, per veld kiezen, hernoemen met uuid", () => {
+  const s = maakServer();
+  const metVelden = (naam, velden) => el("C", naam, { compartimenten: [{ compartmentType: "velden", velden }] });
+  const veld = (naam, data = {}) => ({ naam, fieldType: "attribuut", data });
+  s.main(zet(metVelden("C", [veld("achternaam", { uuid: "u-1" })])));
+  s.afsplitsen();
+  // Branch: veld1 en veld2 erbij, achternaam hernoemd. MAIN: postcode erbij.
+  s.tak(zet(metVelden("C", [veld("geslachtsnaam", { uuid: "u-1" }), veld("veld1"), veld("veld2")])));
+  s.main(zet(metVelden("C", [veld("achternaam", { uuid: "u-1" }), veld("postcode")])));
+  // Ronde 1: hernoeming en veld1 mee, veld2 nog niet.
+  s.samenvoegen({
+    [`${S("C")}#compartiment.velden/uuid:u-1`]: true,
+    [`${S("C")}#compartiment.velden/naam:veld1`]: true,
+    [`${S("C")}#compartiment.velden/naam:veld2`]: false,
+  });
+  const namen = (stand) => stand.profielen[P].elements.C.compartimenten[0].velden.map((v) => v.naam);
+  assert.deepEqual(namen(s.standMain()), ["geslachtsnaam", "postcode", "veld1"]);
+  assert.deepEqual(namen(s.standTak()), ["geslachtsnaam", "postcode", "veld1", "veld2"]);
+  assert.deepEqual(s.verschil(), [[S("C"), "gewijzigd"]]);
+  // Ronde 2: veld2 terug naar MAIN (weg uit de branch).
+  s.samenvoegen({ [S("C")]: "terug" });
+  assert.deepEqual(namen(s.standTak()), ["geslachtsnaam", "postcode", "veld1"]);
+  assert.deepEqual(s.verschil(), []);
+});
