@@ -18,6 +18,11 @@ De single source of truth voor het nummer is `package.json` `"version"`.
   Aanvraag bij Beoordeel aanvraag en Aanvraag beoordelen, Beschikking (uitvoer) bij opstellen en afwijzen.
   Zaak en Beschikking nog zonder type: dat komt met het Zaak/Beslissing-model. De losse berichtenlijn van
   Vraag aanvulling bij klant naar de pool Klantportaal (per ongeluk ontstaan) is eruit.
+- **M3 als gegevens** (plan 2026-11-15, stap 1): `diagramcore/types/m3.js` beschrijft het M3 per pakket
+  (Definitie, Stijl, Implementatie) met typen, kardinaliteit en enumeraties uit de code; controletests
+  tegen `schema.js` (`m3.test.js`) en tegen alle profielen (`render-svc/m3Dekking.test.mjs`). In `schema.js`
+  zijn de gaten beschreven die de tests vonden (o.a. `DiagramType.hooks`, `shapeSets`, `PropertyType.aard`);
+  vier hooks erbij in `handlerCatalogus.js`.
 
 ## [studio/v0.44.0] — 2026-11-15
 

@@ -122,6 +122,76 @@
  */
 
 /**
+ * Verbindingsregel — één toegestane bron×doel-combinatie van een connector-ElementType
+ * (`ElementType.verbindingsregels`); lezers gaan via `verbindingsregelsVan` (typeRegistry.js),
+ * dat ook de verkorte vorm `bron`/`doel` op het type zelf omzet.
+ *
+ * @typedef {Object} Verbindingsregel
+ * @property {ConnectorEindpunt} bron
+ * @property {ConnectorEindpunt} doel
+ */
+
+/**
+ * EdgePresentatie — de declaratieve vorm van een kale connector (Stijl-domein; EA: LineStyle).
+ * `ElementType.edgePresentatie`; `hooks.edgePresentatie` mag hem per connector aanvullen, en een
+ * keuze op het diagram wint. Getekend door ConnectorEdge (canvas) en tekenaar/lijnen.js.
+ *
+ * @typedef {Object} EdgePresentatie
+ * @property {string} [lijn]        - "solid" | "dash-4-3" | "dash-4-4" | "dash-6-3" | "gestippeld" |
+ *   "onzichtbaar"
+ * @property {string} [vorm]        - routering: "recht" | "hoekig" | "boom" | …
+ * @property {string} [kleur]
+ * @property {number} [dikte]       - lijndikte in px
+ * @property {string} [markerStart] - pijlpunt aan de bron: "pijl-open" | "pijl-dicht" | "driehoek" |
+ *   "ruit" | "ruit-open" | "bol" | "cirkel-open" | "kruisje" | "kruis-cirkel" | "schuine-streep"
+ * @property {string} [markerEnd]   - idem aan het doel
+ * @property {Object} [labels]      - vaste labels per zijde
+ * @property {boolean} [labelsBoven] - middenlabel boven de lijn (sequence-berichten)
+ * @property {boolean} [verbergBijNesting] - de lijn verdwijnt als het doel in de bron genest ligt
+ *   (ArchiMate-compositie en -aggregatie, zoals Archi)
+ */
+
+/**
+ * ShapeSet — een alternatieve gedaante van een heel profiel (`DiagramType.shapeSets`, P07): per
+ * elementtype een andere ShapeType-id; de Definitie blijft gelijk. Zie model/shapeSet.js.
+ *
+ * @typedef {Object} ShapeSet
+ * @property {string} id
+ * @property {string} label
+ * @property {Record<string, string>} shapes - elementtype-id → ShapeType-id
+ */
+
+/**
+ * RandElement — rand-aanhechting van een ElementType (zie `ElementType.randElement`).
+ *
+ * @typedef {Object} RandElement
+ * @property {string[]} ouderTypes          - element-typen waaraan het mag hechten
+ * @property {"rand"|"as"} [klem]           - vast op de omtrek (standaard) of op de verticale as
+ *   van de gastheer (sequence-punt op de levenslijn)
+ */
+
+/**
+ * Samentrekking — gedaanten van een samenstel als lollipop (zie `ElementType.samentrekking`).
+ *
+ * @typedef {Object} Samentrekking
+ * @property {string} gedaante              - de waarde van `DiagramNode.gedaante` die inklapt
+ * @property {string[]} relatieTypes        - relaties die over de hele lengte kaal worden
+ * @property {string} [labelIngeklapt]      - menutekst
+ * @property {string} [labelUitgeklapt]     - menutekst
+ */
+
+/**
+ * Opname — een deel als sub-vak in zijn geheel (zie `ElementType.opname`, canvas/opname.js).
+ *
+ * @typedef {Object} Opname
+ * @property {string} gedaante              - de waarde van `DiagramNode.gedaante` die inbedt
+ * @property {string[]} relatieTypes        - de relaties van geheel naar deel
+ * @property {string} [compartiment]        - CompartmentType-id in het geheel
+ * @property {string} [labelIngebed]        - menutekst
+ * @property {string} [labelLos]            - menutekst
+ */
+
+/**
  * ElementType — de betekenis-definitie van een soort element.
  * De vorm komt uit het ShapeType (Stijl-domein), gekoppeld via `shape`; een ShapeRenderer
  * (Implementatie-domein) realiseert dat ShapeType.
@@ -170,6 +240,10 @@
  * @property {string} [kleur]               - default; instantie kan overriden
  * @property {number} [randDikte]           - vormgrammatica: randbreedte in px (identiteit = dik, bv. 3)
  * @property {number} [hoekRadius]          - vormgrammatica: hoekafronding in px (structuur = rond)
+ * @property {"afgeschuind"} [hoekStijl]    - vormgrammatica: afgeschuinde hoeken (ArchiMate
+ *   motivation; gelezen door de renderer `am-box`)
+ * @property {string} [icoon]               - icoon-id voor het mini-icoon en symboolvormen
+ *   (shapes/typeIconen.jsx, ArchiMate `glyphs.js`)
  * @property {"dashed"} [randStijl]         - vormgrammatica: gestippeld = inhoud elders beheerd
  *   (ook per element via data.randStijl); geldt voor class-box, chip en package
  * @property {"standaard"|"onzichtbaar"} [handleStijl] - aansluitpunten tonen of niet
@@ -235,7 +309,7 @@
  * @property {string[]} [overbrugt]         - (connectortype) elementtype-ids
  *   van afbakeningen die deze verbinding **moet** kruisen: bron en doel in
  *   verschillende afbakeningen (BPMN: message flow tussen pools)
- * @property {{ouderTypes: string[], klem?: "rand"|"as"}} [randElement] - rand-aanhechting
+ * @property {RandElement} [randElement] - rand-aanhechting
  *   (gedragsdiagram-primitief §3.1): dit element woont óp de rand van een
  *   gastheer-element (BPMN boundary-event, state entry/exit-point, activity
  *   pin). `ouderTypes` = element-typen waaraan het mag hechten. Aanhechten =
@@ -257,11 +331,11 @@
  *   assistent en de MCP; dubbelklik op het canvas opent de eerste uitwerking (na een
  *   `gedragDiagramId`). De boom blijft ordening (geen M1): de inhoudelijke band is een
  *   kruisverband of gedragsverwijzing. Zie studio/activities/modellerenActivity.jsx.
- * @property {{gedaante: string, relatieTypes: string[], labelIngeklapt?: string, labelUitgeklapt?: string}} [samentrekking]
+ * @property {Samentrekking} [samentrekking]
  *   - gedaanten van een samenstel (lollipop): een voorkomen met
  *   `DiagramNode.gedaante === gedaante` rendert ingeklapt en maakt de genoemde
  *   relaties over de hele lengte kaal
- * @property {{gedaante: string, relatieTypes: string[], compartiment?: string, labelIngebed?: string, labelLos?: string}} [opname]
+ * @property {Opname} [opname]
  *   - gedaanten van een samenstel (opname): een voorkomen van dit *deel* met
  *   `DiagramNode.gedaante === gedaante` verdwijnt als node en verschijnt als
  *   sub-vak in `compartiment` van het geheel (bron van een van de
@@ -269,15 +343,15 @@
  *   Zie canvas/opname.js
  * @property {boolean} [standaardDichtInBoom] - boomrijen van dit type beginnen
  *   ingeklapt (zoals mappen in een verkenner); de chevron-klik wint daarna
- * @property {ConnectorEindpunt} [bron]     - verplicht als isConnector
- * @property {ConnectorEindpunt} [doel]     - verplicht als isConnector
+ * @property {ConnectorEindpunt} [bron]     - verkorte vorm van één verbindingsregel (connector)
+ * @property {ConnectorEindpunt} [doel]     - idem; een connector heeft bron/doel óf verbindingsregels
+ * @property {Verbindingsregel[]} [verbindingsregels] - de volledige vorm: elke regel een
+ *   toegestane bron×doel-combinatie (connector)
  * @property {"x"|"y"|"xy"} [layoutDimensie] - in welke richting het element op
  *   het canvas beweegt (standaard "xy"); "x" = alleen opzij (sequence-levenslijn)
- * @property {Object} [edgePresentatie]     - declaratieve edge-vorm voor kale
- *   connectoren: { lijn, kleur, markerStart, markerEnd, labels, labelsBoven } (zie
- *   ConnectorEdge; labelsBoven = middenlabel boven de lijn, bv. sequence-berichten);
- *   hooks.edgePresentatie(el, {elements}) mag daarnaast sourceHandle/targetHandle/vorm
- *   voorstellen (een keuze op het diagram wint)
+ * @property {EdgePresentatie} [edgePresentatie] - declaratieve edge-vorm voor kale
+ *   connectoren (zie EdgePresentatie); hooks.edgePresentatie(el, {elements}) mag daarnaast
+ *   sourceHandle/targetHandle/vorm voorstellen (een keuze op het diagram wint)
  * @property {PropertyType[]} [properties]  - element-brede eigenschappen voor de
  *   inspector (bv. tekst, expressie, kleur) — PropertyTypes van het ElementType
  * @property {CompartmentType[]} [compartments] - max 9, {ordered}
@@ -458,20 +532,18 @@
  * @property {string} [kort] - kort symbool voor de taakbalk (↓ → ⊙ …); `label` wordt de tooltip
  * @property {(invoer: {flowNodes: Object[], flowEdges: Object[], selectieIds: string[]|null, elements: Object, diagram: Object}) => Record<string, {x: number, y: number}>|Map<string, {x: number, y: number}>|{posities: Record<string, {x: number, y: number}>, maten?: Record<string, {width: number, height: number}>}} run
  *   - posities per knoop; met `{posities, maten}` krijgen containers ook een nieuwe maat.
- *
- * Leesvolgorde — het invoerformaat van de LayoutRenderer "leesvolgorde"
- * (diagramcore/layout/leesvolgorde.js). Geen profielveld meer (18-10): `regelsVoorStijl` maakt het
- * uit de aard en facetten van de typen en de LayoutStijl. Een profiel zonder eigen `layouts`
- * krijgt per stijl vier strategieën (de richting van de stijl eerst); `layoutStijlen: []` = geen
- * automatische layout (bv. sequence: de volgorde ís de tekening).
- *
+ * @property {string} [stijl] - de LayoutStijl waaruit deze strategie is gemaakt (gezet door
+ *   layout/leesvolgorde.js; de taakbalk groepeert erop)
+ */
+
+/**
  * LayoutStijl — de **weergave** van de automatische layout (M3, 2026-10-18), naast de
  * gedaante (ShapeSet): zelfde patroon als ShapeType/ShapeRenderer en LineStyle/
  * LineRenderer. De stijl noemt een LayoutRenderer (het algoritme, Implementatie-domein)
  * en regels die per type kiezen, zoals CSS: van algemeen (aard) naar specifiek (type-id),
  * bij gelijke specificiteit de laatste. Het resultaat zijn posities en maten per voorkomen
  * (zoals OMG DI). `regelsVoorStijl` (types/layoutStijl.js) vertaalt een stijl met de aard
- * en facetten van de typen naar het Leesvolgorde-formaat hieronder.
+ * en facetten van de typen naar het Leesvolgorde-formaat.
  *
  * @typedef {Object} LayoutStijl
  * @property {string} id
@@ -496,11 +568,24 @@
  *   2 — de use cases staand, include/extend-doelen in de tweede kolom)
  * @property {{laag?: number, dwars?: number, baan?: number, marge?: number}} [afstanden]
  * @property {LayoutRegel[]} [regels]
+ */
+
+/**
+ * LayoutRegel — één regel van een LayoutStijl: een selector (zoals CSS) en de opties voor wat hij
+ * kiest.
  *
  * @typedef {Object} LayoutRegel
  * @property {{aard?: string, elementType?: string, connectorType?: string, erft?: string, facet?: Record<string, string>}} selector
  * @property {{volgorde?: "mee"|"omgekeerd"|"negeer", positie?: "begin"|"eind"|null, baan?: boolean}} opties
  *   - connectoren: `volgorde`; elementen: `positie` (begin/eind) en `baan`
+ */
+
+/**
+ * Leesvolgorde — het invoerformaat van de LayoutRenderer "leesvolgorde"
+ * (diagramcore/layout/leesvolgorde.js). Geen profielveld meer (18-10): `regelsVoorStijl` maakt het
+ * uit de aard en facetten van de typen en de LayoutStijl. Een profiel zonder eigen `layouts`
+ * krijgt per stijl vier strategieën (de richting van de stijl eerst); `layoutStijlen: []` = geen
+ * automatische layout (bv. sequence: de volgorde ís de tekening).
  *
  * @typedef {Object} Leesvolgorde
  * @property {"TB"|"LR"} [richting] - standaard (smaak: AD van boven naar beneden, BPMN van links naar rechts)
@@ -546,6 +631,11 @@
  * @property {string} style                - StyleType-id (Implementatie-domein)
  * @property {ShapeType[]} [shapeTypes]     - de eigen vormen van dit profiel als gegevens (M3,
  *   2026-11-04); `registreerDiagramType` registreert ze. Zie types/shapeType.js.
+ * @property {ShapeSet[]} [shapeSets]       - alternatieve gedaanten (P07, menu "Shape-set"); zie
+ *   ShapeSet en model/shapeSet.js
+ * @property {Object} [hooks]               - Implementatie-domein, profielbreed: migreerModel
+ *   (een bewaarde staat bijwerken naar de huidige profielvorm) en hierarchieParen (extra
+ *   ouder→kind-paren voor de boom). Functies; NIET serialiseren. Zie handlerCatalogus.js.
  * @property {string|Array<string|{type: string, omgekeerd?: boolean}>} [hierarchie] - de
  *   connectortypen die de ouder-kindrelatie in de elementenboom vormen (P02, "bevat-relatie").
  *   Eén id (`"ref"`) of een lijst in volgorde van stapeling (`["bevat", "compositie"]`): de
