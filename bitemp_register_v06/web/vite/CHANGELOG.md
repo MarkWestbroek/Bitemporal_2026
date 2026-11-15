@@ -8,6 +8,10 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
 
+## [studio/v0.44.0] — 2026-11-15
+
+Samen met render 0.4.8 en devloop 0.30.2 (api 0.27.0).
+
 ### Toegevoegd
 - **Simulatie: het object in de cm-vorm** (POC, Mark 14-11): de GPK-aanvraag in het objectenpaneel als entiteit
   met GE's en relaties, met de toets op de state (verplicht ingevuld, relatie met bekend doel) en wat buiten het cm

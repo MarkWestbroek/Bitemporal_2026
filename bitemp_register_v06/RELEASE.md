@@ -8,6 +8,37 @@
 
 ---
 
+## studio 0.44.0 / render 0.4.8 / devloop 0.30.2 (2026-11-15)
+
+Akkoord Mark 15-11 ("Wil je releasen? Ook naar fundament"). api blijft 0.27.0; devloop 0.30.2 is
+api 0.27.0 met studio 0.44.0.
+
+- **Samenvoegen naar MAIN per veld:** verschillende velden van hetzelfde element aan beide kanten
+  geven geen conflict meer; een regel per veld in de boom, ook voor velden in een compartiment
+  (gekoppeld op uuid, anders op naam; een hernoeming op dezelfde plek blijft één veld).
+- **Projectformaat 4:** elk modelelement en veld van het canonieke model heeft een uuid. De Studio
+  vult ontbrekende aan bij het openen en na elke eigen wijziging, afgeleid (uuid v5), zodat
+  gelijktijdige clients en een branch met zijn MAIN dezelfde uuid's krijgen.
+  `scripts/projecten-uuids-aanvullen.mjs` vult alle projecten op een server in één keer aan.
+- **Uuid's tonen (beheer):** een instelling voor de beheerder.
+- **BPMN-data-object met een type** (SIMULATIE): type uit een gegevenstaal (M3-aard `gegevens`),
+  rol invoer/uitvoer, toestand, lezen en schrijven; het type is de tracering «traceert naar»;
+  gerelateerde elementen over talen heen. Profielversies: BPMN 1.2.0; canoniek, puur-UML, MIM,
+  ERD 1.1.0. Donker thema: namen op het canvas leesbaar.
+- render 0.4.8: de code van studio 0.44.0 (samenvoegen per veld, profielversies). Een render 0.4.7
+  werkt met deze studio, maar voegt dan alleen per element samen.
+
+Getest: Studio-unit 1713/1713 (na de merge), render-svc `npm test` 30/30 (scenario's 11 en 12
+erbij), e2e 12, 23, 30, 58, 63 en 64 (22/22); SIMULATIE: e2e 33, 53, 54, 63, 64.
+
+Uitrol:
+- App: `viz-frontend:0.44.0` en `bitemp-render-svc:0.4.8` via `update.sh`. Geen schemawijziging,
+  geen rebuild. Daarna (optioneel, aanbevolen) per server één keer
+  `node scripts/projecten-uuids-aanvullen.mjs --omnium <url>` (kijken) en met `--toepassen`.
+- Fundament: `bitemp-devloop:0.30.2` (met frontend 0.44.0 en render 0.4.8), door FUNDAMENT.
+
+---
+
 ## studio 0.43.0 / render 0.4.7 / devloop 0.30.1 (2026-11-14)
 
 Akkoord Mark 14-11 ("C&M&R en daarna verder"). api blijft 0.27.0; devloop 0.30.1 is api 0.27.0 met
