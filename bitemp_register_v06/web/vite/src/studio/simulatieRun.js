@@ -74,7 +74,7 @@ export const LEEG_SCENARIO = {
 // het is alleen een stijlblok in deze browsertab (andere tabs en gebruikers zien niets), maar
 // zolang het aan staat neemt een PNG/SVG-export van het canvas het token mee — handig als je een
 // plaatje van de stand van een procesinstantie wilt.
-const S = { sim: null, m1: null, scenarioTekst: null, edienst: null, gpk: null, startProces: null, toonProces: null, opCanvas: false, cm: null, fout: null, versie: 0 };
+const S = { sim: null, m1: null, scenarioTekst: null, edienst: null, gpk: null, startProces: null, toonProces: null, toonObject: null, opCanvas: false, cm: null, fout: null, versie: 0 };
 const luisteraars = new Set();
 const STIJL_ID = "sim-token-stijl";
 
@@ -227,7 +227,7 @@ async function laadCmBeelden(edienst) {
 export function stop() {
   if (klok) clearInterval(klok);
   klok = null;
-  zet({ sim: null, m1: null, fout: null, toonProces: null });
+  zet({ sim: null, m1: null, fout: null, toonProces: null, toonObject: null });
 }
 
 /** Het proces waar een element in staat. */

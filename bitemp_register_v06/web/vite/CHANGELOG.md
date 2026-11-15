@@ -8,6 +8,17 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
 
+### Toegevoegd
+- **Simulatie: het data-object toont het object van de run** (Mark 15-11): bij een data-object met een type (ook
+  via een subtype) een kenmerk met de versie, geel als het object net veranderde, rood gestippeld als de
+  toestand niet klopt met die op het model; een klik toont het object onder het diagram.
+- **GPK-voorbeeld: layout van Mark** (15-11): *GPK-voorbeeld laden* geeft nu Marks uitlijning van Zaak behandelen
+  (bogen) en data-objecten in alle processen: Aanvraag [ingediend] (invoer, type cm-Aanvraag) bij
+  Ontvankelijkheid toetsen en Documenten koppelen, Zaak en Zaak [Ontvangen] (uitvoer) bij de servicetaken,
+  Aanvraag bij Beoordeel aanvraag en Aanvraag beoordelen, Beschikking (uitvoer) bij opstellen en afwijzen.
+  Zaak en Beschikking nog zonder type: dat komt met het Zaak/Beslissing-model. De losse berichtenlijn van
+  Vraag aanvulling bij klant naar de pool Klantportaal (per ongeluk ontstaan) is eruit.
+
 ## [studio/v0.44.0] — 2026-11-15
 
 Samen met render 0.4.8 en devloop 0.30.2 (api 0.27.0).

@@ -26,6 +26,7 @@ import { willekeurig } from "../../simulatie/gaten.js";
 import { PROCESINSTANTIE, versiesVan } from "../../simulatie/store.js";
 import { tokenBeeld, standTekst, mutatieTekst, TOKEN_KLEUR } from "../../simulatie/weergave.js";
 import { beeldVoor } from "../../simulatie/cmVorm.js";
+import { objectenBijDataObjecten } from "../../simulatie/dataObjecten.js";
 import { CmObject, PlatJson } from "./simulatieCmVorm.jsx";
 import {
   BPMN_PROFIEL,
@@ -174,7 +175,7 @@ const SVG_NS = "http://www.w3.org/2000/svg";
  * en een bolletje rechtsboven (met het aantal bij meer tokens); waar het token
  * geweest is een dunne rand.
  */
-function DiagramMetToken({ diagramId, beeld, versie }) {
+function DiagramMetToken({ diagramId, beeld, versie, objecten = {} }) {
   const { elements, diagrams } = useBpmn();
   const doos = useRef(null);
   const svg = useMemo(() => (diagramId ? tekenDiagram(BPMN_PROFIEL, diagramId) : ""), [diagramId, elements, diagrams]);
@@ -239,7 +240,52 @@ function DiagramMetToken({ diagramId, beeld, versie }) {
       if (p.aantal > 1) g.appendChild(maak("text", { x: b.x + b.width + 4, y: b.y, "text-anchor": "middle", "font-size": 11, "font-weight": 700, fill: "#fff" }, String(p.aantal)));
     }
     for (const g of wortel.querySelectorAll("g[data-sim-token]")) if (!beeld.plekken[g.getAttribute("data-element-id")]) g.removeAttribute("data-sim-token");
-  }, [svg, versie]);
+
+    // Data-objecten (§11.8 stap 3, Mark 15-11): het object van de simulatie dat bij het type hoort.
+    // Rechtsonder een kenmerk met de versie; geel omrand als het in de laatste stap veranderde,
+    // rood gestippeld als de toestand niet klopt met die op het model ("[ingediend]"). Een klik
+    // toont het object onder het diagram.
+    for (const g of wortel.querySelectorAll("g[data-sim-object]")) {
+      g.removeAttribute("data-sim-object");
+      g.removeAttribute("data-sim-gewijzigd");
+      g.removeAttribute("data-sim-klopt");
+      g.style.cursor = "";
+      g.onclick = null;
+      g.querySelector(":scope > title.sim-teken")?.remove();
+    }
+    for (const [id, info] of Object.entries(objecten)) {
+      const g = groep(id);
+      if (!g) continue;
+      const titel = maak("title", {}, "");
+      if (!info.objecten.length) {
+        titel.textContent = `${info.typeNaam}: nog geen object in deze run`;
+        g.insertBefore(titel, g.firstChild);
+        continue;
+      }
+      const o = info.objecten[0];
+      const b = omvang(g);
+      // Klikvlak over de hele vorm (ook tussen de lijnen en de naam door).
+      g.insertBefore(maak("rect", { x: b.x - 4, y: b.y - 4, width: b.width + 8, height: b.height + 8, fill: "transparent", "pointer-events": "all" }), g.firstChild);
+      if (o.gewijzigd) g.appendChild(maak("rect", { x: b.x - 7, y: b.y - 7, width: b.width + 14, height: b.height + 14, rx: 9, fill: "none", stroke: "rgba(250, 204, 21, 0.95)", "stroke-width": 3, "pointer-events": "none" }));
+      if (o.klopt === false) g.appendChild(maak("rect", { x: b.x - 10, y: b.y - 10, width: b.width + 20, height: b.height + 20, rx: 10, fill: "none", stroke: TOKEN_KLEUR.vast, "stroke-width": 1.5, "stroke-dasharray": "4 3", "pointer-events": "none" }));
+      const tekst = `v${o.versie}${info.objecten.length > 1 ? ` ×${info.objecten.length}` : ""}`;
+      const bw = 8 + tekst.length * 6.5;
+      const bx = b.x + b.width - bw / 2;
+      const by = b.y - 8; // rechtsboven, niet over de naam
+      g.appendChild(maak("rect", { x: bx, y: by, width: bw, height: 15, rx: 7.5, fill: "#6366f1", stroke: "#fff", "stroke-width": 1.5 }));
+      g.appendChild(maak("text", { x: bx + bw / 2, y: by + 11, "text-anchor": "middle", "font-size": 10, "font-weight": 700, fill: "#fff", "data-testid": "sim-dataobject-versie" }, tekst));
+      titel.textContent =
+        info.objecten.map((x) => `${x.id} (${x.type}) v${x.versie}${x.toestand ? `, toestand ${x.toestand}` : ""}`).join("\n") +
+        (o.klopt === false ? `\nHet model zegt [${info.modelToestand}]` : "") +
+        "\nKlik: toon het object";
+      g.insertBefore(titel, g.firstChild);
+      g.setAttribute("data-sim-object", o.id);
+      if (o.gewijzigd) g.setAttribute("data-sim-gewijzigd", "");
+      if (o.klopt !== null) g.setAttribute("data-sim-klopt", String(o.klopt));
+      g.style.cursor = "pointer";
+      g.onclick = () => zet({ toonObject: o.id });
+    }
+  }, [svg, versie, objecten]);
   if (!svg) return <div style={{ ...gedempt, padding: 16 }}>Geen procesdiagram om te tonen.</div>;
   return (
     <div
@@ -387,6 +433,15 @@ function Main() {
   const metInstantie = new Set(sim ? Object.values(sim.toestand().objecten).filter((o) => o.type === PROCESINSTANTIE).map((o) => o.data.proces) : []);
   const metToken = new Set(sim ? Object.values(sim.toestand().tokens).map((k) => sim.processen.find((p) => p.elementen.has(k.plek))?.id) : []);
   const openGat = stand.soort === "gat" ? stand.gaten[0] : null;
+  // Data-objecten met een type: welk object van de run erbij hoort (§11.8 stap 3).
+  const bijDataObjecten = useMemo(
+    () =>
+      sim
+        ? objectenBijDataObjecten({ bpmnElementen: elements, elementenVan: (pid) => getProfieltype(pid)?.useStore?.getState?.().elements || null, toestand: sim.toestand(), log })
+        : {},
+    [S.versie, elements]
+  );
+  const getoondObject = (sim && S.toonObject && sim.toestand().objecten[S.toonObject]) || null;
   const afspelen = speeltAf();
   const [snelheid, setSnelheid] = useState("gewoon");
   const sprong = sim ? laatsteSprong() : null;
@@ -483,7 +538,18 @@ function Main() {
             {sprong.bericht ? ` (${sprong.bericht})` : ""}.
           </div>
         )}
-        <DiagramMetToken diagramId={diagramId} beeld={beeld} versie={S.versie} />
+        <DiagramMetToken diagramId={diagramId} beeld={beeld} versie={S.versie} objecten={bijDataObjecten} />
+        {getoondObject && (
+          <div style={{ marginTop: 8, padding: "6px 10px", border: "1px solid var(--s-border, #cbd5e1)", borderRadius: 6, maxWidth: 640 }} data-testid="sim-dataobject-object">
+            <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
+              <span style={kop}>Object bij het data-object</span>
+              <button style={{ ...knop, marginLeft: "auto", padding: "0 6px" }} onClick={() => zet({ toonObject: null })} title="Sluiten">
+                ×
+              </button>
+            </div>
+            <ObjectKaart key={getoondObject.id} o={getoondObject} S={S} />
+          </div>
+        )}
         {!sim && (
           <p style={{ ...gedempt, maxWidth: 640 }}>
             Kies links een scenario en het proces waar het start, en druk op Start. Het token loopt dan over dit diagram; springt het naar een ander proces, dan volgt het beeld. Bewerken doe je in Modelleren; ook daar staat het token op het diagram zolang de run loopt.
