@@ -9,6 +9,11 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 ## [Unreleased]
 
 ### Toegevoegd
+- **M3 als gegevens** (plan 2026-11-15, stap 1): `diagramcore/types/m3.js` beschrijft het M3 per pakket
+  (Definitie, Stijl, Implementatie) met typen, kardinaliteit en enumeraties uit de code; controletests
+  tegen `schema.js` (`m3.test.js`) en tegen alle profielen (`render-svc/m3Dekking.test.mjs`). In `schema.js`
+  zijn de gaten beschreven die de tests vonden (o.a. `DiagramType.hooks`, `shapeSets`, `PropertyType.aard`);
+  vier hooks erbij in `handlerCatalogus.js`.
 - **Simulatie: het object in de cm-vorm** (POC, Mark 14-11): de GPK-aanvraag in het objectenpaneel als entiteit
   met GE's en relaties, met de toets op de state (verplicht ingevuld, relatie met bekend doel) en wat buiten het cm
   staat. **Versies per object**: elke stap die een object raakt is een versie; gewijzigde velden geel; oude

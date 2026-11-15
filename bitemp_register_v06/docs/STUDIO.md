@@ -2351,3 +2351,31 @@ pijlen; BPMN kent alleen in- en uitvoerassociaties, de export maakt er twee van)
 `diagramprofielen/bpmn/dataVelden.js`. Profielversies: BPMN 1.2.0; canoniek, puur-UML, MIM en ERD 1.1.0 (de aard).
 Nog niet: de BPMN-XML-export en -import van type, rol, toestand en richting, en het gebruik in de simulatie
 (ontwerp Simulatie §11.8). E2E: `tests/e2e/64-studio-bpmn-dataobject.spec.js`.
+
+## Het M3 als gegevens (2026-11-16)
+
+Stap 1 van het plan *M3 en projectmetamodel als modellen in Omnium* (docs/plans/2026-11-15;
+besluiten Mark 15-11). Het M3 staat nu ook als gegevens naast de code, als bron voor een
+alleen-lezen puur-uml-model (generator: stap 3).
+
+- `diagramcore/types/m3.js`: per metaklasse het pakket (Definitie, Stijl, Implementatie), de
+  eigenschappen met type en kardinaliteit, operaties (code) apart. Een eigenschap met een
+  metaklasse als type is een associatie. Enumeraties komen uit de code (`AARD_*`,
+  `VORMBOOM_TAGS`, `LAYOUT_RENDERERS`, `SUPERPROFIEL_IDS`) of uit de letterlijke typen van
+  `schema.js`. Hooks zijn een associatie naar **Hook**; de soorten (**HookSoort**) komen uit
+  `handlerCatalogus.js` (`handlersVan("hook")`, met `plek`: DiagramType of ElementType).
+- `diagramcore/types/leesTypedefs.js`: leest de typedefs van `schema.js` als gegevens. De uitleg
+  blijft daardoor op één plek, in `schema.js`.
+- Controletests: `m3.test.js` (elke typedef = een metaklasse met precies dezelfde eigenschappen;
+  optioneel ↔ ondergrens 0; `"a"|"b"` ↔ enumeratie; HookSoort = catalogus) en
+  `render-svc/m3Dekking.test.mjs` (elke sleutel en hook van alle 26 profielen staat in het M3, op de
+  goede metaklasse).
+
+De tests vonden gaten die nu in `schema.js` beschreven staan: `DiagramType.hooks` en `shapeSets`,
+`ElementType.hoekStijl`, `icoon` en `verbindingsregels`, `PropertyType.aard`,
+`LayoutStrategie.stijl`, en de typedefs `Verbindingsregel`, `EdgePresentatie` (LineStyle),
+`ShapeSet`, `RandElement`, `Samentrekking` en `Opname`. In de catalogus kwamen de hooks
+`magVerbinden`, `ontvangtDrop`, `eigenschapUit` en `afgeleideEigenschappen` erbij.
+
+**Nieuwe M3-eigenschap?** Zet hem in de typedef in `schema.js` én in `m3.js`; de tests wijzen aan
+wat ontbreekt.

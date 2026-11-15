@@ -18,10 +18,22 @@ const sleutel = (soort, id) => `${soort}:${id}`;
 /**
  * @param {"hook"|"editor"|"resolver"} soort
  * @param {string} id - hook-naam, editor-datatype of resolver-id
- * @param {{naam: string, beschrijving: string, illustratie?: string}} info
+ * @param {{naam: string, beschrijving: string, illustratie?: string, plek?: "DiagramType"|"ElementType"}} info -
+ *   `plek` (alleen hooks): op welke metaklasse het profiel de hook zet (standaard ElementType)
  */
 export function registreerHandlerInfo(soort, id, info) {
   _handlers.set(sleutel(soort, id), info);
+}
+
+/**
+ * De geregistreerde handlers van één soort, in registratievolgorde: `[{id, naam, beschrijving,
+ * plek?}]`. Voor de hooks is dit de enumeratie HookSoort van het M3 (types/m3.js); de controletest
+ * in render-svc (m3Dekking.test.mjs) eist dat elke hook die een profiel gebruikt hier staat.
+ * @param {"hook"|"editor"|"resolver"} soort
+ */
+export function handlersVan(soort) {
+  const voor = `${soort}:`;
+  return [..._handlers].filter(([k]) => k.startsWith(voor)).map(([k, info]) => ({ id: k.slice(voor.length), ...info }));
 }
 
 const SOORT_FALLBACK = {
@@ -91,11 +103,13 @@ registreerHandlerInfo("hook", "edgePresentatie", {
 });
 registreerHandlerInfo("hook", "hierarchieParen", {
   naam: "Hiërarchie-paren",
+  plek: "DiagramType",
   beschrijving:
     "Levert extra ouder→kind-paren aan de elementen-boom, voor relaties die niet als connector-element bestaan (bv. gespiegelde composities).",
 });
 registreerHandlerInfo("hook", "migreerModel", {
   naam: "Model-migratie",
+  plek: "DiagramType",
   beschrijving:
     "Brengt een opgeslagen (persistente) sandbox bij met de huidige profielvorm — bv. oude presentatie-edges omzetten naar connectoren. Idempotent; geeft null als er niets te doen is.",
 });
@@ -112,6 +126,26 @@ registreerHandlerInfo("hook", "naamWeergave", {
   naam: "Naamweergave",
   beschrijving:
     "De naam zoals de vorm hem toont als dat niet letterlijk de naam is (object: \"jan : Persoon\"). Lege string = geen naamregel; undefined = de gewone naam.",
+});
+registreerHandlerInfo("hook", "magVerbinden", {
+  naam: "Mag verbinden",
+  beschrijving:
+    "Connector: (bron, doel) → false als deze verbinding niet mag, bovenop de verbindingsregels (bv. canoniek «gebruikt»: alleen naar een ref.lijst-item).",
+});
+registreerHandlerInfo("hook", "ontvangtDrop", {
+  naam: "Ontvangt drop",
+  beschrijving:
+    "Een element uit de boom is op dit element gedropt: (element, ref = {profielId, elementId}, {updateElement}). Het profiel legt de band — bv. een sequence-levenslijn krijgt zo haar type.",
+});
+registreerHandlerInfo("hook", "eigenschapUit", {
+  naam: "Eigenschap uit",
+  beschrijving:
+    "(element, key, {elements}) → reden of null: de inspector zet de eigenschap uit en toont de reden (bv. canoniek: een subtype krijgt zijn tijdlijn van de ouder).",
+});
+registreerHandlerInfo("hook", "afgeleideEigenschappen", {
+  naam: "Afgeleide eigenschappen",
+  beschrijving:
+    "(element, {elements}) → [{key, label, waarde, uitleg?, inOndertitel?}]: alleen-lezen regels in de inspector, bv. het domein uit het package.",
 });
 registreerHandlerInfo("hook", "valideer", {
   naam: "Validatie",

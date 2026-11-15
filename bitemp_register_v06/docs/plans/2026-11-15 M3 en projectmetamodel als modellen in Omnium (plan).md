@@ -109,8 +109,8 @@ eenmalig inlezen, zodat we zien wat EA had en het model niet.
 
 | # | Wie | Wat |
 |---|---|---|
-| 1 | M3-MOF | `m3.js` + controletest tegen `schema.js` |
-| 2 | M3-MOF + OMNIUM-UI | `projectMetamodel.js` + controletest (formaat 4 en uuid's zodra die gemerged zijn) |
+| 1 | M3-MOF | `m3.js` + controletest tegen `schema.js` — **klaar 16-11** (ook dekking van alle profielen in render-svc; zie STUDIO.md §Het M3 als gegevens) |
+| 2 | M3-MOF + OMNIUM-UI | `projectMetamodel.js` + controletest; formaat 4 staat op main (studio 0.44.0, ad6f9bc8), voorbeeldbestand van OMNIUM-UI |
 | 3 | M3-MOF | generator naar puur-uml, layout, "actueel"-test |
 | 4 | M3-MOF | publicatiescript naar app (leestoegang voor iedereen), bij de release |
 | 5 | Mark | EA-pakket bevriezen |
