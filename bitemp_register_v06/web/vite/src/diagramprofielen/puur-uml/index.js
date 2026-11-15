@@ -65,6 +65,8 @@ const elementTypes = [
   {
     id: "klasse",
     label: "Klasse",
+    // M3 aard (15-11): draagt gegevens; het type van een BPMN-data-object kan hiernaar wijzen.
+    aard: "gegevens",
     kort: "KL",
     shape: "class-box",
     kleur: "#fef9c3",
@@ -327,6 +329,9 @@ const referenceTypes = [
 
 export const puurUmlDiagramType = {
   id: PUUR_UML_ID,
+  // Profielversie (STUDIO.md "Profielversie in het project"). 1.1.0 (15-11): aard "gegevens" op
+  // de typen die data dragen (het type van een BPMN-data-object wijst ernaar); minor.
+  versie: "1.1.0",
   label: "Puur UML (klassediagram)",
   // Beschrijving: wat de EA-import vóór 2026-10-12 als "notes" bewaarde → M3 data.beschrijving.
   oudeBeschrijvingSleutels: ["notes"],

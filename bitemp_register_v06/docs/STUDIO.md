@@ -2334,3 +2334,20 @@ En: een event of gateway in de tekening is een `<g transform="scale(…)">`; `ge
 eigen transform niet mee, dus wie er iets omheen tekent moet de transform zelf toepassen.
 Ontwerp, keuzes en open vragen: `docs/plans/2026-11-12 Simulatie van BPMN en DMN met cm-objecten (ontwerp).md`
 (§10.5 en §11). E2E: `tests/e2e/63-studio-simulatie.spec.js`.
+
+## BPMN: het data-object met een type (2026-11-15)
+
+Een BPMN-data-object of data store kan een **type** krijgen: een verwijzing naar een element in een taal die
+gegevens draagt — een cm-entiteit, UML-klasse, MIM-objecttype of -gegevensgroeptype, ERD-entiteit. Welke
+elementen dat zijn bepaalt de **M3-aard `gegevens`** op het elementtype (`AARD_ELEMENT` in
+`diagramcore/types/layoutStijl.js`), niet een lijst per profiel; een activiteit valt er vanzelf buiten. De kiezer
+is de bestaande `element-verwijzing` (`studio/elementVerwijzing.jsx`, eerst de taal, dan het element) met
+`regel.aard`. Waarde `{profielId, elementId}`; in BPMN-XML wordt het `itemSubjectRef`.
+
+Verder op het data-object: **rol** (intern, invoer = Data Input met open pijltje, uitvoer = Data Output met dicht
+pijltje; de parameters van het proces) en **toestand** (BPMN `dataState`, onder de naam als *Aanvraag
+[ingediend]*, ook op de data store). Op de data-associatie: **richting** "lezen en schrijven" (één lijn met twee
+pijlen; BPMN kent alleen in- en uitvoerassociaties, de export maakt er twee van). Velden in
+`diagramprofielen/bpmn/dataVelden.js`. Profielversies: BPMN 1.2.0; canoniek, puur-UML, MIM en ERD 1.1.0 (de aard).
+Nog niet: de BPMN-XML-export en -import van type, rol, toestand en richting, en het gebruik in de simulatie
+(ontwerp Simulatie §11.8). E2E: `tests/e2e/64-studio-bpmn-dataobject.spec.js`.

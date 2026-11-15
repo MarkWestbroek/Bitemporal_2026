@@ -85,6 +85,8 @@ const elementTypes = [
   {
     id: "entiteit",
     label: "Entiteit",
+    // M3 aard (15-11): draagt gegevens; het type van een BPMN-data-object kan hiernaar wijzen.
+    aard: "gegevens",
     omschrijving: "Een ding waarover je gegevens vastlegt; de sleutel staat boven de streep.",
     kort: "ENT",
     icoon: "erd-entiteit",
@@ -200,6 +202,9 @@ const elementTypes = [
 
 export const erdDiagramType = {
   id: ERD_ID,
+  // Profielversie (STUDIO.md "Profielversie in het project"). 1.1.0 (15-11): aard "gegevens" op
+  // de typen die data dragen (het type van een BPMN-data-object wijst ernaar); minor.
+  versie: "1.1.0",
   label: "ERD",
   style: "uml-klassiek",
   // Connectoren hechten aan de omtrek i.p.v. aan vier handles: dozen

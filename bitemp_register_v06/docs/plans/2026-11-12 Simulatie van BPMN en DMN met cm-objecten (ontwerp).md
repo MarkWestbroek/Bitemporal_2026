@@ -1027,6 +1027,14 @@ Voorstel:
    zeggen welke taak welk object schrijft; de simulatie kan toetsen dat een taak die een object
    wijzigt ook een associatie heeft, en omgekeerd.
 
+**Gebouwd (15-11), stap 1 en 2:** de M3-aard "gegevens" (canoniek, puur-UML, MIM, ERD); op data-object
+en data store het type (bestaande `element-verwijzing` met `regel.aard`), de rol (invoer/uitvoer, pijltje) en
+de toestand (onder de naam); op de data-associatie de richting "lezen en schrijven" (Mark: bestaat in BPMN
+als twee associaties). BPMN zelf: `dataObject` + `dataObjectReference`, `itemSubjectRef`, `isCollection`,
+`dataState`; `dataInputAssociation` = lezen, `dataOutputAssociation` = schrijven; Data Input / Data Output
+zijn de parameters van het proces (ioSpecification). Nog te doen: stap 3 en 4 (simulatie) en de
+XML-export/-import (TRANSFORMATIES).
+
 Dit overlapt met §11.2 (objecten als objectdiagram): het procesdiagram zelf wordt de plek waar
 je de objecten ziet. Volgorde: na de store in de cm-vorm (§11.7).
 

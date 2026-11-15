@@ -112,6 +112,8 @@ const elementTypes = [
   {
     id: "objecttype",
     label: "Objecttype",
+    // M3 aard (15-11): draagt gegevens; het type van een BPMN-data-object kan hiernaar wijzen.
+    aard: "gegevens",
     lidwoord: "het",
     kort: "OT",
     // Vormgrammatica (besluit 2026-07-07): identiteit = scherpe rechthoek
@@ -137,6 +139,8 @@ const elementTypes = [
   {
     id: "gegevensgroeptype",
     label: "Gegevensgroeptype",
+    // M3 aard (15-11): draagt gegevens; het type van een BPMN-data-object kan hiernaar wijzen.
+    aard: "gegevens",
     lidwoord: "het",
     kort: "GGT",
     // Structuur zonder identiteit = afgeronde rechthoek.
@@ -484,6 +488,9 @@ const referenceTypes = [
 
 export const mim12DiagramType = {
   id: MIM12_ID,
+  // Profielversie (STUDIO.md "Profielversie in het project"). 1.1.0 (15-11): aard "gegevens" op
+  // de typen die data dragen (het type van een BPMN-data-object wijst ernaar); minor.
+  versie: "1.1.0",
   label: "MIM 1.2",
   style: "uml-klassiek",
   // Connectoren hechten aan de omtrek i.p.v. aan vier handles: dozen
