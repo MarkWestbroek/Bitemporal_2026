@@ -238,7 +238,13 @@ export function samenvoegProjecten({ basis, tak, main, mapId = null, keuze = nul
   const verschil = verschilMetMain({ basis: m.basis.werkbestand, tak: m.tak.werkbestand, main: m.main.werkbestand, mapId, ouderVan: maakOuderVan() });
   // Buiten de map telt alleen wat meegaat (zonder keuze: alles; met keuze: wat gekozen is, of
   // ontbreekt en geen conflict is).
-  const gaatMee = (v) => !keuze || (keuze[v.sleutel] === undefined ? v.status !== "conflict" : keuze[v.sleutel] === true);
+  // Per veld (stap 2b): een keuze `<sleutel>#<veld>` telt; één veld mee = de eenheid gaat (deels) mee.
+  const gaatMee = (v) => {
+    if (!keuze) return true;
+    const perVeld = Object.keys(keuze).filter((k) => k.startsWith(`${v.sleutel}#`));
+    if (perVeld.length) return perVeld.some((k) => keuze[k] === true);
+    return keuze[v.sleutel] === undefined ? v.status !== "conflict" : keuze[v.sleutel] === true;
+  };
   const buitenMap = mapId ? buitenScope(verschil.verschillen).filter(gaatMee) : [];
   const { samengevoegd, nieuwTak, conflicten } = voegSamen({ basis: m.basis.werkbestand, tak: m.tak.werkbestand, main: m.main.werkbestand, keuze });
   const blokkerend = keuze ? [] : conflicten;

@@ -6,7 +6,8 @@
  * De boom volgt de projectboom van de branch, beperkt tot wat verschilt:
  *   map → submap → diagram of element → relatie (onder haar bron) of kind (onder zijn boomouder).
  * Koppelingen tussen talen (kruisverbanden) en diagrambundels staan in een eigen groep, net als
- * eenheden zonder map.
+ * eenheden zonder map. Een element met twee of meer gewijzigde velden krijgt een regel per veld
+ * (stap 2b, `kiesbareVelden`); hun keuze heet `<elementsleutel>#<veld>`.
  * Wat alleen op MAIN veranderde, staat niet in de boom: dat komt altijd mee naar de branch.
  *
  * Per regel een **schuifje met drie standen** (Mark 14-11): links = MAIN overnemen in de branch
@@ -24,9 +25,30 @@
 /**
  * @typedef {{knoopId: string, soort: "map"|"groep"|"eenheid", label: string,
  *            verschil: Verschil|null, kinderen: Knoop[],
- *            context?: {profielId: string, elementType?: string}}} Knoop
+ *            context?: {profielId: string, elementType?: string}, heeftVelden?: boolean}} Knoop
  * `context`: bij een ongewijzigde ouder (package) het profiel en type, voor het typelabel.
  */
+
+/**
+ * Velden van een verschil waarvoor je apart kiest (stap 2b): de velden die de branch veranderde
+ * (of die een conflict zijn), vanaf twee; met één veld is het element zelf genoeg.
+ * @param {Verschil} v
+ * @returns {{veld: string, status: string, label?: string, compartiment?: string}[]}
+ */
+export function kiesbareVelden(v) {
+  if (v?.soort !== "element" || v.status === "main") return [];
+  const d = (v.veldDetails || []).filter((x) => x.status !== "main");
+  return d.length >= 2 ? d : [];
+}
+
+/** Sleutel van de keuze voor één veld van een verschil. */
+export const veldSleutel = (v, veld) => `${v.sleutel}#${veld}`;
+
+/** De sleutels in `keuze` die bepalen wat er met een verschil gebeurt (velden, of het geheel). */
+export function keuzeSleutelsVan(v) {
+  const velden = kiesbareVelden(v);
+  return velden.length ? velden.map((d) => veldSleutel(v, d.veld)) : [v.sleutel];
+}
 
 /**
  * Standaardkeuze voor de verschillen van de branch.
@@ -38,11 +60,12 @@ export function standaardKeuze(verschillen, { heeftMap = true } = {}) {
   for (const v of verschillen || []) {
     if (v.status === "main") continue;
     uit[v.sleutel] = v.status !== "conflict" && (!heeftMap || v.inScope);
+    for (const d of kiesbareVelden(v)) uit[veldSleutel(v, d.veld)] = d.status !== "conflict" && (!heeftMap || v.inScope);
   }
   return uit;
 }
 
-const SOORT_VOLGORDE = { map: 0, groep: 1, diagram: 2, element: 3, bundel: 4, kruisverband: 5 };
+const SOORT_VOLGORDE = { veld: -1, map: 0, groep: 1, diagram: 2, element: 3, bundel: 4, kruisverband: 5 };
 const volgordeVan = (k) => SOORT_VOLGORDE[k.soort === "eenheid" ? k.verschil?.soort : k.soort] ?? 9;
 
 /**
@@ -93,7 +116,14 @@ export function bouwKeuzeBoom(verschillen, mappen = {}, context = {}) {
   const eenheden = new Map();
   for (const v of items) {
     if (v.soort === "map") continue;
-    eenheden.set(v.sleutel, { knoopId: `eenheid:${v.sleutel}`, soort: "eenheid", label: v.naam || v.id, verschil: v, kinderen: [] });
+    const velden = kiesbareVelden(v).map((d) => ({
+      knoopId: `veld:${veldSleutel(v, d.veld)}`,
+      soort: /** @type {const} */ ("eenheid"),
+      label: d.label || d.veld,
+      verschil: /** @type {any} */ ({ soort: "veld", profielId: v.profielId, id: d.veld, naam: d.label || d.veld, status: d.status, velden: [], inScope: v.inScope, sleutel: veldSleutel(v, d.veld), mapId: v.mapId, ouderId: null, elementType: v.elementType, ...(d.compartiment ? { compartiment: d.compartiment } : {}) }),
+      kinderen: [],
+    }));
+    eenheden.set(v.sleutel, { knoopId: `eenheid:${v.sleutel}`, soort: "eenheid", label: v.naam || v.id, verschil: v, kinderen: velden, ...(velden.length ? { heeftVelden: true } : {}) });
   }
   const ouderSleutel = (v) => ((v.soort === "element" || v.soort === "diagram") && v.ouderId ? `element:${v.profielId ?? ""}:${v.ouderId}` : null);
   // Context-ouders: alleen aanmaken als ze nodig zijn; zelf aan hun ouder of map gehangen.
@@ -149,11 +179,14 @@ export function bouwKeuzeBoom(verschillen, mappen = {}, context = {}) {
   return [...wortels, ...["zonder", "bundels", "kruis"].filter((id) => groepen.has(id)).map((id) => groepen.get(id))];
 }
 
-/** Alle sleutels van eenheden in deze knoop en eronder (ook de eigen wijziging van een map). */
+/**
+ * Alle sleutels van eenheden in deze knoop en eronder (ook de eigen wijziging van een map). Een
+ * element met veldregels telt met zijn velden, niet met zichzelf.
+ */
 export function sleutelsVan(knoop) {
   const uit = [];
   const loop = (k) => {
-    if (k.verschil) uit.push(k.verschil.sleutel);
+    if (k.verschil && !k.heeftVelden) uit.push(k.verschil.sleutel);
     for (const c of k.kinderen) loop(c);
   };
   loop(knoop);
@@ -187,6 +220,9 @@ export function zetKnoop(knoop, keuze, stand) {
   const waarde = typeof stand === "string" && Object.hasOwn(SCHUIF, stand) ? SCHUIF[stand] : stand;
   const uit = { ...keuze };
   for (const k of sleutelsVan(knoop)) uit[k] = waarde;
+  // Een element met veldregels: ook de sleutel van het element zelf (geldt voor velden zonder regel).
+  const loop = (k) => { if (k.heeftVelden) uit[k.verschil.sleutel] = waarde; k.kinderen.forEach(loop); };
+  loop(knoop);
   return uit;
 }
 
@@ -215,8 +251,9 @@ export function keuzeTelling(verschillen, keuze, { heeftMap = true } = {}) {
   const t = { gekozen: 0, nietGekozen: 0, terug: 0, conflictTak: 0, conflictMain: 0, buitenGekozen: 0, vanMain: 0 };
   for (const v of verschillen || []) {
     if (v.status === "main") { t.vanMain += 1; continue; }
-    if (keuze[v.sleutel] === "terug") { t.terug += 1; continue; }
-    const aan = keuze[v.sleutel] === true;
+    const waarden = keuzeSleutelsVan(v).map((k) => keuze[k]);
+    const aan = waarden.some((w) => w === true);
+    if (!aan && waarden.every((w) => w === "terug")) { t.terug += 1; continue; }
     if (aan) t.gekozen += 1; else t.nietGekozen += 1;
     if (v.status === "conflict") { if (aan) t.conflictTak += 1; else t.conflictMain += 1; }
     if (aan && heeftMap && !v.inScope) t.buitenGekozen += 1;

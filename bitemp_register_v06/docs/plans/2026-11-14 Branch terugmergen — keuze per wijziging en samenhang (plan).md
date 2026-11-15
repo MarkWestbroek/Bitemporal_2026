@@ -257,5 +257,31 @@ in de groep "Diagrambundels" van de boom (in de scope als een van hun diagrammen
 vangnet meldt een tab naar een ontbrekend diagram. Scenario 10. Verder toont de boom het **type uit het
 profiel** (Entiteit, Gegevenselement, Package (domein), Compositie, …) in plaats van "element".
 
-**Nog open in stap 2:** kiezen per **veld** binnen een element (vraagt een drieweg per veld, dus
-ook conflicten per veld); 2b, buiten de map alleen-lezen in de branch.
+**Stap 2b — per veld (gebouwd 14/15-11, nog niet uitgebracht; Mark: "het is nog niet op veld
+niveau, toch?").**
+- Een element dat in alle drie de standen bestaat, wordt **per veld** samengevoegd (`veldenVan`:
+  elke eigenschap, elke `data.*`-sleutel, elk compartiment `compartiment.<type>`; de plaatsing is
+  het veld `map`). Wijzigen branch en MAIN verschillende velden, dan gaan beide mee: geen conflict
+  meer. Alleen hetzelfde veld aan beide kanten is een conflict; `conflicten[].velden` noemt het.
+- `verschilMetMain` geeft per element `veldDetails` (`perVeldStatus`); de status is "conflict" alleen
+  bij een veldconflict.
+- Kiezen: een element met twee of meer gewijzigde velden krijgt in de boom een regel per veld
+  (`kiesbareVelden`), met eigen schuifje; de keuze heet `<elementsleutel>#<veld>` en gaat voor die op
+  het element. De schuif van het element zet alle velden. Labels uit het profiel
+  (PropertyType.label, compartimenten).
+- **Velden binnen een compartiment** (15-11): elk veld is een eigen veld van het element,
+  `compartiment.<type>/uuid:<uuid>` (de veld-uuid `data.uuid`, gezet bij de V3-export, besluit
+  Mark 31-10 — Mark 15-11: zo laten), anders `…/naam:<naam>`, anders `…/pos:<i>`. Een veld zonder
+  uuid krijgt de uuid van zijn naamgenoot in een andere versie (`uuidPerVeldnaam`): een export
+  onderweg is dan geen "weg + nieuw". Hernoemen is één wijziging: met uuid altijd, zonder uuid als
+  het nieuwe veld op de plek staat van een verdwenen basisveld van hetzelfde type (`lijnVeldenUit`;
+  Mark 15-11: "ik heb alleen hernoemd").
+  Velden van MAIN eerst, nieuwe uit de branch achteraan; een volgorde-alleen-wijziging gaat niet mee.
+- Nog als geheel: diagrammen.
+- FTV/ODRL (gesprek met GQL-ODRL-EXEC, 15-11): een policy-target op attribuutniveau kan de veld-uuid
+  naast het naampad dragen (bron: pad + uuid-keten; ODRL-IRI `<basis>/register/<model>/veld/<uuid>`).
+  Codegen laat de veld-uuid nu vallen (MetaRegistry kent hem niet per veld): punt voor BACKEND.
+- Tests: `samenvoegen.test.js` (9 per veld), `keuzeBoom.test.js`, scenario's 11 en 12, e2e 63.
+
+**Nog open in stap 2:** velden binnen een compartiment (veldenlijst) apart samenvoegen; diagrammen per
+veld/node; buiten de map alleen-lezen in de branch.

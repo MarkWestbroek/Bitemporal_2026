@@ -44,6 +44,7 @@ import React, {
 } from "react";
 import { menuBus } from "../menuBus";
 import useStudioStore from "../useStudioStore";
+import { useToonUuids } from "../uuidZichtbaar.js";
 import { vraagNaam, vraagBevestiging, vraagKeuze, vraagReview, toonMelding } from "../naamDialog.jsx";
 import { useBeeldenStore, kopieerDiagramAlsLink, kopieerDiagramAlsSvgLink } from "../gedeeldeBeelden.js";
 
@@ -97,6 +98,7 @@ const leesExportOpties = () => {
   return { achtergrondModus: s.achtergrond, schaal: s.schaal, marge: s.marge };
 };
 import { koppelModelStore } from "../sync/operaties.js";
+import { startUuidAanvulling } from "../uuidAanvulling.js";
 import { createDiagramStore, inEenUndoStap } from "../../diagramcore/model/createDiagramStore.js";
 import { UITLIJN_MODES } from "../../diagramcore/layout/uitlijnen.js";
 import { ANKER_PREFIX } from "../../diagramcore/canvas/materialiseerConnectoren.js";
@@ -268,6 +270,8 @@ export function maakDiagramActiviteit(opties) {
   // Projectsync (plan 2026-10-07, stap 2): elke modelactie wordt een benoemde
   // operatie in de outbox; undo/redo en migraties vangt het diff-vangnet.
   koppelModelStore(id, useStore);
+  // Projectformaat 4 (15-11): ontbrekende uuid's aanvullen, afgeleid (uuid v5; studio/uuidAanvulling.js).
+  if (koppeling?.vulUuids) startUuidAanvulling(id, useStore, koppeling.vulUuids);
   // Model-migratie (DiagramType.hooks.migreerModel): een persistente sandbox
   // bewaart de vorm van het moment van inladen. Breng hem bij — direct na het
   // hydrateren én na elke latere laad (project-import, herlaad). Buiten de
@@ -3909,9 +3913,11 @@ export function maakDiagramActiviteit(opties) {
     const elements = useStore((s) => s.elements);
     const diagrams = useStore((s) => s.diagrams);
     // Kiezer over alle profielen (verwijst naar, 20-10) en ↗ om het gekozen diagram te openen.
+    // toonUuids: beheer-voorkeur (uuidZichtbaar.js); de inspector toont dan de uuid's.
+    const toonUuids = useToonUuids();
     const editorContext = React.useMemo(
-      () => ({ elements, diagrams, profielId: id, alleDiagrammen: alleDiagrammen(), openDiagram: openVerwijzing }),
-      [elements, diagrams]
+      () => ({ elements, diagrams, profielId: id, alleDiagrammen: alleDiagrammen(), openDiagram: openVerwijzing, toonUuids }),
+      [elements, diagrams, toonUuids]
     );
 
     // Kandidaten via de ReferenceResolvers van het profiel (plan §4.5b).

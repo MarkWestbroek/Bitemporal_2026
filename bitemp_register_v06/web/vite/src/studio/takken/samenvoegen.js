@@ -34,11 +34,21 @@
  * `patchLinks`, `zetSoorten`), zodat elke open Studio ze gewoon toepast. Twee keer gebruikt: MAIN →
  * samengevoegd (de merge) en tak → nieuwTak (het bijwerken van de branch).
  *
+ * **Per veld** (stap 2b, Mark 14-11: "het is nog niet op veld niveau, toch?"): een element dat in
+ * alle drie de standen bestaat, wordt per veld samengevoegd (`veldenVan`: elke eigenschap, elke
+ * `data.*`-sleutel, elk compartiment). Wijzigen branch en MAIN verschillende velden, dan gaan
+ * beide mee (geen conflict meer); alleen hetzelfde veld aan beide kanten is een conflict. Een keuze
+ * per veld heet `<elementsleutel>#<veld>` (bv. `element:uml:C#data.kleur`) en gaat voor de keuze
+ * op het element; de plaatsing van een element is het veld `map`. De velden binnen een compartiment
+ * (een veldenlijst zonder id's) gaan nog als geheel.
+ *
  * `samenhangFouten(stand)` is het vangnet van stap 2 (de samenhanggraaf is stap 3): verwijzingen
  * naar iets wat er niet is. Alleen wat de keuze nieuw stuk maakt telt (`nieuweSamenhangFouten`).
  */
 import { gelijk, diffMap, structuurNet, modelStoreNaam } from "../sync/operaties.js";
-import { verschilSleutel, elementVanPlaatsing } from "./verschilMetMain.js";
+import { verschilSleutel, elementVanPlaatsing, veldenVan, uuidPerVeldnaam, compartimentVeld, lijnVeldenUit } from "./verschilMetMain.js";
+
+export { veldenVan };
 
 const leeg = Object.freeze({});
 
@@ -51,16 +61,24 @@ const leeg = Object.freeze({});
  * `takUit` is de nieuwe stand van de tak: gelijk aan `uit`, behalve waar de tak iets veranderde
  * wat niet gekozen werd (dan houdt de tak zijn eigen waarde).
  * @param {Record<string, any>} basis @param {Record<string, any>} tak @param {Record<string, any>} main
+ * `perEenheid(k, b, t, m)` (optioneel): voegt één eenheid zelf samen als die in alle drie bestaat
+ * (per veld); geeft `{uit, takUit, conflicten, gekozen}` van die eenheid, of null voor het gewone
+ * gedrag. Een eenheid met conflicterende velden staat in `conflicten`, met de velden in
+ * `veldConflicten[k]`.
+ * @param {Record<string, any>} basis @param {Record<string, any>} tak @param {Record<string, any>} main
  * @param {(sleutel: string, conflict: boolean) => boolean|"terug"} [neem]
- * @returns {{uit: Record<string, any>, takUit: Record<string, any>, conflicten: string[], gekozen: Record<string, boolean>}}
+ * @param {((k: string, b: any, t: any, m: any) => ({uit: any, takUit: any, conflicten: string[], gekozen: Record<string, boolean>}|null))|null} [perEenheid]
+ * @returns {{uit: Record<string, any>, takUit: Record<string, any>, conflicten: string[], gekozen: Record<string, boolean>, veldConflicten: Record<string, {velden: string[], gekozen: Record<string, boolean>}>}}
  */
-export function voegMapSamen(basis = leeg, tak = leeg, main = leeg, neem = (_k, conflict) => !conflict) {
+export function voegMapSamen(basis = leeg, tak = leeg, main = leeg, neem = (_k, conflict) => !conflict, perEenheid = null) {
   basis = basis || leeg; tak = tak || leeg; main = main || leeg;
   const uit = {};
   const takUit = {};
   const conflicten = [];
   /** per conflict: koos de gebruiker de tak? */
   const gekozen = {};
+  /** per eenheid die per veld is samengevoegd met conflicterende velden */
+  const veldConflicten = {};
   const sleutels = [...Object.keys(main), ...Object.keys(tak).filter((k) => !(k in main)), ...Object.keys(basis).filter((k) => !(k in main) && !(k in tak))];
   for (const k of sleutels) {
     const b = basis[k], t = tak[k], m = main[k];
@@ -68,7 +86,16 @@ export function voegMapSamen(basis = leeg, tak = leeg, main = leeg, neem = (_k, 
     const mainAnders = !gelijk(b, m);
     let waarde = m;
     let takWaarde = m;
-    if (takAnders && !mainAnders) {
+    const perVeld = takAnders && perEenheid && b !== undefined && t !== undefined && m !== undefined ? perEenheid(k, b, t, m) : null;
+    if (perVeld) {
+      waarde = perVeld.uit;
+      takWaarde = perVeld.takUit;
+      if (perVeld.conflicten.length) {
+        conflicten.push(k);
+        gekozen[k] = Object.values(perVeld.gekozen).some(Boolean);
+        veldConflicten[k] = { velden: perVeld.conflicten, gekozen: perVeld.gekozen };
+      }
+    } else if (takAnders && !mainAnders) {
       const n = neem(k, false);
       if (n === "terug") takWaarde = m; // de branch neemt MAIN over
       else if (n) { waarde = t; takWaarde = t; } else takWaarde = t;
@@ -82,7 +109,67 @@ export function voegMapSamen(basis = leeg, tak = leeg, main = leeg, neem = (_k, 
     if (waarde !== undefined) uit[k] = waarde;
     if (takWaarde !== undefined) takUit[k] = takWaarde;
   }
-  return { uit, takUit, conflicten, gekozen };
+  return { uit, takUit, conflicten, gekozen, veldConflicten };
+}
+
+const isObject = (v) => !!v && typeof v === "object" && !Array.isArray(v);
+
+/**
+ * Bouw een element terug uit zijn velden; `vormen` zeggen of er een `data`/`compartimenten` hoort.
+ * Een compartiment is zijn schil plus zijn velden, in de volgorde van de sleutels (die van MAIN,
+ * nieuwe velden uit de branch achteraan).
+ */
+function elementUitVelden(id, velden, ...vormen) {
+  const el = { id };
+  const data = {};
+  /** @type {Map<string, {schil: any, velden: any[]}>} */
+  const comps = new Map();
+  const comp = (ct) => {
+    if (!comps.has(ct)) comps.set(ct, { schil: null, velden: [] });
+    return comps.get(ct);
+  };
+  let heeftData = vormen.some((v) => isObject(v?.data));
+  let heeftComp = vormen.some((v) => Array.isArray(v?.compartimenten));
+  for (const [k, v] of Object.entries(velden)) {
+    if (v === undefined) continue;
+    const cv = compartimentVeld(k);
+    if (cv) { comp(cv.compartiment).velden.push(v); heeftComp = true; }
+    else if (k.startsWith("data.")) { data[k.slice(5)] = v; heeftData = true; }
+    else if (k.startsWith("compartiment.")) { comp(k.slice(13)).schil = v; heeftComp = true; }
+    else el[k] = v;
+  }
+  if (heeftData) el.data = data;
+  if (heeftComp) {
+    el.compartimenten = [...comps.entries()]
+      .filter(([, c]) => c.schil || c.velden.length)
+      .map(([ct, c]) => {
+        if (c.schil && !isObject(c.schil)) return c.schil;
+        const schil = c.schil || { compartmentType: ct };
+        // Alleen een compartiment dat een veldenlijst had (in een van de vormen) krijgt die terug.
+        const hadVelden = c.velden.length > 0 || vormen.some((v) => (Array.isArray(v?.compartimenten) ? v.compartimenten : [])
+          .some((x, i) => String(x?.compartmentType ?? x?.id ?? i) === ct && Array.isArray(x?.velden)));
+        return hadVelden ? { ...schil, velden: c.velden } : schil;
+      });
+  }
+  return el;
+}
+
+/**
+ * Eén element per veld samenvoegen (in alle drie de standen aanwezig). `neemVeld(veld, conflict)`
+ * zoals `neem` bij `voegMapSamen`. De volgorde van de compartimenten is die van MAIN.
+ * @returns {{uit: any, takUit: any, conflicten: string[], gekozen: Record<string, boolean>}}
+ */
+export function voegElementSamen(b, t, m, neemVeld) {
+  const kaart = uuidPerVeldnaam(m, t, b);
+  const lijn = lijnVeldenUit(b, t, m);
+  const r = voegMapSamen(veldenVan(b, kaart, lijn), veldenVan(t, kaart, lijn), veldenVan(m, kaart, lijn), neemVeld);
+  const id = m?.id ?? t?.id ?? b?.id;
+  return {
+    uit: elementUitVelden(id, r.uit, m, t),
+    takUit: elementUitVelden(id, r.takUit, t, m),
+    conflicten: r.conflicten,
+    gekozen: r.gekozen,
+  };
 }
 
 /** Lijst met `id` → map op id. */
@@ -98,7 +185,9 @@ export function plaatsingSleutel(p) {
 
 /**
  * @typedef {{soort: "element"|"diagram"|"map"|"plaatsing"|"bundel"|"kruisverband"|"koppelsoorten",
- *            profielId: string|null, id: string, gekozen?: "tak"|"main"}} Conflict
+ *            profielId: string|null, id: string, gekozen?: "tak"|"main", velden?: string[]}} Conflict
+ * `velden`: bij een element dat per veld is samengevoegd, de velden die aan beide kanten anders
+ * veranderden.
  */
 
 /**
@@ -120,8 +209,17 @@ export function voegSamen({ basis, tak, main, keuze = null }) {
   };
   const meld = (r, soort, profielId) => {
     for (const id of r.conflicten) {
-      conflicten.push({ soort, profielId, id, ...(keuze ? { gekozen: r.gekozen[id] ? "tak" : "main" } : {}) });
+      const pv = r.veldConflicten?.[id];
+      conflicten.push({ soort, profielId, id, ...(pv ? { velden: pv.velden } : {}), ...(keuze ? { gekozen: r.gekozen[id] ? "tak" : "main" } : {}) });
     }
+  };
+  // Keuze per veld: `<sleutel>#<veld>` gaat voor de keuze op de eenheid.
+  const neemVeldVoor = (sleutel) => (veld, conflict) => {
+    if (!keuze) return !conflict;
+    let w = keuze[`${sleutel}#${veld}`];
+    if (w === undefined) w = keuze[sleutel];
+    if (w === "terug") return "terug";
+    return w === undefined ? !conflict : w === true;
   };
 
   // Profielen: elementen en diagrammen per id; de overige velden (diagramTypeId, meta) van MAIN,
@@ -131,7 +229,9 @@ export function voegSamen({ basis, tak, main, keuze = null }) {
   const pids = new Set(["main", "tak", "basis"].flatMap((k) => Object.keys(st[k].profielen || leeg)));
   for (const pid of pids) {
     const b = st.basis.profielen?.[pid], t = st.tak.profielen?.[pid], m = st.main.profielen?.[pid];
-    const el = voegMapSamen(b?.elements, t?.elements, m?.elements, neemVoor((id) => verschilSleutel({ soort: "element", profielId: pid, id })));
+    const elSleutel = (id) => verschilSleutel({ soort: "element", profielId: pid, id });
+    const el = voegMapSamen(b?.elements, t?.elements, m?.elements, neemVoor(elSleutel),
+      (id, eb, et, em) => voegElementSamen(eb, et, em, neemVeldVoor(elSleutel(id))));
     const di = voegMapSamen(b?.diagrams, t?.diagrams, m?.diagrams, neemVoor((id) => verschilSleutel({ soort: "diagram", profielId: pid, id })));
     meld(el, "element", pid);
     meld(di, "diagram", pid);
@@ -146,7 +246,8 @@ export function voegSamen({ basis, tak, main, keuze = null }) {
   // Structuur. Een plaatsing hoort bij haar element of diagram (verplaatsen = wijziging daarvan).
   const s = (k) => st[k].structuur || leeg;
   const mappen = voegMapSamen(s("basis").mappen, s("tak").mappen, s("main").mappen, neemVoor((id) => verschilSleutel({ soort: "map", id })));
-  const plaatsing = voegMapSamen(s("basis").plaatsing, s("tak").plaatsing, s("main").plaatsing, neemVoor(plaatsingSleutel));
+  // De plaatsing van een element of diagram is zijn veld `map`.
+  const plaatsing = voegMapSamen(s("basis").plaatsing, s("tak").plaatsing, s("main").plaatsing, (k, conflict) => neemVeldVoor(plaatsingSleutel(k))("map", conflict));
   const bundels = voegMapSamen(s("basis").bundels, s("tak").bundels, s("main").bundels, neemVoor((id) => verschilSleutel({ soort: "bundel", id })));
   meld(mappen, "map", null);
   meld(plaatsing, "plaatsing", null);

@@ -23,6 +23,23 @@ De single source of truth voor het nummer is `package.json` `"version"`.
   kruisverbanden naar een andere taal: zo zet je de cm-Aanvraag naast het data-object, met de lijn erbij.
   En daar verder: vanaf de cm-Aanvraag komen ook de andere cm-entiteiten erbij. Een dubbelklik op het data-object
   zonder eigen *verwijst naar* opent het cm-diagram waarop zijn type staat. De titel van het venster noemt de naam.
+- **Samenvoegen naar MAIN per veld** (Mark 14-11). Wijzigen de branch en MAIN verschillende velden van hetzelfde
+  element (bv. de naam in de branch, de beschrijving op MAIN), dan gaan beide mee; alleen hetzelfde veld aan
+  beide kanten is nog een conflict. Een element met twee of meer gewijzigde velden krijgt in de boom een regel
+  per veld met een eigen schuifje (naam, eigenschappen met hun label, map, en elk veld in een compartiment, zoals
+  `veld1`). Velden worden gekoppeld op hun uuid, anders op naam; een hernoemd veld zonder
+  uuid op dezelfde plek telt als hernoeming, niet als weg + nieuw. Vraagt render-svc 0.4.8 (api ongewijzigd: de
+  sleutel `…#veld` reist mee in `keuze`).
+- **Uuid's tonen (beheer)** (Mark 15-11): Studio-instellingen → Modelleren → "Uuid's tonen in de eigenschappen",
+  alleen voor een beheerder (of als de login uit staat). Dan staat de uuid van het element en van elk veld in de
+  eigenschappen, alleen-lezen en te kopiëren. `studio/uuidZichtbaar.js`; e2e-spec 64.
+- **Projectformaat 4: uuid's altijd aanwezig** (Mark 15-11). Elk modelelement en elk veld van het canonieke model
+  krijgt een uuid zodra het een naam heeft, en een ouder project bij het openen; niet meer pas bij de V3-export.
+  De uuid is afgeleid (uuid v5) uit het project en het element (een veld: element, compartiment en naam), zodat
+  twee mensen die tegelijk een oud project openen dezelfde uuid's krijgen, en een branch dezelfde als zijn MAIN.
+  Eenmaal gezet blijft hij, ook bij hernoemen. Geen undo-stap; met alleen leesrecht niet. Voor alle projecten op
+  een server in één keer: `scripts/projecten-uuids-aanvullen.mjs` (beheerder; eerst zonder `--toepassen` kijken).
+  `studio/uuidAanvulling.js`, `canoniek-uml/uuids.js` (`uuidV5`, `afgeleideUuidMaker`).
 
 ### Opgelost
 - **Donker thema** (Mark 15-11): de naam onder een BPMN-data-object of -data store (en de band van een pool of

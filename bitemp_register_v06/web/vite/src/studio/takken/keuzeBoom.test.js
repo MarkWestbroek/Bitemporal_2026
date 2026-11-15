@@ -84,3 +84,26 @@ test("schuifTeksten: links en rechts per status", () => {
   assert.deepEqual([schuifTeksten({ status: "conflict" }).rechts, schuifTeksten({ status: "conflict" }).rechtsWaarschuwing], ["MAIN overschrijven", true]);
   assert.equal(schuifTeksten(null).rechts, "alles naar MAIN");
 });
+
+test("per veld (stap 2b): een element met twee gewijzigde velden krijgt veldregels; de schuif van het element zet ze", async () => {
+  const { kiesbareVelden, keuzeSleutelsVan } = await import("./keuzeBoom.js");
+  const c = v("element", "C", { status: "conflict", mapId: "dienst", veldDetails: [
+    { veld: "data.beschrijving", status: "main" }, { veld: "data.kleur", status: "conflict" }, { veld: "naam", status: "gewijzigd" },
+  ] });
+  const een = v("element", "D", { mapId: "dienst", veldDetails: [{ veld: "naam", status: "gewijzigd" }] });
+  assert.deepEqual(kiesbareVelden(c).map((d) => d.veld), ["data.kleur", "naam"], "zonder het MAIN-veld");
+  assert.deepEqual(kiesbareVelden(een), [], "één veld: het element is genoeg");
+  assert.deepEqual(keuzeSleutelsVan(c), ["element:uml:C#data.kleur", "element:uml:C#naam"]);
+  let keuze = standaardKeuze([c, een]);
+  assert.deepEqual(keuze, { "element:uml:C": false, "element:uml:C#data.kleur": false, "element:uml:C#naam": true, "element:uml:D": true });
+  const boom = bouwKeuzeBoom([c, een], MAPPEN);
+  const cKnoop = boom[0].kinderen.find((k) => k.knoopId === "eenheid:element:uml:C");
+  assert.deepEqual(cKnoop.kinderen.map((k) => k.knoopId), ["veld:element:uml:C#data.kleur", "veld:element:uml:C#naam"]);
+  assert.equal(standVan(cKnoop, keuze), "gemengd");
+  keuze = zetKnoop(cKnoop, keuze, "rechts");
+  assert.equal(standVan(cKnoop, keuze), "rechts");
+  assert.equal(keuze["element:uml:C"], true, "ook het element zelf");
+  assert.equal(keuzeTelling([c, een], keuze).conflictTak, 1);
+  keuze = zetKnoop(cKnoop.kinderen[1], keuze, "links");
+  assert.deepEqual(keuzeTelling([c], keuze), { gekozen: 1, nietGekozen: 0, terug: 0, conflictTak: 1, conflictMain: 0, buitenGekozen: 0, vanMain: 0 }, "deels mee telt als gekozen");
+});

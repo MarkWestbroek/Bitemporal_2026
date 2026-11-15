@@ -704,8 +704,24 @@ te wijzigen.
 > (keuze `"terug"`, letterlijk: ook een veld dat MAIN niet heeft, bv. geen `kleur`, verdwijnt),
 > – niets doen, → naar MAIN (bij een conflict: MAIN overschrijven). De tekst per stand hangt af van
 > de status (`schuifTeksten` in `keuzeBoom.js`); op een map is de stand "gemengd" als de kinderen
-> verschillen. Kiezen per veld binnen een element
-> volgt.
+> verschillen.
+> **Per veld (stap 2b, 15-11):** een element in alle drie de standen wordt per veld samengevoegd
+> (`veldenVan`; verschillende velden aan beide kanten = geen conflict); met twee of meer gewijzigde
+> velden krijgt het in de boom een regel per veld (keuze `<elementsleutel>#<veld>`). Ook de velden
+> binnen een compartiment, gekoppeld op hun uuid (`data.uuid`, zie projectformaat 4 hieronder), anders op naam
+> (een hernoeming op dezelfde plek, zelfde type, blijft één veld: `lijnVeldenUit`). Een beheerder kan
+> de uuid's in de eigenschappen laten tonen (Studio-instellingen → Modelleren; `studio/uuidZichtbaar.js`).
+> **Projectformaat 4 (15-11):** elk modelelement en elk veld van canoniek-uml heeft een uuid. De
+> Studio vult een ontbrekende uuid zelf aan, na het openen van een project en na elke eigen wijziging
+> (`studio/uuidAanvulling.js`), als gewone operatie maar zonder undo-stap; met alleen leesrecht niet.
+> De uuid is **afgeleid** (uuid v5, `afgeleideUuidMaker` in `canoniek-uml/uuids.js`): uit de stam van
+> het project (bij een branch zijn MAIN) en het element-id, en voor een veld uit de uuid van het
+> element, het compartiment en de veldnaam van dat moment. Twee clients die tegelijk een oud project
+> openen, komen zo op dezelfde uuid's; eenmaal gezet blijft een uuid staan, ook bij hernoemen. Na de
+> wijziging van een ander vult een client niets aan (dat doet de maker), zodat een late aanvulling
+> geen gelijktijdige hernoeming terugdraait. Alle projecten op een server in één keer:
+> `scripts/projecten-uuids-aanvullen.mjs --omnium <url> [--toepassen]` (beheerderstoken; zonder
+> `--toepassen` alleen kijken), dat dezelfde uuid's als operaties stuurt.
 > De vergelijking is `studio/takken/verschilMetMain.js`: een zuivere drieweg op drie
 > gematerialiseerde werkbestanden (basis, tak, MAIN) met per element, diagram, map en
 > kruisverband `nieuw`/`gewijzigd`/`weg`/`conflict`/`main` (alleen op MAIN veranderd), de

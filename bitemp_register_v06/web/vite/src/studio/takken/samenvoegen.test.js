@@ -105,7 +105,7 @@ test("voegSamen: E aan beide kanten anders gewijzigd is een conflict", () => {
   const main = maakMain();
   main.profielen.uml.elements.E.naam = "E(b)";
   const { conflicten, samengevoegd } = voegSamen({ basis: BASIS, tak, main });
-  assert.deepEqual(conflicten, [{ soort: "element", profielId: "uml", id: "E" }]);
+  assert.deepEqual(conflicten, [{ soort: "element", profielId: "uml", id: "E", velden: ["naam"] }]);
   assert.equal(samengevoegd.profielen.uml.elements.E.naam, "E(b)", "bij een conflict blijft MAIN staan");
 });
 
@@ -192,10 +192,10 @@ test("keuze bij een conflict: aan = de branch wint, uit = MAIN houdt (en de bran
   const main = maakMain();
   main.profielen.uml.elements.E.naam = "E(b)";
   let r = voegSamen({ basis: BASIS, tak, main, keuze: { "element:uml:E": true } });
-  assert.deepEqual(r.conflicten, [{ soort: "element", profielId: "uml", id: "E", gekozen: "tak" }]);
+  assert.deepEqual(r.conflicten, [{ soort: "element", profielId: "uml", id: "E", velden: ["naam"], gekozen: "tak" }]);
   assert.equal(r.samengevoegd.profielen.uml.elements.E.naam, "E'");
   r = voegSamen({ basis: BASIS, tak, main, keuze: {} });
-  assert.deepEqual(r.conflicten, [{ soort: "element", profielId: "uml", id: "E", gekozen: "main" }], "ontbreekt in de keuze: MAIN");
+  assert.deepEqual(r.conflicten, [{ soort: "element", profielId: "uml", id: "E", velden: ["naam"], gekozen: "main" }], "ontbreekt in de keuze: MAIN");
   assert.equal(r.samengevoegd.profielen.uml.elements.E.naam, "E(b)");
   assert.equal(r.nieuwTak.profielen.uml.elements.E.naam, "E'");
 });
@@ -282,7 +282,7 @@ test("terug bij een conflict: MAIN wint aan beide kanten", () => {
   const r = voegSamen({ basis: BASIS, tak, main, keuze: { "element:uml:E": "terug" } });
   assert.equal(r.samengevoegd.profielen.uml.elements.E.naam, "E(b)");
   assert.equal(r.nieuwTak.profielen.uml.elements.E.naam, "E(b)");
-  assert.deepEqual(r.conflicten, [{ soort: "element", profielId: "uml", id: "E", gekozen: "main" }]);
+  assert.deepEqual(r.conflicten, [{ soort: "element", profielId: "uml", id: "E", velden: ["naam"], gekozen: "main" }]);
 });
 
 test("element als ouder in de boom (Mark 14-11): diagram onder een package ligt in de map van dat package", () => {
@@ -319,4 +319,157 @@ test("context: een ongewijzigd package boven een nieuw diagram staat als ouder i
   assert.equal(boom[0].kinderen[0].knoopId, "context:element:uml:PKG");
   assert.equal(boom[0].kinderen[0].label, "besluit");
   assert.equal(boom[0].kinderen[0].kinderen[0].knoopId, "eenheid:diagram:uml:DB");
+});
+
+// ── Stap 2b: per veld (Mark 14-11) ─────────────────────────────────────────────────────────────
+
+test("per veld: branch wijzigt de naam, MAIN de beschrijving van hetzelfde element — geen conflict, beide mee", () => {
+  const basis = kopie(BASIS);
+  basis.profielen.uml.elements.C = { id: "C", naam: "C", data: { kleur: "#fff" } };
+  const tak = kopie(basis);
+  tak.profielen.uml.elements.C.naam = "C'";
+  const main = kopie(basis);
+  main.profielen.uml.elements.C.data.beschrijving = "op MAIN";
+  const v = verschilMetMain({ basis, tak, main }).verschillen.find((x) => x.id === "C");
+  assert.equal(v.status, "gewijzigd");
+  assert.deepEqual(v.velden, ["naam"]);
+  assert.deepEqual(v.veldDetails, [{ veld: "data.beschrijving", status: "main" }, { veld: "naam", status: "gewijzigd" }]);
+  const { samengevoegd, nieuwTak, conflicten } = voegSamen({ basis, tak, main });
+  assert.deepEqual(conflicten, []);
+  assert.deepEqual(samengevoegd.profielen.uml.elements.C, { id: "C", naam: "C'", data: { kleur: "#fff", beschrijving: "op MAIN" } });
+  assert.deepEqual(nieuwTak.profielen.uml.elements.C, samengevoegd.profielen.uml.elements.C);
+});
+
+test("per veld: keuze per veld gaat voor de keuze op het element; terug per veld", () => {
+  const basis = kopie(BASIS);
+  basis.profielen.uml.elements.C = { id: "C", naam: "C", data: {} };
+  const tak = kopie(basis);
+  tak.profielen.uml.elements.C = { id: "C", naam: "C'", data: { kleur: "#e6efe1" } };
+  const keuze = { "element:uml:C": true, "element:uml:C#data.kleur": "terug" };
+  const { samengevoegd, nieuwTak } = voegSamen({ basis, tak, main: kopie(basis), keuze });
+  assert.deepEqual(samengevoegd.profielen.uml.elements.C, { id: "C", naam: "C'", data: {} }, "naam mee, kleur niet");
+  assert.deepEqual(nieuwTak.profielen.uml.elements.C, { id: "C", naam: "C'", data: {} }, "kleur in de branch terug naar MAIN");
+});
+
+test("per veld: conflict alleen op het veld dat aan beide kanten veranderde", () => {
+  const basis = kopie(BASIS);
+  basis.profielen.uml.elements.C = { id: "C", naam: "C", data: { kleur: "#fff" } };
+  const tak = kopie(basis);
+  tak.profielen.uml.elements.C = { id: "C", naam: "C'", data: { kleur: "#f00" } };
+  const main = kopie(basis);
+  main.profielen.uml.elements.C.data.kleur = "#00f";
+  const v = verschilMetMain({ basis, tak, main }).verschillen.find((x) => x.id === "C");
+  assert.equal(v.status, "conflict");
+  assert.deepEqual(v.veldDetails, [{ veld: "data.kleur", status: "conflict" }, { veld: "naam", status: "gewijzigd" }]);
+  // Zonder keuze: het conflict blokkeert (stap 1) en noemt het veld.
+  assert.deepEqual(voegSamen({ basis, tak, main }).conflicten, [{ soort: "element", profielId: "uml", id: "C", velden: ["data.kleur"] }]);
+  // Met keuze: naam mee, kleur: MAIN houdt de zijne, de branch de zijne.
+  const r = voegSamen({ basis, tak, main, keuze: { "element:uml:C#naam": true, "element:uml:C#data.kleur": false } });
+  assert.deepEqual(r.samengevoegd.profielen.uml.elements.C, { id: "C", naam: "C'", data: { kleur: "#00f" } });
+  assert.deepEqual(r.nieuwTak.profielen.uml.elements.C, { id: "C", naam: "C'", data: { kleur: "#f00" } });
+});
+
+test("per veld: verplaatsen is het veld 'map' — hernoemen mee, verplaatsen niet", () => {
+  const tak = maakTak();
+  tak.structuur.mappen.ander = { id: "ander", naam: "Ander", ouderId: null };
+  tak.structuur.plaatsing["el::uml::D"] = "ander";
+  const v = verschilMetMain({ basis: BASIS, tak, main: maakMain(), mapId: "dienst" }).verschillen.find((x) => x.id === "D");
+  assert.deepEqual(v.veldDetails, [{ veld: "map", status: "gewijzigd" }, { veld: "naam", status: "gewijzigd" }]);
+  const r = voegSamen({ basis: BASIS, tak, main: maakMain(), keuze: { "element:uml:D#naam": true, "element:uml:D#map": false, "map::ander": true } });
+  assert.equal(r.samengevoegd.profielen.uml.elements.D.naam, "D'");
+  assert.equal(r.samengevoegd.structuur.plaatsing["el::uml::D"], "dienst", "niet verplaatst op MAIN");
+  assert.equal(r.nieuwTak.structuur.plaatsing["el::uml::D"], "ander", "de branch houdt de verplaatsing");
+});
+
+test("per veld: compartimenten houden de volgorde van MAIN en gaan per compartiment", () => {
+  const comp = (type, namen) => ({ compartmentType: type, velden: namen.map((naam) => ({ naam, fieldType: "attribuut", data: {} })) });
+  const basis = kopie(BASIS);
+  basis.profielen.uml.elements.C = { id: "C", naam: "C", data: {}, compartimenten: [comp("afgeleid", []), comp("velden", ["a"])] };
+  const tak = kopie(basis);
+  tak.profielen.uml.elements.C.compartimenten[1] = comp("velden", ["a", "b"]);
+  const main = kopie(basis);
+  main.profielen.uml.elements.C.compartimenten[0] = comp("afgeleid", ["x"]);
+  const { samengevoegd, conflicten } = voegSamen({ basis, tak, main });
+  assert.deepEqual(conflicten, []);
+  assert.deepEqual(samengevoegd.profielen.uml.elements.C.compartimenten, [comp("afgeleid", ["x"]), comp("velden", ["a", "b"])]);
+});
+
+// ── Velden binnen een compartiment (Mark 15-11): koppelen op data.uuid, anders op naam ─────────
+
+const veldMet = (naam, extra = {}) => ({ naam, fieldType: "attribuut", data: {}, ...extra });
+const metVelden = (velden) => ({ id: "C", naam: "C", data: {}, compartimenten: [{ compartmentType: "velden", velden }] });
+
+test("compartimentvelden: branch voegt b toe, MAIN voegt c toe — beide, geen conflict; per veld kiesbaar", () => {
+  const basis = kopie(BASIS);
+  basis.profielen.uml.elements.C = metVelden([veldMet("a")]);
+  const tak = kopie(basis);
+  tak.profielen.uml.elements.C = metVelden([veldMet("a"), veldMet("b")]);
+  const main = kopie(basis);
+  main.profielen.uml.elements.C = metVelden([veldMet("a"), veldMet("c")]);
+  const v = verschilMetMain({ basis, tak, main }).verschillen.find((x) => x.id === "C");
+  assert.equal(v.status, "gewijzigd");
+  assert.deepEqual(v.veldDetails, [
+    { veld: "compartiment.velden/naam:b", status: "nieuw", label: "b", compartiment: "velden" },
+    { veld: "compartiment.velden/naam:c", status: "main", label: "c", compartiment: "velden" },
+  ]);
+  const { samengevoegd } = voegSamen({ basis, tak, main });
+  assert.deepEqual(samengevoegd.profielen.uml.elements.C.compartimenten[0].velden.map((x) => x.naam), ["a", "c", "b"], "volgorde van MAIN, nieuw achteraan");
+  // b niet mee: blijft in de branch.
+  const r = voegSamen({ basis, tak, main, keuze: { "element:uml:C#compartiment.velden/naam:b": false } });
+  assert.deepEqual(r.samengevoegd.profielen.uml.elements.C.compartimenten[0].velden.map((x) => x.naam), ["a", "c"]);
+  assert.deepEqual(r.nieuwTak.profielen.uml.elements.C.compartimenten[0].velden.map((x) => x.naam), ["a", "c", "b"]);
+});
+
+test("compartimentvelden: hernoemen is één wijziging — met uuid, en zonder uuid op dezelfde plek (Mark 15-11)", () => {
+  const basis = kopie(BASIS);
+  basis.profielen.uml.elements.C = metVelden([veldMet("achternaam", { data: { uuid: "u-1" } }), veldMet("tussenvoegsel")]);
+  const tak = kopie(basis);
+  tak.profielen.uml.elements.C = metVelden([veldMet("geslachtsnaam", { data: { uuid: "u-1" } }), veldMet("voorvoegsel")]);
+  const v = verschilMetMain({ basis, tak, main: kopie(basis) }).verschillen.find((x) => x.id === "C");
+  assert.deepEqual(v.veldDetails.map((d) => [d.veld, d.status, d.label]), [
+    ["compartiment.velden/naam:tussenvoegsel", "gewijzigd", "voorvoegsel"],
+    ["compartiment.velden/uuid:u-1", "gewijzigd", "geslachtsnaam"],
+  ]);
+  // Samengevoegd: de hernoemde velden op hun plek, geen dubbele.
+  const { samengevoegd } = voegSamen({ basis, tak, main: kopie(basis) });
+  assert.deepEqual(samengevoegd.profielen.uml.elements.C.compartimenten[0].velden.map((x) => x.naam), ["geslachtsnaam", "voorvoegsel"]);
+});
+
+test("compartimentvelden: MAIN exporteerde intussen (veld kreeg een uuid) — de branch-versie zonder uuid koppelt via de naam", () => {
+  const basis = kopie(BASIS);
+  basis.profielen.uml.elements.C = metVelden([veldMet("a")]);
+  const tak = kopie(basis);
+  tak.profielen.uml.elements.C = metVelden([veldMet("a", { data: { verplicht: true } })]);
+  const main = kopie(basis);
+  main.profielen.uml.elements.C = metVelden([veldMet("a", { data: { uuid: "u-a" } })]);
+  const v = verschilMetMain({ basis, tak, main }).verschillen.find((x) => x.id === "C");
+  assert.equal(v.status, "conflict", "hetzelfde veld aan beide kanten anders: conflict, niet weg + nieuw");
+  assert.deepEqual(v.veldDetails.map((d) => d.veld), ["compartiment.velden/uuid:u-a"]);
+});
+
+test("compartimentvelden: een compartiment zonder veldenlijst blijft zonder", () => {
+  const basis = kopie(BASIS);
+  basis.profielen.uml.elements.C = { id: "C", naam: "C", data: {}, compartimenten: [{ compartmentType: "notitie", tekst: "x" }] };
+  const tak = kopie(basis);
+  tak.profielen.uml.elements.C.naam = "C'";
+  const { samengevoegd } = voegSamen({ basis, tak, main: kopie(basis) });
+  assert.deepEqual(samengevoegd.profielen.uml.elements.C.compartimenten, [{ compartmentType: "notitie", tekst: "x" }]);
+});
+
+test("compartimentvelden: een veld vooraan invoegen is geen hernoeming van wat erna komt", () => {
+  const basis = kopie(BASIS);
+  basis.profielen.uml.elements.C = metVelden([veldMet("a"), veldMet("b")]);
+  const tak = kopie(basis);
+  tak.profielen.uml.elements.C = metVelden([veldMet("nieuw"), veldMet("a"), veldMet("b")]);
+  const v = verschilMetMain({ basis, tak, main: kopie(basis) }).verschillen.find((x) => x.id === "C");
+  assert.deepEqual(v.veldDetails.map((d) => [d.veld, d.status]), [["compartiment.velden/naam:nieuw", "nieuw"]]);
+});
+
+test("compartimentvelden: hernoemen én een ander type op die plek is geen hernoeming", () => {
+  const basis = kopie(BASIS);
+  basis.profielen.uml.elements.C = metVelden([veldMet("a")]);
+  const tak = kopie(basis);
+  tak.profielen.uml.elements.C = metVelden([{ naam: "x", fieldType: "anders", data: {} }]);
+  const v = verschilMetMain({ basis, tak, main: kopie(basis) }).verschillen.find((x) => x.id === "C");
+  assert.deepEqual(v.veldDetails.map((d) => [d.veld, d.status]), [["compartiment.velden/naam:a", "weg"], ["compartiment.velden/naam:x", "nieuw"]]);
 });

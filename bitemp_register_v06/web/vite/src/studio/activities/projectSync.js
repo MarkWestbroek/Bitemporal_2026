@@ -17,7 +17,10 @@ import { clientId } from "../sync/outbox.js";
 import { nieuwRuimteId } from "../../diagramcore/model/opslagRuimte.js";
 
 export const PROJECT_FORMAAT = "studio-project";
-export const PROJECT_FORMAAT_VERSIE = 3; // v3: zonder tabs/actieveTab en zonder viewports (werkruimte-laag)
+// v3: zonder tabs/actieveTab en zonder viewports (werkruimte-laag).
+// v4 (15-11): elk modelelement en veld van canoniek-uml heeft een uuid (`data.uuid`); de Studio
+// vult ontbrekende aan bij het openen en na elke eigen wijziging (studio/uuidAanvulling.js).
+export const PROJECT_FORMAAT_VERSIE = 4;
 export const STANDAARD_PROJECTNAAM = "Naamloos project";
 
 /** Nieuw project-id: UUID (de server accepteert 8–64 tekens uit [A-Za-z0-9_-]). */
@@ -53,7 +56,9 @@ export function bestandsstamVoor(naam) {
  *   tabs uit v1/v2 blijven in `data.tabs` staan en dienen als eerste
  *   werkruimte als die lokaal nog niet bestaat;
  * - v3 (2026-10-07): tabs, actieve tab en viewports zitten niet meer in het
- *   werkbestand — dat is werkruimte (per gebruiker), geen project.
+ *   werkbestand — dat is werkruimte (per gebruiker), geen project;
+ * - v4 (2026-11-15): uuid's op modelelementen en velden. Een v3-bestand laadt gewoon; de
+ *   uuid-aanvulling (uuidAanvulling.js) maakt het daarna v4.
  *
  * @param {any} data
  * @param {{bestandsnaam?: string}} [opties]

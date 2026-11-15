@@ -2038,7 +2038,9 @@ referentielijstinstantie (niet `id`: dat is op GE/relatie al een edge-id).
 - Identiteit binnen de tool (zandbakken, experimenten, voorstellen naast elkaar; delta, merge);
   besluit Mark 31-10. Artefacten verwijzen **niet** naar de uuid, maar op naampad.
 - Bedacht bij een V3-export uit de Studio (`uuids.js`, `vulUuids`), nooit bij een import;
-  daarna stabiel. De delta matcht eerst op uuid (een hernoeming wordt "gewijzigd · naam"),
+  daarna stabiel. **Sinds projectformaat 4 (15-11)** vult de Studio ze zelf aan, na het openen en na
+  elke eigen wijziging, afgeleid (uuid v5; `studio/uuidAanvulling.js`); voor bestaande projecten op
+  een server: `scripts/projecten-uuids-aanvullen.mjs`. De delta matcht eerst op uuid (een hernoeming wordt "gewijzigd · naam"),
   dan op het uit de namen afgeleide id.
 - ✅ **BACKEND (31-10):** `UUID string json:"uuid,omitempty"` op V3Entiteit, V3Gegevenselement,
   V3Relatie, V3Veld, V3Enum, V3Datatype en V3ReferentielijstInstantie (`model/v3_format.go`); de

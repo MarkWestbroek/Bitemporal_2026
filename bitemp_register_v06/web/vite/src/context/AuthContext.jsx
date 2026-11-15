@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, useCallback, useMemo } from "react";
 
-const AuthContext = createContext(null);
+// Geëxporteerd voor wie de context optioneel leest (studio/uuidZichtbaar.js: buiten een provider géén fout).
+export const AuthContext = createContext(null);
 
 /**
  * detectApiBaseUrl — bepaalt het basis-URL voor de API.
