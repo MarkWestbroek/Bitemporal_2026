@@ -97,7 +97,8 @@ export const TOUR_STAPPEN = [
       "Twee activiteiten in aanbouw. Toegangverlening: schrijf toegangsbeleid in klare taal (Toegangsspraak), " +
       "als diagram en als ODRL. Simulatie: doorloop een BPMN-proces met zijn beslistabellen stap voor stap, " +
       "met een object uit het model. Staan ze niet in de balk? Zet Labs aan onder Instellingen, of gebruik Ga naar. " +
-      "Kies in Simulatie onder Voorbeeldscenario kiezen… bijvoorbeeld het Waterstede-buurtfeest.",
+      "Het demo-project heeft eigen scenario's (map 9 Simulatie): in Simulatie staan ze onder Scenario kiezen… → " +
+      "Uit het project, bijvoorbeeld het buurtfeest; Alle scenario's toetsen loopt ze allemaal door.",
   },
   {
     titel: "Zoek elke opdracht",

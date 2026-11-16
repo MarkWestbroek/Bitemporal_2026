@@ -8,6 +8,11 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
 
+### Gewijzigd
+- **Rondleiding: scenario's uit het project** (16-11): de stap over de Labs-activiteiten wijst nu naar de
+  scenario's van het demo-project (*Scenario kiezen… → Uit het project*, map *9 Simulatie*) en naar *Alle
+  scenario's toetsen*, in plaats van naar de ingebakken keuzelijst.
+
 ## [studio/v0.45.0] — 2026-11-16
 
 Samen met render 0.4.9 (api blijft 0.27.0; devloop door FUNDAMENT).
