@@ -80,12 +80,12 @@ export default async function (proj) {
     let overzicht = diagramMet(w.simulatieId);
     if (!overzicht) {
       overzicht = diagrams[`${stam}_overzicht`] = { id: `${stam}_overzicht`, naam: elements[w.simulatieId].naam, diagramType: "simulatie", nodes: [], edges: [] };
-      zetNode(overzicht, w.simulatieId, 60, 40);
-      knopen.filter((e) => e.elementType === "subject").forEach((e, i) => zetNode(overzicht, e.id, 60 + i * 290, 200));
+      zetNode(overzicht, w.simulatieId, 520, 40);
+      knopen.filter((e) => e.elementType === "subject").forEach((e, i) => zetNode(overzicht, e.id, 60 + i * 330, 220));
     }
     if (w.nieuw.scenario) {
       const aantal = overzicht.nodes.filter((n) => elements[n.elementId]?.elementType === "scenario").length;
-      zetNode(overzicht, w.scenarioId, 60 + aantal * 290, 380);
+      zetNode(overzicht, w.scenarioId, 1100 + aantal * 330, 220);
     }
     let eigen = diagramMet(w.scenarioId, overzicht.id);
     if (!eigen) {
@@ -93,9 +93,27 @@ export default async function (proj) {
       eigen = diagrams[id] = { id, naam: scenario.naam, diagramType: "simulatie", nodes: [], edges: [] };
       zetNode(eigen, w.scenarioId, 60, 40);
     }
-    const y0 = Math.max(240, ...eigen.nodes.map((n) => (n.position?.y || 0) + 140));
+    // Anders dan de knop: één rij onder het scenario (startobject, stubs, verwachting) met ruimte
+    // voor de json-regels, en de lijnen als boom (ouder boven), zoals bij de andere hiërarchieën.
     const nieuw = new Set(knopen.map((e) => e.id));
-    w.kinderen.filter((id) => nieuw.has(id)).forEach((id, i) => zetNode(eigen, id, 60 + (i % 4) * 290, y0 + Math.floor(i / 4) * 190));
+    const volgorde = { instantie: 0, stub: 1, verwachting: 2 };
+    w.kinderen
+      .filter((id) => nieuw.has(id))
+      .sort((a, b) => volgorde[elements[a].elementType] - volgorde[elements[b].elementType])
+      .forEach((id, i) => zetNode(eigen, id, 60 + i * 440, 260));
+    const rij = eigen.nodes.filter((n) => n.elementId !== w.scenarioId);
+    const kop = eigen.nodes.find((n) => n.elementId === w.scenarioId);
+    if (kop && rij.length > 1 && nieuw.has(w.scenarioId)) kop.position = { x: Math.round((Math.max(...rij.map((n) => n.position.x)) + 60) / 2), y: 40 };
+  }
+
+  // Boomlijnen voor «heeft» (en «start met») op elk diagram van de simulatie.
+  for (const d of Object.values(diagrams)) {
+    const op = new Set(d.nodes.map((n) => n.elementId));
+    for (const c of Object.values(elements)) {
+      if (!c.source || !op.has(c.source) || !op.has(c.target) || d.lijnen?.[c.id]) continue;
+      d.lijnen = { ...(d.lijnen || {}), [c.id]: { vorm: "boom", knikken: [], boomOuder: null, sourceHandle: "source-bottom", targetHandle: "target-top" } };
+      zetDia[d.id] = d;
+    }
   }
 
   const ops = [];

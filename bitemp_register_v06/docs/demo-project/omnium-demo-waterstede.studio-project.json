@@ -198,6 +198,12 @@
         "naam": "WSDL",
         "ouderId": "map_1794832755123_mcp1",
         "volgorde": 32
+      },
+      "map_demo_9_simulatie": {
+        "id": "map_demo_9_simulatie",
+        "naam": "9 Simulatie",
+        "ouderId": null,
+        "volgorde": 33
       }
     },
     "plaatsing": {
@@ -484,7 +490,28 @@
       "xsd05::mcp_diagram_adviesbericht_xml_schema": "map_demo_8_meer_talen_xml_schema",
       "wsdl05::mcp_diagram_adviesdienst_veiligheidsregio_wsdl": "map_demo_8_meer_talen_wsdl",
       "el::dmnDrd05::demo_regels_risicoklasse": "map_1794832755080_mcp1",
-      "el::dmnDrd05::demo_regels_leges": "map_1794832755080_mcp1"
+      "el::dmnDrd05::demo_regels_leges": "map_1794832755080_mcp1",
+      "simulatiemodel05::sm_demo_1794863168271_overzicht": "map_demo_9_simulatie",
+      "simulatiemodel05::sm_demo_1794863168271_waterstede-1-buurtfeest-klasse-a-melding": "map_demo_9_simulatie",
+      "simulatiemodel05::sm_demo_1794863168271_waterstede-2-jaarmarkt-klasse-b-verleend": "map_demo_9_simulatie",
+      "simulatiemodel05::sm_demo_1794863168271_waterstede-3-festival-klasse-c-advies-zelf-beslissen": "map_demo_9_simulatie",
+      "el::simulatiemodel05::sm_demo_1794863168271_1": "map_demo_9_simulatie",
+      "el::simulatiemodel05::sm_demo_1794863168271_2": "map_demo_9_simulatie",
+      "el::simulatiemodel05::sm_demo_1794863168271_4": "map_demo_9_simulatie",
+      "el::simulatiemodel05::sm_demo_1794863168271_6": "map_demo_9_simulatie",
+      "el::simulatiemodel05::sm_demo_1794863168271_8": "map_demo_9_simulatie",
+      "el::simulatiemodel05::sm_demo_1794863168271_10": "map_demo_9_simulatie",
+      "el::simulatiemodel05::sm_demo_1794863168271_12": "map_demo_9_simulatie",
+      "el::simulatiemodel05::sm_demo_1794863168271_14": "map_demo_9_simulatie",
+      "el::simulatiemodel05::sm_demo_1794863168271_16": "map_demo_9_simulatie",
+      "el::simulatiemodel05::sm_demo_1794863168271_18": "map_demo_9_simulatie",
+      "el::simulatiemodel05::sm_demo_1794863168271_20": "map_demo_9_simulatie",
+      "el::simulatiemodel05::sm_demo_1794863168271_22": "map_demo_9_simulatie",
+      "el::simulatiemodel05::sm_demo_1794863168271_24": "map_demo_9_simulatie",
+      "el::simulatiemodel05::sm_demo_1794863168271_26": "map_demo_9_simulatie",
+      "el::simulatiemodel05::sm_demo_1794863168271_28": "map_demo_9_simulatie",
+      "el::simulatiemodel05::sm_demo_1794863168271_30": "map_demo_9_simulatie",
+      "el::simulatiemodel05::sm_demo_1794863168271_32": "map_demo_9_simulatie"
     },
     "plaatsingVolgorde": [
       "el::usecase05::mcp_organisator",
@@ -770,7 +797,28 @@
       "xsd05::mcp_diagram_adviesbericht_xml_schema",
       "wsdl05::mcp_diagram_adviesdienst_veiligheidsregio_wsdl",
       "el::dmnDrd05::demo_regels_risicoklasse",
-      "el::dmnDrd05::demo_regels_leges"
+      "el::dmnDrd05::demo_regels_leges",
+      "simulatiemodel05::sm_demo_1794863168271_overzicht",
+      "simulatiemodel05::sm_demo_1794863168271_waterstede-1-buurtfeest-klasse-a-melding",
+      "simulatiemodel05::sm_demo_1794863168271_waterstede-2-jaarmarkt-klasse-b-verleend",
+      "simulatiemodel05::sm_demo_1794863168271_waterstede-3-festival-klasse-c-advies-zelf-beslissen",
+      "el::simulatiemodel05::sm_demo_1794863168271_1",
+      "el::simulatiemodel05::sm_demo_1794863168271_2",
+      "el::simulatiemodel05::sm_demo_1794863168271_4",
+      "el::simulatiemodel05::sm_demo_1794863168271_6",
+      "el::simulatiemodel05::sm_demo_1794863168271_8",
+      "el::simulatiemodel05::sm_demo_1794863168271_10",
+      "el::simulatiemodel05::sm_demo_1794863168271_12",
+      "el::simulatiemodel05::sm_demo_1794863168271_14",
+      "el::simulatiemodel05::sm_demo_1794863168271_16",
+      "el::simulatiemodel05::sm_demo_1794863168271_18",
+      "el::simulatiemodel05::sm_demo_1794863168271_20",
+      "el::simulatiemodel05::sm_demo_1794863168271_22",
+      "el::simulatiemodel05::sm_demo_1794863168271_24",
+      "el::simulatiemodel05::sm_demo_1794863168271_26",
+      "el::simulatiemodel05::sm_demo_1794863168271_28",
+      "el::simulatiemodel05::sm_demo_1794863168271_30",
+      "el::simulatiemodel05::sm_demo_1794863168271_32"
     ]
   },
   "kruisverbanden": [
@@ -11150,6 +11198,729 @@
         }
       },
       "actiefDiagramId": "mcp_diagram_componenten_en_uitrol",
+      "meta": null
+    },
+    "simulatiemodel05": {
+      "diagramTypeId": "simulatiemodel05",
+      "elements": {
+        "sm_demo_1794863168271_1": {
+          "id": "sm_demo_1794863168271_1",
+          "data": {},
+          "naam": "Simulatie van de evenementaanvraag",
+          "elementType": "simulatie",
+          "compartimenten": []
+        },
+        "sm_demo_1794863168271_2": {
+          "id": "sm_demo_1794863168271_2",
+          "data": {
+            "verwijstNaar": {
+              "diagramId": "mcp_diagram_evenementaanvraag_behandelen",
+              "profielId": "bpmnMotor05"
+            }
+          },
+          "naam": "Evenementaanvraag behandelen",
+          "elementType": "subject",
+          "compartimenten": []
+        },
+        "sm_demo_1794863168271_3": {
+          "id": "sm_demo_1794863168271_3",
+          "data": {},
+          "naam": "",
+          "source": "sm_demo_1794863168271_1",
+          "target": "sm_demo_1794863168271_2",
+          "elementType": "heeft",
+          "compartimenten": []
+        },
+        "sm_demo_1794863168271_4": {
+          "id": "sm_demo_1794863168271_4",
+          "data": {
+            "verwijstNaar": {
+              "diagramId": "mcp_diagram_veiligheidsadviezen_inwinnen",
+              "profielId": "bpmnMotor05"
+            }
+          },
+          "naam": "Veiligheidsadviezen inwinnen",
+          "elementType": "subject",
+          "compartimenten": []
+        },
+        "sm_demo_1794863168271_5": {
+          "id": "sm_demo_1794863168271_5",
+          "data": {},
+          "naam": "",
+          "source": "sm_demo_1794863168271_1",
+          "target": "sm_demo_1794863168271_4",
+          "elementType": "heeft",
+          "compartimenten": []
+        },
+        "sm_demo_1794863168271_6": {
+          "id": "sm_demo_1794863168271_6",
+          "data": {
+            "verwijstNaar": {
+              "diagramId": "mcp_diagram_evenement_op_de_kalender_zetten",
+              "profielId": "bpmnMotor05"
+            }
+          },
+          "naam": "Evenement op de kalender zetten",
+          "elementType": "subject",
+          "compartimenten": []
+        },
+        "sm_demo_1794863168271_7": {
+          "id": "sm_demo_1794863168271_7",
+          "data": {},
+          "naam": "",
+          "source": "sm_demo_1794863168271_1",
+          "target": "sm_demo_1794863168271_6",
+          "elementType": "heeft",
+          "compartimenten": []
+        },
+        "sm_demo_1794863168271_8": {
+          "id": "sm_demo_1794863168271_8",
+          "data": {
+            "startBij": {
+              "elementId": "mcp_aanvraag_ontvangen",
+              "profielId": "bpmnMotor05"
+            },
+            "vulwijze": "fixture",
+            "startProces": "evenementaanvraag-behandelen",
+            "beschrijving": "Een buurtfeest met 80 bezoekers, zonder alcohol of wegafsluiting. De beslistabel Risicoklasse geeft klasse A: een melding volstaat. Het proces bevestigt de melding en is klaar; er komt geen vergunning.",
+            "toevalsgetal": "1",
+            "vulwijze_taak": "",
+            "vulwijze_dienst": "",
+            "vulwijze_partner": "",
+            "vulwijze_expressie": ""
+          },
+          "naam": "Waterstede 1: buurtfeest (klasse A, melding)",
+          "elementType": "scenario",
+          "compartimenten": [
+            {
+              "velden": [],
+              "compartmentType": "variabelen"
+            }
+          ]
+        },
+        "sm_demo_1794863168271_9": {
+          "id": "sm_demo_1794863168271_9",
+          "data": {},
+          "naam": "",
+          "source": "sm_demo_1794863168271_1",
+          "target": "sm_demo_1794863168271_8",
+          "elementType": "heeft",
+          "compartimenten": []
+        },
+        "sm_demo_1794863168271_10": {
+          "id": "sm_demo_1794863168271_10",
+          "data": {
+            "json": "{\n  \"aanvraagnummer\": \"EVE-2027-0001\",\n  \"ingediendOp\": \"2027-03-02T10:15:00Z\",\n  \"status\": \"ingediend\",\n  \"naam\": \"Buurtfeest Rietkade\",\n  \"soort\": \"buurtfeest\",\n  \"datumVan\": \"2027-06-12\",\n  \"verwachtAantalBezoekers\": 80,\n  \"alcohol\": false,\n  \"wegafsluiting\": false,\n  \"versterktGeluid\": false,\n  \"commercieel\": false\n}",
+            "sleutel": "aanvraag-1",
+            "typeLabel": "Evenementaanvraag",
+            "instantieVan": {
+              "elementId": "mcp_evenementaanvraag",
+              "profielId": "diagram05"
+            }
+          },
+          "naam": "aanvraag-1",
+          "elementType": "instantie",
+          "compartimenten": []
+        },
+        "sm_demo_1794863168271_11": {
+          "id": "sm_demo_1794863168271_11",
+          "data": {},
+          "naam": "",
+          "source": "sm_demo_1794863168271_8",
+          "target": "sm_demo_1794863168271_10",
+          "elementType": "start-met",
+          "compartimenten": []
+        },
+        "sm_demo_1794863168271_12": {
+          "id": "sm_demo_1794863168271_12",
+          "data": {
+            "bij": {
+              "elementId": "mcp_melding_bevestigd",
+              "profielId": "bpmnMotor05"
+            },
+            "via": "",
+            "plek": "Melding bevestigd",
+            "reden": "",
+            "soort": "einde",
+            "waarden": "{\n  \"status\": \"melding_bevestigd\"\n}"
+          },
+          "naam": "Melding bevestigd",
+          "elementType": "verwachting",
+          "compartimenten": []
+        },
+        "sm_demo_1794863168271_13": {
+          "id": "sm_demo_1794863168271_13",
+          "data": {},
+          "naam": "",
+          "source": "sm_demo_1794863168271_8",
+          "target": "sm_demo_1794863168271_12",
+          "elementType": "heeft",
+          "compartimenten": []
+        },
+        "sm_demo_1794863168271_14": {
+          "id": "sm_demo_1794863168271_14",
+          "data": {
+            "startBij": {
+              "elementId": "mcp_aanvraag_ontvangen",
+              "profielId": "bpmnMotor05"
+            },
+            "vulwijze": "fixture",
+            "startProces": "evenementaanvraag-behandelen",
+            "beschrijving": "Een commerciële jaarmarkt met 1200 bezoekers en een wegafsluiting. Klasse B: reguliere vergunning, leges 150 euro. De vergunningverlener verleent; het signaal 'vergunning verleend' start het kalenderproces.",
+            "toevalsgetal": "1",
+            "vulwijze_taak": "",
+            "vulwijze_dienst": "",
+            "vulwijze_partner": "",
+            "vulwijze_expressie": ""
+          },
+          "naam": "Waterstede 2: jaarmarkt (klasse B, verleend)",
+          "elementType": "scenario",
+          "compartimenten": [
+            {
+              "velden": [],
+              "compartmentType": "variabelen"
+            }
+          ]
+        },
+        "sm_demo_1794863168271_15": {
+          "id": "sm_demo_1794863168271_15",
+          "data": {},
+          "naam": "",
+          "source": "sm_demo_1794863168271_1",
+          "target": "sm_demo_1794863168271_14",
+          "elementType": "heeft",
+          "compartimenten": []
+        },
+        "sm_demo_1794863168271_16": {
+          "id": "sm_demo_1794863168271_16",
+          "data": {
+            "json": "{\n  \"aanvraagnummer\": \"EVE-2027-0002\",\n  \"ingediendOp\": \"2027-03-04T09:00:00Z\",\n  \"status\": \"ingediend\",\n  \"naam\": \"Jaarmarkt Waterstede\",\n  \"soort\": \"markt\",\n  \"datumVan\": \"2027-09-04\",\n  \"verwachtAantalBezoekers\": 1200,\n  \"alcohol\": false,\n  \"wegafsluiting\": true,\n  \"versterktGeluid\": false,\n  \"commercieel\": true\n}",
+            "sleutel": "aanvraag-2",
+            "typeLabel": "Evenementaanvraag",
+            "instantieVan": {
+              "elementId": "mcp_evenementaanvraag",
+              "profielId": "diagram05"
+            }
+          },
+          "naam": "aanvraag-2",
+          "elementType": "instantie",
+          "compartimenten": []
+        },
+        "sm_demo_1794863168271_17": {
+          "id": "sm_demo_1794863168271_17",
+          "data": {},
+          "naam": "",
+          "source": "sm_demo_1794863168271_14",
+          "target": "sm_demo_1794863168271_16",
+          "elementType": "start-met",
+          "compartimenten": []
+        },
+        "sm_demo_1794863168271_18": {
+          "id": "sm_demo_1794863168271_18",
+          "data": {
+            "bij": {
+              "elementId": "mcp_beoordeel_de_aanvraag",
+              "profielId": "bpmnMotor05"
+            },
+            "json": "{\n  \"besluit\": \"verlenen\",\n  \"motivering\": \"Verkeersplan akkoord; marktterrein is beschikbaar.\"\n}",
+            "plek": "aanvraag-beoordelen",
+            "wijze": "",
+            "bezoek": "1"
+          },
+          "naam": "Beoordeel de aanvraag",
+          "elementType": "stub",
+          "compartimenten": []
+        },
+        "sm_demo_1794863168271_19": {
+          "id": "sm_demo_1794863168271_19",
+          "data": {},
+          "naam": "",
+          "source": "sm_demo_1794863168271_14",
+          "target": "sm_demo_1794863168271_18",
+          "elementType": "heeft",
+          "compartimenten": []
+        },
+        "sm_demo_1794863168271_20": {
+          "id": "sm_demo_1794863168271_20",
+          "data": {
+            "bij": {
+              "elementId": "mcp_vergunning_verleend",
+              "profielId": "bpmnMotor05"
+            },
+            "via": "",
+            "plek": "Vergunning verleend",
+            "reden": "",
+            "soort": "einde",
+            "waarden": "{\n  \"status\": \"verleend\",\n  \"leges\": 150\n}"
+          },
+          "naam": "Vergunning verleend",
+          "elementType": "verwachting",
+          "compartimenten": []
+        },
+        "sm_demo_1794863168271_21": {
+          "id": "sm_demo_1794863168271_21",
+          "data": {},
+          "naam": "",
+          "source": "sm_demo_1794863168271_14",
+          "target": "sm_demo_1794863168271_20",
+          "elementType": "heeft",
+          "compartimenten": []
+        },
+        "sm_demo_1794863168271_22": {
+          "id": "sm_demo_1794863168271_22",
+          "data": {
+            "startBij": {
+              "elementId": "mcp_aanvraag_ontvangen",
+              "profielId": "bpmnMotor05"
+            },
+            "vulwijze": "fixture",
+            "startProces": "evenementaanvraag-behandelen",
+            "beschrijving": "Een festival met 6500 bezoekers, alcohol en versterkt geluid. Klasse C: het proces roept 'Veiligheidsadviezen inwinnen' aan (brandweer en politie, parallel). De adviezen komen uit het scenario; de beoordeling vul je zelf in: besluit 'verlenen' of 'weigeren'.",
+            "toevalsgetal": "1",
+            "vulwijze_taak": "",
+            "vulwijze_dienst": "",
+            "vulwijze_partner": "",
+            "vulwijze_expressie": ""
+          },
+          "naam": "Waterstede 3: festival (klasse C, advies, zelf beslissen)",
+          "elementType": "scenario",
+          "compartimenten": [
+            {
+              "velden": [],
+              "compartmentType": "variabelen"
+            }
+          ]
+        },
+        "sm_demo_1794863168271_23": {
+          "id": "sm_demo_1794863168271_23",
+          "data": {},
+          "naam": "",
+          "source": "sm_demo_1794863168271_1",
+          "target": "sm_demo_1794863168271_22",
+          "elementType": "heeft",
+          "compartimenten": []
+        },
+        "sm_demo_1794863168271_24": {
+          "id": "sm_demo_1794863168271_24",
+          "data": {
+            "json": "{\n  \"aanvraagnummer\": \"EVE-2027-0003\",\n  \"ingediendOp\": \"2027-03-09T14:30:00Z\",\n  \"status\": \"ingediend\",\n  \"naam\": \"Rietpop Festival\",\n  \"soort\": \"festival\",\n  \"datumVan\": \"2027-07-17\",\n  \"datumTot\": \"2027-07-18\",\n  \"verwachtAantalBezoekers\": 6500,\n  \"alcohol\": true,\n  \"wegafsluiting\": true,\n  \"versterktGeluid\": true,\n  \"commercieel\": true\n}",
+            "sleutel": "aanvraag-3",
+            "typeLabel": "Evenementaanvraag",
+            "instantieVan": {
+              "elementId": "mcp_evenementaanvraag",
+              "profielId": "diagram05"
+            }
+          },
+          "naam": "aanvraag-3",
+          "elementType": "instantie",
+          "compartimenten": []
+        },
+        "sm_demo_1794863168271_25": {
+          "id": "sm_demo_1794863168271_25",
+          "data": {},
+          "naam": "",
+          "source": "sm_demo_1794863168271_22",
+          "target": "sm_demo_1794863168271_24",
+          "elementType": "start-met",
+          "compartimenten": []
+        },
+        "sm_demo_1794863168271_26": {
+          "id": "sm_demo_1794863168271_26",
+          "data": {
+            "bij": {
+              "elementId": "mcp_ontvang_advies_brandweer",
+              "profielId": "bpmnMotor05"
+            },
+            "json": "{\n  \"adviesBrandweer\": \"positief_onder_voorwaarden\",\n  \"voorwaardeBrandweer\": \"Twee extra nooduitgangen aan de dijkzijde.\"\n}",
+            "plek": "advies-brandweer",
+            "wijze": "",
+            "bezoek": "1"
+          },
+          "naam": "Ontvang advies brandweer",
+          "elementType": "stub",
+          "compartimenten": []
+        },
+        "sm_demo_1794863168271_27": {
+          "id": "sm_demo_1794863168271_27",
+          "data": {},
+          "naam": "",
+          "source": "sm_demo_1794863168271_22",
+          "target": "sm_demo_1794863168271_26",
+          "elementType": "heeft",
+          "compartimenten": []
+        },
+        "sm_demo_1794863168271_28": {
+          "id": "sm_demo_1794863168271_28",
+          "data": {
+            "bij": {
+              "elementId": "mcp_ontvang_advies_politie",
+              "profielId": "bpmnMotor05"
+            },
+            "json": "{\n  \"adviesPolitie\": \"positief\"\n}",
+            "plek": "advies-politie",
+            "wijze": "",
+            "bezoek": "1"
+          },
+          "naam": "Ontvang advies politie",
+          "elementType": "stub",
+          "compartimenten": []
+        },
+        "sm_demo_1794863168271_29": {
+          "id": "sm_demo_1794863168271_29",
+          "data": {},
+          "naam": "",
+          "source": "sm_demo_1794863168271_22",
+          "target": "sm_demo_1794863168271_28",
+          "elementType": "heeft",
+          "compartimenten": []
+        },
+        "sm_demo_1794863168271_30": {
+          "id": "sm_demo_1794863168271_30",
+          "data": {
+            "bij": {
+              "elementId": "mcp_beoordeel_de_aanvraag",
+              "profielId": "bpmnMotor05"
+            },
+            "json": "",
+            "plek": "aanvraag-beoordelen",
+            "wijze": "hand",
+            "bezoek": "1"
+          },
+          "naam": "Beoordeel de aanvraag",
+          "elementType": "stub",
+          "compartimenten": []
+        },
+        "sm_demo_1794863168271_31": {
+          "id": "sm_demo_1794863168271_31",
+          "data": {},
+          "naam": "",
+          "source": "sm_demo_1794863168271_22",
+          "target": "sm_demo_1794863168271_30",
+          "elementType": "heeft",
+          "compartimenten": []
+        },
+        "sm_demo_1794863168271_32": {
+          "id": "sm_demo_1794863168271_32",
+          "data": {
+            "bij": {
+              "elementId": "mcp_beoordeel_de_aanvraag",
+              "profielId": "bpmnMotor05"
+            },
+            "via": "",
+            "plek": "Beoordeel de aanvraag",
+            "reden": "",
+            "soort": "gat",
+            "waarden": "{\n  \"leges\": 900\n}"
+          },
+          "naam": "Beoordeel de aanvraag",
+          "elementType": "verwachting",
+          "compartimenten": []
+        },
+        "sm_demo_1794863168271_33": {
+          "id": "sm_demo_1794863168271_33",
+          "data": {},
+          "naam": "",
+          "source": "sm_demo_1794863168271_22",
+          "target": "sm_demo_1794863168271_32",
+          "elementType": "heeft",
+          "compartimenten": []
+        }
+      },
+      "diagrams": {
+        "sm_demo_1794863168271_overzicht": {
+          "id": "sm_demo_1794863168271_overzicht",
+          "naam": "Simulatie van de evenementaanvraag",
+          "edges": [],
+          "nodes": [
+            {
+              "position": {
+                "x": 520,
+                "y": 40
+              },
+              "elementId": "sm_demo_1794863168271_1"
+            },
+            {
+              "position": {
+                "x": 60,
+                "y": 220
+              },
+              "elementId": "sm_demo_1794863168271_2"
+            },
+            {
+              "position": {
+                "x": 390,
+                "y": 220
+              },
+              "elementId": "sm_demo_1794863168271_4"
+            },
+            {
+              "position": {
+                "x": 720,
+                "y": 220
+              },
+              "elementId": "sm_demo_1794863168271_6"
+            },
+            {
+              "position": {
+                "x": 1100,
+                "y": 220
+              },
+              "elementId": "sm_demo_1794863168271_8"
+            },
+            {
+              "position": {
+                "x": 1430,
+                "y": 220
+              },
+              "elementId": "sm_demo_1794863168271_14"
+            },
+            {
+              "position": {
+                "x": 1760,
+                "y": 220
+              },
+              "elementId": "sm_demo_1794863168271_22"
+            }
+          ],
+          "lijnen": {
+            "sm_demo_1794863168271_3": {
+              "vorm": "boom",
+              "knikken": [],
+              "boomOuder": null,
+              "sourceHandle": "source-bottom",
+              "targetHandle": "target-top"
+            },
+            "sm_demo_1794863168271_5": {
+              "vorm": "boom",
+              "knikken": [],
+              "boomOuder": null,
+              "sourceHandle": "source-bottom",
+              "targetHandle": "target-top"
+            },
+            "sm_demo_1794863168271_7": {
+              "vorm": "boom",
+              "knikken": [],
+              "boomOuder": null,
+              "sourceHandle": "source-bottom",
+              "targetHandle": "target-top"
+            },
+            "sm_demo_1794863168271_9": {
+              "vorm": "boom",
+              "knikken": [],
+              "boomOuder": null,
+              "sourceHandle": "source-bottom",
+              "targetHandle": "target-top"
+            },
+            "sm_demo_1794863168271_15": {
+              "vorm": "boom",
+              "knikken": [],
+              "boomOuder": null,
+              "sourceHandle": "source-bottom",
+              "targetHandle": "target-top"
+            },
+            "sm_demo_1794863168271_23": {
+              "vorm": "boom",
+              "knikken": [],
+              "boomOuder": null,
+              "sourceHandle": "source-bottom",
+              "targetHandle": "target-top"
+            }
+          },
+          "diagramType": "simulatie"
+        },
+        "sm_demo_1794863168271_waterstede-1-buurtfeest-klasse-a-melding": {
+          "id": "sm_demo_1794863168271_waterstede-1-buurtfeest-klasse-a-melding",
+          "naam": "Waterstede 1: buurtfeest (klasse A, melding)",
+          "edges": [],
+          "nodes": [
+            {
+              "position": {
+                "x": 280,
+                "y": 40
+              },
+              "elementId": "sm_demo_1794863168271_8"
+            },
+            {
+              "position": {
+                "x": 60,
+                "y": 260
+              },
+              "elementId": "sm_demo_1794863168271_10"
+            },
+            {
+              "position": {
+                "x": 500,
+                "y": 260
+              },
+              "elementId": "sm_demo_1794863168271_12"
+            }
+          ],
+          "lijnen": {
+            "sm_demo_1794863168271_11": {
+              "vorm": "boom",
+              "knikken": [],
+              "boomOuder": null,
+              "sourceHandle": "source-bottom",
+              "targetHandle": "target-top"
+            },
+            "sm_demo_1794863168271_13": {
+              "vorm": "boom",
+              "knikken": [],
+              "boomOuder": null,
+              "sourceHandle": "source-bottom",
+              "targetHandle": "target-top"
+            }
+          },
+          "diagramType": "simulatie"
+        },
+        "sm_demo_1794863168271_waterstede-2-jaarmarkt-klasse-b-verleend": {
+          "id": "sm_demo_1794863168271_waterstede-2-jaarmarkt-klasse-b-verleend",
+          "naam": "Waterstede 2: jaarmarkt (klasse B, verleend)",
+          "edges": [],
+          "nodes": [
+            {
+              "position": {
+                "x": 500,
+                "y": 40
+              },
+              "elementId": "sm_demo_1794863168271_14"
+            },
+            {
+              "position": {
+                "x": 60,
+                "y": 260
+              },
+              "elementId": "sm_demo_1794863168271_16"
+            },
+            {
+              "position": {
+                "x": 500,
+                "y": 260
+              },
+              "elementId": "sm_demo_1794863168271_18"
+            },
+            {
+              "position": {
+                "x": 940,
+                "y": 260
+              },
+              "elementId": "sm_demo_1794863168271_20"
+            }
+          ],
+          "lijnen": {
+            "sm_demo_1794863168271_17": {
+              "vorm": "boom",
+              "knikken": [],
+              "boomOuder": null,
+              "sourceHandle": "source-bottom",
+              "targetHandle": "target-top"
+            },
+            "sm_demo_1794863168271_19": {
+              "vorm": "boom",
+              "knikken": [],
+              "boomOuder": null,
+              "sourceHandle": "source-bottom",
+              "targetHandle": "target-top"
+            },
+            "sm_demo_1794863168271_21": {
+              "vorm": "boom",
+              "knikken": [],
+              "boomOuder": null,
+              "sourceHandle": "source-bottom",
+              "targetHandle": "target-top"
+            }
+          },
+          "diagramType": "simulatie"
+        },
+        "sm_demo_1794863168271_waterstede-3-festival-klasse-c-advies-zelf-beslissen": {
+          "id": "sm_demo_1794863168271_waterstede-3-festival-klasse-c-advies-zelf-beslissen",
+          "naam": "Waterstede 3: festival (klasse C, advies, zelf beslissen)",
+          "edges": [],
+          "nodes": [
+            {
+              "position": {
+                "x": 940,
+                "y": 40
+              },
+              "elementId": "sm_demo_1794863168271_22"
+            },
+            {
+              "position": {
+                "x": 60,
+                "y": 260
+              },
+              "elementId": "sm_demo_1794863168271_24"
+            },
+            {
+              "position": {
+                "x": 500,
+                "y": 260
+              },
+              "elementId": "sm_demo_1794863168271_26"
+            },
+            {
+              "position": {
+                "x": 940,
+                "y": 260
+              },
+              "elementId": "sm_demo_1794863168271_28"
+            },
+            {
+              "position": {
+                "x": 1380,
+                "y": 260
+              },
+              "elementId": "sm_demo_1794863168271_30"
+            },
+            {
+              "position": {
+                "x": 1820,
+                "y": 260
+              },
+              "elementId": "sm_demo_1794863168271_32"
+            }
+          ],
+          "lijnen": {
+            "sm_demo_1794863168271_25": {
+              "vorm": "boom",
+              "knikken": [],
+              "boomOuder": null,
+              "sourceHandle": "source-bottom",
+              "targetHandle": "target-top"
+            },
+            "sm_demo_1794863168271_27": {
+              "vorm": "boom",
+              "knikken": [],
+              "boomOuder": null,
+              "sourceHandle": "source-bottom",
+              "targetHandle": "target-top"
+            },
+            "sm_demo_1794863168271_29": {
+              "vorm": "boom",
+              "knikken": [],
+              "boomOuder": null,
+              "sourceHandle": "source-bottom",
+              "targetHandle": "target-top"
+            },
+            "sm_demo_1794863168271_31": {
+              "vorm": "boom",
+              "knikken": [],
+              "boomOuder": null,
+              "sourceHandle": "source-bottom",
+              "targetHandle": "target-top"
+            },
+            "sm_demo_1794863168271_33": {
+              "vorm": "boom",
+              "knikken": [],
+              "boomOuder": null,
+              "sourceHandle": "source-bottom",
+              "targetHandle": "target-top"
+            }
+          },
+          "diagramType": "simulatie"
+        }
+      },
+      "actiefDiagramId": "sm_demo_1794863168271_overzicht",
       "meta": null
     }
   }

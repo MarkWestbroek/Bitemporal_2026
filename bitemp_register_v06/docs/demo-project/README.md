@@ -4,7 +4,7 @@ Datum: 2026-11-16 · Gemaakt door Claude (sessie DEMO-PROJECT) op verzoek van Ma
 gebruikers van Omnium Studio. Alles is verzonnen: de gemeente Waterstede bestaat niet.
 
 Het project laat één casus zien, de **evenementenvergunning**, in elke taal (M2-profiel) die de
-Studio kent: 28 diagrammen in 26 talen, 42 kruisverbanden en een simulatie die werkt.
+Studio kent: 32 diagrammen in 27 talen, 42 kruisverbanden en een simulatie die werkt, met de scenario's in het project.
 
 ## Waar het staat
 
@@ -35,6 +35,7 @@ Studio kent: 28 diagrammen in 26 talen, 42 kruisverbanden en een simulatie die w
 | 6 Architectuur | ArchiMate | Evenementenloket in lagen |
 | 7 Toegang | Toegangsregels | Toegang tot evenementaanvragen |
 | 8 Meer talen (een map per taal) | Activity, Requirements, Object, UML, Composite structure, Communication, Component & deployment, SysML, Business (EP), CMMN, MIM, ERD, SHACL, XML Schema, WSDL | elk één klein voorbeeld in hetzelfde domein |
+| 9 Simulatie | Simulatiemodel | Simulatie van de evenementaanvraag · de drie scenario's (elk een eigen diagram) |
 
 **Over talen heen** (activiteit Koppelingen, en dubbelklik op een element met ⧉):
 
@@ -50,9 +51,11 @@ De lijst staat leesbaar in `plannen/09-verbanden.ops.mjs`.
 ## De simulatie
 
 Activiteit **Simulatie** (groep Modelleren) loopt het BPMN-model van het project door met de
-beslistabellen uit het project; er is geen e-dienstmodel nodig. Het scenario staat (nog) niet in het
-project: kies er een onder *Voorbeeldscenario kiezen…* (groep Waterstede). Op een versie van de
-Studio zonder die groep plak je een van de drie bestanden uit `scenarios/` in het tekstvak *Scenario*.
+beslistabellen uit het project; er is geen e-dienstmodel nodig. De drie scenario's staan in het
+project zelf, in de taal Simulatiemodel (map *9 Simulatie*, sinds studio 0.45.0): een simulatie met
+de drie processen als subject, en per scenario het startobject (instantie van de cm-entiteit
+*Evenementaanvraag*), de stubs bij de taken en de verwachting. De activiteit Simulatie biedt ze aan;
+een uitkomst wordt tegen de verwachting getoetst. `scenarios/` blijft als bron van de eerste invoer.
 
 | Scenario | Wat je ziet |
 |---|---|
@@ -66,7 +69,8 @@ toont wel het object van de run, en de toets *Lijnen en objecten* is schoon.
 
 `node docs/demo-project/simulatie-test.mjs [--log]` loopt de drie scenario's door met dezelfde kern
 als het scherm (`web/vite/src/simulatie/`) en toetst einde, status, leges, de lijnen en het
-startobject.
+startobject. Staan de scenario's in het project, dan loopt de test díe versie en toetst hij dat ze
+gelijk zijn aan `scenarios/`.
 
 ## Hoe het gemaakt is
 
@@ -94,6 +98,8 @@ en gaan pas met `toepassen` naar de server. `bijwerken/01-review-mark.mjs` is de
 16-11: submappen per proces, koppelvlak en taal, maat naar inhoud met een nieuwe opstelling,
 kraaienpoten in het ERD, SHACL-regels met parameters, de regels van de beslistabellen als notitie
 op het DRD, en het festival heet Rietpop (Dijkpop bleek een bestaand festival).
+`bijwerken/02-scenarios-in-project.mjs` zette op 16-11 de drie scenario's in het project
+(operaties 93–96), met dezelfde omzetting als de knop *Bewaar in het project*.
 
 **De plannen zijn de eerste bouw, niet de bron.** Na een wijziging op de server lopen ze achter; ze
 blijven staan als voorbeeld van hoe je een project uit plannen opbouwt. Opnieuw bouwen en als
@@ -124,12 +130,6 @@ blijven staan als voorbeeld van hoe je een project uit plannen opbouwt. Opnieuw 
 
 ## Open
 
-- **Scenario's in het project zelf.** Voorlopig staan de Waterstede-scenario's naast de
-  GPK-voorbeelden in de keuzelijst. De taal Simulatiemodel (`simulatiemodel05`) staat op main;
-  `bijwerken/02-scenarios-in-project.mjs` zet de drie scenario's in een map *9 Simulatie* (droog
-  getest; `simulatie-test.mjs` loopt dan de versie uit het project). Besluit Mark 16-11: toepassen
-  op app met de eerstvolgende release die Simulatiemodel meeneemt. Daarna: JSON ophalen, en
-  SIMULATIE haalt de drie uit de ingebakken lijst (HELP: rondleiding).
 - De cm-vorm van het startobject zonder e-dienstmodel (rechtstreeks op de entiteit uit `start.type`).
 - De opstelling van CMMN, state machine en toegangsregels kan beter; dat gaat het snelst met de
   hand in de Studio.
