@@ -87,9 +87,15 @@ export function leesBpmn(tekst, opties = {}) {
 
   // Definities van data (isCollection) — de references tekenen.
   const verzamelingVan = new Map();
+  // Het type van data (16-11): itemSubjectRef → itemDefinition.structureRef (de naam van het type).
+  const typeVanItem = new Map(kinderen(wortel, "itemDefinition").map((i) => [attr(i, "id"), attr(i, "structureRef") || ""]));
+  const typeVanDef = new Map();
   for (const def of [...afstammelingen(wortel, "dataObject"), ...kinderen(wortel, "dataStore")]) {
     verzamelingVan.set(attr(def, "id"), attr(def, "isCollection") === "true");
+    typeVanDef.set(attr(def, "id"), typeVanItem.get(attr(def, "itemSubjectRef")) || "");
   }
+  /** De toestand (dataState) van een data-element. */
+  const toestandVan = (el) => attr(kind(el, "dataState"), "name") || "";
 
   // ── Processen ───────────────────────────────────────────────────────────
   for (const proces of kinderen(wortel, "process")) {
@@ -134,7 +140,18 @@ export function leesBpmn(tekst, opties = {}) {
           voegAnnotatieToe(el, laneVanKnoop.get(id) || pool);
           continue;
         }
-        if (aard === "dataObject" || aard === "ioSpecification" || aard === "dataInput" || aard === "dataOutput") continue; // definitie; de reference tekent
+        // De invoer en uitvoer van het proces (ioSpecification): een data-object met rol (16-11).
+        if (aard === "ioSpecification") {
+          for (const io of kinderen(el).filter((k) => lokaal(k) === "dataInput" || lokaal(k) === "dataOutput")) {
+            const ioId = attr(io, "id");
+            if (!ioId || knoopIds.has(ioId)) continue;
+            knoopIds.add(ioId);
+            const invoer = lokaal(io) === "dataInput";
+            knopen.push({ id: ioId, tekst: attr(io, "name"), aard: lokaal(io), proces: procesId, groep: pool, subproces, rol: invoer ? "invoer" : "uitvoer", toestand: toestandVan(io), typeNaam: typeVanItem.get(attr(io, "itemSubjectRef")) || "", verzameling: attr(io, "isCollection") === "true" });
+          }
+          continue;
+        }
+        if (aard === "dataObject" || aard === "dataInput" || aard === "dataOutput") continue; // definitie; de reference tekent
         if (!id) continue;
         if (!(ACTIVITEITEN.has(aard) || EVENTS.has(aard) || GATEWAYS.has(aard) || DATA.has(aard))) {
           waarschuwingen.push({ melding: `BPMN-element niet ondersteund: ${aard}`, tekst: attr(el, "name") || id });
@@ -173,6 +190,8 @@ export function leesBpmn(tekst, opties = {}) {
         if (aard === "dataObjectReference" || aard === "dataStoreReference") {
           knoop.verwijstNaar = attr(el, "dataObjectRef") || attr(el, "dataStoreRef");
           knoop.verzameling = attr(el, "isCollection") === "true" || verzamelingVan.get(knoop.verwijstNaar) === true;
+          knoop.toestand = toestandVan(el);
+          knoop.typeNaam = typeVanDef.get(knoop.verwijstNaar) || "";
         }
         knopen.push(knoop);
         // Data-associaties van een activiteit: in → activiteit, activiteit → uit.

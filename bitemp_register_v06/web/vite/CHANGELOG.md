@@ -39,6 +39,9 @@ De single source of truth voor het nummer is `package.json` `"version"`.
   nieuwste regel. *Lijnen en objecten* boven de tekening, met een rood getal op de procesknop.
 - **GPK-voorbeeld: Marks layout van 16-11** voor alle vier processen, met de doorklik naar het cm-diagram op de
   Aanvraag-objecten.
+- **BPMN-XML: data-objecten** (16-11): de schrijver schrijft data-objecten, data stores, invoer/uitvoer van het
+  proces (ioSpecification), type (itemDefinition), toestand (dataState) en de data-lijnen; de lezer leest rol en
+  toestand terug. Met een engine-regelset alleen bij `data: true` (de GZAC-uitrol verandert niet).
 
 ## [studio/v0.44.0] — 2026-11-15
 
