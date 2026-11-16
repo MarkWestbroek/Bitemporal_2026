@@ -9,6 +9,9 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 ## [Unreleased]
 
 ### Toegevoegd
+- **Simulatie: Waterstede-scenario's in de keuzelijst** (16-11, voor het demo-project): buurtfeest, jaarmarkt en
+  festival, in een eigen groep naast de GPK-scenario's. Ze draaien op het BPMN en DMN van het project zelf en
+  brengen geen GPK-beslistabel of -e-dienstmodel mee.
 - **Simulatie: het data-object toont het object van de run** (Mark 15-11): bij een data-object met een type (ook
   via een subtype) een kenmerk met de versie, geel als het object net veranderde, rood gestippeld als de
   toestand niet klopt met die op het model; een klik toont het object onder het diagram.

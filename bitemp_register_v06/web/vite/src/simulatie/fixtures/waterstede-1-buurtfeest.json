@@ -1,0 +1,28 @@
+{
+  "versie": "0.1",
+  "naam": "Waterstede 1: buurtfeest (klasse A, melding)",
+  "beschrijving": "Een buurtfeest met 80 bezoekers, zonder alcohol of wegafsluiting. De beslistabel Risicoklasse geeft klasse A: een melding volstaat. Het proces bevestigt de melding en is klaar; er komt geen vergunning.",
+  "start": {
+    "proces": "evenementaanvraag-behandelen",
+    "type": "Evenementaanvraag",
+    "id": "aanvraag-1",
+    "object": {
+      "aanvraagnummer": "EVE-2027-0001",
+      "ingediendOp": "2027-03-02T10:15:00Z",
+      "status": "ingediend",
+      "naam": "Buurtfeest Rietkade",
+      "soort": "buurtfeest",
+      "datumVan": "2027-06-12",
+      "verwachtAantalBezoekers": 80,
+      "alcohol": false,
+      "wegafsluiting": false,
+      "versterktGeluid": false,
+      "commercieel": false
+    },
+    "variabelen": {}
+  },
+  "vulwijze": { "standaard": "fixture" },
+  "antwoorden": {},
+  "zaadje": 1,
+  "verwacht": { "einde": "Melding bevestigd", "status": "melding_bevestigd" }
+}

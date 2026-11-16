@@ -35,9 +35,25 @@ import gpk2 from "../simulatie/fixtures/gpk-scenario-2.json";
 import gpk3 from "../simulatie/fixtures/gpk-scenario-3.json";
 import gpk4 from "../simulatie/fixtures/gpk-scenario-4.json";
 import gpk5 from "../simulatie/fixtures/gpk-scenario-5.json";
+import ws1 from "../simulatie/fixtures/waterstede-1-buurtfeest.json";
+import ws2 from "../simulatie/fixtures/waterstede-2-jaarmarkt.json";
+import ws3 from "../simulatie/fixtures/waterstede-3-festival.json";
 
-/** De GPK-scenario's, met hun beschrijvende naam en beschrijving (klein; daarom niet lui geladen). */
-export const VOORBEELDEN = [gpk1, gpk2, gpk3, gpk4, gpk5].map((s, i) => ({ nr: i + 1, naam: s.naam, beschrijving: s.beschrijving || "", scenario: s }));
+/**
+ * De ingebakken scenario's, met hun naam en beschrijving (klein; daarom niet lui geladen).
+ * `set` zegt waar een scenario op draait: "gpk" brengt de beslistabel en het e-dienstmodel van het
+ * GPK-voorbeeld mee; "waterstede" (16-11) draait op het BPMN en DMN van het project zelf (het
+ * demo-project "Omnium demo — gemeente Waterstede", docs/demo-project), zonder e-dienstmodel.
+ * Tijdelijk: zodra scenario's in het project kunnen staan, verhuizen de Waterstede-scenario's daarheen.
+ */
+export const VOORBEELDEN = [
+  ...[gpk1, gpk2, gpk3, gpk4, gpk5].map((s) => ({ set: "gpk", scenario: s })),
+  ...[ws1, ws2, ws3].map((s) => ({ set: "waterstede", scenario: s })),
+].map((v, i) => ({ nr: i + 1, set: v.set, naam: v.scenario.naam, beschrijving: v.scenario.beschrijving || "", scenario: v.scenario }));
+export const VOORBEELDSETS = [
+  { id: "gpk", label: "GPK (met eigen beslistabel en e-dienstmodel)" },
+  { id: "waterstede", label: "Waterstede (demo-project; draait op het project zelf)" },
+];
 export const laadScenario = async (nr) => VOORBEELDEN.find((v) => v.nr === nr)?.scenario;
 /**
  * Het GPK-voorbeeld: vier processen (Mark 13-11, ontwerp §11.6), de beslistabel en het
@@ -309,10 +325,15 @@ export async function gebruikGpk() {
   zet({ gpk: { beslissingen: gpk.beslissingen, edienst: gpk.edienst } });
 }
 
-/** Een GPK-scenario kiezen; het brengt zijn eigen startproces mee, en beslistabel en e-dienstmodel van het voorbeeld. */
+/**
+ * Een ingebakken scenario kiezen; het brengt zijn eigen startproces mee. Een GPK-scenario ook de
+ * beslistabel en het e-dienstmodel van het voorbeeld; een ander (Waterstede) juist niet: dat draait
+ * op het project zelf, en een GPK-e-dienstmodel zou andere processen aanwijzen.
+ */
 export async function kiesVoorbeeld(nr) {
   if (!nr) return;
   const tekst = JSON.stringify(await laadScenario(nr), null, 2);
+  if (VOORBEELDEN.find((v) => v.nr === nr)?.set !== "gpk") return zet({ scenarioTekst: tekst, startProces: null, gpk: null });
   const gpk = S.gpk || (await laadGpk());
   zet({ scenarioTekst: tekst, startProces: null, gpk: { beslissingen: gpk.beslissingen, edienst: gpk.edienst } });
 }

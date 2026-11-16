@@ -1,0 +1,32 @@
+{
+  "versie": "0.1",
+  "naam": "Waterstede 3: festival (klasse C, advies, zelf beslissen)",
+  "beschrijving": "Een festival met 6500 bezoekers, alcohol en versterkt geluid. Klasse C: het proces roept 'Veiligheidsadviezen inwinnen' aan (brandweer en politie, parallel). De adviezen komen uit het scenario; de beoordeling vul je zelf in: besluit 'verlenen' of 'weigeren'.",
+  "start": {
+    "proces": "evenementaanvraag-behandelen",
+    "type": "Evenementaanvraag",
+    "id": "aanvraag-3",
+    "object": {
+      "aanvraagnummer": "EVE-2027-0003",
+      "ingediendOp": "2027-03-09T14:30:00Z",
+      "status": "ingediend",
+      "naam": "Rietpop Festival",
+      "soort": "festival",
+      "datumVan": "2027-07-17",
+      "datumTot": "2027-07-18",
+      "verwachtAantalBezoekers": 6500,
+      "alcohol": true,
+      "wegafsluiting": true,
+      "versterktGeluid": true,
+      "commercieel": true
+    },
+    "variabelen": {}
+  },
+  "vulwijze": { "standaard": "fixture", "perGat": { "aanvraag-beoordelen": "hand" } },
+  "antwoorden": {
+    "advies-brandweer": { "adviesBrandweer": "positief_onder_voorwaarden", "voorwaardeBrandweer": "Twee extra nooduitgangen aan de dijkzijde." },
+    "advies-politie": { "adviesPolitie": "positief" }
+  },
+  "zaadje": 1,
+  "verwacht": { "gat": "Beoordeel de aanvraag", "leges": 900 }
+}
