@@ -2342,6 +2342,18 @@ dag vervangen).
   gestippeld als de toestand van het object (`state`/`status`) niet klopt met de toestand op het model
   (*[ingediend]*). Een klik toont het object (cm-vorm, versies) onder het diagram; de tooltip noemt id, type,
   versie en toestand. Puur: `simulatie/dataObjecten.js` (`objectenBijDataObjecten`, `typeNamen`). E2E: spec 63.
+- **Lijnen en objecten (16-11, ontwerp §11.8 stap 4):** de run toetst de data-associaties: een taak die leest
+  wat er nog niet is, een schrijvende lijn zonder schrijven, en schrijven zonder schrijvende lijn (naar een
+  data-object van dat type op het diagram). Rode stippellijn over de lijn, rood uitroepteken op de taak (tooltip:
+  de reden), en de lijst *Lijnen en objecten* onder het diagram. Alleen data-objecten met een type. Puur:
+  `simulatie/dataLijnen.js` (`toetsLijnen`). E2E: spec 63.
+- **Startobject (16-11, §11.8 stap 4):** onder het scenario staat of het type van het startobject past bij het
+  invoer-data-object van het startproces (groen vinkje of rood uitroepteken; `toetsStartobject`).
+- **Kaart (16-11, §11.8 stap 4):** bij een object naast *cm-vorm* en *JSON* de weergave *kaart*: de entiteit als vak
+  met de GE's erin en de waarden, zoals de ENT in het cm-diagram (`CmKaart` in `simulatieCmVorm.jsx`).
+- **Log (16-11):** met de greep erboven groter of kleiner te slepen (dubbelklik: standaardhoogte; de hoogte
+  blijft bewaard in de browser), en hij schuift mee zodat de nieuwste regel in beeld is. De meldingen van
+  *Lijnen en objecten* staan boven de tekening; een proces met meldingen heeft een rood getal op zijn knop.
 - **Pijltjestoetsen (16-11):** → is een stap, ← een regel terug; niet in een invoerveld en niet tijdens het
   afspelen. Alleen als het paneel Simulatie in beeld is.
 - **Token**: een rand en een bolletje op het element waar het token staat (indigo = kan verder, oranje = wacht

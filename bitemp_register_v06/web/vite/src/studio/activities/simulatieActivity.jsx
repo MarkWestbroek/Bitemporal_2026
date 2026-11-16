@@ -26,7 +26,8 @@ import { willekeurig } from "../../simulatie/gaten.js";
 import { PROCESINSTANTIE, versiesVan } from "../../simulatie/store.js";
 import { tokenBeeld, standTekst, mutatieTekst, TOKEN_KLEUR } from "../../simulatie/weergave.js";
 import { beeldVoor } from "../../simulatie/cmVorm.js";
-import { objectenBijDataObjecten } from "../../simulatie/dataObjecten.js";
+import { objectenBijDataObjecten, toetsStartobject } from "../../simulatie/dataObjecten.js";
+import { toetsLijnen } from "../../simulatie/dataLijnen.js";
 import { CmObject, PlatJson } from "./simulatieCmVorm.jsx";
 import {
   BPMN_PROFIEL,
@@ -175,7 +176,12 @@ const SVG_NS = "http://www.w3.org/2000/svg";
  * en een bolletje rechtsboven (met het aantal bij meer tokens); waar het token
  * geweest is een dunne rand.
  */
-function DiagramMetToken({ diagramId, beeld, versie, objecten = {} }) {
+/** De log: standaard- en minimumhoogte, en waar de gekozen hoogte bewaard wordt. */
+const LOG_STANDAARD = 220;
+const LOG_MIN = 60;
+const LOG_SLEUTEL = "studio-simulatie-log-hoogte";
+
+function DiagramMetToken({ diagramId, beeld, versie, objecten = {}, lijnToets = null }) {
   const { elements, diagrams } = useBpmn();
   const doos = useRef(null);
   const svg = useMemo(() => (diagramId ? tekenDiagram(BPMN_PROFIEL, diagramId) : ""), [diagramId, elements, diagrams]);
@@ -285,7 +291,30 @@ function DiagramMetToken({ diagramId, beeld, versie, objecten = {} }) {
       g.style.cursor = "pointer";
       g.onclick = () => zet({ toonObject: o.id });
     }
-  }, [svg, versie, objecten]);
+
+    // Lijnen en objecten (§11.8 stap 4, Mark 16-11): een data-associatie die niet past bij wat de
+    // run doet, krijgt een rode stippellijn over zich heen; een taak met een bevinding een rood
+    // uitroepteken linksonder. De tooltip zegt waarom (simulatie/dataLijnen.js).
+    for (const g of wortel.querySelectorAll("g[data-sim-lijnfout]")) g.removeAttribute("data-sim-lijnfout");
+    for (const [lijnId, lijst] of Object.entries(lijnToets?.lijnen || {})) {
+      const pad = wortel.querySelector(`path.dc-lijn[data-connector-id="${CSS.escape(lijnId)}"]`);
+      if (!pad) continue;
+      const over = maak("path", { d: pad.getAttribute("d") || "", fill: "none", stroke: TOKEN_KLEUR.vast, "stroke-width": 3, "stroke-dasharray": "6 4", "stroke-linecap": "round", opacity: 0.9, "data-testid": "sim-lijn-fout", "data-lijn": lijnId });
+      over.appendChild(maak("title", {}, lijst.map((b) => b.reden).join("\n")));
+      pad.parentNode?.appendChild(over);
+    }
+    for (const [taak, lijst] of Object.entries(lijnToets?.taken || {})) {
+      const g = groep(taak);
+      if (!g) continue;
+      const b = omvang(g);
+      g.setAttribute("data-sim-lijnfout", String(lijst.length));
+      const teken = maak("g", { "data-testid": "sim-taak-lijnfout" });
+      teken.appendChild(maak("title", {}, lijst.map((x) => x.reden).join("\n")));
+      teken.appendChild(maak("circle", { cx: b.x, cy: b.y + b.height, r: 8, fill: TOKEN_KLEUR.vast, stroke: "#fff", "stroke-width": 1.5 }));
+      teken.appendChild(maak("text", { x: b.x, y: b.y + b.height + 4, "text-anchor": "middle", "font-size": 11, "font-weight": 700, fill: "#fff" }, "!"));
+      g.appendChild(teken);
+    }
+  }, [svg, versie, objecten, lijnToets]);
   if (!svg) return <div style={{ ...gedempt, padding: 16 }}>Geen procesdiagram om te tonen.</div>;
   return (
     <div
@@ -319,6 +348,18 @@ function Sidebar() {
       return null;
     }
   }, [S.versie]);
+  // Past het startobject bij het invoer-data-object van het startproces (§11.8 stap 4, Mark 16-11)?
+  const startToets = useMemo(() => {
+    const p = startbaar.find((x) => x.id === startProces);
+    if (!p) return [];
+    let startType = null;
+    try {
+      startType = JSON.parse(scenarioTekst()).start?.type || null;
+    } catch {
+      /* het scenario is nog geen geldige JSON */
+    }
+    return toetsStartobject({ bpmnElementen: elements, diagram: diagrams?.[p.diagramId], elementenVan: (pid) => getProfieltype(pid)?.useStore?.getState?.().elements || null, startType }).map((t) => ({ ...t, startType, proces: p.naam }));
+  }, [startbaar, startProces, elements, diagrams, S.versie]);
   const laadGpk = async () => {
     if (heeftProces && !(await vraagBevestiging({ titel: "GPK-voorbeeld laden", tekst: "Dit vervangt het BPMN-model van het project door de vier GPK-processen (oppakken, werkbak, behandelen, beoordelen). Je kunt het in de BPMN-activiteit ongedaan maken met Bewerken → Ongedaan maken.", bevestig: "Vervangen" }))) return;
     await laadGpkProces();
@@ -364,6 +405,13 @@ function Sidebar() {
             {beschrijving.tekst ? <div style={gedempt}>{beschrijving.tekst}</div> : null}
           </div>
         )}
+        {startToets.map((t) => (
+          <div key={t.dataObject} style={{ marginBottom: 4, color: t.past ? "#16a34a" : TOKEN_KLEUR.vast }} data-testid="sim-startobject-toets" data-past={String(t.past)}>
+            {t.past
+              ? `✓ Het startobject (${t.startType}) is een ${t.typeNaam}, het invoer-data-object ${t.naam} van ${t.proces}.`
+              : `! ${t.proces} verwacht een ${t.typeNaam} (invoer-data-object ${t.naam}); het scenario start met ${t.startType || "een object zonder type"}.`}
+          </div>
+        ))}
         <textarea style={{ ...veldstijl, ...mono, height: 260, resize: "vertical" }} value={scenarioTekst()} onChange={(e) => zet({ scenarioTekst: e.target.value })} spellCheck={false} data-testid="sim-scenario" />
         <div style={{ ...gedempt, marginTop: 2 }}>
           Vulwijze: <code>hand</code>, <code>willekeurig</code> of <code>fixture</code>; per run (<code>standaard</code>), per soort gat (<code>perSoort</code>) of per gat (<code>perGat</code>).
@@ -441,6 +489,19 @@ function Main() {
         : {},
     [S.versie, elements]
   );
+  // Passen de lijnen bij wat de run doet (§11.8 stap 4)? Alleen de bevindingen op het getoonde diagram in de lijst.
+  const lijnToets = useMemo(
+    () => (sim ? toetsLijnen({ bpmnElementen: elements, diagrams, elementenVan: (pid) => getProfieltype(pid)?.useStore?.getState?.().elements || null, log }) : null),
+    [S.versie, elements, diagrams]
+  );
+  const opDitDiagram = new Set((diagrams?.[diagramId]?.nodes || []).map((n) => n.elementId));
+  const lijnBevindingen = (lijnToets?.bevindingen || []).filter((b) => opDitDiagram.has(b.taak));
+  /** @type {Record<string, number>} */
+  const bevindingenPerProces = {};
+  for (const b of lijnToets?.bevindingen || []) {
+    const p = processen.find((x) => (diagrams?.[x.diagramId]?.nodes || []).some((n) => n.elementId === b.taak));
+    if (p) bevindingenPerProces[p.id] = (bevindingenPerProces[p.id] || 0) + 1;
+  }
   const getoondObject = (sim && S.toonObject && sim.toestand().objecten[S.toonObject]) || null;
   const afspelen = speeltAf();
   const [snelheid, setSnelheid] = useState("gewoon");
@@ -471,6 +532,34 @@ function Main() {
     window.addEventListener("keydown", opToets);
     return () => window.removeEventListener("keydown", opToets);
   }, []);
+  // De log (Mark 16-11): hoogte met een greep te verslepen (bewaard per browser), en hij schuift mee
+  // zodat de nieuwste regel in beeld is.
+  const logRef = useRef(null);
+  const [logHoogte, setLogHoogte] = useState(() => {
+    const h = Number(localStorage.getItem(LOG_SLEUTEL));
+    return Number.isFinite(h) && h >= LOG_MIN ? h : LOG_STANDAARD;
+  });
+  const zetLogHoogte = (h) => {
+    const nieuw = Math.max(LOG_MIN, Math.min(Math.round(h), Math.round(window.innerHeight * 0.8)));
+    setLogHoogte(nieuw);
+    localStorage.setItem(LOG_SLEUTEL, String(nieuw));
+  };
+  const begin = (e) => {
+    e.preventDefault();
+    const y0 = e.clientY;
+    const h0 = logHoogte;
+    const beweeg = (m) => zetLogHoogte(h0 - (m.clientY - y0));
+    const los = () => {
+      window.removeEventListener("mousemove", beweeg);
+      window.removeEventListener("mouseup", los);
+    };
+    window.addEventListener("mousemove", beweeg);
+    window.addEventListener("mouseup", los);
+  };
+  useLayoutEffect(() => {
+    const el = logRef.current;
+    if (el) el.scrollTop = el.scrollHeight;
+  }, [log.length]);
   let zaadje = 0;
   try {
     zaadje = JSON.parse(scenarioTekst()).zaadje ?? 0;
@@ -546,6 +635,11 @@ function Main() {
             >
               {metToken.has(p.id) ? "● " : ""}
               {p.naam}
+              {bevindingenPerProces[p.id] ? (
+                <span style={{ marginLeft: 6, padding: "0 5px", borderRadius: 8, background: TOKEN_KLEUR.vast, color: "#fff", fontSize: 10, fontWeight: 700 }} title="Lijnen en objecten: bevindingen in dit proces" data-testid="sim-proces-bevindingen">
+                  {bevindingenPerProces[p.id]}
+                </span>
+              ) : null}
             </button>
           ))}
           {sim && S.toonProces && (
@@ -554,6 +648,16 @@ function Main() {
             </button>
           )}
         </div>
+        {lijnBevindingen.length > 0 && (
+          <div style={{ margin: "0 0 8px", padding: "4px 8px", borderRadius: 4, borderLeft: `3px solid ${TOKEN_KLEUR.vast}`, fontSize: 12 }} data-testid="sim-lijnen">
+            <b>Lijnen en objecten ({lijnBevindingen.length})</b>
+            {lijnBevindingen.map((b, i) => (
+              <div key={i} style={{ padding: "1px 0" }}>
+                <span style={{ color: TOKEN_KLEUR.vast, fontWeight: 700 }}>!</span> {b.reden}
+              </div>
+            ))}
+          </div>
+        )}
         {sprong && (
           <div
             data-testid="sim-sprong"
@@ -563,7 +667,7 @@ function Main() {
             {sprong.bericht ? ` (${sprong.bericht})` : ""}.
           </div>
         )}
-        <DiagramMetToken diagramId={diagramId} beeld={beeld} versie={S.versie} objecten={bijDataObjecten} />
+        <DiagramMetToken diagramId={diagramId} beeld={beeld} versie={S.versie} objecten={bijDataObjecten} lijnToets={lijnToets} />
         {getoondObject && (
           <div style={{ marginTop: 8, padding: "6px 10px", border: "1px solid var(--s-border, #cbd5e1)", borderRadius: 6, maxWidth: 640 }} data-testid="sim-dataobject-object">
             <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
@@ -582,8 +686,15 @@ function Main() {
         )}
       </div>
 
-      <div style={{ flexShrink: 0, height: "32%", minHeight: 120, overflow: "auto", borderTop: "1px solid var(--s-border, #cbd5e1)", padding: "8px 12px" }} data-testid="sim-log">
-        <p style={kop}>Log {log.length ? `(${log.length})` : ""}</p>
+      <div
+        onMouseDown={begin}
+        onDoubleClick={() => zetLogHoogte(LOG_STANDAARD)}
+        style={{ flexShrink: 0, height: 6, cursor: "row-resize", borderTop: "1px solid var(--s-border, #cbd5e1)", background: "transparent" }}
+        title="Sleep om de log groter of kleiner te maken; dubbelklik: standaardhoogte"
+        data-testid="sim-log-greep"
+      />
+      <div ref={logRef} style={{ flexShrink: 0, height: logHoogte, minHeight: LOG_MIN, overflow: "auto", padding: "0 12px 8px" }} data-testid="sim-log">
+        <p style={{ ...kop, position: "sticky", top: 0, margin: 0, padding: "4px 0", background: "var(--s-bg, var(--dc-canvas-achtergrond, #fff))", zIndex: 1 }}>Log {log.length ? `(${log.length})` : ""}</p>
         {!log.length && <div style={gedempt}>Elke stap komt hier te staan. Klik op een regel om daarheen terug te spoelen.</div>}
         {log.map((regel) => {
           const mutaties = regel.wijzigingen.map(mutatieTekst).filter(Boolean);
@@ -669,7 +780,7 @@ function ObjectKaart({ o, S }) {
         </div>
       )}
       {beeld ? (
-        <CmObject beeld={beeld} data={data} bron={S.cm.bron} gewijzigd={gewijzigd} />
+        <CmObject beeld={beeld} data={data} bron={S.cm.bron} gewijzigd={gewijzigd} type={o.type} />
       ) : (
         <div style={{ margin: "2px 0 0 12px" }}>
           <PlatJson data={data} gewijzigd={gewijzigd} />

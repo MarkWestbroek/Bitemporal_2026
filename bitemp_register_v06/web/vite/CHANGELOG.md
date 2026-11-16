@@ -28,6 +28,17 @@ De single source of truth voor het nummer is `package.json` `"version"`.
   heeft het boundary event op *Kies zaak om te behandelen* `url == ontvanger.zaakUrl`; het staat nu op de rand
   van de taak. *Kies zaak* krijgt het data-object Zaak [in werkbak] als invoer.
 - **Simulatie met de pijltjestoetsen** (Mark 16-11): → een stap, ← een regel terug.
+- **Simulatie: lijnen en objecten** (Mark 16-11, ontwerp §11.8 stap 4): de run toetst de data-associaties (leest
+  wat er nog niet is, schrijft niet, schrijft zonder lijn); rode stippellijn en uitroepteken in de tekening, met de
+  reden, en een lijst onder het diagram.
+- **Simulatie: startobject getoetst** (Mark 16-11): past het type van het startobject bij het invoer-data-object van
+  het startproces? Onder het scenario, ook voor subtypen.
+- **Simulatie: het object als kaart** (Mark 15/16-11): de entiteit met haar GE's erin en de waarden, zoals de ENT in
+  het cm-diagram; derde weergave naast cm-vorm en JSON.
+- **Simulatie: log op maat** (Mark 16-11): de log is met een greep groter of kleiner te maken en schuift mee naar de
+  nieuwste regel. *Lijnen en objecten* boven de tekening, met een rood getal op de procesknop.
+- **GPK-voorbeeld: Marks layout van 16-11** voor alle vier processen, met de doorklik naar het cm-diagram op de
+  Aanvraag-objecten.
 
 ## [studio/v0.44.0] — 2026-11-15
 

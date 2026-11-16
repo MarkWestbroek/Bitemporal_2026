@@ -1045,6 +1045,27 @@ omgekeerd), het data-object met rol invoer als startobject (type van het scenari
 vorm van de cm-entiteit met de GE's erin (Mark 15-11: "die vorm kan nuttig zijn"), met waarden in plaats van
 typen.
 
+**Gebouwd (16-11), stap 4a — lijnen en objecten:** de run toetst de data-associaties (`simulatie/dataLijnen.js`,
+`toetsLijnen`): *leest wat er nog niet is* (de taak loopt en er is geen object van het type), *schrijft niet* (een
+schrijvende lijn, maar de taak raakte geen object van dat type) en *schrijft zonder lijn* (de taak schreef een object,
+op zijn diagram staat een data-object van dat type, zonder schrijvende lijn). Een externe actie (zaak aanmaken, rol,
+status) telt als schrijven van de zaak. In de tekening een rode stippellijn over de lijn en een rood uitroepteken op de
+taak, met de reden als tooltip; onder het diagram de lijst voor dat diagram. Wat GPK 4 laat zien: *Aanvraag
+beoordelen* en *Stel beschikking op* schrijven de aanvraag (de simulatie zet de formuliervelden van een user task
+op het object van de afhandeling), terwijl het model daar alleen een lezende lijn of een Beschikking heeft. Dat is
+de vraag waar het formulierresultaat landt: op de aanvraag, de zaak of een eigen object (Beoordeling, Beschikking);
+hoort bij het Zaak/Beslissing-model van Mark.
+
+**Gebouwd (16-11), stap 4b — het startobject:** onder het scenario staat of het type van het startobject past bij
+het invoer-data-object (rol invoer, met een type) van het startproces, ook als subtype (`toetsStartobject`). Staat
+het type niet in het project, dan is er niets te toetsen.
+
+**Gebouwd (16-11), stap 4c — de kaart:** naast *cm-vorm* en *JSON* een derde weergave *kaart*: de entiteit als vak
+(«entiteit», naam) met de GE's als vakken erin, zoals de ENT in het cm-diagram waarin het GE in de ENT zit, maar
+met de waarden van het object. Relaties als regel met een pijl, het doel als vak eronder; overerving als dunne
+kop *uit Aanvraag*. Een lichte kaart in beide thema's. Daarmee is stap 4 klaar; de kaart naast het data-object in
+de tekening (in plaats van onder het diagram) is een mogelijke vervolgstap.
+
 **Tracering (Mark 15-11, gebouwd):** het type ís de tracering; een losse dependency zou hetzelfde feit
 dubbel bewaren. Daarom een **afgeleide koppeling** «traceert naar» (M3 `koppelsoort` op de eigenschap), als
 lijn op het diagram en gevolgd door *Gerelateerde elementen toevoegen* (dat nu ook kruisverbanden naar een andere
