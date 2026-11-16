@@ -51,6 +51,14 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 - **Gerelateerde elementen: plaatsing in de vrije ruimte** (16-11): nieuwe elementen komen rechts van de start, per
   niveau een kolom, naar beneden en niet over bestaande elementen; niet meer in een kring die onder de werkbalken viel.
 
+### Opgelost
+- **Lijnen naast het vak na vergroten en terugzetten** (Mark 16-11): na een resize met de muis hield React Flow
+  de gesleepte maat op zijn node vast. Kwam de maat daarna langs een andere weg terug (ongedaan maken, een
+  wijziging van een ander, uitlijnen), dan tekende het vak klein, maar bleven omhulling en aanhechtpunten groot
+  en eindigden de lijnen in het niets. Buiten een lopende resize beslist nu de bewaarde maat
+  (`DiagramCanvas.jsx`; e2e `65-studio-resize-terug`). E2e-verwachtingen bijgewerkt voor projectformaat 4
+  (een kopie krijgt een eigen afgeleide uuid) en canoniek-uml 1.1.0.
+
 ## [studio/v0.44.0] — 2026-11-15
 
 Samen met render 0.4.8 en devloop 0.30.2 (api 0.27.0).

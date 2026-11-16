@@ -31,7 +31,13 @@ test("export noteert de profielversie; een nieuwere notitie geeft een melding en
   await wachtOpNode(page, "Aanvraag");
 
   const uit = await exporteer(page);
-  expect(uit.profielVersies).toEqual({ diagram05: "1.0.0" });
+  // De versie van het profiel zelf (canoniek-uml/index.js `versie`), niet een vaste waarde.
+  const versie = await page.evaluate(async () => {
+    const reg = await import(location.origin + "/viz/react/src/studio/profieltypeRegistry.js");
+    return reg.getProfieltype("diagram05").descriptor.versie;
+  });
+  expect(versie).toMatch(/^\d+\.\d+\.\d+$/);
+  expect(uit.profielVersies).toEqual({ diagram05: versie });
 
   // Hetzelfde project, maar bewaard met een nieuwere hoofdversie van het profiel.
   const nieuwer = { ...uit, profielVersies: { diagram05: "2.0.0" } };
@@ -41,7 +47,7 @@ test("export noteert de profielversie; een nieuwere notitie geeft een melding en
   await (await chooser).setFiles({ name: "nieuwer.json", mimeType: "application/json", buffer: Buffer.from(JSON.stringify(nieuwer)) });
   await page.getByRole("button", { name: "Importeer", exact: true }).click();
   await expect(page.getByText("Nieuwere profielversie")).toBeVisible();
-  await expect(page.getByText(/project 2\.0\.0, deze Studio 1\.0\.0/)).toBeVisible();
+  await expect(page.getByText(`project 2.0.0, deze Studio ${versie}`)).toBeVisible();
   await page.keyboard.press("Escape");
 
   // Hier bewaren maakt de inhoud niet ouder: de notitie blijft 2.0.0.

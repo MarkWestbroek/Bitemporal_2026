@@ -584,6 +584,13 @@ function CanvasBinnenkant({
           // (gemeld 2026-10-07: "bovenrand omlaag haalt de onderrand omhoog").
           position: oud.dragging || oud.resizing ? oud.position : n.position,
           style: n.style,
+          // De NodeResizer zet tijdens het slepen width/height óp de React Flow-node, en die winnen
+          // van `style`. Via `...oud` bleven ze daarna staan: kwam de maat langs een andere weg
+          // terug (ongedaan maken, een wijziging van een ander, uitlijnen), dan tekende het vak op
+          // de nieuwe maat, maar bleven omhulling en aanhechtpunten op de oude en eindigden de
+          // lijnen naast het vak (Mark, 16-11). Buiten een lopende resize beslist de store (style).
+          width: oud.resizing ? oud.width : n.width,
+          height: oud.resizing ? oud.height : n.height,
           zIndex: n.zIndex,
           data: n.data,
           selected,
