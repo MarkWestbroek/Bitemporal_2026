@@ -28,7 +28,7 @@ export const TOUR_STAPPEN = [
   {
     titel: "Welkom in Omnium Studio",
     tekst:
-      "Een rondleiding van een minuut. Hier modelleer je informatievoorziening in verschillende talen " +
+      "Een korte rondleiding. Hier modelleer je informatievoorziening in verschillende talen " +
       "(UML, use cases, BPMN, ArchiMate, …) in één project. Pijltjes of Enter gaan verder, Esc sluit.",
   },
   {
@@ -46,6 +46,16 @@ export const TOUR_STAPPEN = [
       "keer opent (rechtsklik op een tab → Bewaar open tabs als bundel; 👥 = gedeeld met het project). " +
       "Daaronder mappen, diagrammen en per taal (profiel) de elementen. Rechtsklik geeft de acties; " +
       "een element sleep je zo naar een diagram.",
+  },
+  {
+    // HELP-uitbreiding 16-11 (Mark): het servermechanisme, de assistent, melden, de Labs-activiteiten.
+    anker: "menu-project",
+    titel: "Projecten op de server",
+    tekst:
+      "Project → Van server ophalen… toont de projecten waar je bij mag, met eigenaar, versie en grootte. " +
+      "Ophalen vervangt het project in deze browser: bewaar het huidige eerst via Nieuw project… (parkeren) " +
+      "of Exporteer project…. Naar server sturen bewaart je werk daar; met Live synchroniseren zie je de " +
+      "wijzigingen van anderen meteen.",
   },
   {
     anker: "nieuw-diagram",
@@ -71,9 +81,33 @@ export const TOUR_STAPPEN = [
       "alles wat ermee verbonden is.",
   },
   {
+    anker: "paneel-left",
+    titel: "De AI-assistent",
+    tekst:
+      "Rechtsklik op een map → ✨ Vraag de assistent…, en beschrijf wat je wilt (bijvoorbeeld \"een use case " +
+      "voor een parkeervergunning, met het proces eronder\"). Je krijgt eerst een voorstel en past het pas toe " +
+      "als je op Toepassen klikt. De eerste keer kies je hoe: met een eigen API-sleutel (Claude of DeepSeek; " +
+      "die blijft in je browser) of met een toegangscode van de beheerder.",
+  },
+  {
+    anker: "activiteiten",
+    titel: "Experimenteel: Toegangverlening en Simulatie",
+    tekst:
+      "Twee activiteiten in aanbouw. Toegangverlening: schrijf toegangsbeleid in klare taal (Toegangsspraak), " +
+      "als diagram en als ODRL. Simulatie: doorloop een BPMN-proces met zijn beslistabellen stap voor stap, " +
+      "met een object uit het model. Staan ze niet in de balk? Zet Labs aan onder Instellingen, of gebruik Ga naar.",
+  },
+  {
     titel: "Zoek elke opdracht",
     tekst: "Weet je niet waar iets zit? Ctrl+K opent het opdrachtenpalet: typ wat je wilt doen.",
     actie: { label: "Open het opdrachtenpalet", emit: "palette:open" },
+  },
+  {
+    anker: "menu-help",
+    titel: "Iets melden",
+    tekst:
+      "Een bug, een vraag of een idee? Help → Melden… (Alt+M). Met F8 trek je eerst een kader om wat je wilt " +
+      "laten zien: dat gaat als schermafbeelding mee. Onder Mijn meldingen volg je de status en het antwoord.",
   },
   {
     anker: "menu-help",
