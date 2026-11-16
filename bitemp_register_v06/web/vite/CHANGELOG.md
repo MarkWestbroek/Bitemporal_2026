@@ -8,6 +8,10 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
 
+## [studio/v0.45.0] — 2026-11-16
+
+Samen met render 0.4.9 (api blijft 0.27.0; devloop door FUNDAMENT).
+
 ### Gewijzigd
 - **Projectboom: root in plaats van "Niet ingedeeld"** (Mark 16-11): een diagram zonder map staat in de root, onder
   de mappen, met zijn taal-icoon. Een nieuw diagram van de startpagina of via de ＋ bij "Mappen" komt daar. De

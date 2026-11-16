@@ -61,7 +61,9 @@ dat, en forceert `git branch -D` het (met opzet).
 ## 6. Huidige stand
 
 - Generatie **v06**; Studio-release = `web/vite/package.json` (bron van waarheid),
-  getagd met prefix `studio/` (§7). Laatst getagd: **`studio/v0.44.0`**
+  getagd met prefix `studio/` (§7). Laatst getagd: **`studio/v0.45.0`**
+  (2026-11-16: DMN-beslistabel in het project met invoer uit het DRD en keten, projectboom met root,
+  Gebruikers → Projecten…, simulatie met scenario's in het project; samen met render 0.4.9), na **`studio/v0.44.0`**
   (2026-11-15: samenvoegen per veld, projectformaat 4 met afgeleide uuid's, uuid's tonen voor de
   beheerder, BPMN-data-object met een type; samen met render 0.4.8 en devloop 0.30.2), na **`studio/v0.43.0`**
   (2026-11-14: samenvoegen met schuifje, packages en bundels in de boom; fix automatische
@@ -192,7 +194,8 @@ dat, en forceert `git branch -D` het (met opzet).
   brekende wijzigingen). Daarvoor **`api/v0.11.0`** (2026-10-07: Studio-projecten op de server,
   tabel `studio_projecten`); zie `RELEASE.md`.
 - Generator: **`codegen/v0.1.0`**; sindsdien geen release.
-- Render-sidecar: **`render/v0.4.8`** (2026-11-15: de code van studio 0.44.0 — samenvoegen per veld,
+- Render-sidecar: **`render/v0.4.9`** (2026-11-16: de code van studio 0.45.0 — 27 profielen met
+  Simulatiemodel, DMN DRD 1.1.0, Object 1.1.0; image `bitemp-render-svc:0.4.9`), na **`render/v0.4.8`** (2026-11-15: de code van studio 0.44.0 — samenvoegen per veld,
   profielversies BPMN 1.2.0 en 1.1.0; image `bitemp-render-svc:0.4.8`), na **`render/v0.4.7`** (2026-11-14: de code van studio 0.43.0 — packages en bundels
   in vergelijken/samenvoegen; image `bitemp-render-svc:0.4.7`), na **`render/v0.4.6`** (2026-11-14: `keuze` op `/samenvoegen`, samenhang-vangnet,
   sleutel/map/ouder in `/vergelijk`; image `bitemp-render-svc:0.4.6`), na **`render/v0.4.5`** (2026-11-14: `POST /samenvoegen` met naspeel-controle;
