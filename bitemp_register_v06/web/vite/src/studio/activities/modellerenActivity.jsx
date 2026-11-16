@@ -20,6 +20,7 @@ import { create } from "zustand";
 import { menuBus } from "../menuBus";
 import { registreerMeldContext } from "../meldContext.js";
 import { zetUuidContext, planUuidAanvulling } from "../uuidAanvulling.js";
+import { useBeheerZicht, zetBeheerZicht, zichtbareProfielen } from "../beheerZicht.js";
 import { veldCompartimenten } from "../assistent/assistentKern.js";
 import { vraagNaam, vraagBevestiging, vraagKeuze, toonMelding } from "../naamDialog.jsx";
 import { ELEMENT_REF_MIME } from "../../diagramcore/canvas/externDrop.js";
@@ -531,7 +532,7 @@ export const useModellerenStore = create((set, get) => ({
   // ── Projectstructuur (fase 3 v0): vrije mappen, Sparx-principe ────
   // De boom is van de gebruiker: mappen mogen vrij nesten en diagrammen
   // van álle profieltypen door elkaar bevatten. Wat nergens geplaatst is
-  // staat onder "Niet ingedeeld" (per profieltype).
+  // staat in de root van de boom (16-11; was "Niet ingedeeld").
   /** @type {Record<string,{id:string,naam:string,ouderId:string|null}>} */
   mappen: mappenMetBeschrijving(opgeslagen.mappen) || {},
   /** open/dicht per map (default open) — werkruimte-laag */
@@ -1071,7 +1072,7 @@ function useHernoemDoel(sleutel, start) {
   }, [hernoemDoel, sleutel]); // eslint-disable-line react-hooks/exhaustive-deps
 }
 
-function DiagramRegel({ profiel, diagram, inMap = false }) {
+function DiagramRegel({ profiel, diagram, inMap = false, metIcoon = inMap }) {
   const actieveTab = useModellerenStore((s) => s.actieveTab);
   const openTab = useModellerenStore((s) => s.openTab);
   const plaatsDiagram = useModellerenStore((s) => s.plaatsDiagram);
@@ -1126,10 +1127,10 @@ function DiagramRegel({ profiel, diagram, inMap = false }) {
       {
         label: "Verplaats naar",
         items: verplaatsNaarItems(verplaats, {
-          bovenaan: inMap ? { label: "(Niet ingedeeld)" } : null,
+          bovenaan: inMap ? { label: "(Root van het project)" } : null,
         }),
       },
-      ...(inMap ? [{ sep: true }, { label: "Uit de map halen", onClick: () => verplaats(null) }] : []),
+      ...(inMap ? [{ sep: true }, { label: "Uit de map halen (naar de root)", onClick: () => verplaats(null) }] : []),
       ...meldItems({ pad: meldPad(useModellerenStore.getState().plaatsing[id], diagram.naam), onderwerpid: `${profiel.id}/${diagram.id}` }),
       // Diagram weggooien — voor elk profiel (gemeld 2026-10-07: in de
       // Modelleren-host was er buiten documentenbeheer-editors geen weg).
@@ -1206,7 +1207,7 @@ function DiagramRegel({ profiel, diagram, inMap = false }) {
         e.dataTransfer.effectAllowed = "move";
       }}
     >
-      {inMap && (
+      {metIcoon && (
         <span className="studio-project__regel-profiel" style={{ color: stijl.kleur || "inherit" }}>
           <ProfielIcoon profiel={profiel} />
         </span>
@@ -1623,7 +1624,8 @@ function plakDiagramItems(ouderSleutel) {
  * aanmaken; het nieuwe diagram landt meteen in de gegeven map (of los).
  */
 function nieuwDiagramItems(mapId) {
-  return getProfieltypen()
+  // Klassieke editors (dmn-js, bpmn.io) alleen voor een beheerder (beheerZicht.js, 16-11).
+  return zichtbareProfielen(getProfieltypen())
     .filter((p) => !p.vasteDocumenten)
     .map((p) => ({
       label: p.label,
@@ -2565,59 +2567,18 @@ function Map_({ map, diepte }) {
   );
 }
 
-function ProfielSectie({ profiel }) {
+/**
+ * Diagrammen van één profiel die in geen map staan: die staan in de root van de projectboom, onder
+ * de mappen (Mark 16-11; was de kop "Niet ingedeeld"). Het projectformaat verandert niet: geen
+ * plaatsing = root. Een nieuw diagram van de startpagina of de ＋ bij "Mappen" komt dus hier.
+ */
+function RootDiagrammen({ profiel }) {
   const diagrams = profiel.useStore((s) => s.diagrams);
   const plaatsing = useModellerenStore((s) => s.plaatsing);
-  const openTab = useModellerenStore((s) => s.openTab);
-
-  // Alleen wat nog niet in een map is geplaatst.
-  const entries = Object.values(diagrams).filter((d) => isWees(plaatsing, tabId(profiel.id, d.id)));
-  const nieuw = async () => {
-    const naam = await vraagNaam({
-      titel: `Nieuw ${profiel.diagramTerm}`,
-      waarde: `Nieuw ${profiel.diagramTerm}`,
-      bevestig: "Aanmaken",
-    });
-    if (!naam) return;
-    const id = `${profiel.menuPrefix}_${Date.now()}`;
-    profiel.useStore.getState().addDiagram({ id, naam, diagramType: profiel.descriptor.id });
-    openTab(profiel.id, id);
-  };
-
-  const stijl = effectieveStijl(profiel);
-  // Zonder niet-ingedeelde diagrammen zwijgt dit profiel (BOOM-1, 16-10: twaalf regels
-  // "geen diagrammen" zeiden niets); nieuw maken kan via de ＋ in de kop "Niet ingedeeld".
-  if (entries.length === 0) return null;
-  return (
-    <div className="studio-project__sectie" data-lijst>
-      <div className="studio-project__kop">
-        <span className="studio-project__stip" style={{ background: stijl.kleur || "var(--s-fg-muted)" }} />
-        <span className="studio-project__icoon"><ProfielIcoon profiel={profiel} /></span>
-        <span className="studio-project__naam">{profiel.label}</span>
-        {!profiel.vasteDocumenten && (
-          <button type="button" className="studio-project__nieuw" onClick={nieuw} title={`Nieuw ${profiel.diagramTerm}`}>
-            ＋
-          </button>
-        )}
-      </div>
-      {entries.map((d) => (
-        <DiagramRegel key={d.id} profiel={profiel} diagram={d} />
-      ))}
-    </div>
-  );
-}
-
-/** Onder "Niet ingedeeld" staat niets meer: zeg dat, in plaats van per profiel "geen diagrammen". */
-function NietIngedeeldLeeg({ profielen }) {
-  const plaatsing = useModellerenStore((s) => s.plaatsing);
-  // Abonneren op elke profielstore zou hooks in een lus zijn; de boom hertekent toch bij elke
-  // plaatsing- of diagramwijziging, dus lezen volstaat.
-  const leeg = profielen.every((p) => {
-    const diagrams = p.useStore?.getState?.().diagrams || {};
-    return !Object.values(diagrams).some((d) => isWees(plaatsing, tabId(p.id, d.id)));
-  });
-  if (!leeg) return null;
-  return <div className="studio-project__leeg" data-testid="niet-ingedeeld-leeg">alle diagrammen staan in een map</div>;
+  const entries = Object.values(diagrams)
+    .filter((d) => isWees(plaatsing, tabId(profiel.id, d.id)))
+    .sort((a, b) => (a.naam || "").localeCompare(b.naam || "", "nl"));
+  return entries.map((d) => <DiagramRegel key={d.id} profiel={profiel} diagram={d} metIcoon />);
 }
 
 // Scrollpositie van de projectboom, buiten React: de boom is je navigatie
@@ -2728,7 +2689,9 @@ function BundelSectie() {
 
 function Sidebar() {
   useSyncExternalStore(abonneerOpProfieltypen, profieltypenVersie);
-  const profielen = getProfieltypen();
+  const beheer = useBeheerZicht();
+  zetBeheerZicht(beheer);
+  const profielen = zichtbareProfielen(getProfieltypen(), beheer);
   const scrollRef = React.useRef(null);
   useEffect(() => {
     const el = scrollRef.current;
@@ -2747,17 +2710,15 @@ function Sidebar() {
   const tabs = useModellerenStore((s) => s.tabs);
   const verplaatsMap = useModellerenStore((s) => s.verplaatsMap);
   const rootMappen = Object.values(mappen).filter((m) => !m.ouderId).sort(opVolgorde);
-  // Droppen op "Niet ingedeeld" haalt diagrammen uit hun map. Elementen
-  // niet: die hebben geen "niet ingedeeld"-plek (verwijderen kan wél, via
-  // het contextmenu — met bevestiging).
-  const drop = useDrop({
-    [PLAATSING_MIME]: (data) =>
-      data.split("\n").forEach((key) => {
-        if (!isElementKey(key)) plaatsDiagram(key, null);
-      }),
-  });
-  // Droppen op de "Mappen"-kop hangt een map terug aan de wortel.
-  const dropWortel = useDrop({ [MAP_MIME]: (id) => verplaatsMap(id, null) });
+  // Droppen op de "Mappen"-kop (of het vlak eronder): een map hangt terug aan de root, een diagram
+  // gaat uit zijn map naar de root. Elementen niet: die hebben geen plek in de root (verwijderen
+  // kan wél, via het contextmenu — met bevestiging).
+  const naarRoot = (data) =>
+    data.split("\n").forEach((key) => {
+      if (!isElementKey(key)) plaatsDiagram(key, null);
+    });
+  const drop = useDrop({ [PLAATSING_MIME]: naarRoot });
+  const dropWortel = useDrop({ [MAP_MIME]: (id) => verplaatsMap(id, null), [PLAATSING_MIME]: naarRoot });
 
   // Auto-scroll tijdens slepen: met "iets in de hand" tegen de boven- of
   // onderrand duwen scrollt de boom mee (anders zijn hoger gelegen mappen
@@ -3095,55 +3056,38 @@ function Sidebar() {
           {...dropWortel.props}
         >
           <span className="studio-project__naam">Mappen</span>
-          <button type="button" className="studio-project__nieuw" title="Nieuwe map" onClick={maakMap}>
-            ＋
-          </button>
-        </div>
-        <button type="button" className="studio-project__grote-knop" onClick={maakMap}>
-          ＋ Nieuwe map
-        </button>
-        {rootMappen.map((m) => (
-          <Map_ key={m.id} map={m} diepte={0} />
-        ))}
-
-        <div
-          className={"studio-project__kop studio-project__kop--los" + (drop.over ? " is-dropdoel" : "")}
-          {...drop.props}
-        >
-          <span className="studio-project__naam">Niet ingedeeld</span>
-          {/* Eén ＋ voor alle talen (BOOM-1, 16-10): de lege profielregels zijn weg. */}
+          {/* Eén ＋: een map, of een diagram in de root (16-11; was de ＋ bij "Niet ingedeeld"). */}
           <button
             type="button"
             className="studio-project__nieuw"
-            title="Nieuw diagram (los; sleep het daarna in een map)"
+            title="Nieuwe map, of een nieuw diagram in de root"
             data-testid="nieuw-diagram-los"
-            onClick={(e) => openCtxMenu(e, nieuwDiagramItems(null))}
+            onClick={(e) =>
+              openCtxMenu(e, [
+                { label: "Nieuwe map", onClick: maakMap },
+                { label: "Nieuw diagram (in de root)", items: nieuwDiagramItems(null) },
+              ])
+            }
           >
             ＋
           </button>
         </div>
-        {/* Alleen profielen met diagrammen die nergens staan; de rest zwijgt (BOOM-1, 16-10). */}
-        {profielen.map((p) => (
-          <ProfielSectie key={p.id} profiel={p} />
+        {/* De grote knop "＋ Nieuwe map" is weg (Mark 16-11): de ＋ hierboven doet hetzelfde. */}
+        {rootMappen.map((m) => (
+          <Map_ key={m.id} map={m} diepte={0} />
         ))}
-        <NietIngedeeldLeeg profielen={profielen} />
+
+        {/* Diagrammen zonder map staan in de root, onder de mappen (16-11; was "Niet ingedeeld").
+            Het vlak is ook een sleepdoel: een diagram hierheen slepen haalt het uit zijn map. */}
+        <div className={"studio-project__root" + (drop.over ? " is-dropdoel" : "")} data-testid="boom-root" {...drop.props}>
+          {profielen.map((p) => (
+            <RootDiagrammen key={p.id} profiel={p} />
+          ))}
+        </div>
       </div>
 
       {Browser && (
-        <div className="studio-project__splitter" title="Sleep om de verdeling boom/elementen te wijzigen" onPointerDown={startSplitter} />
-      )}
-      {Browser && (
-        <div className="studio-project__elementen" style={{ flex: `0 0 ${elementenHoogte}px` }}>
-          <div className="studio-project__elementen-kop" title="Elementen van dit profiel die nergens in de boom staan en op geen enkel geplaatst diagram (wezen). Sleep ze in een map of op een diagram.">
-            <span
-              className="studio-project__stip"
-              style={{ background: effectieveStijl(profiel).kleur || "var(--s-fg-muted)" }}
-            />
-            <ProfielIcoon profiel={profiel} />
-            <span className="studio-project__naam">{profiel.label} — niet ingedeeld</span>
-          </div>
-          <ElementenBrowserMetFilter profiel={profiel} Browser={Browser} />
-        </div>
+        <ElementenVak profiel={profiel} Browser={Browser} hoogte={elementenHoogte} startSplitter={startSplitter} />
       )}
       <BoomContextMenu />
     </div>
@@ -3157,7 +3101,31 @@ function Sidebar() {
  * Eigen component (met stabiele hooks per profiel) zodat de filter meebeweegt
  * met zowel de plaatsing als het model.
  */
-function ElementenBrowserMetFilter({ profiel, Browser }) {
+function ElementenVak({ profiel, Browser, hoogte, startSplitter }) {
+  const { verbergIds, wezen } = useWezen(profiel);
+  const naarMapItems = React.useMemo(() => naarMapItemsVoor(profiel), [profiel]);
+  // Geen wezen? Dan geen vak (Mark 16-11: het laatste restje "niet ingedeeld" in de zijbalk). Het
+  // komt vanzelf terug zodra een element nergens meer staat.
+  if (wezen === 0) return null;
+  return (
+    <>
+      <div className="studio-project__splitter" title="Sleep om de verdeling boom/elementen te wijzigen" onPointerDown={startSplitter} />
+      <div className="studio-project__elementen" style={{ flex: `0 0 ${hoogte}px` }} data-testid="elementen-wezen">
+        <div className="studio-project__elementen-kop" title="Elementen van dit profiel die nergens in de boom staan en op geen enkel geplaatst diagram (wezen). Sleep ze in een map of op een diagram.">
+          <span
+            className="studio-project__stip"
+            style={{ background: effectieveStijl(profiel).kleur || "var(--s-fg-muted)" }}
+          />
+          <ProfielIcoon profiel={profiel} />
+          <span className="studio-project__naam">{profiel.label} — niet op een diagram</span>
+        </div>
+        <Browser verbergIds={verbergIds} naarMapItems={naarMapItems} />
+      </div>
+    </>
+  );
+}
+
+function useWezen(profiel) {
   const elements = profiel.useStore((s) => s.elements);
   const plaatsing = useModellerenStore((s) => s.plaatsing);
   const verbergIds = React.useMemo(() => {
@@ -3174,21 +3142,15 @@ function ElementenBrowserMetFilter({ profiel, Browser }) {
     }
     return set;
   }, [profiel, elements, plaatsing]);
-  // "Verplaats naar map ▸" in de browser (per regel, per multiselectie en
-  // per typegroep "alle N …") — de boom is de eigenaar van de mappen.
-  const naarMapItems = React.useMemo(() => naarMapItemsVoor(profiel), [profiel]);
   // BOOM-1 (16-10): alleen wezen. Sinds de boomregel staat alles wat op een geplaatst diagram
-  // staat in de boom; wat hier overblijft is echt zwervend. Niets over? Dan één regel.
+  // staat in de boom; wat hier overblijft is echt zwervend. Niets over? Dan geen vak (16-11).
   const ets = profiel.descriptor?.elementTypes || [];
   const wezen = Object.values(elements).filter((el) => {
     if (verbergIds.has(el.id) || el.source) return false;
     const et = ets.find((t) => t.id === el.elementType);
     return !et?.isConnector;
   }).length;
-  if (wezen === 0) {
-    return <div className="studio-project__leeg" data-testid="elementen-geen-wezen">alle elementen staan in de boom</div>;
-  }
-  return <Browser verbergIds={verbergIds} naarMapItems={naarMapItems} />;
+  return { verbergIds, wezen };
 }
 
 function BoomContextMenu() {
@@ -3374,7 +3336,8 @@ ${profiel.omschrijving}` : ""}`}
 function LegeStaat() {
   useSyncExternalStore(abonneerOpProfieltypen, profieltypenVersie);
   const openTab = useModellerenStore((s) => s.openTab);
-  const profielen = getProfieltypen();
+  // Klassieke editors alleen voor een beheerder (beheerZicht.js). Een nieuw diagram komt in de root.
+  const profielen = zichtbareProfielen(getProfieltypen(), useBeheerZicht());
   return (
     <div className="studio-modelleren__leeg">
       <p>
