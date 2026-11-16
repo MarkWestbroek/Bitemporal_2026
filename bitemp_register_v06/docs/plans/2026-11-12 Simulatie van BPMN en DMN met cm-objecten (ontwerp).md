@@ -1142,15 +1142,48 @@ wijziging, dus een formaat dicht bij de replay-bestanden sluit daar later op aan
 - **Activiteit Simulatie:** *Bewaar in het project*, de groep *Uit het project* in de keuzelijst, en de toets
   op de verwachting zodra de run stilstaat.
 
+- **Subjecten** (16-11): een scenario uit het project draait op de subjecten van zijn simulatie
+  (`subjectenVan`, `m1Voor` in `simulatieRun.js`); zonder subjecten op alle processen.
+- **Testset** (16-11): *Alle scenario's toetsen* draait elk scenario van het project en toetst de afloop aan
+  zijn verwachting (`draaiTestset`).
+- **Cm-vorm zonder e-dienstmodel** (16-11): de structuur rechtstreeks uit het cm van het project, elk veld op
+  zijn veldnaam (`maakCmBeeldDirect`). Daarmee heeft een project zonder e-dienstmodel (het demo-project) ook
+  de boom en de kaart.
+- **De kaart in de tekening** (16-11, §11.8): de kaart van het object hangt naast het aangeklikte data-object.
+
+### 12.6 Het object als objectdiagram (Mark 16-11, gebouwd)
+
+De kaart van 15-11 was een eigen vorm, met `veld: waarde`. Dat klopt niet met UML: `:` wijst naar het type,
+`=` geeft de waarde (een slot; in een klasse de standaardwaarde). EA laat in de *run state* van een object
+ook andere operatoren toe (`attr1 > 10`): het object is dan geen foto van één instantie maar een eis aan de
+toestand. Dat is hier alleen bruikbaar bij de Verwachting van een scenario, die nu alleen `=` kent (open).
+
+In de tekening is een object daarom een klein objectdiagram in de vormen van het cm
+(`simulatie/objectVorm.js`):
+
+| In het cm | In de objectweergave |
+|---|---|
+| entiteit met ingebedde GE's ("neem op in Entiteit") | het hoofdobject «entiteit», kop `naam : Type`; de enkelvoudige GE's genest met `veld = waarde`; ouder en subtype samen |
+| meervoudig GE | per voorkomen een los object «gegevenselement», compositielijn naar het hoofdobject |
+| relatie met eigen velden | per voorkomen een los object «relatie», lijn naar het hoofdobject, pijl naar het doel |
+| het doel van een relatie | een eigen object «entiteit», met zijn GE's genest |
+| referentielijst binnen een GE | een waarde op het veld: `type = GPK (Gehandicaptenparkeerkaart)` |
+| kardinaliteit, typen, materieel | niet getoond (materieel kan later tot waarden leiden: aanvang en einde) |
+
+Lege velden staan er nooit in. Meervoudig blijft los omdat het als object niet te nesten is: als klasse wel,
+als object niet. Getekend in de simulatie zelf, in de stijl van het canvas; de echte weg (de tekenaar van het
+canvas, als instanties in een objectdiagram) valt samen met "instanties tekenen" (§12.5 punt 2).
+
 ### 12.5 Open
 
-1. De run beperken tot de subjecten van de simulatie (nu doen alle processen van het project mee).
-2. De koppeling taak → beslistabel van naam naar een verwijzing (uuid), zoals bij de DMN-export.
-3. Het scenario laten wijzen naar een getekend object (aard `instantie`) in een andere taal; instanties in een
+1. De koppeling taak → beslistabel van naam naar een verwijzing (uuid), zoals bij de DMN-export.
+2. Het scenario laten wijzen naar een getekend object (aard `instantie`) in een andere taal; instanties in een
    map per scenario.
-4. Een subject dat geen diagram is (use case-realisatie), en een lezer per taal voor activity en sequence.
-5. Alle scenario's van een simulatie in één keer draaien als testset.
-6. De Waterstede-scenario's uit de ingebakken lijst naar het demo-project.
+3. Een subject dat geen diagram is (use case-realisatie), en een lezer per taal voor activity en sequence.
+4. De Waterstede-scenario's uit de ingebakken lijst naar het demo-project (wacht op een release met het profiel).
+5. Zonder e-dienstmodel: hoe een relatie in het object is ingebed (nu onbekend).
+6. Operatoren in de Verwachting (`leges > 100`), naar de run state van EA.
+7. Afgeleide velden (`/weergavenaam`) in de objectweergave: de simulatie rekent ze nog niet uit.
 
 ## Referenties
 

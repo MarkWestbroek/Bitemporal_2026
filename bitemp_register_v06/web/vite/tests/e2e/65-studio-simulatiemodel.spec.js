@@ -4,6 +4,7 @@
 // toetsen aan de verwachting.
 // Ontwerp: docs/plans/2026-11-12 Simulatie van BPMN en DMN met cm-objecten §12.
 import { test, expect } from "@playwright/test";
+import fs from "node:fs";
 import { openStudio } from "./helpers/studio.js";
 
 test.use({ viewport: { width: 1600, height: 1000 } });
@@ -41,6 +42,14 @@ test("scenario bewaren in het project, terugkiezen, afspelen en toetsen aan de v
   // Het overzicht (simulatie, vier subjecten, vijf scenario's) en een diagram per scenario.
   expect(na.diagrammen[0]).toEqual({ naam: "Simulatie", nodes: 10 });
   expect(na.diagrammen).toHaveLength(6);
+  // In de projectboom staan ze samen in de map Simulatie, niet los in de root.
+  const inMap = await page.evaluate(async () => {
+    const { useModellerenStore } = await import(location.origin + "/viz/react/src/studio/activities/modellerenActivity.jsx");
+    const ms = useModellerenStore.getState();
+    const map = Object.values(ms.mappen).find((m) => m.naam === "Simulatie");
+    return map ? Object.entries(ms.plaatsing).filter(([k, v]) => v === map.id && k.startsWith("simulatiemodel05::")).length : -1;
+  });
+  expect(inMap).toBe(6);
   expect(na.diagrammen.find((d) => d.naam === gpk4.naam)).toEqual({ naam: gpk4.naam, nodes: 1 + 1 + stubs + 1 });
   // Verwijzingen naar de andere talen: het subject naar het BPMN-diagram, het scenario naar het
   // startevent, een stub naar zijn taak.
@@ -106,4 +115,61 @@ test("het scenario-diagram tekent in Modelleren: scenario, instantie, stubs en v
   await expect(instantie).toContainText("aanvraagnummer");
   await expect(page.locator(".react-flow__node", { hasText: "«verwachting»" }).first()).toContainText("einde: Beschikt");
   await foto(page, "sm-3-modelleren");
+});
+
+test("cm-vorm zonder e-dienstmodel: de structuur komt uit het canonieke model van het project", async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem("studio05-hints-gezien", JSON.stringify({ gezien: {}, uit: true })));
+  await openStudio(page);
+  await naar(page, "Simulatie");
+  await page.getByTestId("sim-laad-gpk").click();
+  const scenario = page.getByTestId("sim-scenario");
+  await expect(scenario).toHaveValue(/GPK 4: toegekend/);
+  // Het GPK-e-dienstmodel uit; het startobject is een Aanvraag uit het cm van het project.
+  await page.getByRole("button", { name: "GPK-voorbeeld niet meer gebruiken" }).click();
+  // Het canonieke model van cg-test in het project (met de GPK-aanvraag als subtype van Aanvraag).
+  const v3 = JSON.parse(fs.readFileSync(new URL("../../src/diagramprofielen/canoniek-uml/fixtures/cg-test/inrichten-domeinen-v3.json", import.meta.url), "utf8"));
+  await page.evaluate(async (v3) => {
+    const { importeerV3 } = await import(location.origin + "/viz/react/src/diagramprofielen/canoniek-uml/serialisatie.js");
+    const { getProfieltype } = await import(location.origin + "/viz/react/src/studio/profieltypeRegistry.js");
+    getProfieltype("diagram05").useStore.getState().laadModel(importeerV3(v3));
+  }, v3);
+  await page.getByTestId("sim-start").click();
+  const aanvraag = page.locator('[data-testid="sim-object"][data-object="aanvraag-1"]');
+  await expect(aanvraag.getByTestId("sim-cm")).toContainText("zonder e-dienstmodel");
+  // De velden van de entiteit met hun waarde uit het platte object, op veldnaam.
+  await expect(aanvraag.locator('[data-testid="sim-cm-veld"]', { hasText: "aanvraagnummer" }).first()).toContainText("GPK-2026-0001");
+  await expect(aanvraag.getByTestId("sim-cm")).toContainText("erft van Aanvraag");
+  await foto(page, "sm-4-cm-direct");
+});
+
+test("testset en subjecten: alle scenario's toetsen; de run draait op de subjecten van de simulatie", async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem("studio05-hints-gezien", JSON.stringify({ gezien: {}, uit: true })));
+  await openStudio(page);
+  await naar(page, "Simulatie");
+  await page.getByTestId("sim-laad-gpk").click();
+  await expect(page.getByTestId("sim-scenario")).toHaveValue(/GPK 4: toegekend/);
+  // De vijf GPK-scenario's komen uit waar ze horen.
+  await page.getByTestId("sim-testset").click();
+  const rijen = page.getByTestId("sim-testset-rij");
+  await expect(rijen).toHaveCount(5);
+  for (let i = 0; i < 5; i++) await expect(rijen.nth(i)).toHaveAttribute("data-uitkomst", "klopt");
+
+  // Een scenario uit het project draait op de subjecten van zijn simulatie: alle vier.
+  const gpk4 = await page.evaluate(() => Object.values(window.__simulatiemodel05Store.getState().elements).find((e) => e.elementType === "scenario" && e.naam.startsWith("GPK 4")).id);
+  await page.getByTestId("sim-voorbeeld").selectOption(`p:${gpk4}`);
+  await page.getByTestId("sim-start").click();
+  await expect(page.getByText("Draait op 4 processen (de subjecten van Simulatie)")).toBeVisible();
+  await page.getByTestId("sim-stop").click();
+
+  // Zonder het subject Zaak behandelen doet dat proces niet mee: GPK 4 komt niet meer bij Beschikt.
+  await page.evaluate(() => {
+    const st = window.__simulatiemodel05Store.getState();
+    st.deleteElement(Object.values(st.elements).find((e) => e.elementType === "subject" && e.naam === "Zaak behandelen").id);
+  });
+  await page.getByTestId("sim-testset").click();
+  await expect(rijen.filter({ hasText: "GPK 4" })).toHaveAttribute("data-uitkomst", "wijkt af");
+  await expect(rijen.filter({ hasText: "GPK 1" })).toHaveAttribute("data-uitkomst", "klopt"); // eindigt al in het oppakproces
+  await page.getByTestId("sim-start").click();
+  await expect(page.getByText("Draait op 3 processen (de subjecten van Simulatie)")).toBeVisible();
+  await foto(page, "sm-5-testset");
 });

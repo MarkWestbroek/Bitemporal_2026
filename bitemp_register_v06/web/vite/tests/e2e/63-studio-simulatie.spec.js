@@ -229,9 +229,61 @@ test("data-object met een type toont het object van de run: versie, geel bij een
   // Een stap die het object niet raakt: niet meer geel.
   await page.getByTestId("sim-stap").click();
   await expect(dobj).not.toHaveAttribute("data-sim-gewijzigd", "");
-  // Klik: het object in de cm-vorm onder het diagram.
+  // Klik: het object als los object naast het data-object in de tekening (16-11): alleen de
+  // objectvorm "naam : Type", rechts ervan en niet eroverheen.
   await dobj.click();
-  await expect(page.getByTestId("sim-dataobject-object")).toContainText("aanvraag-1");
+  const kaart = page.getByTestId("sim-dataobject-object");
+  const hoofd = kaart.locator('[data-doos="hoofd"]');
+  await expect(hoofd.getByTestId("sim-objectdoos-kop")).toHaveText("aanvraag-1 : Gehandicaptenparkeerkaartaanvraag");
+  // UML: = geeft de waarde; de gegevenselementen van ouder en subtype genest in hetzelfde object.
+  await expect(hoofd.locator('[data-ge="Aanvraagidentificatie"]')).toContainText("aanvraagnummer = GPK-2026-0001");
+  await expect(hoofd.locator('[data-ge="GpkAanvraagKaart"]')).toContainText("soort = passagier");
+  await expect(hoofd.locator('[data-ge="AanvraagAanvraagtype"]')).toContainText("type = GPK (Gehandicaptenparkeerkaart)");
+  await expect(hoofd).not.toContainText("toelichting"); // lege velden staan er niet in
+  // Het meervoudige gegevenselement en de relatie met haar doel zijn losse objecten, met lijnen.
+  await expect(kaart.locator('[data-stereotype="gegevenselement"]')).toContainText("naam = pasfoto");
+  await expect(kaart.locator('[data-stereotype="relatie"]')).toContainText("partijrol = aanvrager");
+  await expect(kaart.locator('[data-doos^="doel:"]')).toContainText("bsn = 999990019");
+  await expect(kaart.getByTestId("sim-object-lijn")).toHaveCount(3);
+  await expect(kaart).toHaveAttribute("data-plek", "tekening");
+  await expect(kaart.locator("button")).toHaveCount(0); // geen venster, geen kruisje
+  const [vak, bij] = [await hoofd.boundingBox(), await dobj.boundingBox()];
+  expect(vak.x).toBeGreaterThanOrEqual(bij.x + bij.width);
+  expect(Math.abs(vak.y - bij.y)).toBeLessThan(40);
+  await foto(page, "5-kaart-in-tekening");
+  // Slepen verplaatst het object.
+  await page.mouse.move(vak.x + 60, vak.y + 10);
+  await page.mouse.down();
+  await page.mouse.move(vak.x + 160, vak.y + 90, { steps: 4 });
+  await page.mouse.up();
+  const verplaatst = await hoofd.boundingBox();
+  // Een los object verplaatst alleen zichzelf.
+  const bijlage = kaart.locator('[data-stereotype="gegevenselement"]');
+  const b0 = await bijlage.boundingBox();
+  await page.mouse.move(b0.x + 30, b0.y + 10);
+  await page.mouse.down();
+  await page.mouse.move(b0.x + 30, b0.y + 70, { steps: 3 });
+  await page.mouse.up();
+  expect(Math.round((await bijlage.boundingBox()).y - b0.y)).toBe(60);
+  expect(Math.round((await hoofd.boundingBox()).y)).toBe(Math.round(verplaatst.y));
+  expect(Math.round(verplaatst.x - vak.x)).toBe(100);
+  expect(Math.round(verplaatst.y - vak.y)).toBe(80);
+  // Rechtsklik: aanwijzen in het objectenpaneel, en sluiten.
+  await hoofd.click({ button: "right", position: { x: 30, y: 10 } });
+  await page.getByTestId("sim-zwevend-paneel").click();
+  await expect(page.locator('[data-testid="sim-object"][data-object="aanvraag-1"]')).toHaveAttribute("data-aangewezen", "ja");
+  await hoofd.click({ button: "right", position: { x: 30, y: 10 } });
+  await page.getByTestId("sim-zwevend-sluit").click();
+  await expect(kaart).toHaveCount(0);
+  // Lege velden verbergen: het vinkje haalt de lege optionele velden uit de cm-vorm.
+  const paneel = page.locator('[data-testid="sim-object"][data-object="aanvraag-1"]');
+  const velden = paneel.getByTestId("sim-cm-veld");
+  const aantalVelden = await velden.count();
+  await page.getByTestId("sim-verberg-leeg").check();
+  expect(await velden.count()).toBeLessThan(aantalVelden);
+  await expect(paneel).not.toContainText("toelichting");
+  await page.getByTestId("sim-verberg-leeg").uncheck();
+  await expect(velden).toHaveCount(aantalVelden);
   // Zet het model een andere toestand op het data-object, dan klopt het niet meer (rood gestippeld).
   await toets("beoordeeld");
   await expect(dobj).toHaveAttribute("data-sim-klopt", "false");

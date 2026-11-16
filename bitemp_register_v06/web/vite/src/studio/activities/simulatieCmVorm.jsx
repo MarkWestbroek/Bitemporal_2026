@@ -5,7 +5,7 @@
  * niet in het objecttype zit is onbekend. Bovenaan de toets: verplicht ingevuld, relaties met
  * een bekend doel. De logica staat in simulatie/cmVorm.js.
  */
-import { useState } from "react";
+import { createContext, useContext, useState } from "react";
 import { cmVorm } from "../../simulatie/cmVorm.js";
 
 const mono = { fontFamily: "ui-monospace, Consolas, monospace", fontSize: 11 };
@@ -18,11 +18,31 @@ function ietsBekend(kinderen) {
   return kinderen.some((k) => (k.soort === "veld" ? heeftWaarde(k.waarde) : k.voorkomens.some(ietsBekend)));
 }
 const toon = (w) => (typeof w === "string" ? w : JSON.stringify(w));
+
+/**
+ * Weergave-opties voor de cm-vorm en de kaart (Mark 16-11). `verbergLeeg`: lege optionele velden
+ * (en gegevenselementen waar dan niets van overblijft) niet tonen. Een verplicht veld zonder waarde
+ * blijft altijd staan.
+ */
+export const CmOpties = createContext({ verbergLeeg: false });
+
+/**
+ * Staat er iets te tonen? Een gegevenselement of relatie die er niet is (niets bekend, en niet in
+ * het objecttype of een leeg alternatief binnen een doel) komt niet in beeld: hij verschijnt pas
+ * als hij er is (Mark 16-11). Met `verbergLeeg` geldt dat voor alles wat leeg is.
+ */
+function afwezig(k, hier, fouten, binnenDoel, verbergLeeg) {
+  if (k.voorkomens.some(ietsBekend) || fouten.some((f) => f.startsWith(hier))) return false;
+  return verbergLeeg || !k.inObjecttype || (binnenDoel && k.soort === "ge");
+}
+const veldVerborgen = (k, fout, verbergLeeg) => verbergLeeg && !fout && !heeftWaarde(k.waarde);
 /** Markering van een veld dat in de getoonde versie veranderde. */
 export const GEWIJZIGD = { background: "rgba(250, 204, 21, 0.28)", borderRadius: 3 };
 
 function Veld({ k, fout, gewijzigd }) {
+  const { verbergLeeg } = useContext(CmOpties);
   const leeg = !heeftWaarde(k.waarde);
+  if (veldVerborgen(k, fout, verbergLeeg)) return null;
   const nieuw = k.platSleutel && gewijzigd?.has(k.platSleutel);
   return (
     <div style={{ ...mono, display: "flex", gap: 6, ...(nieuw ? GEWIJZIGD : {}) }} data-testid="sim-cm-veld" data-pad={k.id} data-gewijzigd={nieuw ? "ja" : undefined} title={nieuw ? "veranderd in deze versie" : undefined}>
@@ -45,18 +65,10 @@ function Veld({ k, fout, gewijzigd }) {
 
 /** Eén knoop (GE, relatie, doel, ouder) met zijn voorkomens. */
 function Knoop({ k, pad, fouten, binnenDoel, gewijzigd }) {
+  const { verbergLeeg } = useContext(CmOpties);
   const hier = `${pad}.${k.naam}`;
-  const bekend = k.voorkomens.some(ietsBekend);
-  // Wat niets bekends heeft en niet in het objecttype zit, of een leeg alternatief binnen een doel: één regel.
-  if (!bekend && (!k.inObjecttype || (binnenDoel && k.soort === "ge")) && !fouten.some((f) => f.startsWith(hier))) {
-    return (
-      <div style={{ ...gedempt, fontSize: 11 }} data-testid="sim-cm-leeg">
-        {k.soort === "relatie" ? "→ " : ""}
-        {k.naam}
-        {k.doel ? ` → ${k.doel}` : ""} — {k.inObjecttype ? "leeg" : "niet in het objecttype"}
-      </div>
-    );
-  }
+  // Wat er niet is, staat er niet (Mark 16-11): het komt in beeld zodra het er is.
+  if (afwezig(k, hier, fouten, binnenDoel, verbergLeeg)) return null;
   const kop =
     k.soort === "ouder" ? `erft van ${k.naam}` : k.soort === "relatie" ? `→ ${k.naam}` : k.soort === "doel" ? k.naam : k.naam;
   return (
@@ -95,13 +107,15 @@ const KAART_RAND = "1px solid var(--dc-node-border, #94a3b8)";
 const KAART_KLEUREN = { "--s-fg-muted": "#64748b", "--s-hover": "#f1f5f9", "--s-border": "#cbd5e1", "--dc-node-border": "#64748b", "--dc-node-bg": "#ffffff", color: "#0f172a" };
 
 function KaartVeld({ k, fout, gewijzigd }) {
+  const { verbergLeeg } = useContext(CmOpties);
   const nieuw = k.platSleutel && gewijzigd?.has(k.platSleutel);
   const leeg = !heeftWaarde(k.waarde);
+  if (veldVerborgen(k, fout, verbergLeeg)) return null;
   return (
     <div style={{ display: "flex", gap: 6, padding: "0 6px", ...(nieuw ? GEWIJZIGD : {}) }} data-testid="sim-kaart-veld" data-pad={k.id} data-gewijzigd={nieuw ? "ja" : undefined}>
       <span style={{ color: fout ? ROOD : undefined }}>
         {k.naam}
-        {k.verplicht ? "*" : ""}:
+        {k.verplicht ? "*" : ""} =
       </span>
       <span style={{ fontWeight: leeg ? 400 : 600, wordBreak: "break-word", ...(leeg ? gedempt : {}), ...(fout ? { color: ROOD } : {}) }}>
         {!k.inObjecttype ? "onbekend" : leeg ? (fout ? "ontbreekt" : "—") : toon(k.waarde)}
@@ -122,17 +136,9 @@ function KaartInhoud({ kinderen, pad, fouten, binnenDoel, gewijzigd }) {
 
 /** Een GE, relatie, doel of ouder op de kaart. */
 function KaartKnoop({ k, pad, fouten, binnenDoel, gewijzigd }) {
+  const { verbergLeeg } = useContext(CmOpties);
   const hier = `${pad}.${k.naam}`;
-  const bekend = k.voorkomens.some(ietsBekend);
-  if (!bekend && (!k.inObjecttype || (binnenDoel && k.soort === "ge")) && !fouten.some((f) => f.startsWith(hier))) {
-    return (
-      <div style={{ ...gedempt, padding: "0 6px", fontSize: 10 }}>
-        {k.soort === "relatie" ? "→ " : ""}
-        {k.naam}
-        {k.doel ? ` → ${k.doel}` : ""} — {k.inObjecttype ? "leeg" : "niet in het objecttype"}
-      </div>
-    );
-  }
+  if (afwezig(k, hier, fouten, binnenDoel, verbergLeeg)) return null;
   if (k.soort === "ouder") {
     // Overerving: de velden van de ouder horen bij dit object; een dunne kop, geen eigen vak.
     return (
@@ -185,14 +191,34 @@ function KaartKnoop({ k, pad, fouten, binnenDoel, gewijzigd }) {
 }
 
 /** Het object als kaart: de entiteit met haar GE's erin, met de waarden. */
-export function CmKaart({ boom, fouten = [], gewijzigd = new Set(), type }) {
+/**
+ * @param {Object} p
+ * @param {string} [p.objectNaam] - het object als instantie tekenen: kop "naam : Type", onderstreept
+ *   (zoals een object in een objectdiagram), met de toestand erachter
+ * @param {string} [p.toestand]
+ * @param {string} [p.versie] - bv. "v3", rechts in de kop
+ * @param {string} [p.kleur] - de vulling van de kop (een object: geel, zoals de Instantie)
+ */
+export function CmKaart({ boom, fouten = [], gewijzigd = new Set(), type, objectNaam = null, toestand = null, versie = null, kleur = null }) {
   return (
     // Een lichte kaart in beide thema's, zoals een vorm op het canvas: de thema-tokens staan hier vast.
-    <div style={{ ...KAART_KLEUREN, ...mono, display: "inline-block", minWidth: 260, maxWidth: "100%", border: "1.5px solid var(--dc-node-border, #64748b)", borderRadius: 6, background: "var(--dc-node-bg, #fff)", margin: "4px 0" }} data-testid="sim-kaart">
-      <div style={{ textAlign: "center", padding: "3px 8px", borderBottom: "1.5px solid var(--dc-node-border, #64748b)" }}>
-        <div style={{ ...gedempt, fontSize: 9 }}>«entiteit»</div>
-        <div style={{ fontWeight: 700 }}>{boom.naam}</div>
-        {type && String(type).toLowerCase() !== String(boom.naam).toLowerCase() ? <div style={{ ...gedempt, fontSize: 9 }}>object van type {type}</div> : null}
+    <div style={{ ...KAART_KLEUREN, ...mono, display: "inline-block", minWidth: 260, maxWidth: "100%", border: "1.5px solid var(--dc-node-border, #64748b)", borderRadius: 6, background: "var(--dc-node-bg, #fff)", margin: objectNaam ? 0 : "4px 0", overflow: "hidden" }} data-testid="sim-kaart">
+      <div style={{ textAlign: "center", padding: "3px 8px", borderBottom: "1.5px solid var(--dc-node-border, #64748b)", background: kleur || undefined, position: "relative" }}>
+        {objectNaam ? (
+          <>
+            <div style={{ fontWeight: 700, textDecoration: "underline" }}>
+              {objectNaam} : {boom.naam}
+            </div>
+            {toestand ? <div style={{ ...gedempt, fontSize: 9 }}>[{toestand}]</div> : null}
+            {versie ? <span style={{ position: "absolute", right: 6, top: 3, fontSize: 9, fontWeight: 700, color: "#4338ca" }}>{versie}</span> : null}
+          </>
+        ) : (
+          <>
+            <div style={{ ...gedempt, fontSize: 9 }}>«entiteit»</div>
+            <div style={{ fontWeight: 700 }}>{boom.naam}</div>
+            {type && String(type).toLowerCase() !== String(boom.naam).toLowerCase() ? <div style={{ ...gedempt, fontSize: 9 }}>object van type {type}</div> : null}
+          </>
+        )}
       </div>
       <div style={{ padding: "2px 0 4px" }}>
         <KaartInhoud kinderen={boom.voorkomens[0] || []} pad={boom.naam} fouten={fouten} binnenDoel={false} gewijzigd={gewijzigd} />
@@ -215,8 +241,8 @@ export function PlatJson({ data, gewijzigd = new Set() }) {
 }
 
 /** Het object in de cm-vorm, met een knop terug naar de platte vorm (JSON). */
-export function CmObject({ beeld, data, bron, gewijzigd = new Set(), type = null }) {
-  const [weergave, setWeergave] = useState("cm-vorm");
+export function CmObject({ beeld, data, bron, gewijzigd = new Set(), type = null, begin = "cm-vorm" }) {
+  const [weergave, setWeergave] = useState(begin);
   const alsJson = weergave === "JSON";
   // Geen memo: de store wijzigt het object ter plekke (zelfde referentie); de omzetting is goedkoop.
   const { boom, problemen, buitenCm } = cmVorm(beeld, data);
