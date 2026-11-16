@@ -505,6 +505,10 @@ te wijzigen.
 > leeg diagram toont `LegeCanvas.jsx` (afgeleid uit het profiel, `startActies` per
 > activiteit). Tips en "rondleiding gezien" staan per browser in localStorage
 > (`studio05-hints-gezien`, `studio05-tour-v1`).
+> De stappen (`tourStappen.js`, 16-11 uitgebreid): welkom, activiteiten, Project → Van server
+> ophalen, de projectboom (met bundels), eerste diagram, elementen maken, eigenschappen, de
+> AI-assistent, de Labs-activiteiten Toegangverlening en Simulatie, het opdrachtenpalet, melden en
+> Help. `tourStappen.test.js` controleert dat elk anker in de code bestaat.
 >
 > **Consolidatie fase 2 (2026-07-11) — Modelleren als één ingang:** nieuwe
 > activiteit **Modelleren** (bovenaan de balk, preview) met een
