@@ -14,7 +14,9 @@ Studio kent: 28 diagrammen in 26 talen, 42 kruisverbanden en een simulatie die w
 - `omnium-demo-waterstede.studio-project.json`: de stand als werkbestand (`studio-project` v3),
   voor een andere instantie (*Project → Importeer project…*) en als reserve. Na wijzigingen op de
   server haal je hem opnieuw op met `naar-server.mjs … van-server`; het bestand volgt de server,
-  niet andersom.
+  niet andersom. In VS Code staat dat onder *Terminal → Run Task…* →
+  **demo-project: JSON ophalen van app (v06)** (token uit `OMNIUM_TOKEN_CLAUDE`); daarna
+  **demo-project: simulatie testen (v06)** en committen.
 - Het is een demo, geen speelplaats. Een speelplaats waar iedereen in mag schrijven is een kopie
   onder een andere naam: `naar-server.mjs <basis> <token-env> nieuw "Omnium speelplaats"` (nog niet
   gedaan).
@@ -49,7 +51,8 @@ De lijst staat leesbaar in `plannen/09-verbanden.ops.mjs`.
 
 Activiteit **Simulatie** (groep Modelleren) loopt het BPMN-model van het project door met de
 beslistabellen uit het project; er is geen e-dienstmodel nodig. Het scenario staat (nog) niet in het
-project: plak een van de drie bestanden uit `scenarios/` in het tekstvak *Scenario*.
+project: kies er een onder *Voorbeeldscenario kiezen…* (groep Waterstede). Op een versie van de
+Studio zonder die groep plak je een van de drie bestanden uit `scenarios/` in het tekstvak *Scenario*.
 
 | Scenario | Wat je ziet |
 |---|---|
@@ -121,9 +124,9 @@ blijven staan als voorbeeld van hoe je een project uit plannen opbouwt. Opnieuw 
 
 ## Open
 
-- **Scenario's.** Nu moet een nieuwe gebruiker het scenario plakken. Besluit Mark 16-11: voorlopig
-  de Waterstede-scenario's naast de GPK-voorbeelden in de keuzelijst (gevraagd aan sessie
-  SIMULATIE, die ook bouwt aan scenario's in het project zelf).
+- **Scenario's in het project zelf.** Besluit Mark 16-11: voorlopig staan de Waterstede-scenario's
+  naast de GPK-voorbeelden in de keuzelijst (gedaan door sessie SIMULATIE). Die sessie bouwt aan
+  scenario's in het project; zodra dat kan, gaan deze drie het demo-project in.
 - De cm-vorm van het startobject zonder e-dienstmodel (rechtstreeks op de entiteit uit `start.type`).
 - De opstelling van CMMN, state machine en toegangsregels kan beter; dat gaat het snelst met de
   hand in de Studio.
