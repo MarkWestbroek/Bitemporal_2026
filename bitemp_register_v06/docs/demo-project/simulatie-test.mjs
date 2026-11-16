@@ -1,8 +1,9 @@
 // simulatie-test.mjs — loopt de scenario's in scenarios/ door op het gebouwde werkbestand, met
 // dezelfde kern als de activiteit Simulatie in de Studio (web/vite/src/simulatie/). Zo weten we
-// dat de demo werkt voordat hij op een server staat.
+// dat de demo werkt voordat hij op een server staat. Staan de scenario's in het project (taal
+// Simulatiemodel), dan loopt de test die versie en toetst hij dat ze gelijk zijn aan scenarios/.
 //
-//   node docs/demo-project/simulatie-test.mjs [--log]      (vanuit bitemp_register_v06/)
+//   node docs/demo-project/simulatie-test.mjs [--log] [werkbestand.json]      (vanuit bitemp_register_v06/)
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -10,9 +11,11 @@ import { UIT } from "./bouw.mjs";
 import { maakSimulatie } from "../../web/vite/src/simulatie/simulatie.js";
 import { toetsLijnen } from "../../web/vite/src/simulatie/dataLijnen.js";
 import { toetsStartobject } from "../../web/vite/src/simulatie/dataObjecten.js";
+import { simulatiesIn, scenarioUitModel } from "../../web/vite/src/simulatie/scenarioModel.js";
 
 const HIER = path.dirname(fileURLToPath(import.meta.url));
-const project = JSON.parse(fs.readFileSync(UIT, "utf8"));
+const bestand = process.argv.slice(2).find((a) => !a.startsWith("--")) || UIT;
+const project = JSON.parse(fs.readFileSync(bestand, "utf8"));
 const model = (pid) => ({ elements: project.profielen[pid].elements, diagrams: project.profielen[pid].diagrams });
 // Zoals simulatieRun.start(): het BPMN-model van het project, de beslissingen uit het project, geen e-dienstmodel.
 const m1 = { proces: { model_naam: "BPMN-model van het project", model: model("bpmnMotor05") }, beslissingen: [{ model_naam: "DMN", model: model("dmnDrd05") }], edienst: null };
@@ -20,8 +23,26 @@ const m1 = { proces: { model_naam: "BPMN-model van het project", model: model("b
 const toonLog = process.argv.includes("--log");
 let fout = 0;
 const map = path.join(HIER, "scenarios");
-for (const b of fs.readdirSync(map).filter((x) => x.endsWith(".json")).sort()) {
-  const scenario = JSON.parse(fs.readFileSync(path.join(map, b), "utf8"));
+const uitBestanden = fs.readdirSync(map).filter((x) => x.endsWith(".json")).sort().map((b) => JSON.parse(fs.readFileSync(path.join(map, b), "utf8")));
+// De scenario's in het project (simulatiemodel05), als ze er staan; anders de bestanden.
+const simEl = project.profielen.simulatiemodel05?.elements || {};
+const inProject = simulatiesIn(simEl).simulaties.flatMap((s) => s.scenarios).map((s) => scenarioUitModel(simEl, s.id));
+// Uit het model komen de plekken als element-id terug (mcp_beoordeel_de_aanvraag), in de bestanden
+// staan ze als bpmn-id (aanvraag-beoordelen); de simulatie kent beide.
+const bpmnId = (k) => project.profielen.bpmnMotor05.elements[k]?.data?.bpmnId || k;
+const opBpmnId = (o) => o && Object.fromEntries(Object.entries(o).map(([k, v]) => [bpmnId(k), v]));
+const kern = (s) => JSON.stringify({ naam: s.naam, start: s.start, vulwijze: { ...s.vulwijze, ...(s.vulwijze?.perGat ? { perGat: opBpmnId(s.vulwijze.perGat) } : {}) }, antwoorden: opBpmnId(s.antwoorden), zaadje: s.zaadje, verwacht: s.verwacht });
+if (inProject.length) {
+  console.log(`scenario's uit het project (${inProject.length})`);
+  for (const f of uitBestanden) {
+    const m = inProject.find((s) => s.naam === f.naam);
+    if (!m) { console.log(`✗ "${f.naam}" staat niet in het project`); fout += 1; }
+    else if (kern(m) !== kern(f)) { console.log(`✗ "${f.naam}" in het project wijkt af van scenarios/:
+    project  ${kern(m)}
+    bestand  ${kern(f)}`); fout += 1; }
+  }
+} else console.log("scenario's uit scenarios/ (niet in het project)");
+for (const scenario of inProject.length ? inProject : uitBestanden) {
   const sim = maakSimulatie({ m1, scenario });
   let stand = sim.loop();
   const v = scenario.verwacht || {};
