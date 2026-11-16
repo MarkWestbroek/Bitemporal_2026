@@ -8,6 +8,41 @@
 
 ---
 
+## studio 0.45.0 / render 0.4.9 (2026-11-16)
+
+Akkoord Mark 16-11 ("daarna 1 en 2 en daarna een release als je wilt"). api blijft 0.27.0; devloop
+(api 0.27.0 met studio 0.45.0 en render 0.4.9) bouwt FUNDAMENT.
+
+- **DMN-beslistabel in het project:** op een beslissing in een DMN DRD bewerk je de tabel in een
+  dialoog (Eigenschappen → beslistabel). De invoerkolommen volgen uit de pijlen in het DRD; het veld
+  kies je op het invoergegeven (eigenschap *gegeven*, M3-datatype `veld-verwijzing`). Een getekende
+  «traceert naar» van een invoergegeven wordt dat gegeven. Een beslissing kan de uitkomst van een
+  andere lezen: export (DMN-XML met `requiredDecision`) en simulatie rekenen de keten uit.
+  Profiel DMN DRD 1.1.0.
+- **Projectboom:** een diagram zonder map staat in de root; "Niet ingedeeld" is weg. De klassieke
+  editors (dmn-js, bpmn.io, Canoniek model IDE v1, Berichtdefinities) zijn alleen nog zichtbaar
+  voor een beheerder.
+- **Gebruikers → Projecten…:** een gebruiker achteraf aan projecten toewijzen; in *Toegang…* een
+  namenlijst met waarschuwing bij een onbekende naam.
+- **Simulatie** (SIMULATIE): scenario's in het project (nieuw profiel *Simulatiemodel*, M3-aard
+  `instantie`), het object als objectdiagram en als kaart, alle scenario's toetsen, cm-vorm zonder
+  e-dienstmodel, lijnen en objecten getoetst, Waterstede-scenario's. Profiel Object 1.1.0.
+- **Fix:** lijnen naast het vak na vergroten en weer verkleinen.
+- Rondleiding: vier stappen erbij; BPMN-XML schrijft data-objecten; BPMN-import koppelt het type terug.
+- render 0.4.9: de code van studio 0.45.0 (27 profielen, met Simulatiemodel; DMN DRD 1.1.0,
+  Object 1.1.0).
+
+Getest: Studio-unit 1769/1769 op main, render-svc 33/33, e2e 177 geslaagd (02 en 17 falen al
+langer op main).
+
+Uitrol:
+- App: `viz-frontend:0.45.0` en `bitemp-render-svc:0.4.9` via `update.sh`. Geen schemawijziging,
+  geen rebuild.
+- Daarna zet DEMO-PROJECT de Waterstede-scenario's in het demo-project (script klaar).
+- Fundament: `bitemp-devloop` met frontend 0.45.0 en render 0.4.9, door FUNDAMENT.
+
+---
+
 ## studio 0.44.0 / render 0.4.8 / devloop 0.30.2 (2026-11-15)
 
 Akkoord Mark 15-11 ("Wil je releasen? Ook naar fundament"). api blijft 0.27.0; devloop 0.30.2 is
