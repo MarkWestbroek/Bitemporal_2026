@@ -111,3 +111,36 @@ test("DRD als boom: een beslissing krijgt de uitvoer van de beslissing eronder",
   assert.deepEqual(reken(30).uitkomst, { tarief: 10, korting: false });
   assert.equal(reken(30).onderliggend[0].uitkomst.groep, "volwassene");
 });
+
+// Keten uit het DRD (16-11): Top leest de uitvoer van Onderliggend via de kolom-bron.
+test("keten: een kolom uit een andere beslissing leest precies die uitvoer", () => {
+  const model = { elements: {
+    top: { id: "top", naam: "Top", elementType: "decision", data: { beslistabel: {
+      hitPolicy: "FIRST",
+      inputs: [
+        { id: "k1", naam: "Onderliggend", bron: { soort: "beslissing", elementId: "onder", uitvoerId: "o2" } },
+        { id: "k2", naam: "inkomen", bron: { soort: "invoer", elementId: "c" }, fieldRef: null, veldNaam: "bedrag" },
+      ],
+      outputs: [{ id: "t", naam: "tarief" }],
+      rules: [
+        { id: "r1", inputEntries: { k1: "\"hoog\"", k2: "> 1000" }, outputEntries: { t: "\"vol\"" } },
+        { id: "r2", inputEntries: { k1: "", k2: "" }, outputEntries: { t: "\"geen\"" } },
+      ],
+    } } },
+    onder: { id: "onder", naam: "Onderliggend", elementType: "decision", data: { beslistabel: {
+      hitPolicy: "UNIQUE",
+      inputs: [{ id: "a", naam: "leeftijd", fieldRef: { veldnaam: "leeftijd" } }],
+      outputs: [{ id: "o1", naam: "korting" }, { id: "o2", naam: "categorie" }],
+      rules: [{ id: "x", inputEntries: { a: ">= 18" }, outputEntries: { o1: "0", o2: "\"hoog\"" } }],
+    } } },
+    p: { id: "p", elementType: "infoReq", source: "onder", target: "top" },
+  } };
+  const uit = rekenBeslissingUit({ model, beslissing: model.elements.top }, { object: { leeftijd: 30, bedrag: 2000 } });
+  assert.equal(uit.regel, "r1");
+  assert.deepEqual(uit.uitkomst, { tarief: "vol" });
+  assert.equal(uit.onderliggend[0].beslissing, "Onderliggend");
+  const jong = rekenBeslissingUit({ model, beslissing: model.elements.top }, { object: { leeftijd: 12, bedrag: 2000 } });
+  assert.equal(jong.regel, "r2"); // Onderliggend had geen uitkomst: de kolom is leeg
+  delete model.elements.p;
+  assert.throws(() => rekenBeslissingUit({ model, beslissing: model.elements.top }, { object: {} }), Onleesbaar);
+});

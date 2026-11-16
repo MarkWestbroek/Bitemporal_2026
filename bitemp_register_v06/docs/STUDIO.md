@@ -548,8 +548,9 @@ te wijzigen.
 > heeft, blijft de `fieldRef` van de kolom gelden. Een kolom waarvan de pijl verdween blijft staan
 > met `bronWeg` en een melding. *Tabel wissen…* (met bevestiging) zet `data.beslistabel` op leeg; met
 > *Maken…* begin je opnieuw, met de invoer uit het diagram. De export (`dmnArtefact`) werkt bestaande bronkolommen bij
-> (`alleenBestaand`) en voegt niets toe; een kolom uit een beslissing geeft daar de waarschuwing
-> `DMN-KETEN`: de vereiste beslissing gaat nog niet mee in het artefact. Ook nog niet: een modelveld
+> (`alleenBestaand`) en voegt niets toe. Een kolom uit een beslissing neemt die beslissing mee in
+> hetzelfde artefact (keten, zie TRANSFORMATIES.md §11.12); de simulatie leest haar uitvoer via
+> `bron.uitvoerId` (`simulatie/beslistabel.js`). Nog niet: een modelveld
 > op de tabel slepen dat zelf het invoergegeven met pijl maakt.
 >
 > **Getekende «traceert naar» → gegeven (Mark, 16-11):** een met de hand getekende koppeling
