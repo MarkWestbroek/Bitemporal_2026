@@ -18,6 +18,9 @@
 
 export const AFGELEID_PREFIX = "afgeleid:";
 
+/** Datatypes waarvan de waarde `{profielId, elementId, …}` is. */
+const VERWIJZINGEN = new Set(["element-verwijzing", "veld-verwijzing"]);
+
 /** @param {unknown} linkId */
 export const isAfgeleideLink = (linkId) => typeof linkId === "string" && linkId.startsWith(AFGELEID_PREFIX);
 
@@ -30,7 +33,9 @@ export function afgeleideKoppelingen({ profielId, elements, elementTypes }) {
   /** @type {Map<string, any[]>} eigenschappen met een koppelsoort, per elementtype */
   const perType = new Map();
   for (const t of elementTypes || []) {
-    const props = (t?.properties || []).filter((p) => p?.koppelsoort && p?.datatype === "element-verwijzing");
+    // Ook "veld-verwijzing" (16-11): die wijst naar een veld van een element; het kruisverband
+    // loopt naar dat element.
+    const props = (t?.properties || []).filter((p) => p?.koppelsoort && VERWIJZINGEN.has(p?.datatype));
     if (props.length) perType.set(t.id, props);
   }
   if (!perType.size) return [];

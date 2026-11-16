@@ -13,9 +13,14 @@ import { nieuweBeslistabel } from "../dmn/dmnModel.js";
  * lege, met één invoer, één uitvoer en één regel.
  * @param {any} opgeslagen
  * @param {string} [naam] - naam van de beslissing; die is leidend
+ * @param {{leeg?: boolean}} [opties]
  */
-export function tabelVoorBewerken(opgeslagen, naam = "") {
-  if (!opgeslagen || typeof opgeslagen !== "object") return nieuweBeslistabel(naam || "Nieuwe beslissing");
+export function tabelVoorBewerken(opgeslagen, naam = "", { leeg = false } = {}) {
+  if (!opgeslagen || typeof opgeslagen !== "object") {
+    const nieuw = nieuweBeslistabel(naam || "Nieuwe beslissing");
+    // leeg: zonder de lege invoerkolom; de invoer komt uit het diagram (invoerUitDrd.js).
+    return leeg ? { ...nieuw, inputs: [], rules: nieuw.rules.map((r) => ({ ...r, inputEntries: {} })) } : nieuw;
+  }
   const inputs = Array.isArray(opgeslagen.inputs) ? opgeslagen.inputs : [];
   const outputs = Array.isArray(opgeslagen.outputs) ? opgeslagen.outputs : [];
   const rules = (Array.isArray(opgeslagen.rules) ? opgeslagen.rules : []).map((r) => ({

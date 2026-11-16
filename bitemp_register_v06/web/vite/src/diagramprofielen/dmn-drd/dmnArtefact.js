@@ -39,6 +39,7 @@ import { doelVersieRange } from "../../transformatie/doelVersie.js";
 import { schrijfDmn } from "../../transformatie/dmnXmlSchrijver.js";
 import { fieldRefsOpUuid, verversFieldRef } from "../../modelpicker/modelTree.js";
 import { pickerTypesUitV3 } from "../../modelpicker/pickerTypesUitV3.js";
+import { bronnenVan, metInvoerUitDrd } from "./invoerUitDrd.js";
 
 export const SCHRIJVER_ID = "dmn-xml-schrijver@0.1.0";
 export const REGELSET = { id: "dmn-beslistabel", versie: "0.1.0" };
@@ -99,9 +100,17 @@ export async function maakDmnArtefact({ modelBestand, edienst, identifier, objec
   const diagnostics = [];
   // Binding via de uuid: het naampad van nu uit het V3-model.
   const index = v3Model ? fieldRefsOpUuid(pickerTypesUitV3(v3Model)) : null;
+  // Kolommen uit het DRD (invoerUitDrd.js, 16-11): naam en veld volgen het invoergegeven van nu.
+  // De export voegt geen kolommen toe; dat doet de editor bij het opslaan.
+  const bijgewerkt = metInvoerUitDrd(
+    opgeslagen,
+    bronnenVan(model?.elements || {}, el.id),
+    (gegeven, kolom) => (gegeven?.uuid && index?.get(gegeven.uuid)) || (kolom?.fieldRef?.uuid && kolom.fieldRef.uuid === gegeven?.uuid ? kolom.fieldRef : null) || (index ? null : kolom?.fieldRef || null),
+    { alleenBestaand: true }
+  );
   const tabel = {
-    ...opgeslagen,
-    inputs: (opgeslagen.inputs || []).map((c) => {
+    ...bijgewerkt,
+    inputs: (bijgewerkt.inputs || []).map((c) => {
       const ref = c.fieldRef;
       if (!ref?.uuid || !index) return c;
       if (!index.has(ref.uuid)) {
@@ -117,6 +126,13 @@ export async function maakDmnArtefact({ modelBestand, edienst, identifier, objec
   // Per kolom: waar de engine de waarde vindt.
   const invoer = [];
   for (const c of tabel.inputs || []) {
+    if (c.bronWeg) diagnostics.push({ severity: "warning", code: "DMN-BRON", message: `De bron van kolom "${c.naam || c.id}" staat niet meer in het diagram`, sourceId: c.id, path: null });
+    if (c.bron?.soort === "beslissing") {
+      // Het resultaat van een andere beslissing: geen dossierwaarde. De keten als één DRD
+      // exporteren (vereiste beslissing mee in het bestand) volgt nog.
+      diagnostics.push({ severity: "warning", code: "DMN-KETEN", message: `Kolom "${c.naam || c.id}" leest het resultaat van een andere beslissing; die beslissing gaat nog niet mee in dit artefact`, sourceId: c.id, path: null });
+      continue;
+    }
     let veldpad = c.fieldRef?.veldpad;
     const naamVar = c.naam || c.fieldRef?.veldnaam;
     if (!veldpad) {
