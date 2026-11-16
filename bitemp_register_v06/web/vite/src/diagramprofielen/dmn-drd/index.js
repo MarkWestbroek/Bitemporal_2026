@@ -218,6 +218,10 @@ export function drdRijenPosities({ ids, elements, edges, perRij = 5 }) {
 
 export const dmnDrdDiagramType = {
   id: DMN_DRD_ID,
+  // Profielversie (STUDIO.md "Profielversie in het project"). 1.1.0 (16-11): eigenschap
+  // `beslistabel` op de beslissing (bewerkbaar in de Studio) en `gegeven` (veld-verwijzing) op het
+  // invoergegeven; minor, oude projecten blijven geldig.
+  versie: "1.1.0",
   label: "DMN DRD",
   // Beschrijving: vóór 2026-10-12 "toelichting" (en uit EA "notes") → M3 data.beschrijving.
   oudeBeschrijvingSleutels: ["toelichting", "notes"],
