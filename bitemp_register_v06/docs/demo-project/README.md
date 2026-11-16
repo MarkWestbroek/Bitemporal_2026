@@ -124,9 +124,12 @@ blijven staan als voorbeeld van hoe je een project uit plannen opbouwt. Opnieuw 
 
 ## Open
 
-- **Scenario's in het project zelf.** Besluit Mark 16-11: voorlopig staan de Waterstede-scenario's
-  naast de GPK-voorbeelden in de keuzelijst (gedaan door sessie SIMULATIE). Die sessie bouwt aan
-  scenario's in het project; zodra dat kan, gaan deze drie het demo-project in.
+- **Scenario's in het project zelf.** Voorlopig staan de Waterstede-scenario's naast de
+  GPK-voorbeelden in de keuzelijst. De taal Simulatiemodel (`simulatiemodel05`) staat op main;
+  `bijwerken/02-scenarios-in-project.mjs` zet de drie scenario's in een map *9 Simulatie* (droog
+  getest; `simulatie-test.mjs` loopt dan de versie uit het project). Besluit Mark 16-11: toepassen
+  op app met de eerstvolgende release die Simulatiemodel meeneemt. Daarna: JSON ophalen, en
+  SIMULATIE haalt de drie uit de ingebakken lijst (HELP: rondleiding).
 - De cm-vorm van het startobject zonder e-dienstmodel (rechtstreeks op de entiteit uit `start.type`).
 - De opstelling van CMMN, state machine en toegangsregels kan beter; dat gaat het snelst met de
   hand in de Studio.
