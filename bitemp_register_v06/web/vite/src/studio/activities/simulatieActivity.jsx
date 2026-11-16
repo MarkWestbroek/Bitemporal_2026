@@ -32,6 +32,7 @@ import { CmObject, PlatJson } from "./simulatieCmVorm.jsx";
 import {
   BPMN_PROFIEL,
   VOORBEELDEN,
+  VOORBEELDSETS,
   useRun,
   zet,
   probeer,
@@ -392,11 +393,15 @@ function Sidebar() {
 
         <p style={{ ...kop, marginTop: 12 }}>Scenario</p>
         <select style={{ ...veldstijl, marginBottom: 4 }} value="" onChange={(e) => kiesVoorbeeld(Number(e.target.value))} data-testid="sim-voorbeeld">
-          <option value="">GPK-scenario kiezen…</option>
-          {VOORBEELDEN.map((v) => (
-            <option key={v.nr} value={v.nr} title={v.beschrijving}>
-              {v.naam}
-            </option>
+          <option value="">Voorbeeldscenario kiezen…</option>
+          {VOORBEELDSETS.map((set) => (
+            <optgroup key={set.id} label={set.label}>
+              {VOORBEELDEN.filter((v) => v.set === set.id).map((v) => (
+                <option key={v.nr} value={v.nr} title={v.beschrijving}>
+                  {v.naam}
+                </option>
+              ))}
+            </optgroup>
           ))}
         </select>
         {beschrijving && (

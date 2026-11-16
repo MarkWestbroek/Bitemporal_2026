@@ -2317,6 +2317,11 @@ dag vervangen).
   proces van de laatste stap in beeld.
 - **Scenario's** hebben een `naam` en een `beschrijving`; de keuzelijst toont de naam, onder de lijst staat de
   beschrijving van het scenario in de tekst.
+- **Ingebakken scenario's** (16-11): de keuzelijst heeft twee groepen. De **GPK**-scenario's brengen de
+  beslistabel en het e-dienstmodel van het GPK-voorbeeld mee. De **Waterstede**-scenario's (buurtfeest,
+  jaarmarkt, festival) horen bij het demo-project *Omnium demo — gemeente Waterstede* en draaien op het BPMN en
+  DMN van het project zelf, zonder e-dienstmodel; kiezen zet het GPK-voorbeeld dus uit. Tijdelijk: zodra
+  scenario's in het project kunnen staan, verhuizen ze daarheen (`VOORBEELDEN` in `simulatieRun.js`).
 - **GPK-voorbeeld** (13-11): vier processen, Aanvraag oppakken → signaal *zaak in de werkbak* → Kies zaak om te
   behandelen (kandidaatgroep, claim via een onderbrekend boundary event) → signaal *medewerker aan zaak
   gekoppeld* → Zaak behandelen, met beoordelen als call activity. Een signaal staat in het log met wie het
