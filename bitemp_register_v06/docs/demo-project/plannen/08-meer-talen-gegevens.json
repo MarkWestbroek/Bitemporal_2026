@@ -1,0 +1,1001 @@
+{
+ "map": "/",
+ "plan": {
+  "uitleg": "Van de overige talen elk één klein voorbeeld: het bedrijfsproces (Eriksson-Penker), de bezwaarcasus (CMMN), en het gegevensmodel in MIM, ERD, SHACL, XML Schema en WSDL.",
+  "diagrammen": [
+   {
+    "sleutel": "dEp",
+    "taal": "business05",
+    "naam": "Vergunningverlening als bedrijfsproces",
+    "map": "8 Meer talen"
+   },
+   {
+    "sleutel": "dCmmn",
+    "taal": "cmmn05",
+    "naam": "Bezwaar tegen een evenementenvergunning (casus)",
+    "map": "8 Meer talen"
+   },
+   {
+    "sleutel": "dMim",
+    "taal": "mim05",
+    "naam": "Evenementen (MIM)",
+    "map": "8 Meer talen"
+   },
+   {
+    "sleutel": "dErd",
+    "taal": "erd05",
+    "naam": "Evenementen (ERD)",
+    "map": "8 Meer talen"
+   },
+   {
+    "sleutel": "dShacl",
+    "taal": "shacl05",
+    "naam": "Evenementaanvraag (SHACL)",
+    "map": "8 Meer talen"
+   },
+   {
+    "sleutel": "dXsd",
+    "taal": "xsd05",
+    "naam": "Adviesbericht (XML Schema)",
+    "map": "8 Meer talen"
+   },
+   {
+    "sleutel": "dWsdl",
+    "taal": "wsdl05",
+    "naam": "Adviesdienst veiligheidsregio (WSDL)",
+    "map": "8 Meer talen"
+   }
+  ],
+  "elementen": [
+   {
+    "sleutel": "epProces",
+    "type": "proces",
+    "naam": "Evenementenvergunning verlenen",
+    "diagram": "dEp",
+    "eigenschappen": {
+     "eigenaar": "Team Vergunningen"
+    }
+   },
+   {
+    "sleutel": "epDoel",
+    "type": "doel",
+    "naam": "Veilige evenementen, snel beslist",
+    "diagram": "dEp",
+    "eigenschappen": {
+     "meetbaar": "90% binnen zes weken"
+    }
+   },
+   {
+    "sleutel": "epIn",
+    "type": "bedrijfsobject",
+    "naam": "Evenementaanvraag",
+    "diagram": "dEp"
+   },
+   {
+    "sleutel": "epUit",
+    "type": "bedrijfsobject",
+    "naam": "Evenementenvergunning",
+    "diagram": "dEp"
+   },
+   {
+    "sleutel": "epStart",
+    "type": "gebeurtenis",
+    "naam": "Aanvraag ontvangen",
+    "diagram": "dEp"
+   },
+   {
+    "sleutel": "epMensen",
+    "type": "mensen",
+    "naam": "Vergunningverleners",
+    "diagram": "dEp",
+    "eigenschappen": {
+     "hoeveelheid": "4 fte"
+    }
+   },
+   {
+    "sleutel": "epInfo",
+    "type": "informatie",
+    "naam": "APV en beleidsregels evenementen",
+    "diagram": "dEp"
+   },
+   {
+    "sleutel": "epActor",
+    "type": "actor",
+    "naam": "Organisator",
+    "diagram": "dEp"
+   },
+   {
+    "sleutel": "cmCase",
+    "type": "case-plan",
+    "naam": "Bezwaar evenementenvergunning",
+    "diagram": "dCmmn"
+   },
+   {
+    "sleutel": "cmIntake",
+    "type": "stage",
+    "naam": "Ontvankelijkheid",
+    "diagram": "dCmmn",
+    "in": "cmCase",
+    "eigenschappen": {
+     "verplicht": true
+    }
+   },
+   {
+    "sleutel": "cmToets",
+    "type": "taak",
+    "naam": "Toets termijn en belang",
+    "diagram": "dCmmn",
+    "in": "cmIntake",
+    "eigenschappen": {
+     "soort": "human",
+     "verplicht": true
+    }
+   },
+   {
+    "sleutel": "cmBehandel",
+    "type": "stage",
+    "naam": "Heroverweging",
+    "diagram": "dCmmn",
+    "in": "cmCase"
+   },
+   {
+    "sleutel": "cmHoor",
+    "type": "taak",
+    "naam": "Hoor de bezwaarmaker",
+    "diagram": "dCmmn",
+    "in": "cmBehandel",
+    "eigenschappen": {
+     "soort": "human",
+     "discretionair": true
+    }
+   },
+   {
+    "sleutel": "cmAdvies",
+    "type": "taak",
+    "naam": "Vraag advies aan de bezwaarcommissie",
+    "diagram": "dCmmn",
+    "in": "cmBehandel",
+    "eigenschappen": {
+     "soort": "human"
+    }
+   },
+   {
+    "sleutel": "cmBeslis",
+    "type": "taak",
+    "naam": "Neem de beslissing op bezwaar",
+    "diagram": "dCmmn",
+    "in": "cmBehandel",
+    "eigenschappen": {
+     "soort": "human",
+     "verplicht": true
+    }
+   },
+   {
+    "sleutel": "cmMijl",
+    "type": "mijlpaal",
+    "naam": "Beslissing op bezwaar genomen",
+    "diagram": "dCmmn",
+    "in": "cmCase"
+   },
+   {
+    "sleutel": "cmDossier",
+    "type": "case-file-item",
+    "naam": "Bezwaarschrift",
+    "diagram": "dCmmn",
+    "in": "cmCase"
+   },
+   {
+    "sleutel": "cmIntrek",
+    "type": "event-listener",
+    "naam": "Bezwaar ingetrokken",
+    "diagram": "dCmmn",
+    "in": "cmCase",
+    "eigenschappen": {
+     "soort": "gebruiker"
+    }
+   },
+   {
+    "sleutel": "miPkg",
+    "type": "package",
+    "naam": "Evenementen",
+    "diagram": "dMim",
+    "eigenschappen": {
+     "soort": "domein",
+     "mimVersie": "1.2",
+     "definitie": "Het informatiemodel van evenementen in de gemeente Waterstede."
+    }
+   },
+   {
+    "sleutel": "miAanvraag",
+    "type": "objecttype",
+    "naam": "Evenementaanvraag",
+    "diagram": "dMim",
+    "in": "miPkg",
+    "eigenschappen": {
+     "definitie": "Het verzoek van een organisator om een evenement te mogen houden.",
+     "herkomst": "Gemeente Waterstede",
+     "uniekeAanduiding": "aanvraagnummer"
+    },
+    "velden": [
+     {
+      "naam": "aanvraagnummer",
+      "type": "CharacterString"
+     },
+     {
+      "naam": "naam",
+      "type": "CharacterString"
+     },
+     {
+      "naam": "datumVan",
+      "type": "Date"
+     },
+     {
+      "naam": "verwachtAantalBezoekers",
+      "type": "Integer"
+     },
+     {
+      "naam": "risicoklasse",
+      "type": "Risicoklasse"
+     }
+    ]
+   },
+   {
+    "sleutel": "miOrg",
+    "type": "objecttype",
+    "naam": "Organisator",
+    "diagram": "dMim",
+    "in": "miPkg",
+    "eigenschappen": {
+     "definitie": "De persoon of organisatie die het evenement houdt en de aanvraag indient."
+    },
+    "velden": [
+     {
+      "naam": "naam",
+      "type": "CharacterString"
+     },
+     {
+      "naam": "kvkNummer",
+      "type": "CharacterString"
+     }
+    ]
+   },
+   {
+    "sleutel": "miLocatie",
+    "type": "objecttype",
+    "naam": "Evenementlocatie",
+    "diagram": "dMim",
+    "in": "miPkg",
+    "eigenschappen": {
+     "definitie": "De plaats waar het evenement wordt gehouden."
+    },
+    "velden": [
+     {
+      "naam": "omschrijving",
+      "type": "CharacterString"
+     }
+    ]
+   },
+   {
+    "sleutel": "miAdres",
+    "type": "gegevensgroeptype",
+    "naam": "Adres",
+    "diagram": "dMim",
+    "in": "miPkg",
+    "velden": [
+     {
+      "naam": "postcode",
+      "type": "CharacterString"
+     },
+     {
+      "naam": "plaats",
+      "type": "CharacterString"
+     }
+    ]
+   },
+   {
+    "sleutel": "miRisico",
+    "type": "enumeratie",
+    "naam": "Risicoklasse",
+    "diagram": "dMim",
+    "in": "miPkg",
+    "velden": [
+     {
+      "naam": "A"
+     },
+     {
+      "naam": "B"
+     },
+     {
+      "naam": "C"
+     }
+    ]
+   },
+   {
+    "sleutel": "erAanvraag",
+    "type": "entiteit",
+    "naam": "evenementaanvraag",
+    "diagram": "dErd",
+    "velden": [
+     {
+      "naam": "id",
+      "type": "uuid"
+     }
+    ]
+   },
+   {
+    "sleutel": "erOrg",
+    "type": "entiteit",
+    "naam": "organisator",
+    "diagram": "dErd",
+    "velden": [
+     {
+      "naam": "id",
+      "type": "uuid"
+     }
+    ]
+   },
+   {
+    "sleutel": "erLocatie",
+    "type": "entiteit",
+    "naam": "evenementlocatie",
+    "diagram": "dErd",
+    "velden": [
+     {
+      "naam": "id",
+      "type": "uuid"
+     }
+    ]
+   },
+   {
+    "sleutel": "erKoppel",
+    "type": "entiteit",
+    "naam": "aanvraag_locatie",
+    "diagram": "dErd",
+    "velden": [
+     {
+      "naam": "aanvraag_id",
+      "type": "uuid"
+     },
+     {
+      "naam": "locatie_id",
+      "type": "uuid"
+     }
+    ]
+   },
+   {
+    "sleutel": "erVergunning",
+    "type": "entiteit",
+    "naam": "evenementenvergunning",
+    "diagram": "dErd",
+    "velden": [
+     {
+      "naam": "id",
+      "type": "uuid"
+     }
+    ]
+   },
+   {
+    "sleutel": "shGraaf",
+    "type": "shapesgraaf",
+    "naam": "Evenementen-shapes",
+    "diagram": "dShacl",
+    "eigenschappen": {
+     "iri": "https://data.waterstede.example/shapes/evenementen",
+     "titel": "Shapes voor evenementaanvragen"
+    }
+   },
+   {
+    "sleutel": "shAanvraag",
+    "type": "nodeshape",
+    "naam": "EvenementaanvraagShape",
+    "diagram": "dShacl",
+    "eigenschappen": {
+     "doelklassen": "ev:Evenementaanvraag",
+     "beschrijving": "Wat een geldige evenementaanvraag moet bevatten."
+    },
+    "velden": [
+     {
+      "naam": "ev:naam",
+      "type": "xsd:string"
+     },
+     {
+      "naam": "ev:datumVan",
+      "type": "xsd:date"
+     },
+     {
+      "naam": "ev:verwachtAantalBezoekers",
+      "type": "xsd:integer"
+     }
+    ]
+   },
+   {
+    "sleutel": "shOrg",
+    "type": "nodeshape",
+    "naam": "OrganisatorShape",
+    "diagram": "dShacl",
+    "eigenschappen": {
+     "doelklassen": "ev:Organisator"
+    },
+    "velden": [
+     {
+      "naam": "ev:naam",
+      "type": "xsd:string"
+     },
+     {
+      "naam": "ev:email",
+      "type": "xsd:string"
+     }
+    ]
+   },
+   {
+    "sleutel": "shLocatie",
+    "type": "klasse",
+    "naam": "ev:Evenementlocatie",
+    "diagram": "dShacl"
+   },
+   {
+    "sleutel": "xsSchema",
+    "type": "schema",
+    "naam": "advies",
+    "diagram": "dXsd",
+    "eigenschappen": {
+     "targetNamespace": "https://waterstede.example/schema/advies/v1",
+     "prefix": "adv",
+     "elementFormDefault": "qualified",
+     "version": "1.0"
+    }
+   },
+   {
+    "sleutel": "xsVerzoek",
+    "type": "element",
+    "naam": "adviesverzoek",
+    "diagram": "dXsd",
+    "in": "xsSchema"
+   },
+   {
+    "sleutel": "xsAdvies",
+    "type": "element",
+    "naam": "advies",
+    "diagram": "dXsd",
+    "in": "xsSchema"
+   },
+   {
+    "sleutel": "xsVerzoekT",
+    "type": "complexType",
+    "naam": "AdviesverzoekType",
+    "diagram": "dXsd",
+    "in": "xsSchema",
+    "eigenschappen": {
+     "modelGroup": "sequence"
+    },
+    "velden": [
+     {
+      "naam": "aanvraagnummer",
+      "type": "xs:string"
+     },
+     {
+      "naam": "evenementnaam",
+      "type": "xs:string"
+     },
+     {
+      "naam": "datumVan",
+      "type": "xs:date"
+     },
+     {
+      "naam": "verwachtAantalBezoekers",
+      "type": "xs:int"
+     }
+    ]
+   },
+   {
+    "sleutel": "xsAdviesT",
+    "type": "complexType",
+    "naam": "AdviesType",
+    "diagram": "dXsd",
+    "in": "xsSchema",
+    "eigenschappen": {
+     "modelGroup": "sequence"
+    },
+    "velden": [
+     {
+      "naam": "aanvraagnummer",
+      "type": "xs:string"
+     },
+     {
+      "naam": "oordeel",
+      "type": "adv:OordeelType"
+     },
+     {
+      "naam": "toelichting",
+      "type": "xs:string"
+     }
+    ]
+   },
+   {
+    "sleutel": "xsOordeel",
+    "type": "enumeration",
+    "naam": "OordeelType",
+    "diagram": "dXsd",
+    "in": "xsSchema",
+    "eigenschappen": {
+     "base": "xs:string"
+    },
+    "velden": [
+     {
+      "naam": "positief",
+      "compartiment": "waarden"
+     },
+     {
+      "naam": "positief_onder_voorwaarden",
+      "compartiment": "waarden"
+     },
+     {
+      "naam": "negatief",
+      "compartiment": "waarden"
+     }
+    ]
+   },
+   {
+    "sleutel": "wsNs",
+    "type": "namespace",
+    "naam": "AdviesService",
+    "diagram": "dWsdl",
+    "eigenschappen": {
+     "targetNamespace": "https://veiligheidsregio.example/wsdl/advies/v1",
+     "prefix": "advsvc"
+    }
+   },
+   {
+    "sleutel": "wsService",
+    "type": "service",
+    "naam": "AdviesService",
+    "diagram": "dWsdl",
+    "in": "wsNs",
+    "velden": [
+     {
+      "naam": "AdviesPort",
+      "type": "AdviesSoapBinding"
+     }
+    ]
+   },
+   {
+    "sleutel": "wsBinding",
+    "type": "binding",
+    "naam": "AdviesSoapBinding",
+    "diagram": "dWsdl",
+    "in": "wsNs",
+    "eigenschappen": {
+     "protocol": "SOAP 1.2",
+     "stijl": "document",
+     "transport": "HTTP"
+    }
+   },
+   {
+    "sleutel": "wsPort",
+    "type": "portType",
+    "naam": "AdviesPortType",
+    "diagram": "dWsdl",
+    "in": "wsNs",
+    "velden": [
+     {
+      "naam": "vraagAdvies",
+      "type": "AdviesverzoekBericht → AdviesBericht"
+     }
+    ]
+   },
+   {
+    "sleutel": "wsMsgIn",
+    "type": "message",
+    "naam": "AdviesverzoekBericht",
+    "diagram": "dWsdl",
+    "in": "wsNs",
+    "velden": [
+     {
+      "naam": "body",
+      "type": "adv:adviesverzoek"
+     }
+    ]
+   },
+   {
+    "sleutel": "wsMsgUit",
+    "type": "message",
+    "naam": "AdviesBericht",
+    "diagram": "dWsdl",
+    "in": "wsNs",
+    "velden": [
+     {
+      "naam": "body",
+      "type": "adv:advies"
+     }
+    ]
+   },
+   {
+    "sleutel": "wsTypes",
+    "type": "types",
+    "naam": "advies.xsd",
+    "diagram": "dWsdl",
+    "in": "wsNs",
+    "eigenschappen": {
+     "schema": "https://waterstede.example/schema/advies/v1"
+    }
+   }
+  ],
+  "connectoren": [
+   {
+    "type": "invoer",
+    "bron": "epIn",
+    "doel": "epProces"
+   },
+   {
+    "type": "invoer",
+    "bron": "epStart",
+    "doel": "epProces"
+   },
+   {
+    "type": "uitvoer",
+    "bron": "epProces",
+    "doel": "epUit"
+   },
+   {
+    "type": "doelkoppeling",
+    "bron": "epProces",
+    "doel": "epDoel"
+   },
+   {
+    "type": "levering",
+    "bron": "epMensen",
+    "doel": "epProces"
+   },
+   {
+    "type": "besturing",
+    "bron": "epInfo",
+    "doel": "epProces"
+   },
+   {
+    "type": "associatie",
+    "bron": "epActor",
+    "doel": "epIn"
+   },
+   {
+    "type": "associatie",
+    "bron": "cmDossier",
+    "doel": "cmIntake"
+   },
+   {
+    "type": "associatie",
+    "bron": "cmIntake",
+    "doel": "cmBehandel"
+   },
+   {
+    "type": "associatie",
+    "bron": "cmAdvies",
+    "doel": "cmBeslis"
+   },
+   {
+    "type": "associatie",
+    "bron": "cmBehandel",
+    "doel": "cmMijl"
+   },
+   {
+    "type": "relatiesoort",
+    "bron": "miAanvraag",
+    "doel": "miOrg",
+    "naam": "is ingediend door",
+    "eigenschappen": {
+     "doelKardinaliteit": "1",
+     "bronKardinaliteit": "0..*"
+    }
+   },
+   {
+    "type": "relatiesoort",
+    "bron": "miAanvraag",
+    "doel": "miLocatie",
+    "naam": "vindt plaats op",
+    "eigenschappen": {
+     "doelKardinaliteit": "1..*",
+     "bronKardinaliteit": "0..*"
+    }
+   },
+   {
+    "type": "gegevensgroep",
+    "bron": "miLocatie",
+    "doel": "miAdres",
+    "eigenschappen": {
+     "naam": "adres",
+     "kardinaliteit": "0..1"
+    }
+   },
+   {
+    "type": "relatie",
+    "bron": "erAanvraag",
+    "doel": "erOrg",
+    "naam": "ingediend door",
+    "eigenschappen": {
+     "bronKardinaliteit": "0..*",
+     "doelKardinaliteit": "1"
+    }
+   },
+   {
+    "type": "relatie",
+    "bron": "erKoppel",
+    "doel": "erAanvraag",
+    "eigenschappen": {
+     "bronKardinaliteit": "1..*",
+     "doelKardinaliteit": "1"
+    }
+   },
+   {
+    "type": "relatie",
+    "bron": "erKoppel",
+    "doel": "erLocatie",
+    "eigenschappen": {
+     "bronKardinaliteit": "0..*",
+     "doelKardinaliteit": "1"
+    }
+   },
+   {
+    "type": "relatie",
+    "bron": "erVergunning",
+    "doel": "erAanvraag",
+    "naam": "verleend op",
+    "eigenschappen": {
+     "bronKardinaliteit": "0..1",
+     "doelKardinaliteit": "1"
+    }
+   },
+   {
+    "type": "verwijzing",
+    "bron": "shAanvraag",
+    "doel": "shOrg",
+    "eigenschappen": {
+     "rolnaam": "ev:ingediendDoor",
+     "kardinaliteit": "1..1"
+    }
+   },
+   {
+    "type": "verwijzing",
+    "bron": "shAanvraag",
+    "doel": "shLocatie",
+    "eigenschappen": {
+     "rolnaam": "ev:vindtPlaatsOp",
+     "kardinaliteit": "1..*"
+    }
+   },
+   {
+    "type": "vanType",
+    "bron": "xsVerzoek",
+    "doel": "xsVerzoekT"
+   },
+   {
+    "type": "vanType",
+    "bron": "xsAdvies",
+    "doel": "xsAdviesT"
+   },
+   {
+    "type": "vanType",
+    "bron": "xsAdviesT",
+    "doel": "xsOordeel",
+    "eigenschappen": {
+     "rolnaam": "oordeel",
+     "minOccurs": "1",
+     "maxOccurs": "1"
+    }
+   },
+   {
+    "type": "port",
+    "bron": "wsService",
+    "doel": "wsBinding",
+    "eigenschappen": {
+     "adres": "https://veiligheidsregio.example/advies"
+    }
+   },
+   {
+    "type": "realiseert",
+    "bron": "wsBinding",
+    "doel": "wsPort"
+   },
+   {
+    "type": "gebruiktMessage",
+    "bron": "wsPort",
+    "doel": "wsMsgIn",
+    "eigenschappen": {
+     "operatie": "vraagAdvies",
+     "rol": "input"
+    }
+   },
+   {
+    "type": "gebruiktMessage",
+    "bron": "wsPort",
+    "doel": "wsMsgUit",
+    "eigenschappen": {
+     "operatie": "vraagAdvies",
+     "rol": "output"
+    }
+   },
+   {
+    "type": "gebruiktTypes",
+    "bron": "wsMsgIn",
+    "doel": "wsTypes"
+   },
+   {
+    "type": "gebruiktTypes",
+    "bron": "wsMsgUit",
+    "doel": "wsTypes"
+   }
+  ],
+  "opstelling": [
+   {
+    "diagram": "dEp",
+    "actie": "leesvolgorde-lr"
+   },
+   {
+    "diagram": "dCmmn",
+    "actie": "leesvolgorde-lr"
+   },
+   {
+    "diagram": "dMim",
+    "actie": "leesvolgorde-tb"
+   },
+   {
+    "diagram": "dXsd",
+    "actie": "leesvolgorde-tb"
+   },
+   {
+    "diagram": "dWsdl",
+    "actie": "leesvolgorde-tb"
+   }
+  ],
+  "posities": [
+   {
+    "diagram": "dErd",
+    "element": "erKoppel",
+    "x": 40,
+    "y": 40
+   },
+   {
+    "diagram": "dErd",
+    "element": "erLocatie",
+    "x": 40,
+    "y": 240
+   },
+   {
+    "diagram": "dErd",
+    "element": "erVergunning",
+    "x": 360,
+    "y": 40
+   },
+   {
+    "diagram": "dErd",
+    "element": "erAanvraag",
+    "x": 360,
+    "y": 240
+   },
+   {
+    "diagram": "dErd",
+    "element": "erOrg",
+    "x": 680,
+    "y": 240
+   },
+   {
+    "diagram": "dShacl",
+    "element": "shGraaf",
+    "x": 40,
+    "y": 40
+   },
+   {
+    "diagram": "dShacl",
+    "element": "shAanvraag",
+    "x": 40,
+    "y": 180
+   },
+   {
+    "diagram": "dShacl",
+    "element": "shOrg",
+    "x": 380,
+    "y": 180
+   },
+   {
+    "diagram": "dShacl",
+    "element": "shLocatie",
+    "x": 380,
+    "y": 380
+   }
+  ]
+ },
+ "na": {
+  "velden": [
+   {
+    "profiel": "erd05",
+    "element": "evenementaanvraag",
+    "compartiment": "kolommen",
+    "fieldType": "kolom",
+    "velden": [
+     {
+      "naam": "aanvraagnummer",
+      "type": "text"
+     },
+     {
+      "naam": "naam",
+      "type": "text"
+     },
+     {
+      "naam": "datum_van",
+      "type": "date"
+     },
+     {
+      "naam": "verwacht_aantal_bezoekers",
+      "type": "integer"
+     },
+     {
+      "naam": "risicoklasse",
+      "type": "char(1)"
+     },
+     {
+      "naam": "organisator_id",
+      "type": "uuid"
+     }
+    ]
+   },
+   {
+    "profiel": "erd05",
+    "element": "organisator",
+    "compartiment": "kolommen",
+    "fieldType": "kolom",
+    "velden": [
+     {
+      "naam": "naam",
+      "type": "text"
+     },
+     {
+      "naam": "kvk_nummer",
+      "type": "text"
+     },
+     {
+      "naam": "email",
+      "type": "text"
+     }
+    ]
+   },
+   {
+    "profiel": "erd05",
+    "element": "evenementlocatie",
+    "compartiment": "kolommen",
+    "fieldType": "kolom",
+    "velden": [
+     {
+      "naam": "omschrijving",
+      "type": "text"
+     },
+     {
+      "naam": "postcode",
+      "type": "text"
+     },
+     {
+      "naam": "plaats",
+      "type": "text"
+     }
+    ]
+   },
+   {
+    "profiel": "erd05",
+    "element": "evenementenvergunning",
+    "compartiment": "kolommen",
+    "fieldType": "kolom",
+    "velden": [
+     {
+      "naam": "vergunningnummer",
+      "type": "text"
+     },
+     {
+      "naam": "verleend_op",
+      "type": "date"
+     },
+     {
+      "naam": "aanvraag_id",
+      "type": "uuid"
+     }
+    ]
+   }
+  ]
+ }
+}

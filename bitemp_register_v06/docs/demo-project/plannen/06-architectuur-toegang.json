@@ -1,0 +1,706 @@
+{
+ "map": "/",
+ "plan": {
+  "uitleg": "De architectuur van het evenementenloket in ArchiMate (bedrijf, applicatie, technologie), het toegangsbeleid op evenementaanvragen, en de levensloop van een aanvraag als state machine.",
+  "diagrammen": [
+   {
+    "sleutel": "dArch",
+    "taal": "archimate05",
+    "naam": "Evenementenloket in lagen",
+    "map": "6 Architectuur"
+   },
+   {
+    "sleutel": "dToegang",
+    "taal": "toegangsregels",
+    "naam": "Toegang tot evenementaanvragen",
+    "map": "7 Toegang"
+   },
+   {
+    "sleutel": "dSm",
+    "taal": "statemachine05",
+    "naam": "Levensloop van een evenementaanvraag",
+    "map": "2 Proces"
+   }
+  ],
+  "elementen": [
+   {
+    "sleutel": "arOrg",
+    "type": "business-actor",
+    "naam": "Organisator",
+    "diagram": "dArch"
+   },
+   {
+    "sleutel": "arRol",
+    "type": "business-rol",
+    "naam": "Vergunningverlener",
+    "diagram": "dArch"
+   },
+   {
+    "sleutel": "arDienst",
+    "type": "business-service",
+    "naam": "Evenementenvergunning",
+    "diagram": "dArch"
+   },
+   {
+    "sleutel": "arProces",
+    "type": "business-proces",
+    "naam": "Evenementaanvraag behandelen",
+    "diagram": "dArch"
+   },
+   {
+    "sleutel": "arObject",
+    "type": "business-object",
+    "naam": "Evenementaanvraag",
+    "diagram": "dArch"
+   },
+   {
+    "sleutel": "arSvcAanvraag",
+    "type": "app-service",
+    "naam": "Aanvraag indienen en volgen",
+    "diagram": "dArch"
+   },
+   {
+    "sleutel": "arSvcBeslis",
+    "type": "app-service",
+    "naam": "Risicoklasse bepalen",
+    "diagram": "dArch"
+   },
+   {
+    "sleutel": "arLoket",
+    "type": "app-component",
+    "naam": "Evenementenloket (portaal)",
+    "diagram": "dArch"
+   },
+   {
+    "sleutel": "arZaak",
+    "type": "app-component",
+    "naam": "Zaaksysteem",
+    "diagram": "dArch"
+   },
+   {
+    "sleutel": "arBeslis",
+    "type": "app-component",
+    "naam": "Beslisservice (DMN)",
+    "diagram": "dArch"
+   },
+   {
+    "sleutel": "arRegister",
+    "type": "app-component",
+    "naam": "Evenementenregister",
+    "diagram": "dArch"
+   },
+   {
+    "sleutel": "arApi",
+    "type": "app-interface",
+    "naam": "Evenementen-API",
+    "diagram": "dArch"
+   },
+   {
+    "sleutel": "arData",
+    "type": "data-object",
+    "naam": "Evenementaanvraag (gegevens)",
+    "diagram": "dArch"
+   },
+   {
+    "sleutel": "arPlatform",
+    "type": "node",
+    "naam": "Gemeentelijk platform",
+    "diagram": "dArch"
+   },
+   {
+    "sleutel": "arDb",
+    "type": "systeemsoftware",
+    "naam": "PostgreSQL",
+    "diagram": "dArch"
+   },
+   {
+    "sleutel": "arHosting",
+    "type": "tech-service",
+    "naam": "Containerhosting",
+    "diagram": "dArch"
+   },
+   {
+    "sleutel": "tPolicy",
+    "type": "policy",
+    "naam": "Evenementaanvragen Waterstede",
+    "diagram": "dToegang",
+    "eigenschappen": {
+     "geldigVanaf": "2027-01-01",
+     "grondslag": "de Algemene wet bestuursrecht en de APV Waterstede",
+     "doel": "vergunningverlening evenementen"
+    }
+   },
+   {
+    "sleutel": "tR1",
+    "type": "toegangsregel",
+    "naam": "eigen aanvraag inzien",
+    "diagram": "dToegang",
+    "eigenschappen": {
+     "modaliteit": "mag"
+    }
+   },
+   {
+    "sleutel": "tR2",
+    "type": "toegangsregel",
+    "naam": "aanvragen behandelen",
+    "diagram": "dToegang",
+    "eigenschappen": {
+     "modaliteit": "mag"
+    }
+   },
+   {
+    "sleutel": "tR3",
+    "type": "toegangsregel",
+    "naam": "advies bij klasse C",
+    "diagram": "dToegang",
+    "eigenschappen": {
+     "modaliteit": "mag"
+    }
+   },
+   {
+    "sleutel": "tR4",
+    "type": "toegangsregel",
+    "naam": "geen contactgegevens voor de adviseur",
+    "diagram": "dToegang",
+    "eigenschappen": {
+     "modaliteit": "mag niet"
+    }
+   },
+   {
+    "sleutel": "tSOrg",
+    "type": "subject",
+    "naam": "Organisator",
+    "diagram": "dToegang",
+    "eigenschappen": {
+     "rol": "organisator"
+    }
+   },
+   {
+    "sleutel": "tSBeh",
+    "type": "subject",
+    "naam": "Vergunningverlener",
+    "diagram": "dToegang",
+    "eigenschappen": {
+     "rol": "vergunningverlener"
+    }
+   },
+   {
+    "sleutel": "tSAdv",
+    "type": "subject",
+    "naam": "Veiligheidsadviseur",
+    "diagram": "dToegang",
+    "eigenschappen": {
+     "rol": "veiligheidsadviseur"
+    }
+   },
+   {
+    "sleutel": "tHLees",
+    "type": "handeling",
+    "naam": "bekijken",
+    "diagram": "dToegang",
+    "eigenschappen": {
+     "nlgov": "lezen"
+    }
+   },
+   {
+    "sleutel": "tHWijzig",
+    "type": "handeling",
+    "naam": "wijzigen",
+    "diagram": "dToegang",
+    "eigenschappen": {
+     "nlgov": "wijzigen"
+    }
+   },
+   {
+    "sleutel": "tGAanvraag",
+    "type": "gegevensselectie",
+    "naam": "de evenementaanvraag",
+    "diagram": "dToegang"
+   },
+   {
+    "sleutel": "tGContact",
+    "type": "gegevensselectie",
+    "naam": "de contactgegevens van de organisator",
+    "diagram": "dToegang"
+   },
+   {
+    "sleutel": "tVEigen",
+    "type": "voorwaarde",
+    "naam": "is de indiener",
+    "diagram": "dToegang",
+    "eigenschappen": {
+     "links": "de organisator van de aanvraag",
+     "vergelijking": "is",
+     "rechts": "de aanvrager"
+    }
+   },
+   {
+    "sleutel": "tVKlasse",
+    "type": "voorwaarde",
+    "naam": "klasse C",
+    "diagram": "dToegang",
+    "eigenschappen": {
+     "links": "de risicoklasse van de aanvraag",
+     "vergelijking": "is",
+     "rechts": "\"C\""
+    }
+   },
+   {
+    "sleutel": "tPlicht",
+    "type": "plicht",
+    "naam": "de inzage vastleggen",
+    "diagram": "dToegang",
+    "eigenschappen": {
+     "nlgov": "loggen"
+    }
+   },
+   {
+    "sleutel": "mBegin",
+    "type": "begin",
+    "naam": "",
+    "diagram": "dSm"
+   },
+   {
+    "sleutel": "mIngediend",
+    "type": "toestand",
+    "naam": "Ingediend",
+    "diagram": "dSm",
+    "velden": [
+     {
+      "naam": "entry / stuur ontvangstbevestiging"
+     }
+    ]
+   },
+   {
+    "sleutel": "mBehandeling",
+    "type": "composiet",
+    "naam": "In behandeling",
+    "diagram": "dSm"
+   },
+   {
+    "sleutel": "mAdvies",
+    "type": "toestand",
+    "naam": "Wacht op advies",
+    "diagram": "dSm",
+    "in": "mBehandeling"
+   },
+   {
+    "sleutel": "mBeoordeling",
+    "type": "toestand",
+    "naam": "In beoordeling",
+    "diagram": "dSm",
+    "in": "mBehandeling",
+    "velden": [
+     {
+      "naam": "do / toets aan de APV"
+     }
+    ]
+   },
+   {
+    "sleutel": "mMelding",
+    "type": "toestand",
+    "naam": "Melding bevestigd",
+    "diagram": "dSm"
+   },
+   {
+    "sleutel": "mVerleend",
+    "type": "toestand",
+    "naam": "Verleend",
+    "diagram": "dSm",
+    "velden": [
+     {
+      "naam": "entry / publiceer op de kalender"
+     }
+    ]
+   },
+   {
+    "sleutel": "mGeweigerd",
+    "type": "toestand",
+    "naam": "Geweigerd",
+    "diagram": "dSm"
+   },
+   {
+    "sleutel": "mEind",
+    "type": "eind",
+    "naam": "",
+    "diagram": "dSm"
+   }
+  ],
+  "connectoren": [
+   {
+    "type": "bediening",
+    "bron": "arDienst",
+    "doel": "arOrg"
+   },
+   {
+    "type": "realisatie",
+    "bron": "arProces",
+    "doel": "arDienst"
+   },
+   {
+    "type": "toewijzing",
+    "bron": "arRol",
+    "doel": "arProces"
+   },
+   {
+    "type": "toegang",
+    "bron": "arProces",
+    "doel": "arObject",
+    "eigenschappen": {
+     "toegang": "lezen-schrijven"
+    }
+   },
+   {
+    "type": "bediening",
+    "bron": "arSvcAanvraag",
+    "doel": "arProces"
+   },
+   {
+    "type": "bediening",
+    "bron": "arSvcBeslis",
+    "doel": "arProces"
+   },
+   {
+    "type": "realisatie",
+    "bron": "arLoket",
+    "doel": "arSvcAanvraag"
+   },
+   {
+    "type": "realisatie",
+    "bron": "arBeslis",
+    "doel": "arSvcBeslis"
+   },
+   {
+    "type": "compositie",
+    "bron": "arRegister",
+    "doel": "arApi"
+   },
+   {
+    "type": "bediening",
+    "bron": "arApi",
+    "doel": "arLoket"
+   },
+   {
+    "type": "bediening",
+    "bron": "arApi",
+    "doel": "arZaak"
+   },
+   {
+    "type": "toegang",
+    "bron": "arRegister",
+    "doel": "arData",
+    "eigenschappen": {
+     "toegang": "lezen-schrijven"
+    }
+   },
+   {
+    "type": "realisatie",
+    "bron": "arData",
+    "doel": "arObject"
+   },
+   {
+    "type": "realisatie",
+    "bron": "arPlatform",
+    "doel": "arHosting"
+   },
+   {
+    "type": "bediening",
+    "bron": "arHosting",
+    "doel": "arRegister"
+   },
+   {
+    "type": "bediening",
+    "bron": "arHosting",
+    "doel": "arBeslis"
+   },
+   {
+    "type": "toewijzing",
+    "bron": "arPlatform",
+    "doel": "arDb"
+   },
+   {
+    "type": "bediening",
+    "bron": "arDb",
+    "doel": "arRegister"
+   },
+   {
+    "type": "omvat",
+    "bron": "tPolicy",
+    "doel": "tR1"
+   },
+   {
+    "type": "omvat",
+    "bron": "tPolicy",
+    "doel": "tR2"
+   },
+   {
+    "type": "omvat",
+    "bron": "tPolicy",
+    "doel": "tR3"
+   },
+   {
+    "type": "omvat",
+    "bron": "tPolicy",
+    "doel": "tR4"
+   },
+   {
+    "type": "wie",
+    "bron": "tR1",
+    "doel": "tSOrg"
+   },
+   {
+    "type": "doet",
+    "bron": "tR1",
+    "doel": "tHLees"
+   },
+   {
+    "type": "op",
+    "bron": "tR1",
+    "doel": "tGAanvraag"
+   },
+   {
+    "type": "als",
+    "bron": "tR1",
+    "doel": "tVEigen"
+   },
+   {
+    "type": "wie",
+    "bron": "tR2",
+    "doel": "tSBeh"
+   },
+   {
+    "type": "doet",
+    "bron": "tR2",
+    "doel": "tHWijzig"
+   },
+   {
+    "type": "op",
+    "bron": "tR2",
+    "doel": "tGAanvraag"
+   },
+   {
+    "type": "waarbij",
+    "bron": "tR2",
+    "doel": "tPlicht"
+   },
+   {
+    "type": "wie",
+    "bron": "tR3",
+    "doel": "tSAdv"
+   },
+   {
+    "type": "doet",
+    "bron": "tR3",
+    "doel": "tHLees"
+   },
+   {
+    "type": "op",
+    "bron": "tR3",
+    "doel": "tGAanvraag"
+   },
+   {
+    "type": "als",
+    "bron": "tR3",
+    "doel": "tVKlasse"
+   },
+   {
+    "type": "wie",
+    "bron": "tR4",
+    "doel": "tSAdv"
+   },
+   {
+    "type": "doet",
+    "bron": "tR4",
+    "doel": "tHLees"
+   },
+   {
+    "type": "op",
+    "bron": "tR4",
+    "doel": "tGContact"
+   },
+   {
+    "type": "transitie",
+    "bron": "mBegin",
+    "doel": "mIngediend",
+    "eigenschappen": {
+     "trigger": "aanvraag ontvangen"
+    }
+   },
+   {
+    "type": "transitie",
+    "bron": "mIngediend",
+    "doel": "mMelding",
+    "eigenschappen": {
+     "guard": "risicoklasse A",
+     "effect": "bevestig de melding"
+    }
+   },
+   {
+    "type": "transitie",
+    "bron": "mIngediend",
+    "doel": "mBeoordeling",
+    "eigenschappen": {
+     "guard": "risicoklasse B"
+    }
+   },
+   {
+    "type": "transitie",
+    "bron": "mIngediend",
+    "doel": "mAdvies",
+    "eigenschappen": {
+     "guard": "risicoklasse C",
+     "effect": "vraag adviezen aan"
+    }
+   },
+   {
+    "type": "transitie",
+    "bron": "mAdvies",
+    "doel": "mBeoordeling",
+    "eigenschappen": {
+     "trigger": "adviezen binnen"
+    }
+   },
+   {
+    "type": "transitie",
+    "bron": "mBeoordeling",
+    "doel": "mVerleend",
+    "eigenschappen": {
+     "trigger": "besluit",
+     "guard": "verlenen"
+    }
+   },
+   {
+    "type": "transitie",
+    "bron": "mBeoordeling",
+    "doel": "mGeweigerd",
+    "eigenschappen": {
+     "trigger": "besluit",
+     "guard": "weigeren"
+    }
+   },
+   {
+    "type": "transitie",
+    "bron": "mMelding",
+    "doel": "mEind"
+   },
+   {
+    "type": "transitie",
+    "bron": "mVerleend",
+    "doel": "mEind"
+   },
+   {
+    "type": "transitie",
+    "bron": "mGeweigerd",
+    "doel": "mEind"
+   }
+  ],
+  "opstelling": [
+   {
+    "diagram": "dToegang",
+    "actie": "leesvolgorde-lr"
+   },
+   {
+    "diagram": "dSm",
+    "actie": "leesvolgorde-tb"
+   }
+  ],
+  "posities": [
+   {
+    "diagram": "dArch",
+    "element": "arOrg",
+    "x": 40,
+    "y": 40
+   },
+   {
+    "diagram": "dArch",
+    "element": "arRol",
+    "x": 400,
+    "y": 40
+   },
+   {
+    "diagram": "dArch",
+    "element": "arDienst",
+    "x": 40,
+    "y": 180
+   },
+   {
+    "diagram": "dArch",
+    "element": "arProces",
+    "x": 400,
+    "y": 180
+   },
+   {
+    "diagram": "dArch",
+    "element": "arObject",
+    "x": 1000,
+    "y": 180
+   },
+   {
+    "diagram": "dArch",
+    "element": "arSvcAanvraag",
+    "x": 220,
+    "y": 340
+   },
+   {
+    "diagram": "dArch",
+    "element": "arSvcBeslis",
+    "x": 580,
+    "y": 340
+   },
+   {
+    "diagram": "dArch",
+    "element": "arLoket",
+    "x": 220,
+    "y": 480
+   },
+   {
+    "diagram": "dArch",
+    "element": "arBeslis",
+    "x": 580,
+    "y": 480
+   },
+   {
+    "diagram": "dArch",
+    "element": "arRegister",
+    "x": 800,
+    "y": 480
+   },
+   {
+    "diagram": "dArch",
+    "element": "arData",
+    "x": 1000,
+    "y": 480
+   },
+   {
+    "diagram": "dArch",
+    "element": "arZaak",
+    "x": 500,
+    "y": 620
+   },
+   {
+    "diagram": "dArch",
+    "element": "arApi",
+    "x": 940,
+    "y": 620
+   },
+   {
+    "diagram": "dArch",
+    "element": "arHosting",
+    "x": 690,
+    "y": 780
+   },
+   {
+    "diagram": "dArch",
+    "element": "arPlatform",
+    "x": 690,
+    "y": 920
+   },
+   {
+    "diagram": "dArch",
+    "element": "arDb",
+    "x": 440,
+    "y": 920
+   }
+  ]
+ }
+}
