@@ -288,7 +288,8 @@
  *   "stroom" | "specialisatie" | "realisatie" | "bericht" | "associatie" |
  *   "afhankelijkheid" | "toewijzing" | "insluiting" | "annotatie". Element:
  *   "begin" | "eind" | "baan" | "gegevens" (draagt data; het type van een BPMN-data-object
- *   wijst naar zo'n element, 15-11). Gelezen door de layout (via de LayoutStijl) en
+ *   wijst naar zo'n element, 15-11) | "instantie" (draagt de gegevens van één instantie van
+ *   zo'n type: object, Instantie in het simulatiemodel; 16-11). Gelezen door de layout (via de LayoutStijl) en
  *   bruikbaar voor transformaties, documenten, validatie en de MCP.
  * @property {Record<string, string>} [facetten] - indeling van het type op de
  *   facetten van het DiagramType, bv. `{laag: "business", aspect: "actief"}`

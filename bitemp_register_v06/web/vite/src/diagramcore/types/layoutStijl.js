@@ -51,9 +51,12 @@ export const AARD_CONNECTOR = ["stroom", "specialisatie", "realisatie", "bericht
 /**
  * Aard van een knoop-ElementType: begin (InitialNode, StartEvent), eind (FinalNode, EndEvent), baan
  * (partitie, lane), gegevens (een type dat data draagt: cm-entiteit, UML-klasse, MIM-objecttype,
- * ERD-entiteit; Mark 15-11 — het type van een BPMN-data-object wijst naar zo'n element).
+ * ERD-entiteit; Mark 15-11 — het type van een BPMN-data-object wijst naar zo'n element), instantie
+ * (draagt de gegevens van één instantie van zo'n type, M0 beschreven in een M1-model: het object
+ * uit het object-profiel, de Instantie uit het simulatiemodel; Mark 16-11). De aard staat op het
+ * ElementType, niet op het profiel, en is één waarde.
  */
-export const AARD_ELEMENT = ["begin", "eind", "baan", "gegevens"];
+export const AARD_ELEMENT = ["begin", "eind", "baan", "gegevens", "instantie"];
 
 /** Standaard leesrichting per connector-aard; de rest telt gewoon mee ("mee"). */
 export const STANDAARD_VOLGORDE = Object.freeze({

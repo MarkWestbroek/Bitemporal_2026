@@ -393,6 +393,17 @@ export const IconObject05 = (p) => (
   </svg>
 );
 
+/** Simulatiemodel: een doos (de simulatie) met een afspeeldriehoek en twee scenario's eronder. */
+export const IconSimulatiemodel05 = (p) => (
+  <svg {...base} {...p}>
+    <rect x="7" y="3" width="10" height="7" rx="1" />
+    <path d="M11 5l3 1.5-3 1.5z" />
+    <path d="M12 10v3M6 13h12M6 13v2M18 13v2" />
+    <rect x="3" y="15" width="6" height="5" rx="1" />
+    <rect x="15" y="15" width="6" height="5" rx="1" />
+  </svg>
+);
+
 /** Requirements: doos met gevulde kop en vinkregels. */
 export const IconRequirements05 = (p) => (
   <svg {...base} {...p}>

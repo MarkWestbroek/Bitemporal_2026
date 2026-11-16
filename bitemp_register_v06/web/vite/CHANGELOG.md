@@ -9,6 +9,14 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 ## [Unreleased]
 
 ### Toegevoegd
+- **Scenario's in het project: het profiel Simulatiemodel** (Mark 16-11): een nieuwe modeltaal `simulatie`
+  (profiel `simulatiemodel05`) met Simulatie, Simulatiesubject, Scenario, Instantie, Stub en Verwachting. In
+  de activiteit Simulatie zet *Bewaar in het project* het scenario als model in het project; de keuzelijst
+  toont die scenario's onder *Uit het project*. Staat de run stil, dan staat erbij of de afloop klopt met de
+  verwachting van het scenario (einde of gat, via, waarden). *GPK-voorbeeld laden* zet de vijf GPK-scenario’s
+  als voorbeeld in het project.
+- **M3-aard `instantie`**: voor een elementtype dat de gegevens van één instantie draagt (de Instantie in het
+  simulatiemodel, het object in het object-profiel; profiel Object 1.1.0).
 - **Rondleiding: vier stappen erbij** (Mark 16-11): *Projecten op de server* (Project → Van server ophalen,
   parkeren, Naar server sturen, Live synchroniseren), *De AI-assistent* (rechtsklik op een map; eigen API-sleutel of
   toegangscode), *Experimenteel: Toegangverlening en Simulatie* (en Labs) en *Iets melden* (Alt+M, F8, Mijn

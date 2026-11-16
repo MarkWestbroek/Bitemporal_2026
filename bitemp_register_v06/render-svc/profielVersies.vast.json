@@ -60,8 +60,8 @@
     "vingerafdruk": "4f90a7b946f0681f"
   },
   "object05": {
-    "versie": "1.0.0",
-    "vingerafdruk": "b92ed12d0ad03157"
+    "versie": "1.1.0",
+    "vingerafdruk": "973c6c9f3ae65209"
   },
   "puurUml05": {
     "versie": "1.1.0",
@@ -78,6 +78,10 @@
   "shacl05": {
     "versie": "1.0.0",
     "vingerafdruk": "cec17212e1383cd0"
+  },
+  "simulatiemodel05": {
+    "versie": "1.0.0",
+    "vingerafdruk": "aef765c4f1bbf24a"
   },
   "statemachine05": {
     "versie": "1.0.0",

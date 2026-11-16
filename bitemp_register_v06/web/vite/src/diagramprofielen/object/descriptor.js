@@ -40,6 +40,7 @@ export const elementTypes = [
   {
     id: "object",
     label: "Object",
+    aard: "instantie", // M3 (16-11): draagt de gegevens van één instantie; een scenario kan ernaar wijzen
     omschrijving: "Instantie van een klasse: naam : Klasse (onderstreept) met slots attribuut = waarde.",
     kort: "OBJ",
     icoon: "ob-object",
@@ -152,6 +153,8 @@ export const elementTypes = [
 export const objectDiagramType = {
   id: OBJECT_ID,
   label: "Object",
+  // Profielversie. 1.1.0 (16-11): aard "instantie" op het object.
+  versie: "1.1.0",
   // Vóór 2026-10-12 stond de beschrijving onder "toelichting" (en uit EA onder
   // "notes"); bij het laden migreert die naar data.beschrijving (M3).
   oudeBeschrijvingSleutels: ["toelichting", "notes"],
