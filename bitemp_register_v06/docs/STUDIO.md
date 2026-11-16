@@ -1925,8 +1925,10 @@ fase 2 een **bewerkbare sandbox**:
   zijn haar uiteinden niveau 1. Keuzes: *diepte* (1 = direct verbonden, 2, 3 of alles wat
   bereikbaar is; wat al op het diagram staat telt mee voor de afstand) en *daarna auto-layout*
   (hele diagram, standaard uit). Wat via een package/map-verbinding hangt, staat standaard uit.
-  Nieuwe elementen komen in ringen rond de start (één ring per niveau), in één undo-stap. Code:
-  `diagramcore/model/gerelateerd.js` (`gerelateerdeElementen`, `ringPosities`; tests
+  Nieuwe elementen komen in de vrije ruimte rechts van de start: per niveau een kolom, van boven
+  naar beneden vanaf de hoogte van de start, zonder over een bestaand element te vallen en nooit
+  erboven (16-11; de eerdere ringen zetten elementen onder de werkbalken). In één undo-stap. Code:
+  `diagramcore/model/gerelateerd.js` (`gerelateerdeElementen`, `vrijePosities`; tests
   `gerelateerd.test.js`), `voegGerelateerdeToe` in `maakDiagramActiviteit.jsx`; de dialoog is
   `vraagReview` met `instellingen` + `herbereken` (`naamDialog.jsx`).
 - **Boomstijl naar alle kanten** (2026-11-07): "Kinderen in boomstijl" en de boomstijl van één

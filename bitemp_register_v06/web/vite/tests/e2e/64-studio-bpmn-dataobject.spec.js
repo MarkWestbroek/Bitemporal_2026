@@ -71,8 +71,7 @@ test("data-object: type uit het cm kiezen, rol invoer, toestand onder de naam", 
   expect(await inStore(page, "bpmnMotor05", 'return Object.keys(store.getState().elements).filter((k) => k.startsWith("koppeling:")).length;')).toBe(0);
 
   // Vanaf het cm-element verder in het cm (Mark 15-11): de titel noemt de naam, Partij komt erbij.
-  // (De ring rond het data-object zet hem onder de werkbalken; eerst opzij.)
-  await inStore(page, "bpmnMotor05", 'store.getState().updateNodePosition("d_proces", "diagram05::e_aanvraag", { x: 600, y: 420 });');
+  // Het nieuwe element staat in de vrije ruimte rechts ervan, niet onder de werkbalken (Mark 15-11).
   await node(page, "diagram05::e_aanvraag").click({ button: "right", position: { x: 20, y: 12 } });
   await page.locator(".dc-contextmenu-item", { hasText: "Gerelateerde elementen toevoegen" }).click();
   await expect(dialoog).toContainText("Gerelateerde elementen van Aanvraag");

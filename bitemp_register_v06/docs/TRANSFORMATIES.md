@@ -1535,9 +1535,11 @@ Met een **engine-regelset** alleen als die `data: true` zet; anders blijft data 
 (info-melding). Operaton maakt van een `dataObject` met een type procesvariabelen, en
 de GZAC-uitrol mag daar niet ongemerkt door veranderen. De **lezer** leest de invoer
 en uitvoer van het proces terug als data-object met rol, en `dataState` als toestand;
-het type komt terug als naam (`typeNaam` op de knoop). Die naam koppelt de toepasser
-nog niet aan een cm-element: dat vraagt de binding op uuid met een naamtoets, zoals
-bij de DMN-export, en is een vervolgstap. Tests: `bpmnXmlSchrijverData.test.js`
+het type komt terug als naam (`typeNaam` op de knoop). De import (`bpmnXmlImport.js`,
+`typeZoeker`) koppelt die naam weer aan een element in het project met M3-aard
+`gegevens` (cm-entiteit, UML-klasse, MIM-objecttype, ERD-entiteit; hoofdletters tellen
+niet). Eén treffer wordt het type; geen treffer geeft een info-melding, meer treffers
+een waarschuwing (kies het type dan in de inspector). Melding `BPMN-DATATYPE`. Tests: `bpmnXmlSchrijverData.test.js`
 (ook tegen het schema van bpmn-moddle, zonder waarschuwingen).
 
 ### 11.12 Ontvankelijkheid: beslistabel (DMN) in het oppakproces (2026-10-30)

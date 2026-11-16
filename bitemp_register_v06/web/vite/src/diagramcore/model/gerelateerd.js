@@ -159,31 +159,36 @@ export function kruisGraaf({ eigenProfielId, startIds, links, bronVan }) {
 }
 
 /**
- * Posities voor nieuwe elementen: in ringen rond het anker, één ring per niveau. De straal groeit
- * mee met het aantal, zodat de elementen elkaar niet raken.
- * @param {{x: number, y: number}} anker
+ * Posities voor nieuwe elementen in de vrije ruimte (Mark 15-11: de kring zette elementen boven het
+ * startpunt, onder de werkbalken). Per niveau een kolom rechts van het anker (niveau 1 de eerste),
+ * van boven naar beneden vanaf de hoogte van het anker; een plek die een bestaand element (of een
+ * eerder geplaatst nieuw element) raakt, wordt overgeslagen. Nooit boven het anker.
+ * @param {{x: number, y: number, width?: number}} anker - linksboven (en breedte) van het startelement
  * @param {Array<{id: string, niveau: number}>} kandidaten
+ * @param {Array<{x: number, y: number, width: number, height: number}>} [bezet] - de elementen die er al staan
+ * @param {{width: number, height: number, tussen: number}} [maat] - de ruimte die een nieuw element vraagt
  * @returns {Record<string, {x: number, y: number}>}
  */
-export function ringPosities(anker, kandidaten) {
-  /** @type {Map<number, string[]>} */
-  const perNiveau = new Map();
-  for (const k of kandidaten) {
-    if (!perNiveau.has(k.niveau)) perNiveau.set(k.niveau, []);
-    perNiveau.get(k.niveau)?.push(k.id);
-  }
+export function vrijePosities(anker, kandidaten, bezet = [], maat = { width: 180, height: 90, tussen: 60 }) {
+  const vakken = bezet.map((b) => ({ ...b }));
+  const raakt = (v) => vakken.some((b) => v.x < b.x + b.width + maat.tussen / 2 && b.x < v.x + v.width + maat.tussen / 2 && v.y < b.y + b.height + maat.tussen / 2 && b.y < v.y + v.height + maat.tussen / 2);
+  const niveaus = [...new Set(kandidaten.map((k) => k.niveau))].sort((a, b) => a - b);
+  const kolomX = (i) => Math.round(anker.x + (anker.width || maat.width) + maat.tussen * 2 + i * (maat.width + maat.tussen * 2));
   /** @type {Record<string, {x: number, y: number}>} */
   const uit = {};
-  let vorigeStraal = 0;
-  for (const niveau of [...perNiveau.keys()].sort((a, b) => a - b)) {
-    const ids = perNiveau.get(niveau) || [];
-    // Elk element vraagt ~280 px boog; minstens 360 px verder dan de vorige ring.
-    const straal = Math.max(vorigeStraal + 360, (ids.length * 280) / (2 * Math.PI));
-    vorigeStraal = straal;
-    ids.forEach((id, i) => {
-      const hoek = -Math.PI / 2 + (2 * Math.PI * i) / ids.length + (niveau % 2 ? 0 : Math.PI / ids.length);
-      uit[id] = { x: Math.round(anker.x + straal * Math.cos(hoek)), y: Math.round(anker.y + straal * Math.sin(hoek)) };
-    });
-  }
+  niveaus.forEach((niveau, i) => {
+    const x = kolomX(i);
+    let rij = 0;
+    for (const k of kandidaten.filter((c) => c.niveau === niveau)) {
+      let v;
+      for (;; rij += 1) {
+        v = { x, y: Math.round(anker.y + rij * (maat.height + maat.tussen)), width: maat.width, height: maat.height };
+        if (!raakt(v)) break;
+      }
+      vakken.push(v);
+      uit[k.id] = { x: v.x, y: v.y };
+      rij += 1;
+    }
+  });
   return uit;
 }
