@@ -61,6 +61,37 @@ export async function maakCmBeeld({ model, edienst, identifier, sha256Hex }) {
 }
 
 /**
+ * Het beeld van een entiteit zonder e-dienstmodel (16-11): de structuur komt rechtstreeks uit het
+ * cm, en elk veld staat in het platte object op zijn veldnaam. Dat is de vorm die de beslistabel
+ * ook leest (`fieldRef.veldnaam`). Een meervoudig gegevenselement is een lijst onder zijn meervoud
+ * (`aanvraagbijlagen`), en anders onder zijn naam met een kleine letter. Relaties staan er als
+ * onbekend bij: zonder e-dienstmodel is niet bekend hoe ze in het object zijn ingebed.
+ * @param {{model: any, bron: string}} p - bron = de naam van de entiteit (hoofdletters tellen niet)
+ * @returns {any|null} null als de entiteit niet in het model staat
+ */
+export function maakCmBeeldDirect({ model, bron }) {
+  const m = model?.model || model;
+  const entiteiten = m?.entiteiten || [];
+  const entiteit = entiteiten.find((e) => String(e.typenaam).toLowerCase() === String(bron || "").toLowerCase());
+  if (!entiteit) return null;
+  const graaf = v3Graaf({ model: m, keuzes: { bron: entiteit.typenaam } });
+  const groepen = new Map(graaf.groepen.map((g) => [g.id, g]));
+  const paden = new Map();
+  for (const g of graaf.groepen) {
+    g.geselecteerd = true; // zonder e-dienstmodel is er geen selectie: alles hoort bij het object
+    if (g.aard !== "ge" || !g.meervoudig) continue;
+    const [eigenaar, geNaam] = [g.groep, g.id.split(".").pop()];
+    const ge = (entiteiten.find((e) => e.typenaam === eigenaar)?.gegevenselementen || []).find((x) => x.naam === geNaam);
+    paden.set(g.id, [ge?.meervoud || geNaam.charAt(0).toLowerCase() + geNaam.slice(1)]);
+  }
+  for (const k of graaf.knopen) {
+    const lijst = paden.get(groepen.get(k.groep)?.id);
+    paden.set(k.id, [...(lijst ? [...lijst, "[]"] : []), k.eigenschappen?.veldnaam || k.id.split(".").pop()]);
+  }
+  return { identifier: entiteit.typenaam, bron: entiteit.typenaam, graaf, paden, model: m, direct: true };
+}
+
+/**
  * De beelden van alle objecttypen van een e-dienst. Een objecttype waarvan de bron-entiteit niet
  * in het model staat, wordt overgeslagen.
  */

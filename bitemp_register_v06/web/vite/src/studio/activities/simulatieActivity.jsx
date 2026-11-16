@@ -25,10 +25,11 @@ import { vraagBevestiging, toonMelding } from "../naamDialog.jsx";
 import { willekeurig } from "../../simulatie/gaten.js";
 import { PROCESINSTANTIE, versiesVan } from "../../simulatie/store.js";
 import { tokenBeeld, standTekst, mutatieTekst, TOKEN_KLEUR } from "../../simulatie/weergave.js";
-import { beeldVoor } from "../../simulatie/cmVorm.js";
 import { objectenBijDataObjecten, toetsStartobject } from "../../simulatie/dataObjecten.js";
 import { toetsLijnen } from "../../simulatie/dataLijnen.js";
-import { CmObject, PlatJson } from "./simulatieCmVorm.jsx";
+import { CmObject, CmOpties, PlatJson, GEWIJZIGD } from "./simulatieCmVorm.jsx";
+import { objectVorm } from "../../simulatie/objectVorm.js";
+import { cmVorm } from "../../simulatie/cmVorm.js";
 import {
   BPMN_PROFIEL,
   VOORBEELDEN,
@@ -52,10 +53,14 @@ import {
   kiesVoorbeeld,
   laadGpkProces,
   conditiesProjectNaarCel,
+  cmBeeldVoor,
+  useRunNu,
+  zetVerbergLeeg,
   scenariosUitProject,
   SIMULATIEMODEL_PROFIEL,
   kiesProjectScenario,
   bewaarScenarioInProject,
+  draaiTestset,
   verwachtingVanRun,
 } from "../simulatieRun.js";
 import { juelCondities } from "../../diagramprofielen/bpmn/conditiesNaarCel.js";
@@ -187,9 +192,13 @@ const LOG_STANDAARD = 220;
 const LOG_MIN = 60;
 const LOG_SLEUTEL = "studio-simulatie-log-hoogte";
 
-function DiagramMetToken({ diagramId, beeld, versie, objecten = {}, lijnToets = null }) {
+/** De breedte waar een zwevend object bij het plaatsen op rekent. */
+const KAART_BREEDTE = 240;
+
+function DiagramMetToken({ diagramId, beeld, versie, objecten = {}, lijnToets = null, children = null }) {
   const { elements, diagrams } = useBpmn();
   const doos = useRef(null);
+  const buiten = useRef(null);
   const svg = useMemo(() => (diagramId ? tekenDiagram(BPMN_PROFIEL, diagramId) : ""), [diagramId, elements, diagrams]);
   useLayoutEffect(() => {
     const wortel = doos.current?.querySelector("svg");
@@ -295,7 +304,16 @@ function DiagramMetToken({ diagramId, beeld, versie, objecten = {}, lijnToets = 
       if (o.gewijzigd) g.setAttribute("data-sim-gewijzigd", "");
       if (o.klopt !== null) g.setAttribute("data-sim-klopt", String(o.klopt));
       g.style.cursor = "pointer";
-      g.onclick = () => zet({ toonObject: o.id });
+      // Klik (16-11): het object komt als los, verplaatsbaar object naast het data-object te hangen
+      // (rechts; links als daar geen plaats is). Een tweede object komt erbij.
+      g.onclick = () => {
+        const a = g.getBoundingClientRect();
+        const vlak = buiten.current?.getBoundingClientRect();
+        if (!vlak) return;
+        const rechts = a.right - vlak.left + 14;
+        const links = a.left - vlak.left - KAART_BREEDTE - 14;
+        toonZwevend(o.id, { left: rechts + KAART_BREEDTE <= vlak.width ? rechts : links >= 0 ? links : Math.max(4, vlak.width - KAART_BREEDTE - 4), top: Math.max(4, a.top - vlak.top - 6) });
+      };
     }
 
     // Lijnen en objecten (§11.8 stap 4, Mark 16-11): een data-associatie die niet past bij wat de
@@ -323,15 +341,18 @@ function DiagramMetToken({ diagramId, beeld, versie, objecten = {}, lijnToets = 
   }, [svg, versie, objecten, lijnToets]);
   if (!svg) return <div style={{ ...gedempt, padding: 16 }}>Geen procesdiagram om te tonen.</div>;
   return (
-    <div
-      ref={doos}
-      data-testid="sim-diagram"
-      // dc-canvasvlak: dezelfde thema-tokens als het canvas (donker thema: donker vlak, lichte kaarten, lichte buitenlabels; Mark 15-11).
-      className="sim-diagram dc-canvasvlak"
-      style={{ background: "var(--dc-canvas-achtergrond, #fff)", borderRadius: 6, padding: 12, border: "1px solid var(--s-border, #cbd5e1)", overflow: "auto" }}
-      // De tekening komt uit de eigen tekenaar (diagramcore/tekenaar), die tekst als tekstknoop schrijft.
-      dangerouslySetInnerHTML={{ __html: svg }}
-    />
+    <div ref={buiten} style={{ position: "relative" }}>
+      <div
+        ref={doos}
+        data-testid="sim-diagram"
+        // dc-canvasvlak: dezelfde thema-tokens als het canvas (donker thema: donker vlak, lichte kaarten, lichte buitenlabels; Mark 15-11).
+        className="sim-diagram dc-canvasvlak"
+        style={{ background: "var(--dc-canvas-achtergrond, #fff)", borderRadius: 6, padding: 12, border: "1px solid var(--s-border, #cbd5e1)", overflow: "auto" }}
+        // De tekening komt uit de eigen tekenaar (diagramcore/tekenaar), die tekst als tekstknoop schrijft.
+        dangerouslySetInnerHTML={{ __html: svg }}
+      />
+      {children}
+    </div>
   );
 }
 
@@ -422,6 +443,26 @@ function Sidebar() {
             </optgroup>
           ))}
         </select>
+        {uitProject.length > 0 && (
+          <div style={{ marginBottom: 6 }}>
+            <button style={knop} onClick={() => probeer(() => draaiTestset())} disabled={loopt} data-testid="sim-testset" title="Draait alle scenario's van het project door tot een gat of een einde en toetst de afloop aan hun verwachting. De run in beeld verandert niet.">
+              Alle scenario's toetsen
+            </button>
+            {S.testset && (
+              <div style={{ marginTop: 4 }} data-testid="sim-testset-uitkomst">
+                {S.testset.map((r) => {
+                  const kleur = r.uitkomst === "klopt" ? "#16a34a" : r.uitkomst === "geen verwachting" ? "var(--s-fg-muted, #64748b)" : TOKEN_KLEUR.vast;
+                  return (
+                    <div key={r.id} style={{ color: kleur, cursor: loopt ? "default" : "pointer", marginBottom: 2 }} title={`${r.tekst}${loopt ? "" : "\nKlik: kies dit scenario"}`} onClick={() => !loopt && kiesProjectScenario(r.id)} data-testid="sim-testset-rij" data-uitkomst={r.uitkomst}>
+                      {r.uitkomst === "klopt" ? "✓" : r.uitkomst === "geen verwachting" ? "–" : "✗"} {r.naam}
+                      {r.uitkomst !== "klopt" && <span style={{ fontSize: 11 }}>: {r.uitkomst === "wijkt af" || r.uitkomst === "fout" ? r.tekst : r.uitkomst}</span>}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
         {beschrijving && (
           <div style={{ marginBottom: 4 }} data-testid="sim-scenario-beschrijving">
             <b>{beschrijving.naam}</b>
@@ -538,7 +579,6 @@ function Main() {
     const p = processen.find((x) => (diagrams?.[x.diagramId]?.nodes || []).some((n) => n.elementId === b.taak));
     if (p) bevindingenPerProces[p.id] = (bevindingenPerProces[p.id] || 0) + 1;
   }
-  const getoondObject = (sim && S.toonObject && sim.toestand().objecten[S.toonObject]) || null;
   const afspelen = speeltAf();
   const [snelheid, setSnelheid] = useState("gewoon");
   const sprong = sim ? laatsteSprong() : null;
@@ -710,18 +750,19 @@ function Main() {
             {sprong.bericht ? ` (${sprong.bericht})` : ""}.
           </div>
         )}
-        <DiagramMetToken diagramId={diagramId} beeld={beeld} versie={S.versie} objecten={bijDataObjecten} lijnToets={lijnToets} />
-        {getoondObject && (
-          <div style={{ marginTop: 8, padding: "6px 10px", border: "1px solid var(--s-border, #cbd5e1)", borderRadius: 6, maxWidth: 640 }} data-testid="sim-dataobject-object">
-            <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
-              <span style={kop}>Object bij het data-object</span>
-              <button style={{ ...knop, marginLeft: "auto", padding: "0 6px" }} onClick={() => zet({ toonObject: null })} title="Sluiten">
-                ×
-              </button>
-            </div>
-            <ObjectKaart key={getoondObject.id} o={getoondObject} S={S} />
-          </div>
-        )}
+        <DiagramMetToken
+          diagramId={diagramId}
+          beeld={beeld}
+          versie={S.versie}
+          objecten={bijDataObjecten}
+          lijnToets={lijnToets}
+        >
+          <CmOpties.Provider value={{ verbergLeeg: !!S.verbergLeeg }}>
+            {(S.zwevend || []).map((z) => (
+              <ZwevendObject key={z.id} z={z} S={S} />
+            ))}
+          </CmOpties.Provider>
+        </DiagramMetToken>
         {!sim && (
           <p style={{ ...gedempt, maxWidth: 640 }}>
             Kies links een scenario en het proces waar het start, en druk op Start. Het token loopt dan over dit diagram; springt het naar een ander proces, dan volgt het beeld. Bewerken doe je in Modelleren; ook daar staat het token op het diagram zolang de run loopt.
@@ -780,8 +821,18 @@ function Main() {
  * de velden die in de getoonde versie veranderden zijn gemarkeerd. Klik op een versie om het
  * object te zien zoals het na die stap was (de run zelf blijft staan); "nu" gaat terug.
  */
-function ObjectKaart({ o, S }) {
+function ObjectKaart({ o, S, begin = "cm-vorm" }) {
   const [bekijk, setBekijk] = useState(null);
+  // "Toon in het objectenpaneel" vanuit de tekening: in beeld schuiven en even oplichten.
+  const hier = useRef(null);
+  const [licht, setLicht] = useState(false);
+  useEffect(() => {
+    if (!S.wijsAan || S.wijsAan.id !== o.id) return undefined;
+    hier.current?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    setLicht(true);
+    const t = setTimeout(() => setLicht(false), 1600);
+    return () => clearTimeout(t);
+  }, [S.wijsAan, o.id]);
   const versies = versiesVan(S.sim.log, o.id);
   const getoond = (bekijk && versies.find((v) => v.nr === bekijk)) || null;
   const laatste = versies[versies.length - 1];
@@ -789,10 +840,12 @@ function ObjectKaart({ o, S }) {
   const markeer = getoond || (laatste && laatste.nr === S.sim.log.length ? laatste : null);
   const gewijzigd = new Set(markeer?.velden || []);
   const data = getoond ? S.sim.toestand(getoond.nr).objecten[o.id]?.data || {} : o.data;
-  const beeld = o.type !== PROCESINSTANTIE ? beeldVoor(S.cm?.beelden, o.type) : null;
+  // Het cm-beeld: via het e-dienstmodel, of zonder e-dienstmodel rechtstreeks uit het cm van het project.
+  const cm = o.type !== PROCESINSTANTIE && S.cm ? cmBeeldVoor(o.type) : null;
+  const beeld = cm?.beeld || null;
   const chip = (actief) => ({ fontSize: 10, padding: "0 5px", borderRadius: 8, cursor: "pointer", border: "1px solid var(--s-border, #cbd5e1)", background: actief ? "var(--s-accent, #6366f1)" : "transparent", color: actief ? "#fff" : "inherit" });
   return (
-    <details open={o.type !== PROCESINSTANTIE} style={{ marginBottom: 4 }} data-testid="sim-object" data-object={o.id}>
+    <details ref={hier} open={o.type !== PROCESINSTANTIE || undefined} style={{ marginBottom: 4, borderRadius: 4, outline: licht ? "2px solid #facc15" : "none", outlineOffset: 2 }} data-testid="sim-object" data-object={o.id} data-aangewezen={licht ? "ja" : undefined}>
       <summary style={{ cursor: "pointer" }}>
         <b>{o.type === PROCESINSTANTIE ? o.data.naam || o.data.proces : o.id}</b> <span style={gedempt}>{o.type}</span>
         {(data.state || data.status) && (
@@ -823,13 +876,251 @@ function ObjectKaart({ o, S }) {
         </div>
       )}
       {beeld ? (
-        <CmObject beeld={beeld} data={data} bron={S.cm.bron} gewijzigd={gewijzigd} type={o.type} />
+        <CmObject beeld={beeld} data={data} bron={cm.bron} gewijzigd={gewijzigd} type={o.type} begin={begin} />
       ) : (
         <div style={{ margin: "2px 0 0 12px" }}>
           <PlatJson data={data} gewijzigd={gewijzigd} />
         </div>
       )}
     </details>
+  );
+}
+
+/** Een object erbij zetten in de tekening (of het bestaande naar voren halen); een tweede schuift iets op. */
+function toonZwevend(id, plek) {
+  const S = useRunNu();
+  const lijst = (S.zwevend || []).filter((z) => z.id !== id);
+  const bestaand = (S.zwevend || []).find((z) => z.id === id);
+  let p = bestaand ? { left: bestaand.left, top: bestaand.top } : plek;
+  while (!bestaand && lijst.some((z) => Math.abs(z.left - p.left) < 12 && Math.abs(z.top - p.top) < 12)) p = { left: p.left + 22, top: p.top + 22 };
+  zet({ zwevend: [...lijst, { ...(bestaand || {}), id, ...p }] });
+}
+
+/** De kleuren van een object in de tekening, naar de vormen van het cm. */
+const OBJECT_KLEUR = { entiteit: "#fde68a", relatie: "#ede9fe", gegevenselement: "#bbf7d0" };
+const OBJECT_RAND = "#64748b";
+/** Waar een object begint als het nog niet versleept is: een kolom per niveau, van boven naar beneden. */
+const OBJECT_KOLOM = 268;
+
+/** Een waarde zoals hij achter de = staat. */
+const alsWaarde = (w) => (typeof w === "string" ? w : JSON.stringify(w));
+
+/** Eén veld: `naam = waarde` (UML: = geeft de waarde; de : staat alleen in de kop, bij het type). */
+function ObjectVeld({ v, inspring }) {
+  return (
+    <div style={{ padding: `0 6px 0 ${inspring ? 14 : 6}px`, overflowWrap: "anywhere", ...(v.gewijzigd ? GEWIJZIGD : {}) }} data-testid="sim-object-veld" data-veld={v.naam} data-gewijzigd={v.gewijzigd ? "ja" : undefined}>
+      <span style={{ fontWeight: v.verplicht ? 700 : 400, color: v.fout ? TOKEN_KLEUR.vast : undefined }}>{v.naam}</span>
+      {" = "}
+      {v.fout && (v.waarde === undefined || v.waarde === null || v.waarde === "") ? <span style={{ color: TOKEN_KLEUR.vast }}>ontbreekt</span> : <span style={{ wordBreak: "break-word" }}>{Array.isArray(v.waarde) ? v.waarde.map(alsWaarde).join(", ") : alsWaarde(v.waarde)}</span>}
+      {v.extra ? <span style={{ color: "#475569" }}> ({v.extra})</span> : null}
+    </div>
+  );
+}
+
+/**
+ * Eén object in de vorm van het cm ("neem op in Entiteit"), met waarden: de kop «stereotype» en
+ * onderstreept `naam : Type`, de enkelvoudige gegevenselementen genest. Zonder kardinaliteit en
+ * typen; alleen wat een waarde heeft.
+ */
+function ObjectDoos({ d, kleur, toestand = null, versie = null, plek, onSleep, onMenu, meet }) {
+  const begin = useRef(null);
+  return (
+    <div
+      ref={meet}
+      data-testid="sim-objectdoos"
+      data-doos={d.id}
+      data-stereotype={d.stereotype}
+      style={{ position: "absolute", left: plek.left, top: plek.top, minWidth: 140, maxWidth: 236, width: "max-content", border: `2px solid ${OBJECT_RAND}`, borderRadius: 10, background: kleur, color: "#0f172a", fontSize: 10.5, lineHeight: 1.35, cursor: "grab", userSelect: "none", touchAction: "none", boxShadow: "0 4px 14px rgba(0, 0, 0, 0.3)", paddingBottom: 4 }}
+      onPointerDown={(e) => {
+        if (e.button !== 0) return;
+        e.stopPropagation();
+        e.currentTarget.setPointerCapture(e.pointerId);
+        begin.current = { x: e.clientX, y: e.clientY, left: plek.left, top: plek.top };
+      }}
+      onPointerMove={(e) => {
+        const b = begin.current;
+        if (b) onSleep({ left: b.left + e.clientX - b.x, top: b.top + e.clientY - b.y }, false);
+      }}
+      onPointerUp={(e) => {
+        const b = begin.current;
+        if (!b) return;
+        begin.current = null;
+        onSleep({ left: b.left + e.clientX - b.x, top: b.top + e.clientY - b.y }, true);
+      }}
+      onContextMenu={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        onMenu(e);
+      }}
+    >
+      <div style={{ textAlign: "center", padding: "2px 8px 3px", borderBottom: `1.5px solid ${OBJECT_RAND}`, position: "relative" }}>
+        <div style={{ fontStyle: "italic", fontSize: 9.5 }}>«{d.stereotype}»</div>
+        <div style={{ fontWeight: 700, fontSize: 11, textDecoration: "underline", overflowWrap: "anywhere" }} data-testid="sim-objectdoos-kop">
+          {d.kop}
+        </div>
+        {toestand ? <div style={{ fontSize: 10 }}>[{toestand}]</div> : null}
+        {versie ? (
+          <span style={{ position: "absolute", right: 6, top: 2, fontSize: 9, fontWeight: 700, color: "#4338ca" }} title="de versie van het object in deze run">
+            {versie}
+          </span>
+        ) : null}
+      </div>
+      {d.velden.length > 0 && (
+        <div style={{ paddingTop: 3 }}>
+          {d.velden.map((v) => (
+            <ObjectVeld key={v.naam} v={v} />
+          ))}
+        </div>
+      )}
+      {d.secties.map((sectie) => (
+        <div key={sectie.naam} style={{ paddingTop: 3 }} data-testid="sim-object-ge" data-ge={sectie.naam}>
+          <div style={{ fontWeight: 700, padding: "0 6px" }}>{sectie.naam}</div>
+          {sectie.velden.map((v) => (
+            <ObjectVeld key={v.naam} v={v} inspring />
+          ))}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/** Het aanhechtpunt van een lijn tussen twee objecten: de zijden die naar elkaar toe liggen. */
+function lijnPunten(a, b) {
+  if (b.left >= a.left + a.width) return [a.left + a.width, a.top + Math.min(a.height / 2, 28), b.left, b.top + Math.min(b.height / 2, 28)];
+  if (b.left + b.width <= a.left) return [a.left, a.top + Math.min(a.height / 2, 28), b.left + b.width, b.top + Math.min(b.height / 2, 28)];
+  if (b.top >= a.top + a.height) return [a.left + a.width / 2, a.top + a.height, b.left + b.width / 2, b.top];
+  return [a.left + a.width / 2, a.top, b.left + b.width / 2, b.top + b.height];
+}
+
+/**
+ * Een object van de run als een klein objectdiagram over de tekening (Mark 16-11, ontwerp §12.6):
+ * het hoofdobject in de vorm van het cm, met de meervoudige gegevenselementen en de relaties als
+ * losse objecten ernaast, verbonden met lijnen (`simulatie/objectVorm.js`). Geen venster eromheen.
+ * Het hoofdobject slepen verplaatst het geheel, een los object alleen zichzelf. Rechtsklik sluit
+ * het of wijst het aan in het objectenpaneel (voor de versies en de json). Het toont de stand van
+ * nu; wat in de laatste stap veranderde is gemarkeerd.
+ */
+function ZwevendObject({ z, S }) {
+  const [sleep, setSleep] = useState(null); // {id, left, top} zolang er gesleept wordt
+  const [menu, setMenu] = useState(null);
+  const [maten, setMaten] = useState({});
+  const dozen = useRef({});
+  useEffect(() => {
+    if (!menu) return undefined;
+    const dicht = () => setMenu(null);
+    window.addEventListener("pointerdown", dicht);
+    return () => window.removeEventListener("pointerdown", dicht);
+  }, [menu]);
+  // De maten van de objecten, voor de opstelling en de lijnen; opnieuw na elke stap van de run.
+  useLayoutEffect(() => {
+    const nu = {};
+    for (const [id, el] of Object.entries(dozen.current)) if (el) nu[id] = { width: el.offsetWidth, height: el.offsetHeight };
+    setMaten((oud) => (JSON.stringify(oud) === JSON.stringify(nu) ? oud : nu));
+  }, [S.versie, z.id]);
+
+  const o = S.sim?.toestand().objecten[z.id];
+  if (!o) return null;
+  const versies = versiesVan(S.sim.log, o.id);
+  const laatste = versies[versies.length - 1];
+  const gewijzigd = new Set(laatste && laatste.nr === S.sim.log.length ? laatste.velden : []);
+  const cm = cmBeeldVoor(o.type);
+  const vorm = cm ? cmVorm(cm.beeld, o.data) : null;
+  // Zonder type in het cm: één object met de platte velden.
+  const { objecten, lijnen } = vorm?.boom
+    ? objectVorm(vorm.boom, { objectNaam: o.id, fouten: vorm.problemen.filter((p) => p.ernst === "fout").map((p) => p.pad), gewijzigd })
+    : { objecten: [{ id: "hoofd", stereotype: "object", kop: `${o.id} : ${o.type}`, type: o.type, kolom: 0, velden: Object.entries(o.data || {}).map(([naam, waarde]) => ({ naam, waarde, gewijzigd: gewijzigd.has(naam) })), secties: [] }], lijnen: [] };
+  const kleurVan = (d) => (d.stereotype === "entiteit" && (cm?.beeld.model?.entiteiten || []).find((e) => e.typenaam === d.type)?.kleur) || OBJECT_KLEUR[d.stereotype] || "#fef9c3";
+
+  // De opstelling: een kolom per niveau, van boven naar beneden; wat versleept is blijft waar het staat.
+  const hoogte = {};
+  const plekken = {};
+  for (const d of objecten) {
+    const vast = z.delen?.[d.id];
+    const y = hoogte[d.kolom] || 0;
+    plekken[d.id] = sleep?.id === d.id ? { left: sleep.left, top: sleep.top } : vast || { left: d.kolom * OBJECT_KOLOM + (d.inspring ? 28 : 0), top: y };
+    hoogte[d.kolom] = y + (maten[d.id]?.height || 60) + 18;
+  }
+  const groep = sleep?.id === "#groep" ? sleep : { left: z.left, top: z.top };
+  const vak = (id) => (maten[id] ? { ...plekken[id], ...maten[id] } : null);
+  const sluit = (alle) => zet({ zwevend: alle ? [] : (S.zwevend || []).filter((x) => x.id !== o.id) });
+  const bewaar = (patch) => zet({ zwevend: [...(S.zwevend || []).filter((x) => x.id !== o.id), { ...z, ...patch }] });
+  const regel = { display: "block", width: "100%", textAlign: "left", padding: "4px 10px", fontSize: 12, border: "none", background: "transparent", color: "inherit", cursor: "pointer" };
+  return (
+    <div data-testid="sim-dataobject-object" data-plek="tekening" data-object={o.id} style={{ position: "absolute", left: groep.left, top: groep.top, width: 0, height: 0, zIndex: sleep ? 7 : 5 }}>
+      <svg style={{ position: "absolute", left: 0, top: 0, width: 1, height: 1, overflow: "visible", pointerEvents: "none" }}>
+        <defs>
+          <marker id={`sim-ruit-${o.id}`} viewBox="0 0 14 8" refX="0" refY="4" markerWidth="14" markerHeight="8" orient="auto">
+            <path d="M0 4 L7 0 L14 4 L7 8 Z" fill={OBJECT_RAND} />
+          </marker>
+          <marker id={`sim-pijl-${o.id}`} viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto">
+            <path d="M1 1 L9 5 L1 9" fill="none" stroke={OBJECT_RAND} strokeWidth="1.5" />
+          </marker>
+        </defs>
+        {lijnen.map((l) => {
+          const [a, b] = [vak(l.van), vak(l.naar)];
+          if (!a || !b) return null;
+          const [x1, y1, x2, y2] = lijnPunten(a, b);
+          return (
+            <g key={`${l.van}>${l.naar}`} data-testid="sim-object-lijn" data-soort={l.soort}>
+              <line x1={x1} y1={y1} x2={x2} y2={y2} stroke={OBJECT_RAND} strokeWidth="1.5" markerStart={l.soort === "compositie" ? `url(#sim-ruit-${o.id})` : undefined} markerEnd={l.soort === "doel" ? `url(#sim-pijl-${o.id})` : undefined} />
+              {l.label ? (
+                <text x={(x1 + x2) / 2} y={(y1 + y2) / 2 - 4} textAnchor="middle" fontSize="10" fill="var(--s-fg, #1f2937)">
+                  {l.label}
+                </text>
+              ) : null}
+            </g>
+          );
+        })}
+      </svg>
+      {objecten.map((d) => (
+        <ObjectDoos
+          key={d.id}
+          d={d}
+          kleur={kleurVan(d)}
+          toestand={d.id === "hoofd" ? o.data.status || o.data.state || null : null}
+          versie={d.id === "hoofd" ? `v${versies.length}` : null}
+          plek={plekken[d.id]}
+          meet={(el) => (dozen.current[d.id] = el)}
+          onMenu={(e) => {
+            const r = e.currentTarget.getBoundingClientRect();
+            setMenu({ x: plekken[d.id].left + e.clientX - r.left, y: plekken[d.id].top + e.clientY - r.top });
+          }}
+          onSleep={(p, klaar) => {
+            // Het hoofdobject neemt het geheel mee; een los object verplaatst alleen zichzelf.
+            if (d.id === "hoofd") {
+              const naar = { left: Math.max(0, z.left + p.left - plekken.hoofd.left), top: Math.max(0, z.top + p.top - plekken.hoofd.top) };
+              if (klaar) (setSleep(null), bewaar(naar));
+              else setSleep({ id: "#groep", ...naar });
+            } else if (klaar) (setSleep(null), bewaar({ delen: { ...(z.delen || {}), [d.id]: p } }));
+            else setSleep({ id: d.id, ...p });
+          }}
+        />
+      ))}
+      {menu && (
+        <div
+          data-testid="sim-zwevend-menu"
+          onPointerDown={(e) => e.stopPropagation()}
+          style={{ position: "absolute", left: menu.x, top: menu.y, zIndex: 9, minWidth: 190, padding: "4px 0", borderRadius: 6, border: "1px solid var(--s-border, #cbd5e1)", background: "var(--s-panel, #fff)", color: "var(--s-fg, #1f2937)", boxShadow: "0 6px 20px rgba(0, 0, 0, 0.35)", cursor: "default" }}
+        >
+          <button style={regel} onClick={() => (setMenu(null), zet({ wijsAan: { id: o.id, tik: Date.now() } }))} data-testid="sim-zwevend-paneel">
+            Toon in het objectenpaneel
+          </button>
+          {Object.keys(z.delen || {}).length > 0 && (
+            <button style={regel} onClick={() => (setMenu(null), bewaar({ delen: {} }))}>
+              Opnieuw opstellen
+            </button>
+          )}
+          <button style={regel} onClick={() => (setMenu(null), sluit(false))} data-testid="sim-zwevend-sluit">
+            Sluiten
+          </button>
+          {(S.zwevend || []).length > 1 && (
+            <button style={regel} onClick={() => (setMenu(null), sluit(true))}>
+              Alle objecten sluiten
+            </button>
+          )}
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -840,11 +1131,19 @@ function Inspector() {
   const objecten = toestand ? Object.values(toestand.objecten) : [];
   return (
     <div style={{ padding: "8px 10px", fontSize: 12, color: "var(--s-fg, #1f2937)" }} data-testid="sim-objecten">
-      <p style={kop}>Objecten</p>
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+        <p style={{ ...kop, margin: 0 }}>Objecten</p>
+        <label style={{ marginLeft: "auto", display: "inline-flex", alignItems: "center", gap: 4, fontSize: 11, color: "var(--s-fg-muted, #64748b)" }} title="Lege optionele velden niet tonen, in het paneel en bij de objecten in de tekening. Een verplicht veld zonder waarde blijft staan.">
+          <input type="checkbox" checked={!!S.verbergLeeg} onChange={(e) => zetVerbergLeeg(e.target.checked)} data-testid="sim-verberg-leeg" />
+          lege velden verbergen
+        </label>
+      </div>
       {!objecten.length && <div style={gedempt}>Nog geen objecten. Na Start staat hier het startobject, en elke procesinstantie.</div>}
-      {objecten.map((o) => (
-        <ObjectKaart key={o.id} o={o} S={S} />
-      ))}
+      <CmOpties.Provider value={{ verbergLeeg: !!S.verbergLeeg }}>
+        {objecten.map((o) => (
+          <ObjectKaart key={o.id} o={o} S={S} />
+        ))}
+      </CmOpties.Provider>
       {toestand && Object.keys(toestand.variabelen).length > 0 && (
         <>
           <p style={{ ...kop, marginTop: 10 }}>Procesvariabelen</p>
@@ -868,7 +1167,7 @@ function Inspector() {
       )}
       {S.sim && S.m1 && (
         <p style={{ ...gedempt, marginTop: 12 }}>
-          Draait op {S.sim.processen.length} processen. Beslistabellen: {S.m1.beslissingen.length ? S.m1.beslissingen.map((b) => b.model_naam).join(", ") : "geen"}. E-dienstmodel: {S.m1.edienst?.edienst?.naam || (S.m1.edienst ? "geladen" : "geen")}.
+          Draait op {S.sim.processen.length} processen{S.subjecten ? ` (de subjecten van ${S.subjecten.simulatie})` : ""}. Beslistabellen: {S.m1.beslissingen.length ? S.m1.beslissingen.map((b) => b.model_naam).join(", ") : "geen"}. E-dienstmodel: {S.m1.edienst?.edienst?.naam || (S.m1.edienst ? "geladen" : "geen")}.
         </p>
       )}
     </div>

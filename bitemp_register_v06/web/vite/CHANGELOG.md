@@ -22,6 +22,20 @@ De single source of truth voor het nummer is `package.json` `"version"`.
   rechts de tabel (dezelfde tabeleditor als in de klassieke DMN-activiteit): kolommen binden door slepen of *bind…*,
   keuzelijsten uit het model. *Opslaan* schrijft de tabel in één keer naar `data.beslistabel` van de beslissing, zodat
   hij meeloopt met sync, branches, de DMN-XML-export en de simulatie (`studio/BeslistabelEditor.jsx`).
+- **Simulatie: alle scenario's toetsen, en de run op de subjecten** (16-11): *Alle scenario's toetsen* draait elk
+  scenario van het project en zet erbij of de afloop klopt met de verwachting. Een scenario uit het project
+  draait alleen op de subjecten (processen) van zijn simulatie.
+- **Simulatie: cm-vorm zonder e-dienstmodel** (16-11): de boom en de kaart van een object komen dan rechtstreeks
+  uit het canonieke model van het project, elk veld op zijn veldnaam.
+- **Simulatie: het object als objectdiagram in de tekening** (Mark 16-11): een klik op een data-object zet het
+  object ernaast in de vormen van het cm: het hoofdobject «entiteit» met kop `naam : Type` en de enkelvoudige
+  gegevenselementen genest als `veld = waarde`; meervoudige gegevenselementen en relaties (met hun doel) als
+  losse objecten met lijnen. Te verslepen, meer dan één tegelijk; rechtsklik sluit het of wijst het aan in het
+  objectenpaneel.
+- **Simulatie: wat er niet is, staat er niet** (Mark 16-11): afwezige gegevenselementen en lege alternatieven
+  komen niet meer in de cm-vorm en de kaart; met *lege velden verbergen* ook de lege optionele velden niet.
+- **Simulatiemodel in een eigen map** (16-11): de diagrammen van een bewaard scenario komen in de projectboom in
+  een map met de naam van de simulatie.
 - **Gebruikers → Projecten…** (Mark 16-11): achteraf een gebruiker aan Studio-projecten toewijzen, niet alleen bij
   het uitnodigen. Per project geen toegang / lezen / schrijven, met de eigenaar en een open `*`-rij erbij; alleen
   de gewijzigde projecten worden geschreven. In *Van server ophalen → Toegang…* kies je de gebruiker nu uit een

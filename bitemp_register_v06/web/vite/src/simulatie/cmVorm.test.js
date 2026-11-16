@@ -86,3 +86,31 @@ test("toets: de GE's van een Partij zijn alternatieven; een leeg alternatief is 
   const { problemen } = cmVorm(await beeld(), aanvraag());
   assert.ok(!problemen.some((p) => /PartijMaatschappelijkeActiviteit|PartijVestiging|PartijKlantverwijzing/.test(p.pad) && p.ernst === "fout"));
 });
+
+test("zonder e-dienstmodel (16-11): de structuur uit het cm, elk veld op zijn veldnaam, een meervoudig GE als lijst onder zijn meervoud", async () => {
+  const { maakCmBeeldDirect } = await import("./cmVorm.js");
+  assert.equal(maakCmBeeldDirect({ model, bron: "Bestaat niet" }), null);
+  const direct = maakCmBeeldDirect({ model, bron: "gehandicaptenparkeerkaartaanvraag" }); // hoofdletters tellen niet
+  assert.equal(direct.bron, "Gehandicaptenparkeerkaartaanvraag");
+  const plat = {
+    aanvraagnummer: "GPK-2026-0001",
+    ingediendOp: "2026-11-12T09:00:00Z",
+    status: "ingediend",
+    soort: "passagier",
+    eerdereKaart: false,
+    aanvraagbijlagen: [{ naam: "pasfoto", documentUrl: "https://stub.example/documenten/1" }],
+    beoordeling: "toegekend",
+  };
+  const { boom, problemen, buitenCm } = cmVorm(direct, plat);
+  assert.equal(vind(boom, "Aanvraag.Aanvraagidentificatie.aanvraagnummer").waarde, "GPK-2026-0001");
+  assert.equal(vind(boom, "Gehandicaptenparkeerkaartaanvraag.GpkAanvraagKaart.soort").waarde, "passagier");
+  assert.equal(vind(boom, "Gehandicaptenparkeerkaartaanvraag.GpkAanvraagKaart.soort").inObjecttype, true);
+  const bijlagen = vind(boom, "Aanvraag.Aanvraagbijlage");
+  assert.equal(bijlagen.voorkomens.length, 1);
+  assert.equal(bijlagen.voorkomens[0].find((k) => k.naam === "naam").waarde, "pasfoto");
+  // Wat niet in het cm staat (een behandelveld) komt apart, zoals met een e-dienstmodel.
+  assert.deepEqual(buitenCm, { beoordeling: "toegekend" });
+  // De toets werkt: het verplichte type van de aanvraag ontbreekt hier.
+  assert.ok(problemen.some((p) => p.ernst === "fout" && /verplicht veld zonder waarde/.test(p.melding)), JSON.stringify(problemen));
+  assert.ok(!problemen.some((p) => /aanvraagnummer|ingediendOp/.test(p.pad)));
+});

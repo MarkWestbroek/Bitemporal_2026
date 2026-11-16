@@ -25,9 +25,10 @@ import { tokenBeeld, tokenCss } from "../simulatie/weergave.js";
 import { getProfieltype, getProfieltypen } from "./profieltypeRegistry";
 import { conditiesNaarCel } from "../diagramprofielen/bpmn/conditiesNaarCel.js";
 import { exporteerV3 } from "../diagramprofielen/canoniek-uml/serialisatie.js";
-import { maakCmBeelden } from "../simulatie/cmVorm.js";
+import { maakCmBeelden, maakCmBeeldDirect, beeldVoor } from "../simulatie/cmVorm.js";
 import { scenarioUitModel, scenarioNaarModel, simulatiesIn, toetsVerwachting } from "../simulatie/scenarioModel.js";
 import { typeZoeker } from "../diagramprofielen/bpmn/bpmnXmlImport.js";
+import { useModellerenStore } from "./activities/modellerenActivity.jsx";
 
 /** Het profiel waar de processen in staan. */
 export const BPMN_PROFIEL = "bpmnMotor05";
@@ -92,7 +93,17 @@ export const LEEG_SCENARIO = {
 // het is alleen een stijlblok in deze browsertab (andere tabs en gebruikers zien niets), maar
 // zolang het aan staat neemt een PNG/SVG-export van het canvas het token mee — handig als je een
 // plaatje van de stand van een procesinstantie wilt.
-const S = { sim: null, m1: null, scenarioTekst: null, edienst: null, gpk: null, startProces: null, toonProces: null, toonObject: null, opCanvas: false, cm: null, fout: null, versie: 0 };
+const LEEG_SLEUTEL = "studio-simulatie-leeg-verbergen";
+const leesVerbergLeeg = () => {
+  try {
+    return localStorage.getItem(LEEG_SLEUTEL) === "ja";
+  } catch {
+    return false;
+  }
+};
+// zwevend: de objecten die los over de tekening hangen ({id, left, top}); wijsAan: het object dat in
+// het objectenpaneel aangewezen wordt; verbergLeeg: lege optionele velden niet tonen (bewaard).
+const S = { zwevend: [], wijsAan: null, verbergLeeg: leesVerbergLeeg(), projectScenario: null, subjecten: null, testset: null, sim: null, m1: null, scenarioTekst: null, edienst: null, gpk: null, startProces: null, toonProces: null, toonObject: null, opCanvas: false, cm: null, fout: null, versie: 0 };
 const luisteraars = new Set();
 const STIJL_ID = "sim-token-stijl";
 
@@ -122,6 +133,19 @@ export function zet(patch = {}) {
 const abonneer = (l) => (luisteraars.add(l), () => luisteraars.delete(l));
 
 /** De run in een component: rendert opnieuw bij elke wijziging. */
+/** De stand van nu, buiten een component. */
+export const useRunNu = () => S;
+
+/** Lege optionele velden verbergen of tonen; de keuze blijft bewaard. */
+export function zetVerbergLeeg(aan) {
+  try {
+    localStorage.setItem(LEEG_SLEUTEL, aan ? "ja" : "nee");
+  } catch {
+    /* geen opslag: de keuze geldt voor deze tab */
+  }
+  zet({ verbergLeeg: !!aan });
+}
+
 export function useRun() {
   useSyncExternalStore(abonneer, () => S.versie);
   return S;
@@ -188,16 +212,49 @@ export function probeer(doen) {
   zet({ fout });
 }
 
+/**
+ * De subjecten van de simulatie waar een scenario uit het project bij hoort (16-11): de
+ * BPMN-diagrammen waar de run op draait. Null = geen beperking (een los scenario, of een simulatie
+ * zonder subjecten die naar een bestaand BPMN-diagram wijzen).
+ * @returns {{simulatie: string, diagramIds: Set<string>}|null}
+ */
+export function subjectenVan(scenarioId) {
+  const st = getProfieltype(SIMULATIEMODEL_PROFIEL)?.useStore?.getState?.();
+  if (!scenarioId || !st?.elements?.[scenarioId]) return null;
+  const bij = simulatiesIn(st.elements).simulaties.find((s) => s.scenarios.some((sc) => sc.id === scenarioId));
+  if (!bij) return null;
+  const bestaand = bpmnModel().diagrams;
+  const diagramIds = new Set(
+    bij.subjecten
+      .map((s) => s.data?.verwijstNaar)
+      .filter((v) => v && (typeof v === "string" || v.profielId === BPMN_PROFIEL))
+      .map((v) => (typeof v === "string" ? v : v.diagramId))
+      .filter((id) => bestaand[id]),
+  );
+  return diagramIds.size ? { simulatie: bij.simulatie.naam || "Simulatie", diagramIds } : null;
+}
+
+/** De M1-set van een run: het proces (beperkt tot de subjecten, als die er zijn), de beslistabellen en het e-dienstmodel. */
+function m1Voor(subjecten) {
+  const model = bpmnModel();
+  const project = beslissingenUitProject();
+  return {
+    proces: {
+      model_naam: subjecten ? `BPMN-model van het project (subjecten van ${subjecten.simulatie})` : "BPMN-model van het project",
+      model: subjecten ? { elements: model.elements, diagrams: Object.fromEntries(Object.entries(model.diagrams).filter(([id]) => subjecten.diagramIds.has(id))) } : model,
+    },
+    beslissingen: project.length ? project : S.gpk ? [S.gpk.beslissingen] : [],
+    edienst: edienstNu(),
+  };
+}
+
 export function start() {
   probeer(() => {
     const scenario = JSON.parse(scenarioTekst());
-    const project = beslissingenUitProject();
-    const m1 = {
-      proces: { model_naam: "BPMN-model van het project", model: bpmnModel() },
-      beslissingen: project.length ? project : S.gpk ? [S.gpk.beslissingen] : [],
-      edienst: edienstNu(),
-    };
+    const subjecten = subjectenVan(S.projectScenario);
+    const m1 = m1Voor(subjecten);
     const sim = maakSimulatie({ m1, scenario: { ...scenario, start: { ...scenario.start, proces: gekozenStartProces() } } });
+    S.subjecten = subjecten ? { simulatie: subjecten.simulatie, aantal: subjecten.diagramIds.size } : null;
     sim.start();
     Object.assign(S, { sim, m1, toonProces: null });
   });
@@ -230,8 +287,10 @@ function projectV3() {
  * cg-test (het model waartegen het GPK-e-dienstmodel is opgesteld).
  */
 async function laadCmBeelden(edienst) {
-  if (!edienst) return zet({ cm: { beelden: [], bron: null } });
   const project = projectV3();
+  directeBeelden = new Map();
+  directModel = project;
+  if (!edienst) return zet({ cm: { beelden: [], bron: null } });
   let beelden = project ? await maakCmBeelden({ model: project, edienst, sha256Hex }) : [];
   let bron = beelden.length ? "het canonieke model van het project" : null;
   if (!beelden.length) {
@@ -242,10 +301,38 @@ async function laadCmBeelden(edienst) {
   zet({ cm: { beelden, bron } });
 }
 
+// Zonder e-dienstmodel (16-11): het beeld van een type rechtstreeks uit het canonieke model van het
+// project, per type gemaakt als een object van dat type getoond wordt.
+let directeBeelden = new Map();
+let directModel = null;
+
+/**
+ * Het cm-beeld bij een objecttype van de run: dat van het e-dienstmodel als het er is, anders
+ * rechtstreeks uit het canonieke model van het project (elk veld op zijn veldnaam).
+ * @returns {{beeld: any, bron: string|null}|null}
+ */
+export function cmBeeldVoor(type) {
+  const viaEdienst = beeldVoor(S.cm?.beelden, type);
+  if (viaEdienst) return { beeld: viaEdienst, bron: S.cm?.bron || null };
+  if (!directModel || !type) return null;
+  const sleutel = String(type).toLowerCase();
+  if (!directeBeelden.has(sleutel)) {
+    let beeld = null;
+    try {
+      beeld = maakCmBeeldDirect({ model: directModel, bron: type });
+    } catch {
+      /* een type dat niet te lezen is, blijft platte json */
+    }
+    directeBeelden.set(sleutel, beeld);
+  }
+  const beeld = directeBeelden.get(sleutel);
+  return beeld ? { beeld, bron: "het canonieke model van het project (zonder e-dienstmodel: elk veld op zijn veldnaam)" } : null;
+}
+
 export function stop() {
   if (klok) clearInterval(klok);
   klok = null;
-  zet({ sim: null, m1: null, fout: null, toonProces: null, toonObject: null });
+  zet({ sim: null, m1: null, fout: null, toonProces: null, zwevend: [], wijsAan: null });
 }
 
 /** Het proces waar een element in staat. */
@@ -335,6 +422,7 @@ export async function gebruikGpk() {
 export async function kiesVoorbeeld(nr) {
   if (!nr) return;
   const tekst = JSON.stringify(await laadScenario(nr), null, 2);
+  S.projectScenario = null;
   if (VOORBEELDEN.find((v) => v.nr === nr)?.set !== "gpk") return zet({ scenarioTekst: tekst, startProces: null, gpk: null });
   const gpk = S.gpk || (await laadGpk());
   zet({ scenarioTekst: tekst, startProces: null, gpk: { beslissingen: gpk.beslissingen, edienst: gpk.edienst } });
@@ -368,10 +456,46 @@ export function kiesProjectScenario(id) {
     if (!st) throw new Error("Het profiel Simulatiemodel is niet geladen.");
     const scenario = scenarioUitModel(st.elements, id, {
       naamVan: (ref) => elementVan(ref)?.naam || null,
+      plekVan: (ref) => elementVan(ref)?.data?.bpmnId || null,
       procesVan: (ref) => (ref?.elementId ? startbareProcessen().find((p) => p.elementen.has(ref.elementId))?.id || null : null),
     });
-    Object.assign(S, { scenarioTekst: JSON.stringify(scenario, null, 2), startProces: null });
+    Object.assign(S, { scenarioTekst: JSON.stringify(scenario, null, 2), startProces: null, projectScenario: id });
   });
+}
+
+/**
+ * Alle scenario's van het project in één keer draaien, als testset (16-11): elk scenario loopt
+ * door tot een gat of een einde, en de afloop wordt getoetst aan zijn verwachting. De lopende run
+ * blijft staan; de uitkomst komt in `S.testset`.
+ * @returns {{id: string, naam: string, simulatie: string, uitkomst: "klopt"|"wijkt af"|"geen verwachting"|"fout", tekst: string}[]}
+ */
+export function draaiTestset() {
+  const st = simulatiemodel();
+  const uit = [];
+  for (const sc of scenariosUitProject()) {
+    const rij = { id: sc.id, naam: sc.naam, simulatie: sc.simulatie };
+    try {
+      const subjecten = subjectenVan(sc.id);
+      const m1 = m1Voor(subjecten);
+      const { processen } = leesProcessen(m1.proces, m1.edienst);
+      const scenario = scenarioUitModel(st.elements, sc.id, {
+        naamVan: (ref) => elementVan(ref)?.naam || null,
+        plekVan: (ref) => elementVan(ref)?.data?.bpmnId || null,
+        procesVan: (ref) => (ref?.elementId ? processen.find((p) => p.elementen.has(ref.elementId))?.id || null : null),
+      });
+      const sim = maakSimulatie({ m1, scenario });
+      const stand = sim.loop();
+      const t = sim.toestand();
+      const toets = toetsVerwachting(scenario.verwacht, { stand, variabelen: t.variabelen, object: t.objecten[scenario.start?.id || "startobject"]?.data || {}, log: sim.log });
+      if (!toets) uit.push({ ...rij, uitkomst: "geen verwachting", tekst: `eindigt als ${stand.soort}` });
+      else if (toets.klopt) uit.push({ ...rij, uitkomst: "klopt", tekst: toets.punten.map((p) => `${p.wat} = ${typeof p.verwacht === "string" ? p.verwacht : JSON.stringify(p.verwacht)}`).join("; ") });
+      else uit.push({ ...rij, uitkomst: "wijkt af", tekst: toets.punten.filter((p) => !p.klopt).map((p) => `${p.wat}: verwacht ${JSON.stringify(p.verwacht)}, gevonden ${JSON.stringify(p.gevonden)}`).join("; ") });
+    } catch (e) {
+      uit.push({ ...rij, uitkomst: "fout", tekst: e.message });
+    }
+  }
+  zet({ testset: uit });
+  return uit;
 }
 
 /**
@@ -435,10 +559,18 @@ export function bewaarScenarioInProject(gegeven = null) {
     const diagrammen = () => Object.values(simulatiemodel().diagrams || {});
     const diagramMet = (elementId, behalve = null) => diagrammen().find((d) => d.id !== behalve && (d.nodes || []).some((k) => k.elementId === elementId)) || null;
     const onder = (diagram) => Math.max(0, ...(diagram?.nodes || []).map((k) => (k.position?.y || 0) + 140));
+    // Nieuwe diagrammen komen in de map van de simulatie in de projectboom (16-11): het overzicht in
+    // een map met de naam van de simulatie, elk scenario-diagram in de map waar het overzicht staat.
+    // Wat de gebruiker daarna verplaatst, blijft waar hij het zet.
+    const boom = () => useModellerenStore.getState();
+    const boomSleutel = (diagramId) => `${SIMULATIEMODEL_PROFIEL}::${diagramId}`;
     let overzicht = diagramMet(w.simulatieId);
     if (!overzicht) {
       const id = nieuwId();
-      st.addDiagram({ id, naam: st.elements[w.simulatieId]?.naam || w.toevoegen.find((e) => e.id === w.simulatieId)?.naam || "Simulatie" });
+      const naam = st.elements[w.simulatieId]?.naam || w.toevoegen.find((e) => e.id === w.simulatieId)?.naam || "Simulatie";
+      st.addDiagram({ id, naam });
+      const map = Object.values(boom().mappen || {}).find((m) => m.naam === naam && !m.ouderId)?.id || boom().nieuweMap(naam);
+      boom().plaatsDiagram(boomSleutel(id), map);
       st.addElementToDiagram(id, w.simulatieId, { x: 60, y: 40 });
       [...nieuw.values()].filter((e) => e.elementType === "subject").forEach((e, i) => st.addElementToDiagram(id, e.id, { x: 60 + i * 290, y: 200 }));
       overzicht = simulatiemodel().diagrams[id];
@@ -451,6 +583,8 @@ export function bewaarScenarioInProject(gegeven = null) {
     if (!eigen) {
       const id = nieuwId();
       st.addDiagram({ id, naam: scenario.naam });
+      const map = boom().plaatsing?.[boomSleutel(overzicht.id)] || null;
+      if (map) boom().plaatsDiagram(boomSleutel(id), map);
       st.addElementToDiagram(id, w.scenarioId, { x: 60, y: 40 });
       eigen = simulatiemodel().diagrams[id];
     }

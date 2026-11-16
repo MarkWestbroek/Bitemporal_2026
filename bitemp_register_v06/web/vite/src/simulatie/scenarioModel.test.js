@@ -117,6 +117,9 @@ test("verwijzingen: type, taak en startevent worden opgelost; de tekst blijft al
   assert.equal(terug.start.proces, "evenementaanvraag-behandelen");
   assert.deepEqual(Object.keys(terug.antwoorden).sort(), ["advies-politie", "taak7"]);
   assert.deepEqual(terug.vulwijze.perGat, { "aanvraag-beoordelen": "hand" });
+  // Met plekVan (het bpmn-id van de taak) komt de oorspronkelijke sleutel terug.
+  const leesbaar = scenarioUitModel(elements, w.scenarioId, { plekVan: (ref) => (ref?.elementId === "taak7" ? "advies-brandweer" : null) });
+  assert.deepEqual(Object.keys(leesbaar.antwoorden).sort(), ["advies-brandweer", "advies-politie"]);
 });
 
 test("ongeldige json op een instantie geeft een fout die het element noemt", () => {

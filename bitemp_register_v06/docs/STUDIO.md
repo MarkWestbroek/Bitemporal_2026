@@ -2368,7 +2368,9 @@ dag vervangen).
     scenario met dezelfde naam wordt bijgewerkt; de instantie, de verwachting en de stubs blijven dezelfde
     elementen, zodat hun plek op het diagram blijft. De eerste keer ontstaat de simulatie, met de processen
     van het project als subjecten. Het overzicht (simulatie, subjecten, scenario's) en elk scenario krijgen een
-    eigen diagram. Verwijzingen naar andere talen worden gelegd waar de naam gevonden wordt: het type van de
+    eigen diagram. Nieuwe diagrammen komen in de projectboom in een map met de naam van de simulatie; wat je
+    daarna verplaatst blijft staan. Een scenario-diagram heet zoals het scenario zelf, dus in de boom zie je die
+    naam twee keer: het diagram, en het scenario-element onder het overzicht. Verwijzingen naar andere talen worden gelegd waar de naam gevonden wordt: het type van de
     instantie, de taak van een stub, het startevent, het einde; anders blijft de tekst staan.
   - **Voorbeeld:** *GPK-voorbeeld laden* zet ook de vijf GPK-scenario’s als model in het project: één
     simulatie met vier subjecten, vijf scenario’s en een diagram per scenario.
@@ -2379,9 +2381,16 @@ dag vervangen).
     het `einde` of het `gat` waar hij stopt, `via` (een stap waar hij langs moet komen) en verwachte
     waarden (in de procesvariabelen, op het startobject, of één niveau diep in een variabele). De `reden` is
     uitleg en wordt niet getoetst (`toetsVerwachting`).
-  - **Nog niet:** de run beperken tot de subjecten van de simulatie; een scenario laten starten met een
-    getekend object uit het object-profiel; formele en materiële tijd in de serialisatie; de
-    Waterstede-scenario's naar het demo-project verhuizen.
+  - **Subjecten:** een scenario uit het project draait op de subjecten van zijn simulatie: alleen die
+    BPMN-diagrammen doen mee als proces. In het paneel Objecten staat "Draait op N processen (de subjecten
+    van …)". Een simulatie zonder subjecten, of een scenario uit de ingebakken lijst, draait op alle processen
+    van het project. Een call activity naar een proces dat geen subject is, loopt vast met de reden erbij.
+  - **Alle scenario's toetsen** (onder de keuzelijst): draait elk scenario van het project door tot een gat of
+    een einde en toetst de afloop aan zijn verwachting. Per scenario ✓, ✗ met wat afwijkt, of – (geen
+    verwachting); een klik kiest het scenario. De run in beeld verandert niet (`draaiTestset`).
+  - **Nog niet:** een scenario laten starten met een getekend object uit het object-profiel; formele en
+    materiële tijd in de serialisatie; de Waterstede-scenario's naar het demo-project verhuizen (wacht op een
+    release met dit profiel).
   - Tests: `simulatie/scenarioModel.test.js` (rondgang van alle acht ingebakken scenario's), e2e
     `65-studio-simulatiemodel`.
 - **GPK-voorbeeld** (13-11): vier processen, Aanvraag oppakken → signaal *zaak in de werkbak* → Kies zaak om te
@@ -2427,6 +2436,40 @@ dag vervangen).
 - **Log (16-11):** met de greep erboven groter of kleiner te slepen (dubbelklik: standaardhoogte; de hoogte
   blijft bewaard in de browser), en hij schuift mee zodat de nieuwste regel in beeld is. De meldingen van
   *Lijnen en objecten* staan boven de tekening; een proces met meldingen heeft een rood getal op zijn knop.
+- **Cm-vorm zonder e-dienstmodel (16-11):** is er geen e-dienstmodel, of kent het het type van een object niet,
+  dan komt de structuur rechtstreeks uit het canonieke model van het project (`maakCmBeeldDirect` in
+  `cmVorm.js`): elk veld staat in het object op zijn veldnaam (zoals de beslistabel het leest), een meervoudig
+  gegevenselement is een lijst onder zijn meervoud. De boom, de kaart en de toets op verplichte velden werken
+  dan ook; relaties staan er als onbekend bij. Onder het object staat waar de structuur vandaan komt.
+- **Objecten in de tekening (16-11):** een klik op een data-object met een object zet dat object als een klein
+  objectdiagram naast het data-object (rechts, en links als daar geen plaats is), zonder venster
+  (`simulatie/objectVorm.js`, `ZwevendObject`):
+  - **Het hoofdobject** heeft de vorm van "neem op in Entiteit" uit het cm, met waarden: de kop «entiteit» en
+    onderstreept `naam : Type` met de toestand en de versie, daaronder de enkelvoudige gegevenselementen genest
+    (de naam vet, de velden ingesprongen als `veld = waarde`). De gegevenselementen van de ouder en het subtype
+    staan samen in hetzelfde object. Zonder kardinaliteit, typen en "materieel". `:` wijst naar het type en
+    staat alleen in de kop; `=` geeft de waarde (UML).
+  - **Een meervoudig gegevenselement** is per voorkomen een los object «gegevenselement», met een compositielijn
+    naar het hoofdobject.
+  - **Een relatie** met eigen velden is per voorkomen een los object «relatie» (`partijrol = aanvrager`), met
+    een pijl naar haar doel; het doel is een eigen object «entiteit» eronder. Zonder eigen velden is het alleen
+    de pijl, met de naam van de relatie erbij.
+  - **Een referentielijst** binnen een gegevenselement is een waarde op het veld:
+    `type = GPK (Gehandicaptenparkeerkaart)`.
+  - **Lege velden** staan er nooit in; een verplicht veld zonder waarde blijft staan als fout. De kleur van een
+    entiteit komt uit het cm.
+  - **Bediening:** het hoofdobject slepen verplaatst het geheel, een los object alleen zichzelf; de lijnen
+    bewegen mee. Een tweede object komt erbij. Rechtsklik: *Toon in het objectenpaneel* (het object licht daar
+    op; daar staan de versies en de json), *Opnieuw opstellen*, *Sluiten*, *Alle objecten sluiten*. Het toont de
+    stand van nu; wat in de laatste stap veranderde is gemarkeerd. De objecten blijven hangen als het beeld naar
+    een ander proces gaat, en verdwijnen bij Stop.
+  - Zonder type in het cm: één object met de platte velden.
+- **Wat er niet is, staat er niet (16-11):** een gegevenselement of relatie zonder waarden die niet in het
+  objecttype zit, of een leeg alternatief binnen een doel (de GE's van een Partij), komt niet meer in de
+  cm-vorm en de kaart; het verschijnt zodra het er is. Met het vinkje **lege velden verbergen** boven in het
+  paneel Objecten verdwijnen in het paneel (cm-vorm en kaart) ook de lege optionele velden, en de
+  gegevenselementen waar dan niets van overblijft. In de kaart staat bij een veld nu `=` in plaats van `:`. Een verplicht veld zonder waarde blijft altijd staan. De
+  keuze wordt bewaard.
 - **Pijltjestoetsen (16-11):** → is een stap, ← een regel terug; niet in een invoerveld en niet tijdens het
   afspelen. Alleen als het paneel Simulatie in beeld is.
 - **Token**: een rand en een bolletje op het element waar het token staat (indigo = kan verder, oranje = wacht

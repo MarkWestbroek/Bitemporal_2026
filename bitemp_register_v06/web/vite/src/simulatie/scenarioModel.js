@@ -68,8 +68,10 @@ export function simulatiesIn(elements) {
  * @param {Object} [zoek]
  * @param {(ref: any) => string|null} [zoek.naamVan] - de naam van een element in een andere taal
  * @param {(ref: any) => string|null} [zoek.procesVan] - de proces-id van het proces met dit startevent
+ * @param {(ref: any) => string|null} [zoek.plekVan] - de leesbare sleutel van het element van een stub
+ *   (het bpmn-id), zodat het json-scenario na een rondgang dezelfde sleutels heeft; anders het element-id
  */
-export function scenarioUitModel(elements, scenarioId, { naamVan = () => null, procesVan = () => null } = {}) {
+export function scenarioUitModel(elements, scenarioId, { naamVan = () => null, procesVan = () => null, plekVan = () => null } = {}) {
   const el = elements?.[scenarioId];
   if (!el || el.elementType !== "scenario") throw new Error(`Scenario "${scenarioId}" staat niet in het simulatiemodel`);
   const d = el.data || {};
@@ -96,7 +98,7 @@ export function scenarioUitModel(elements, scenarioId, { naamVan = () => null, p
   const kinderen = doelen(elements, el.id, "heeft");
   for (const stub of kinderen.filter((k) => k.elementType === "stub")) {
     const sd = stub.data || {};
-    const plek = sd.bij?.elementId || sd.plek;
+    const plek = plekVan(sd.bij) || sd.bij?.elementId || sd.plek;
     if (!plek) continue;
     if (sd.wijze) {
       perGat[plek] = sd.wijze;
