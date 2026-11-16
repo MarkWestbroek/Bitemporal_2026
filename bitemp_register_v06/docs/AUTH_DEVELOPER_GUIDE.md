@@ -693,6 +693,17 @@ deny. De UI spiegelt de tabel in `web/vite/src/shared/rollen.js`.
 rij in `studio_project_toegang` zegt (gebruiker of `*`, lezen of schrijven). Zonder leesrecht
 geeft de API 404. **Uitnodigen**: `gebruikers/uitnodiging.go`, aan met `UITNODIGEN_ENABLED=true`.
 
+Rijen zetten kan op twee plekken in de Studio, allebei via `GET/PUT /api/studio/projecten/:id/toegang`
+(PUT vervangt alle rijen van dat project):
+
+- per project: *Van server ophalen → Toegang…* (`ProjectToegang.jsx`); de gebruikersnaam is vrij
+  te typen, met de bestaande gebruikers als keuzelijst voor een beheerder, en een waarschuwing bij een
+  onbekende naam;
+- per gebruiker: *Gebruikers → Projecten…* (16-11, `gebruikersActivity.jsx`): alle projecten met
+  geen toegang / lezen / schrijven. Opslaan schrijft alleen de gewijzigde projecten, en leest elk
+  project vlak daarvoor opnieuw, zodat de rijen van anderen blijven staan (`metRechtVoor` in
+  `projectSync.js`).
+
 Dezelfde hiërarchie staat in het Rego-beleid:
 
 ```rego

@@ -522,11 +522,22 @@ te wijzigen.
 > store: de inhoud is identiek, hoe je hem ook opent. Zie
 > `activities/modellerenActivity.jsx`.
 >
+> **Root in plaats van "Niet ingedeeld" (Mark, 16-11):** een diagram zonder map staat in de
+> **root** van de projectboom, onder de mappen; de kop "Niet ingedeeld" is weg. Het projectformaat
+> verandert niet: geen plaatsing = root. Een nieuw diagram van de lege startpagina of via de ＋ bij
+> "Mappen" (*Nieuw diagram (in de root)*) komt daar; slepen naar de "Mappen"-kop of het vlak onder de
+> mappen haalt een diagram uit zijn map. De vaste documenten van de **klassieke editors** (Canoniek
+> model IDE (v1), DMN-model met dmn-js, BPMN-proces met bpmn.io, Berichtdefinities; `klassiek: true`)
+> lopen niet mee in het project: ze staan alleen nog voor een **beheerder** (of met de login uit) in de
+> boom, op de startpagina en in *Nieuw diagram* (`studio/beheerZicht.js`). Het elementenvak onderaan
+> heet nu "<taal> — niet op een diagram" (de wezen) en verdwijnt zolang er geen wezen zijn.
+>
 > **Consolidatie fase 3 v0 (2026-07-12) — vrije mappen + bewerkbare
 > profielstijl:** de Modelleren-browser heeft nu een **vrije mappenboom**
 > (Sparx-principe: de indeling is van de gebruiker) — mappen maken/nesten,
 > hernoemen via dubbelklik, verwijderen (inhoud valt terug naar de ouder),
-> en diagrammen **slepen** naar mappen of terug naar "Niet ingedeeld";
+> en diagrammen **slepen** naar mappen of terug naar de root (tot 16-11 de kop "Niet ingedeeld"; zie
+> hieronder);
 > geplaatste diagrammen dragen hun profiel-icoon. Structuur persist in
 > localStorage. Daarnaast is de **visuele identiteit per profieltype
 > bewerkbaar**: Studio-instellingen → **Profieltypen** (kleurkiezer +

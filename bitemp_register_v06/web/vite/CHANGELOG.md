@@ -8,7 +8,19 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
 
+### Gewijzigd
+- **Projectboom: root in plaats van "Niet ingedeeld"** (Mark 16-11): een diagram zonder map staat in de root, onder
+  de mappen, met zijn taal-icoon. Een nieuw diagram van de startpagina of via de ＋ bij "Mappen" komt daar. De
+  klassieke editors (Canoniek model IDE (v1), DMN-model, BPMN-proces, Berichtdefinities) lopen niet mee in het
+  project en staan alleen nog voor een beheerder in de boom, op de startpagina en in *Nieuw diagram*
+  (`studio/beheerZicht.js`). Het elementenvak onderaan heet "<taal> — niet op een diagram" en verdwijnt zolang
+  er geen wezen zijn. De grote knop "＋ Nieuwe map" is weg; de ＋ bij "Mappen" doet hetzelfde.
+
 ### Toegevoegd
+- **Gebruikers → Projecten…** (Mark 16-11): achteraf een gebruiker aan Studio-projecten toewijzen, niet alleen bij
+  het uitnodigen. Per project geen toegang / lezen / schrijven, met de eigenaar en een open `*`-rij erbij; alleen
+  de gewijzigde projecten worden geschreven. In *Van server ophalen → Toegang…* kies je de gebruiker nu uit een
+  lijst (voor beheerders), met een waarschuwing bij een naam die niet bestaat.
 - **Rondleiding: vier stappen erbij** (Mark 16-11): *Projecten op de server* (Project → Van server ophalen,
   parkeren, Naar server sturen, Live synchroniseren), *De AI-assistent* (rechtsklik op een map; eigen API-sleutel of
   toegangscode), *Experimenteel: Toegangverlening en Simulatie* (en Labs) en *Iets melden* (Alt+M, F8, Mijn

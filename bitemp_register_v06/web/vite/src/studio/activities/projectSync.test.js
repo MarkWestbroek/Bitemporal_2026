@@ -5,6 +5,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import {
+  metRechtVoor,
   normaliseerProjectData,
   projectNaamUitBestandsnaam,
   bestandsstamVoor,
@@ -103,4 +104,12 @@ test("slaProjectOp stuurt de clientId mee (body + X-Omnium-Client); 409 'project
   } finally {
     globalThis.fetch = oudeFetch;
   }
+});
+
+test("metRechtVoor: zet, wijzigt en haalt het recht van één gebruiker; de rest blijft", () => {
+  const rijen = [{ subject: "*", recht: "lezen" }, { subject: "hugo", recht: "lezen" }];
+  assert.deepEqual(metRechtVoor(rijen, "hugo", "schrijven"), [{ subject: "*", recht: "lezen" }, { subject: "hugo", recht: "schrijven" }]);
+  assert.deepEqual(metRechtVoor(rijen, "anna", "lezen"), [...rijen, { subject: "anna", recht: "lezen" }]);
+  assert.deepEqual(metRechtVoor(rijen, "hugo", ""), [{ subject: "*", recht: "lezen" }]);
+  assert.deepEqual(metRechtVoor([], "hugo", ""), []);
 });

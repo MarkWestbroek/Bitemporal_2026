@@ -16,13 +16,16 @@
  *   - beëindigen:        DELETE /gebruikers/:id (afvoer; niets wordt hard verwijderd)
  *   - uitnodigen:        POST /api/gebruikers/uitnodigingen (plan 2026-10-12): rol + projecttoegang;
  *                        de genodigde kiest zelf gebruikersnaam en wachtwoord (UitnodigingPagina)
+ *   - projecten:         per gebruiker "Projecten…" (16-11): leest per project GET …/toegang en schrijft
+ *                        alleen de gewijzigde projecten terug met PUT …/toegang (vervangt de rijen;
+ *                        vlak vóór het schrijven opnieuw gelezen, zodat andere rijen blijven staan)
  */
 import React, { useCallback, useEffect, useState } from "react";
 import { IconGebruikers } from "../icons";
 import { apiBase } from "../studioUtils";
 import { vraagNaam, vraagBevestiging } from "../naamDialog.jsx";
 import { TOEKENBARE_ROLLEN as ROLLEN, ROL_UITLEG, isBeheerder } from "../../shared/rollen.js";
-import { lijstProjecten } from "./projectSync.js";
+import { lijstProjecten, haalToegangOp, zetToegang, metRechtVoor } from "./projectSync.js";
 import MijnTokens from "./MijnTokens.jsx";
 const MIN_LENGTE = 10; // gelijk aan gebruikers.MinWachtwoordLengte
 
@@ -160,6 +163,135 @@ function RolErbij({ onToevoegen, onAnnuleer }) {
       <button type="button" className="studio-btn studio-btn--primary" onClick={() => onToevoegen(rol, tot)}>Toevoegen</button>
       <button type="button" className="studio-btn" onClick={onAnnuleer}>×</button>
     </span>
+  );
+}
+
+/**
+ * Projecten van één gebruiker (Mark 16-11: achteraf een gebruiker aan een project toewijzen): per
+ * project geen toegang / lezen / schrijven. Eigenaar en beheerders mogen altijd alles; "iedereen die
+ * is ingelogd" (*) staat erbij als ondergrens. Opslaan schrijft alleen de projecten die veranderden.
+ */
+function GebruikerProjecten({ gebruiker, beheerder, onKlaar }) {
+  const naam = gebruiker.gebruikersnaam;
+  const [rijen, setRijen] = useState(null); // [{ id, naam, eigenaar, iedereen, recht, oorspronkelijk, leesbaar }]
+  const [fout, setFout] = useState("");
+  const [bezig, setBezig] = useState(false);
+  const [bewaard, setBewaard] = useState(false);
+
+  useEffect(() => {
+    let weg = false;
+    (async () => {
+      try {
+        const lijst = (await lijstProjecten()) || [];
+        const uit = await Promise.all(
+          lijst.map(async (p) => {
+            const d = await haalToegangOp(p.id).catch(() => null);
+            const eigen = (d?.toegang || []).find((x) => x.subject === naam);
+            const iedereen = (d?.toegang || []).find((x) => x.subject === "*");
+            return {
+              id: p.id,
+              naam: p.naam || p.id,
+              eigenaar: d?.eigenaar || p.eigenaar || "",
+              iedereen: iedereen?.recht || "",
+              recht: eigen?.recht || "",
+              oorspronkelijk: eigen?.recht || "",
+              leesbaar: !!d,
+            };
+          })
+        );
+        if (!weg) setRijen(uit.sort((a, b) => a.naam.localeCompare(b.naam, "nl")));
+      } catch (e) {
+        if (!weg) setFout(e?.message || String(e));
+      }
+    })();
+    return () => {
+      weg = true;
+    };
+  }, [naam]);
+
+  const gewijzigd = (rijen || []).filter((x) => x.recht !== x.oorspronkelijk);
+
+  async function opslaan() {
+    setFout("");
+    setBezig(true);
+    const mislukt = new Map();
+    for (const x of gewijzigd) {
+      try {
+        // Vlak voor het schrijven opnieuw lezen: PUT vervangt alle rijen van het project.
+        const d = await haalToegangOp(x.id);
+        await zetToegang(x.id, metRechtVoor(d?.toegang || [], naam, x.recht));
+      } catch (e) {
+        mislukt.set(x.id, `${x.naam}: ${e?.message || e}`);
+      }
+    }
+    setBezig(false);
+    if (mislukt.size) setFout([...mislukt.values()].join(" · "));
+    setRijen((rs) => rs.map((x) => (mislukt.has(x.id) ? x : { ...x, oorspronkelijk: x.recht })));
+    setBewaard(!mislukt.size);
+  }
+
+  return (
+    <div data-testid="gebruiker-projecten" style={{ ...kader, marginTop: 6, fontSize: 12, textAlign: "left" }}>
+      <div style={{ marginBottom: 6 }}>
+        Projecten van <strong>{naam}</strong>.{" "}
+        {beheerder ? (
+          <span style={gedempt}>Als beheerder mag {naam} al alles; een recht hier telt pas als die rol vervalt.</span>
+        ) : (
+          <span style={gedempt}>
+            Zonder recht ziet {naam} een project niet, tenzij het voor iedereen open staat of van {naam} zelf is. Schrijven vraagt ook minstens de rol modelleur.
+          </span>
+        )}
+      </div>
+      {rijen === null && !fout && <div style={gedempt}>Laden…</div>}
+      {rijen && rijen.length === 0 && <div style={gedempt}>Geen projecten op de server.</div>}
+      {rijen && rijen.length > 0 && (
+        <div style={{ display: "grid", gap: 2, maxHeight: 260, overflow: "auto" }}>
+          {rijen.map((x) => {
+            const vanHem = x.eigenaar === naam;
+            return (
+              <div key={x.id} style={{ display: "flex", gap: 8, alignItems: "center" }} data-project-id={x.id}>
+                {vanHem ? (
+                  <span style={{ width: 110, ...gedempt }}>eigenaar</span>
+                ) : (
+                  <select
+                    style={{ ...invoer, width: 110 }}
+                    aria-label={`Recht op ${x.naam}`}
+                    value={x.recht}
+                    disabled={!x.leesbaar}
+                    onChange={(e) => {
+                      setBewaard(false);
+                      setRijen(rijen.map((y) => (y.id === x.id ? { ...y, recht: e.target.value } : y)));
+                    }}
+                  >
+                    <option value="">geen toegang</option>
+                    <option value="lezen">lezen</option>
+                    <option value="schrijven">schrijven</option>
+                  </select>
+                )}
+                <span style={{ fontWeight: x.recht !== x.oorspronkelijk ? 600 : 400 }}>{x.naam}</span>
+                {x.eigenaar && !vanHem && <span style={gedempt}>· {x.eigenaar}</span>}
+                {x.iedereen && (
+                  <span style={gedempt} title="Rij * in de projecttoegang">
+                    · iedereen: {x.iedereen}
+                  </span>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+      {fout && <p role="alert" style={{ color: "#b91c1c", margin: "6px 0 0" }}>{fout}</p>}
+      <div style={{ display: "flex", gap: 6, marginTop: 8, alignItems: "center" }}>
+        <span style={{ flex: 1 }} />
+        {bewaard && <span role="status" style={{ color: "#15803d" }}>Opgeslagen</span>}
+        <button type="button" className="studio-btn studio-btn--primary" disabled={!gewijzigd.length || bezig} onClick={opslaan}>
+          {bezig ? "Bezig…" : gewijzigd.length ? `Opslaan (${gewijzigd.length})` : "Opslaan"}
+        </button>
+        <button type="button" className="studio-btn" onClick={onKlaar}>
+          Sluiten
+        </button>
+      </div>
+    </div>
   );
 }
 
@@ -319,6 +451,7 @@ function Main() {
   const [nieuw, setNieuw] = useState({ gebruikersnaam: "", weergavenaam: "", email: "", rol: "modelleur", tot: "" });
   const [eenmalig, setEenmalig] = useState(null); // { naam, wachtwoord }
   const [rolFormVoor, setRolFormVoor] = useState(null); // gebruiker-id
+  const [projectenVoor, setProjectenVoor] = useState(null); // gebruiker-id met open "Projecten…"
 
   const laad = useCallback(() => {
     api("/api/auth/me").then(setIk).catch(() => setIk(null));
@@ -456,7 +589,8 @@ function Main() {
               {lijst.map((g) => {
                 const zelf = isIk(g);
                 return (
-                  <tr key={g.id} style={{ borderBottom: "1px solid var(--s-border, #f1f5f9)", verticalAlign: "top", opacity: g.mag_inloggen ? 1 : 0.65 }}>
+                  <React.Fragment key={g.id}>
+                  <tr style={{ borderBottom: "1px solid var(--s-border, #f1f5f9)", verticalAlign: "top", opacity: g.mag_inloggen ? 1 : 0.65 }}>
                     <td style={{ padding: 6 }}>
                       <strong>{g.gebruikersnaam}</strong>{zelf && <span style={gedempt}> (jij)</span>}
                       {g.weergavenaam && <div>{g.weergavenaam}</div>}
@@ -488,6 +622,8 @@ function Main() {
                     <td style={{ padding: 6, whiteSpace: "nowrap" }}>{tijd(g.laatste_login_op)}</td>
                     <td style={{ padding: 6 }}>
                       <div style={{ display: "flex", flexWrap: "wrap", gap: 4, justifyContent: "flex-end" }}>
+                        <button type="button" className="studio-btn" aria-expanded={projectenVoor === g.id}
+                          onClick={() => setProjectenVoor(projectenVoor === g.id ? null : g.id)} title="Op welke Studio-projecten deze gebruiker mag lezen of schrijven">Projecten…</button>
                         <button type="button" className="studio-btn" onClick={() => resetWachtwoord(g)} title="Nieuw wachtwoord maken (het oude vervalt)">Nieuw wachtwoord</button>
                         {!zelf && (g.status === "geblokkeerd"
                           ? <button type="button" className="studio-btn" onClick={() => zetStatus(g, "actief")}>Deblokkeren</button>
@@ -496,6 +632,14 @@ function Main() {
                       </div>
                     </td>
                   </tr>
+                  {projectenVoor === g.id && (
+                    <tr>
+                      <td colSpan={5} style={{ padding: "0 6px 8px" }}>
+                        <GebruikerProjecten gebruiker={g} beheerder={g.rollen.some((r) => isBeheerder(r.rol))} onKlaar={() => setProjectenVoor(null)} />
+                      </td>
+                    </tr>
+                  )}
+                  </React.Fragment>
                 );
               })}
             </tbody>
@@ -514,7 +658,7 @@ function Sidebar() {
         {ROLLEN.map((r) => <li key={r}><strong>{r}</strong> {ROL_UITLEG[r]}</li>)}
       </ul>
       <p>De oude namen blijven werken: viewer = lezer, editor = bouwer, admin = beheerder.</p>
-      <p>Studio-projecten zijn dicht tenzij: een genodigde ziet alleen de projecten uit de uitnodiging (later uit te breiden via <em>Van server ophalen → Toegang…</em>).</p>
+      <p>Studio-projecten zijn dicht tenzij: een genodigde ziet alleen de projecten uit de uitnodiging (achteraf aan te passen met <em>Projecten…</em> bij de gebruiker, of per project via <em>Van server ophalen → Toegang…</em>).</p>
       <p>Een gebruiker is een bitemporele entiteit (domein <code>beheer</code>). Wachtwoorden staan daar bewust buiten en komen nooit in de geschiedenis.</p>
       <p>Zie <code>docs/AUTH_DEVELOPER_GUIDE.md</code> §11.</p>
     </div>

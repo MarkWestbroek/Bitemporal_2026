@@ -183,7 +183,8 @@
   color: var(--s-fg);
 }
 .studio-project__mapkop.is-dropdoel,
-.studio-project__kop.is-dropdoel { outline: 1.5px dashed var(--s-accent, #4f46e5); outline-offset: -1px; background: var(--s-hover); }
+.studio-project__kop.is-dropdoel,
+.studio-project__root.is-dropdoel { outline: 1.5px dashed var(--s-accent, #4f46e5); outline-offset: -1px; background: var(--s-hover); }
 .studio-project__mapkop { cursor: grab; }
 .studio-project__mapkop:active { cursor: grabbing; }
 .studio-project__mapkop.is-selectie { background: var(--s-hover); }
@@ -252,16 +253,8 @@
 .studio-project__map .studio-project__diagram { padding-left: 22px; }
 .studio-project__map .studio-project__leeg { padding-left: 22px; }
 .studio-project__kop--los { margin-top: 12px; border-top: 1px solid var(--s-border); padding-top: 8px; border-radius: 0; }
-.studio-project__grote-knop {
-  display: block; width: calc(100% - 12px); box-sizing: border-box;
-  margin: 2px 6px 8px;
-  padding: 5px 10px;
-  font: inherit; font-size: 12px;
-  color: var(--s-fg);
-  background: var(--s-panel); border: 1px dashed var(--s-border); border-radius: 6px;
-  cursor: pointer; text-align: center;
-}
-.studio-project__grote-knop:hover { background: var(--s-hover); border-style: solid; }
+/* Root van de projectboom (16-11): diagrammen zonder map, onder de mappen; ook sleepdoel. */
+.studio-project__root { min-height: 28px; padding-bottom: 8px; border-radius: 6px; }
 
 /* Elementen-boom van het actieve tab-profiel, onder de mappenboom. */
 .studio-project__splitter {
