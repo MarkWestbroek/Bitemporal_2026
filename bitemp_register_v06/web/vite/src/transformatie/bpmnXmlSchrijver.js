@@ -38,8 +38,18 @@
  * buiten het proces is (bv. "Klantportaal") valt met zijn inhoud weg, met een
  * info-melding; zie `deelnemersBuitenProces`. Lanes en message flows ook (info).
  *
- * Nog niet: data-objecten, notities, boundary events en de inhoud van
- * subprocessen. Die geven een melding `BPMN-SCHRIJVER` en blijven weg.
+ * Data (16-11, ontwerp Simulatie §11.8): een data-object wordt een `dataObject` met een
+ * `dataObjectReference`; met rol invoer/uitvoer een `dataInput`/`dataOutput` in de
+ * `ioSpecification` van het proces; een data store een `dataStore` (definitions) met een
+ * `dataStoreReference`. Het type wordt een `itemDefinition` (structureRef = de naam van het type,
+ * via `typeNaam`) waar `itemSubjectRef` naar wijst; de toestand een `dataState`. Een lijn
+ * data → taak is een `dataInputAssociation` (met een property `__targetRef_placeholder` als doel,
+ * zoals bpmn.io), taak → data een `dataOutputAssociation`; "lezen en schrijven" allebei. Een lijn
+ * naar iets anders dan een activiteit blijft weg (melding). Met een engine-regelset alleen als die
+ * `data: true` zet; anders is data notatie (info-melding), zodat een uitrol niet ongemerkt verandert.
+ *
+ * Nog niet: notities, boundary events en de inhoud van subprocessen. Die geven een melding
+ * `BPMN-SCHRIJVER` en blijven weg.
  *
  * Puur: geen DOM nodig, de uitvoer is tekst.
  */
@@ -73,7 +83,8 @@ const SOORT_DEFINITIE = {
   terminate: "terminateEventDefinition",
 };
 /** Standaardmaat in BPMNDI als het diagram er geen heeft (events en gateways hebben een vaste maat). */
-const STANDAARD_MAAT = { event: { width: 36, height: 36 }, gateway: { width: 50, height: 50 }, taak: { width: 100, height: 80 } };
+const STANDAARD_MAAT = { event: { width: 36, height: 36 }, gateway: { width: 50, height: 50 }, taak: { width: 100, height: 80 }, "data-object": { width: 36, height: 50 }, "data-store": { width: 50, height: 50 } };
+const DATA_TYPEN = new Set(["data-object", "data-store"]);
 
 const NS = {
   bpmn: "http://www.omg.org/spec/BPMN/20100524/MODEL",
@@ -229,9 +240,11 @@ const midden = (v) => ({ x: v.x + v.width / 2, y: v.y + v.height / 2 });
  * @param {Set<string>} [invoer.wekbareBerichten] - berichtnamen waar een lopend proces op wacht (vangend
  *   tussen-event in de e-dienst): een werpend event wekt dat proces (`berichten.wekken`) in plaats van
  *   er een te starten (`berichten.werpen`)
+ * @param {(ref: {profielId: string, elementId: string}) => string|null} [invoer.typeNaam] - de naam van het type
+ *   van een data-object (structureRef); standaard het elementId van de verwijzing
  * @returns {{xml: string, ids: Map<string,string>, diagnostics: any[]}}
  */
-export function schrijfBpmn({ model, diagramId, proces, targetNamespace = "http://bpmn.io/schema/bpmn", engine = null, beslissingen = {}, wekbareBerichten = new Set() }) {
+export function schrijfBpmn({ model, diagramId, proces, targetNamespace = "http://bpmn.io/schema/bpmn", engine = null, beslissingen = {}, wekbareBerichten = new Set(), typeNaam = (ref) => ref?.elementId || null }) {
   const diagnostics = [];
   const meld = (message, sourceId = null) => diagnostics.push({ severity: "warning", code: "BPMN-SCHRIJVER", message, sourceId, path: null });
   const diagram = diagramId ? model.diagrams?.[diagramId] : Object.values(model.diagrams || {})[0];
@@ -248,9 +261,22 @@ export function schrijfBpmn({ model, diagramId, proces, targetNamespace = "http:
 
   // ── Knopen en verbindingen op dit diagram ──
   const opDiagram = new Map();
+  /** Data-objecten en data stores op dit diagram (eigen BPMN-vorm, zie de kop). */
+  const dataOpDiagram = new Map();
   for (const n of diagram.nodes || []) {
     const el = model.elements?.[n.elementId];
     if (!el || buiten.has(el.id)) continue;
+    if (DATA_TYPEN.has(el.elementType)) {
+      // Met een engine-regelset alleen als die erom vraagt (`data: true`): Operaton maakt van een
+      // dataObject met een type procesvariabelen; dat is een keuze voor de uitrol, niet stilzwijgend.
+      if (engine && !engine.data) {
+        info(`${el.elementType} "${el.naam || el.id}" is notatie voor deze engine (de regelset schrijft geen data)`, el.id);
+        continue;
+      }
+      const maat = n.size || STANDAARD_MAAT[el.elementType];
+      dataOpDiagram.set(el.id, { el, vorm: { x: n.position.x, y: n.position.y, width: maat.width, height: maat.height } });
+      continue;
+    }
     const tag = tagVan(el);
     if (!tag) {
       if (el.id === procesPool) info(`Pool "${el.naam || el.id}" is het proces; de pool zelf is notatie`, el.id);
@@ -283,7 +309,55 @@ export function schrijfBpmn({ model, diagramId, proces, targetNamespace = "http:
     ids.set(el.id, id);
   };
   for (const { el } of opDiagram.values()) geefId(el);
+  for (const { el } of dataOpDiagram.values()) geefId(el);
   seq.forEach((e, i) => geefId({ ...e, naam: "" }, `flow-${i + 1}`));
+
+  // ── Data: typen, lijnen per activiteit ──
+  /** @type {Map<string, string>} typenaam → itemDefinition-id */
+  const items = new Map();
+  const itemVan = (el) => {
+    const ref = el.data?.type;
+    if (!ref?.elementId) return undefined;
+    const naam = typeNaam(ref) || ref.elementId;
+    if (!items.has(naam)) items.set(naam, `Item_${bpmnIdUit(naam) || items.size + 1}`);
+    return items.get(naam);
+  };
+  const ACTIVITEIT_TAGS = new Set([...TAAK_AARDEN, "subProcess"]);
+  /** Per activiteit de data-lijnen: in (bron = data), uit (doel = data). */
+  const dataLijnen = new Map();
+  /** @type {{id: string, data: string, taak: string, uit: boolean}[]} */
+  const associaties = [];
+  for (const e of Object.values(model.elements || {})) {
+    if (e.elementType !== "data-associatie") continue;
+    const vanData = dataOpDiagram.has(e.source);
+    const naarData = dataOpDiagram.has(e.target);
+    if (!vanData && !naarData) continue;
+    const taak = vanData ? e.target : e.source;
+    const data = vanData ? e.source : e.target;
+    if (!ACTIVITEIT_TAGS.has(opDiagram.get(taak)?.tag)) {
+      meld(`Data-lijn "${e.naam || e.id}" hoort aan een activiteit; geschreven wordt hij niet`, e.id);
+      continue;
+    }
+    const beide = e.data?.richting === "beide";
+    const basis = bpmnIdUit(e.data?.bpmnId) || `${ids.get(taak)}-${ids.get(data)}`;
+    const lijnen = dataLijnen.get(taak) || dataLijnen.set(taak, { in: [], uit: [] }).get(taak);
+    const nieuwId = (achter) => {
+      let id = `${basis}${achter}`;
+      for (let i = 2; gebruikt.has(id); i += 1) id = `${basis}${achter}-${i}`;
+      gebruikt.add(id);
+      return id;
+    };
+    if (vanData || beide) {
+      const id = nieuwId(vanData ? "-in" : "-in");
+      lijnen.in.push({ id, data: ids.get(data) });
+      associaties.push({ id, data, taak, uit: false });
+    }
+    if (naarData || beide) {
+      const id = nieuwId("-uit");
+      lijnen.uit.push({ id, data: ids.get(data) });
+      associaties.push({ id, data, taak, uit: true });
+    }
+  }
 
   const inkomend = new Map();
   const uitgaand = new Map();
@@ -342,6 +416,14 @@ export function schrijfBpmn({ model, diagramId, proces, targetNamespace = "http:
     const kinderen = [];
     for (const f of inkomend.get(el.id) || []) kinderen.push(`<bpmn:incoming>${f}</bpmn:incoming>`);
     for (const f of uitgaand.get(el.id) || []) kinderen.push(`<bpmn:outgoing>${f}</bpmn:outgoing>`);
+    // Data-lijnen (tActivity: property, dataInputAssociation, dataOutputAssociation vóór de lus).
+    const dl = dataLijnen.get(el.id);
+    if (dl) {
+      const plaats = `Property_${id}`;
+      if (dl.in.length) kinderen.push(`<bpmn:property id="${plaats}" name="__targetRef_placeholder" />`);
+      for (const x of dl.in) kinderen.push(`<bpmn:dataInputAssociation id="${x.id}"><bpmn:sourceRef>${x.data}</bpmn:sourceRef><bpmn:targetRef>${plaats}</bpmn:targetRef></bpmn:dataInputAssociation>`);
+      for (const x of dl.uit) kinderen.push(`<bpmn:dataOutputAssociation id="${x.id}"><bpmn:targetRef>${x.data}</bpmn:targetRef></bpmn:dataOutputAssociation>`);
+    }
     const definitie = SOORT_DEFINITIE[el.data?.soort];
     if (definitie && EVENT_TAG[el.elementType]) {
       const d = { id: `${id}-definitie`, messageRef: bericht ? berichten.get(bericht) : undefined };
@@ -417,6 +499,41 @@ export function schrijfBpmn({ model, diagramId, proces, targetNamespace = "http:
     for (const k of kinderen) r.push(`      ${k}`);
     r.push(`    </bpmn:${tag}>`);
   }
+  // ── Data in het proces ──
+  const io = { in: /** @type {string[]} */ ([]), uit: /** @type {string[]} */ ([]), inIds: /** @type {string[]} */ ([]), uitIds: /** @type {string[]} */ ([]) };
+  /** dataStore-definities (op definitions-niveau) */
+  const opslag = [];
+  for (const { el } of dataOpDiagram.values()) {
+    const id = ids.get(el.id);
+    const item = itemVan(el);
+    const toestand = String(el.data?.toestand || "").trim();
+    const staat = toestand ? `<bpmn:dataState id="${id}-toestand" name="${esc(toestand)}" />` : "";
+    const verzameling = el.data?.verzameling ? "true" : undefined;
+    const met = (tag, a) => (staat ? [`    <bpmn:${tag}${attrs(a)}>`, `      ${staat}`, `    </bpmn:${tag}>`] : [`    <bpmn:${tag}${attrs(a)} />`]);
+    if (el.elementType === "data-store") {
+      opslag.push(`  <bpmn:dataStore${attrs({ id: `DataStore_${id}`, name: el.naam || undefined, itemSubjectRef: item })} />`);
+      r.push(...met("dataStoreReference", { id, name: el.naam || undefined, dataStoreRef: `DataStore_${id}` }));
+    } else if (el.data?.rol === "invoer" || el.data?.rol === "uitvoer") {
+      const invoer = el.data.rol === "invoer";
+      const regels = met(invoer ? "dataInput" : "dataOutput", { id, name: el.naam || undefined, itemSubjectRef: item, isCollection: verzameling }).map((x) => `  ${x}`);
+      (invoer ? io.in : io.uit).push(...regels);
+      (invoer ? io.inIds : io.uitIds).push(id);
+    } else {
+      r.push(`    <bpmn:dataObject${attrs({ id: `DataObject_${id}`, itemSubjectRef: item, isCollection: verzameling })} />`);
+      r.push(...met("dataObjectReference", { id, name: el.naam || undefined, dataObjectRef: `DataObject_${id}` }));
+    }
+  }
+  if (io.inIds.length || io.uitIds.length) {
+    r.unshift(
+      `    <bpmn:ioSpecification id="${proces.id}-io">`,
+      ...io.in,
+      ...io.uit,
+      `      <bpmn:inputSet id="${proces.id}-invoer">${io.inIds.map((x) => `<bpmn:dataInputRefs>${x}</bpmn:dataInputRefs>`).join("")}</bpmn:inputSet>`,
+      `      <bpmn:outputSet id="${proces.id}-uitvoer">${io.uitIds.map((x) => `<bpmn:dataOutputRefs>${x}</bpmn:dataOutputRefs>`).join("")}</bpmn:outputSet>`,
+      `    </bpmn:ioSpecification>`,
+    );
+  }
+
   let xsi = false;
   for (const e of seq) {
     const a = { id: ids.get(e.id), name: e.naam || undefined, sourceRef: ids.get(e.source), targetRef: ids.get(e.target) };
@@ -442,6 +559,16 @@ export function schrijfBpmn({ model, diagramId, proces, targetNamespace = "http:
     const id = ids.get(el.id);
     di.push(`      <bpmndi:BPMNShape id="${id}_di" bpmnElement="${id}"><dc:Bounds${attrs({ x: vorm.x, y: vorm.y, width: vorm.width, height: vorm.height })} /></bpmndi:BPMNShape>`);
   }
+  for (const { el, vorm } of dataOpDiagram.values()) {
+    const id = ids.get(el.id);
+    di.push(`      <bpmndi:BPMNShape id="${id}_di" bpmnElement="${id}"><dc:Bounds${attrs({ x: vorm.x, y: vorm.y, width: vorm.width, height: vorm.height })} /></bpmndi:BPMNShape>`);
+  }
+  for (const a of associaties) {
+    const d = dataOpDiagram.get(a.data).vorm;
+    const t = opDiagram.get(a.taak).vorm;
+    const [van, naar] = a.uit ? [t, d] : [d, t];
+    di.push(`      <bpmndi:BPMNEdge id="${a.id}_di" bpmnElement="${a.id}"><di:waypoint x="${randpunt(van, midden(naar)).x}" y="${randpunt(van, midden(naar)).y}" /><di:waypoint x="${randpunt(naar, midden(van)).x}" y="${randpunt(naar, midden(van)).y}" /></bpmndi:BPMNEdge>`);
+  }
   for (const e of seq) {
     const id = ids.get(e.id);
     const bron = opDiagram.get(e.source).vorm;
@@ -462,7 +589,9 @@ export function schrijfBpmn({ model, diagramId, proces, targetNamespace = "http:
   const xml = [
     `<?xml version="1.0" encoding="UTF-8"?>`,
     `<bpmn:definitions${attrs({ ...ns, id: `Definitions_${proces.id}`, targetNamespace })}>`,
+    ...[...items].map(([naam, id]) => `  <bpmn:itemDefinition${attrs({ id, structureRef: naam })} />`),
     ...[...berichten].map(([naam, id]) => `  <bpmn:message${attrs({ id, name: naam })} />`),
+    ...opslag,
     `  <bpmn:process${attrs(procesAttr)}>`,
     ...r,
     `  </bpmn:process>`,

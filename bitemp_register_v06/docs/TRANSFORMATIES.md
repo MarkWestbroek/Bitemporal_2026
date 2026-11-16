@@ -1514,8 +1514,31 @@ Wat de schrijver en de regelset daarvoor doen:
 (niet JCS, afspraak FUNDAMENT). bronmodelHash = sha256 over JCS van het
 BPMN-model.
 
-Nog niet in de schrijver: pools/lanes, message flows, data-objecten, notities,
-boundary events en de inhoud van subprocessen (melding `BPMN-SCHRIJVER`).
+Nog niet in de schrijver: notities, boundary events en de inhoud van subprocessen
+(melding `BPMN-SCHRIJVER`). Pools, lanes en message flows zijn notatie (info).
+
+**Data-objecten (16-11, ontwerp Simulatie §11.8).** De schrijver schrijft data in de
+vorm die bpmn.io ook schrijft:
+
+| Omnium | BPMN 2.0 |
+|---|---|
+| data-object (intern) | `dataObject` + `dataObjectReference` |
+| data-object met rol invoer / uitvoer | `dataInput` / `dataOutput` in de `ioSpecification` van het proces (met `inputSet`/`outputSet`) |
+| data store | `dataStore` (definitions) + `dataStoreReference` |
+| type (`{profielId, elementId}`) | `itemDefinition` met `structureRef` = de naam van het type (`typeNaam`, standaard het elementId), via `itemSubjectRef` |
+| toestand | `dataState` |
+| lijn data → taak | `dataInputAssociation`, doel een property `__targetRef_placeholder` op de taak |
+| lijn taak → data | `dataOutputAssociation` |
+| lezen en schrijven | allebei |
+
+Met een **engine-regelset** alleen als die `data: true` zet; anders blijft data notatie
+(info-melding). Operaton maakt van een `dataObject` met een type procesvariabelen, en
+de GZAC-uitrol mag daar niet ongemerkt door veranderen. De **lezer** leest de invoer
+en uitvoer van het proces terug als data-object met rol, en `dataState` als toestand;
+het type komt terug als naam (`typeNaam` op de knoop). Die naam koppelt de toepasser
+nog niet aan een cm-element: dat vraagt de binding op uuid met een naamtoets, zoals
+bij de DMN-export, en is een vervolgstap. Tests: `bpmnXmlSchrijverData.test.js`
+(ook tegen het schema van bpmn-moddle, zonder waarschuwingen).
 
 ### 11.12 Ontvankelijkheid: beslistabel (DMN) in het oppakproces (2026-10-30)
 
