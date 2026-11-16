@@ -2117,3 +2117,18 @@ Open:
 - `zetVariabelen` en de berichtnaam naar CEL, met de aanroep van de GZAC-bean in de regelset (`bpmnGzacRegels.js`).
 - FEEL → CEL bij de DMN-import. (JUEL → CEL bij de BPMN-import en de knop Naar CEL: gedaan 13-11.)
 - Fase 3: ketens met een andere partij (kopie, Berichttype en Procescontract), de semi-permanente store.
+
+## 42. Referentielijst-instanties: richting van de items-relatie, binding en domein (2026-11-07)
+
+Bij het indelen in domeinen bleek `register` aan `np-loc` te hangen via `AdellijkeTitelsTitel`
+(CODEGEN §12). Oorzaak: de items-relatie is een kind van `Referentielijst` (sleutel
+`referentielijst_id + rel_id`) en krijgt diens domein, zodat de pijl omlaag wijst;
+`VoegOnderliggendGEToe` compenseert dat maar vuurt niet (de codegen leest `V3Relatie.Domein` niet).
+Daarnaast bestaat de referentielijst-instantie alleen op M1: geen systeemnaam op de tabel, geen
+seed, geen afgedwongen binding (D5/R4). **Besluit Mark 07-11:** richting omdraaien (item → lijst,
+REL in het domein van het item), instantie echt maken (seed via de registratieflow, systeemnaam ↔
+id, 422 bij verkeerde `referentielijst_id`, `domein` in V3), meerdere lijsten per item-type als
+meerdere RELs. Plan met zeven stappen:
+`plans/2026-11-07 Referentielijst-instanties — richting, binding en domein (plan).md`. Na de demo
+van 09-11, vóór de rebuild uit het Studio-project (stap 1 raakt de Studio).
+

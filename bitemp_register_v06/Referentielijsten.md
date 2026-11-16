@@ -638,6 +638,7 @@ Zie `docs/implementatieplan-referentielijsten.md` voor het gedetailleerde stappe
 2. **Cross-model referentielijsten**: nu buiten scope, maar structuur moet dit niet blokkeren. Referentielijsten en gegevenstypen zijn potentieel generiek over modellen heen. Toekomstige iteratie.
 3. **Bootstrap GE-data**: directe INSERT voor bootstrap bij eerste sync. ✅ Besloten.
 4. **Items-relatie FK constraint**: `referentielijst_id` is altijd het ID van de gebonden instantie. Nu via applicatielogica afgedwongen; later evt. DB CHECK constraint.
+5. **Richting, binding en domein (besluit Mark 07-11-2026)**: de items-relatie gaat van het item-type naar de lijst (`Land → Referentielijst`), komt daarmee in het domein van het item, en de instantie wordt een echt record (seed via de registratieflow, systeemnaam ↔ id, binding afgedwongen, `domein` op de instantie in V3). Meerdere lijsten per item-type (Landenlijst én EULidstaten) worden meerdere RELs op het item. Zie `docs/plans/2026-11-07 Referentielijst-instanties — richting, binding en domein (plan).md`; dat plan lost ook punt 4 op.
 
 
 # Nieuw plan 29 maart 2026!!
