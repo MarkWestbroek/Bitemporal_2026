@@ -12,7 +12,8 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 - **Rondleiding: vier stappen erbij** (Mark 16-11): *Projecten op de server* (Project → Van server ophalen,
   parkeren, Naar server sturen, Live synchroniseren), *De AI-assistent* (rechtsklik op een map; eigen API-sleutel of
   toegangscode), *Experimenteel: Toegangverlening en Simulatie* (en Labs) en *Iets melden* (Alt+M, F8, Mijn
-  meldingen). Wie de rondleiding al zag, vindt hem terug onder Help → Rondleiding.
+  meldingen). Wie de rondleiding al zag, vindt hem terug onder Help → Rondleiding. Daarna (16-11): de stappen wijzen op het
+  demo-project *Omnium demo — gemeente Waterstede* en op de Waterstede-scenario's in de simulatie.
 - **Simulatie: Waterstede-scenario's in de keuzelijst** (16-11, voor het demo-project): buurtfeest, jaarmarkt en
   festival, in een eigen groep naast de GPK-scenario's. Ze draaien op het BPMN en DMN van het project zelf en
   brengen geen GPK-beslistabel of -e-dienstmodel mee.
