@@ -55,7 +55,8 @@ export const TOUR_STAPPEN = [
       "Project → Van server ophalen… toont de projecten waar je bij mag, met eigenaar, versie en grootte. " +
       "Ophalen vervangt het project in deze browser: bewaar het huidige eerst via Nieuw project… (parkeren) " +
       "of Exporteer project…. Naar server sturen bewaart je werk daar; met Live synchroniseren zie je de " +
-      "wijzigingen van anderen meteen.",
+      "wijzigingen van anderen meteen. Om te proberen: haal Omnium demo — gemeente Waterstede op, een verzonnen " +
+      "evenementenvergunning in alle talen.",
   },
   {
     anker: "nieuw-diagram",
@@ -95,7 +96,8 @@ export const TOUR_STAPPEN = [
     tekst:
       "Twee activiteiten in aanbouw. Toegangverlening: schrijf toegangsbeleid in klare taal (Toegangsspraak), " +
       "als diagram en als ODRL. Simulatie: doorloop een BPMN-proces met zijn beslistabellen stap voor stap, " +
-      "met een object uit het model. Staan ze niet in de balk? Zet Labs aan onder Instellingen, of gebruik Ga naar.",
+      "met een object uit het model. Staan ze niet in de balk? Zet Labs aan onder Instellingen, of gebruik Ga naar. " +
+      "Kies in Simulatie onder Voorbeeldscenario kiezen… bijvoorbeeld het Waterstede-buurtfeest.",
   },
   {
     titel: "Zoek elke opdracht",
