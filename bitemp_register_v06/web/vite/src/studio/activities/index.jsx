@@ -42,6 +42,7 @@ import cmmnActivity from "./cmmnActivity";
 // EA-aanvulling (2026-10-09): de UML 2-/EA-diagramsoorten die de Sparx EA-import nog miste.
 import componentDeploymentActivity from "./componentDeploymentActivity";
 import objectActivity from "./objectActivity";
+import simulatiemodelActivity from "./simulatiemodelActivity";
 import requirementsActivity from "./requirementsActivity";
 import businessActivity from "./businessActivity";
 import xsdActivity from "./xsdActivity";
@@ -128,6 +129,7 @@ registreerActiviteiten([
   cmmnActivity, // "CMMN" — casusmodel; sentries op het rand-primitief (preview)
   componentDeploymentActivity, // "Component & deployment" — UML 2 component-/deploymentdiagrammen (preview, niet in de balk)
   objectActivity, // "Object" — instantiediagram: objecten met slots, links (preview, niet in de balk)
+  simulatiemodelActivity, // "Simulatiemodel" — simulatie, subjecten, scenario's, instanties, stubs (preview, niet in de balk)
   requirementsActivity, // "Requirements" — EA-stijl: requirement/feature/issue/change (preview, niet in de balk)
   businessActivity, // "Business (EP)" — Eriksson-Penker (preview, niet in de balk)
   xsdActivity, // "XML Schema" — XSD-stereotypen (preview, niet in de balk)

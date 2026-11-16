@@ -2739,13 +2739,16 @@
      "vast": true,
      "eigenschappen": [
       "soort",
-      "bericht"
+      "bericht",
+      "signaal",
+      "filter",
+      "eenPerZaak"
      ]
     },
     {
      "id": "taak",
      "label": "Task",
-     "omschrijving": "Eén stap werk in het proces; het taaktype tekent een icoontje linksboven.",
+     "omschrijving": "Eén stap werk in het proces; het taaktype tekent een icoontje linksboven. Met een aangeroepen proces is het een call activity (dikke rand, ⊞ onderaan).",
      "eigenschappen": [
       "taakSoort",
       "bpmnId",
@@ -2753,13 +2756,17 @@
       "lusVerzameling",
       "lusElement",
       "aangeroepenProces",
+      "aangeroepenIn",
+      "aangeroepenUit",
       "beslissing",
       "resultaat",
       "formulier",
+      "kandidaatgroep",
       "actie",
       "actieDoel",
       "actieToelichting",
-      "dossierstatus"
+      "dossierstatus",
+      "zetVariabelen"
      ]
     },
     {
@@ -2778,6 +2785,9 @@
      "vast": true,
      "eigenschappen": [
       "soort",
+      "bericht",
+      "signaal",
+      "filter",
       "onderbrekend"
      ]
     },
@@ -2789,7 +2799,9 @@
      "eigenschappen": [
       "soort",
       "richting",
-      "bericht"
+      "bericht",
+      "signaal",
+      "filter"
      ]
     },
     {
@@ -2828,14 +2840,21 @@
      "omschrijving": "Gegevens die het proces in- of uitgaan (koppel met een data-associatie). Verzameling = drie streepjes.",
      "vast": true,
      "eigenschappen": [
-      "verzameling"
+      "verzameling",
+      "type",
+      "rol",
+      "toestand"
      ]
     },
     {
      "id": "data-store",
      "label": "Data store",
      "omschrijving": "Register, database of archief dat het proces overleeft (cilinder).",
-     "vast": true
+     "vast": true,
+     "eigenschappen": [
+      "type",
+      "toestand"
+     ]
     },
     {
      "id": "pool",
@@ -2886,7 +2905,8 @@
      "vast": true,
      "eigenschappen": [
       "soort",
-      "bericht"
+      "bericht",
+      "signaal"
      ]
     },
     {
@@ -2993,7 +3013,8 @@
       }
      ],
      "eigenschappen": [
-      "stereotype"
+      "stereotype",
+      "richting"
      ]
     },
     {
@@ -3673,7 +3694,6 @@
       "materieel",
       "tijdprecisie",
       "typenaam",
-      "domein",
       "meervoud",
       "naamLabelHeen",
       "naamLabelTerug"
@@ -3773,7 +3793,6 @@
       "materieel",
       "tijdprecisie",
       "typenaam",
-      "domein",
       "meervoud",
       "relatieSubtype",
       "bronKardinaliteit",
@@ -3896,7 +3915,8 @@
     },
     {
      "id": "entiteit",
-     "erft": "representatie"
+     "erft": "representatie",
+     "aard": "gegevens"
     },
     {
      "id": "gegevenselement",
@@ -5637,7 +5657,8 @@
    ],
    "layoutTypen": [
     {
-     "id": "entiteit"
+     "id": "entiteit",
+     "aard": "gegevens"
     },
     {
      "id": "domein",
@@ -5686,10 +5707,27 @@
      "id": "formulier",
      "label": "Formulier",
      "eigenschappen": [
+      "code",
       "doeltype",
       "status",
       "isStandaard",
       "definitieVersie"
+     ],
+     "velden": [
+      {
+       "id": "velden",
+       "soort": "attribuut",
+       "fieldType": "veld"
+      }
+     ]
+    },
+    {
+     "id": "stap",
+     "label": "Stap",
+     "eigenschappen": [
+      "key",
+      "beschrijving",
+      "overig"
      ],
      "velden": [
       {
@@ -5754,7 +5792,8 @@
      "eigenschappen": [
       "conditieVeld",
       "conditieOp",
-      "conditieWaarde"
+      "conditieWaarde",
+      "conditieWaardeType"
      ],
      "velden": [
       {
@@ -5762,6 +5801,14 @@
        "soort": "attribuut",
        "fieldType": "veld"
       }
+     ]
+    },
+    {
+     "id": "invoegen",
+     "label": "Invoegen",
+     "eigenschappen": [
+      "formulier",
+      "overig"
      ]
     },
     {
@@ -5787,16 +5834,19 @@
       {
        "bron": [
         "formulier",
+        "stap",
         "groep",
         "rij",
         "lijst",
         "conditioneel"
        ],
        "doel": [
+        "stap",
         "groep",
         "rij",
         "lijst",
-        "conditioneel"
+        "conditioneel",
+        "invoegen"
        ]
       }
      ],
@@ -5815,10 +5865,12 @@
        ],
        "doel": [
         "formulier",
+        "stap",
         "groep",
         "rij",
         "lijst",
         "conditioneel",
+        "invoegen",
         "constraint",
         "diagramverwijzing"
        ]
@@ -5832,6 +5884,9 @@
      "id": "formulier"
     },
     {
+     "id": "stap"
+    },
+    {
      "id": "groep"
     },
     {
@@ -5842,6 +5897,9 @@
     },
     {
      "id": "conditioneel"
+    },
+    {
+     "id": "invoegen"
     },
     {
      "id": "notitie",
@@ -6532,10 +6590,12 @@
    ],
    "layoutTypen": [
     {
-     "id": "objecttype"
+     "id": "objecttype",
+     "aard": "gegevens"
     },
     {
-     "id": "gegevensgroeptype"
+     "id": "gegevensgroeptype",
+     "aard": "gegevens"
     },
     {
      "id": "enumeratie"
@@ -7086,11 +7146,13 @@
    ],
    "layoutTypen": [
     {
-     "id": "object"
+     "id": "object",
+     "aard": "instantie"
     },
     {
      "id": "multiobject",
-     "erft": "object"
+     "erft": "object",
+     "aard": "instantie"
     },
     {
      "id": "package",
@@ -8001,6 +8063,282 @@
      "id": "notitielijn",
      "isConnector": true,
      "aard": "annotatie"
+    },
+    {
+     "id": "diagramverwijzing",
+     "minBreedte": 120,
+     "minHoogte": 44
+    }
+   ]
+  },
+  {
+   "id": "simulatiemodel05",
+   "naam": "Simulatiemodel",
+   "diagramTypeId": "simulatie",
+   "elementen": [
+    {
+     "id": "simulatie",
+     "label": "Simulatie",
+     "omschrijving": "Wat er samen gesimuleerd wordt: een of meer subjecten (processen) met een of meer scenario's."
+    },
+    {
+     "id": "subject",
+     "label": "Simulatiesubject",
+     "omschrijving": "Een dynamisch modelonderdeel dat de simulatie naspeelt: nu een BPMN-diagram (een proces); later een activity- of sequencediagram of een use case-realisatie.",
+     "eigenschappen": [
+      "verwijstNaar"
+     ]
+    },
+    {
+     "id": "scenario",
+     "label": "Scenario",
+     "omschrijving": "Eén doorloop: waar hij start, met welke gegevens, hoe de gaten gevuld worden en wat de verwachte uitkomst is.",
+     "eigenschappen": [
+      "startBij",
+      "startProces",
+      "vulwijze",
+      "vulwijze_taak",
+      "vulwijze_dienst",
+      "vulwijze_expressie",
+      "vulwijze_partner",
+      "toevalsgetal"
+     ],
+     "velden": [
+      {
+       "id": "variabelen",
+       "soort": "attribuut",
+       "fieldType": "variabele"
+      }
+     ]
+    },
+    {
+     "id": "instantie",
+     "label": "Instantie",
+     "omschrijving": "De gegevens van één instantie van een type uit het model, als json: de startgegevens van een scenario of de waarde van een stub.",
+     "eigenschappen": [
+      "instantieVan",
+      "typeLabel",
+      "sleutel",
+      "json"
+     ]
+    },
+    {
+     "id": "stub",
+     "label": "Stub",
+     "omschrijving": "Het antwoord bij een gat: wat een taak, dienst of partner teruggeeft. Het volgnummer zegt bij welk bezoek van de taak het geldt.",
+     "eigenschappen": [
+      "bij",
+      "plek",
+      "bezoek",
+      "wijze",
+      "json"
+     ]
+    },
+    {
+     "id": "verwachting",
+     "label": "Verwachting",
+     "omschrijving": "Waar de run hoort uit te komen: een einde of een gat, met de waarden die dan moeten gelden. Maakt van het scenario een test.",
+     "eigenschappen": [
+      "soort",
+      "bij",
+      "plek",
+      "via",
+      "waarden",
+      "reden"
+     ]
+    },
+    {
+     "id": "package",
+     "label": "Package",
+     "omschrijving": "Groepeert elementen; erin slepen legt het lidmaatschap.",
+     "container": "bevat",
+     "uitwerking": true,
+     "leden": [
+      "simulatie",
+      "subject",
+      "scenario",
+      "instantie",
+      "stub",
+      "verwachting",
+      "package"
+     ]
+    },
+    {
+     "id": "boundary",
+     "label": "Kader",
+     "omschrijving": "Informeel kader: groepeert visueel, zonder betekenis in het model."
+    },
+    {
+     "id": "constraint",
+     "label": "Constraint",
+     "omschrijving": "Regel die het standaardarsenaal niet kan uitdrukken (UML Constraint), tussen {…}; koppel hem met annotatie-lijnen aan wat hij beperkt (bv. {xor} tussen twee relaties).",
+     "eigenschappen": [
+      "specificatie",
+      "taal"
+     ]
+    },
+    {
+     "id": "diagramverwijzing",
+     "label": "Diagramverwijzing",
+     "omschrijving": "Verwijst naar een ander diagram (ook in een andere taal); dubbelklik opent het."
+    }
+   ],
+   "connectoren": [
+    {
+     "id": "heeft",
+     "label": "Heeft",
+     "omschrijving": "De simulatie heeft subjecten en scenario's; een scenario heeft stubs en een verwachting.",
+     "regels": [
+      {
+       "bron": [
+        "simulatie",
+        "scenario"
+       ],
+       "doel": [
+        "subject",
+        "scenario",
+        "stub",
+        "verwachting"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "start-met",
+     "label": "Start met",
+     "omschrijving": "Het scenario start met deze instantie als startobject.",
+     "regels": [
+      {
+       "bron": [
+        "scenario"
+       ],
+       "doel": [
+        "instantie"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "waarde",
+     "label": "Waarde",
+     "omschrijving": "De stub geeft deze instantie terug (in plaats van de json op de stub zelf).",
+     "regels": [
+      {
+       "bron": [
+        "stub"
+       ],
+       "doel": [
+        "instantie"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "notitielijn",
+     "label": "Annotatie-lijn",
+     "omschrijving": "Van een notitie of constraint naar het element waar hij over gaat (UML annotatedElement / constrainedElement).",
+     "regels": [
+      {
+       "bron": [
+        "constraint"
+       ],
+       "doel": [
+        "simulatie",
+        "subject",
+        "scenario",
+        "instantie",
+        "stub",
+        "verwachting",
+        "package",
+        "boundary",
+        "constraint",
+        "diagramverwijzing"
+       ]
+      }
+     ]
+    }
+   ],
+   "layouts": [
+    {
+     "id": "leesvolgorde-tb",
+     "label": "Leesvolgorde, van boven naar beneden (standaard)"
+    },
+    {
+     "id": "leesvolgorde-lr",
+     "label": "Leesvolgorde, van links naar rechts"
+    },
+    {
+     "id": "leesvolgorde-bt",
+     "label": "Leesvolgorde, van onder naar boven"
+    },
+    {
+     "id": "leesvolgorde-rl",
+     "label": "Leesvolgorde, van rechts naar links"
+    }
+   ],
+   "layoutTypen": [
+    {
+     "id": "simulatie"
+    },
+    {
+     "id": "subject"
+    },
+    {
+     "id": "scenario"
+    },
+    {
+     "id": "instantie",
+     "aard": "instantie"
+    },
+    {
+     "id": "stub"
+    },
+    {
+     "id": "verwachting"
+    },
+    {
+     "id": "package",
+     "containerVoor": "bevat"
+    },
+    {
+     "id": "notitie",
+     "minBreedte": 100,
+     "minHoogte": 44
+    },
+    {
+     "id": "boundary",
+     "minBreedte": 140,
+     "minHoogte": 90
+    },
+    {
+     "id": "heeft",
+     "isConnector": true,
+     "aard": "associatie"
+    },
+    {
+     "id": "start-met",
+     "isConnector": true,
+     "aard": "afhankelijkheid"
+    },
+    {
+     "id": "waarde",
+     "isConnector": true,
+     "aard": "afhankelijkheid"
+    },
+    {
+     "id": "notitielijn",
+     "isConnector": true,
+     "aard": "annotatie"
+    },
+    {
+     "id": "bevat",
+     "isConnector": true,
+     "aard": "insluiting"
+    },
+    {
+     "id": "constraint",
+     "minBreedte": 100,
+     "minHoogte": 44
     },
     {
      "id": "diagramverwijzing",
@@ -9397,7 +9735,8 @@
    ],
    "layoutTypen": [
     {
-     "id": "klasse"
+     "id": "klasse",
+     "aard": "gegevens"
     },
     {
      "id": "interface"

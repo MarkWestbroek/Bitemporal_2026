@@ -52,6 +52,11 @@ import {
   kiesVoorbeeld,
   laadGpkProces,
   conditiesProjectNaarCel,
+  scenariosUitProject,
+  SIMULATIEMODEL_PROFIEL,
+  kiesProjectScenario,
+  bewaarScenarioInProject,
+  verwachtingVanRun,
 } from "../simulatieRun.js";
 import { juelCondities } from "../../diagramprofielen/bpmn/conditiesNaarCel.js";
 
@@ -337,6 +342,10 @@ function Sidebar() {
   const startbaar = useMemo(() => startbareProcessen({ elements, diagrams }), [elements, diagrams, S.versie]);
   const startProces = gekozenStartProces(startbaar);
   const project = useMemo(() => beslissingenUitProject(), [S.versie]);
+  // De scenario's die als model in het project staan (profiel Simulatiemodel, 16-11); levend.
+  const smStore = getProfieltype(SIMULATIEMODEL_PROFIEL)?.useStore;
+  const smElements = smStore ? smStore((s) => s.elements) : null;
+  const uitProject = useMemo(() => scenariosUitProject(), [smElements, S.versie]);
   const loopt = !!S.sim;
   const heeftProces = startbaar.length > 0;
   const nJuel = useMemo(() => juelCondities(elements), [elements]);
@@ -392,8 +401,17 @@ function Sidebar() {
         </select>
 
         <p style={{ ...kop, marginTop: 12 }}>Scenario</p>
-        <select style={{ ...veldstijl, marginBottom: 4 }} value="" onChange={(e) => kiesVoorbeeld(Number(e.target.value))} data-testid="sim-voorbeeld">
-          <option value="">Voorbeeldscenario kiezen…</option>
+        <select style={{ ...veldstijl, marginBottom: 4 }} value="" onChange={(e) => (e.target.value.startsWith("p:") ? kiesProjectScenario(e.target.value.slice(2)) : kiesVoorbeeld(Number(e.target.value)))} data-testid="sim-voorbeeld">
+          <option value="">Scenario kiezen…</option>
+          {uitProject.length > 0 && (
+            <optgroup label="Uit het project">
+              {uitProject.map((v) => (
+                <option key={v.id} value={`p:${v.id}`} title={v.beschrijving}>
+                  {v.naam}
+                </option>
+              ))}
+            </optgroup>
+          )}
           {VOORBEELDSETS.map((set) => (
             <optgroup key={set.id} label={set.label}>
               {VOORBEELDEN.filter((v) => v.set === set.id).map((v) => (
@@ -418,6 +436,17 @@ function Sidebar() {
           </div>
         ))}
         <textarea style={{ ...veldstijl, ...mono, height: 260, resize: "vertical" }} value={scenarioTekst()} onChange={(e) => zet({ scenarioTekst: e.target.value })} spellCheck={false} data-testid="sim-scenario" />
+        <button
+          style={{ ...knop, marginTop: 4 }}
+          onClick={() => {
+            const uit = bewaarScenarioInProject();
+            if (uit) toonMelding({ titel: "Scenario bewaard", tekst: `"${uit.naam}" staat ${uit.nieuw ? "nu" : "bijgewerkt"} in het project, als model in het profiel Simulatiemodel (Modelleren). Het gaat mee met bewaren en synchroniseren van het project.` });
+          }}
+          data-testid="sim-bewaar-scenario"
+          title="Bewaart dit scenario in het project, als model in het profiel Simulatiemodel: het scenario, de startgegevens (instantie), de stubs en de verwachting. Een scenario met dezelfde naam wordt bijgewerkt."
+        >
+          Bewaar in het project
+        </button>
         <div style={{ ...gedempt, marginTop: 2 }}>
           Vulwijze: <code>hand</code>, <code>willekeurig</code> of <code>fixture</code>; per run (<code>standaard</code>), per soort gat (<code>perSoort</code>) of per gat (<code>perGat</code>).
         </div>
@@ -486,6 +515,8 @@ function Main() {
   const metInstantie = new Set(sim ? Object.values(sim.toestand().objecten).filter((o) => o.type === PROCESINSTANTIE).map((o) => o.data.proces) : []);
   const metToken = new Set(sim ? Object.values(sim.toestand().tokens).map((k) => sim.processen.find((p) => p.elementen.has(k.plek))?.id) : []);
   const openGat = stand.soort === "gat" ? stand.gaten[0] : null;
+  // Het scenario als test (16-11): klopt de afloop met `verwacht`? Pas als de run stilstaat.
+  const verwachting = useMemo(() => verwachtingVanRun(), [S.versie]);
   // Data-objecten met een type: welk object van de run erbij hoort (§11.8 stap 3).
   const bijDataObjecten = useMemo(
     () =>
@@ -625,6 +656,13 @@ function Main() {
             {standTekst(stand)}
           </span>
         </div>
+        {verwachting && (
+          <div style={{ marginTop: 6, color: verwachting.klopt ? "#16a34a" : TOKEN_KLEUR.vast }} data-testid="sim-verwachting" data-klopt={String(verwachting.klopt)}>
+            {verwachting.klopt ? "✓ De afloop klopt met de verwachting van het scenario" : "! De afloop wijkt af van de verwachting van het scenario"}
+            {": "}
+            {verwachting.punten.map((p) => (p.klopt ? `${p.wat} = ${typeof p.verwacht === "string" ? p.verwacht : JSON.stringify(p.verwacht)}` : `${p.wat}: verwacht ${JSON.stringify(p.verwacht)}, gevonden ${JSON.stringify(p.gevonden)}`)).join("; ")}
+          </div>
+        )}
         {S.fout && <div style={{ color: TOKEN_KLEUR.vast, marginTop: 6 }}>{S.fout}</div>}
         {openGat && <GatFormulier gat={openGat} zaadje={zaadje} onVul={(w) => (sim.vul(openGat.id, w), zet())} />}
       </div>

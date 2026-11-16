@@ -2342,6 +2342,37 @@ dag vervangen).
   jaarmarkt, festival) horen bij het demo-project *Omnium demo — gemeente Waterstede* en draaien op het BPMN en
   DMN van het project zelf, zonder e-dienstmodel; kiezen zet het GPK-voorbeeld dus uit. Tijdelijk: zodra
   scenario's in het project kunnen staan, verhuizen ze daarheen (`VOORBEELDEN` in `simulatieRun.js`).
+- **Scenario's in het project: het profiel Simulatiemodel** (16-11, ontwerp §12). Een simulatie is een model
+  (M1) in de modeltaal `simulatie` (M2, `diagramprofielen/simulatie/`, in het project profiel
+  `simulatiemodel05`). Het staat in het project, gaat mee in bewaren en synchroniseren, en is te tekenen.
+  - **Elementtypen:** *Simulatie* heeft *Simulatiesubjecten* (elk wijst naar een dynamisch modelonderdeel: nu
+    een BPMN-diagram, later een activity- of sequencediagram of een use case-realisatie) en *Scenario's*. Een
+    scenario *start met* een *Instantie* (de startgegevens), en heeft *Stubs* (het antwoord bij een gat; het
+    volgnummer zegt bij welk bezoek van de taak) en een *Verwachting* (waar de run moet uitkomen).
+  - **Instantie:** de gegevens van één instantie van een type uit het model, als json (M0, beschreven in een
+    M1-model). Het elementtype heeft de M3-aard `instantie`; *instantie van* wijst naar een element met de
+    aard `gegevens`. Het object uit het object-profiel heeft dezelfde aard (profiel Object 1.1.0). De aard
+    staat op het elementtype, niet op het profiel, en is één waarde (`AARD_ELEMENT` in `layoutStijl.js`).
+  - **Bewaar in het project** (onder het scenario): zet het scenario uit het tekstvak in het model. Een
+    scenario met dezelfde naam wordt bijgewerkt; de instantie, de verwachting en de stubs blijven dezelfde
+    elementen, zodat hun plek op het diagram blijft. De eerste keer ontstaat de simulatie, met de processen
+    van het project als subjecten. Het overzicht (simulatie, subjecten, scenario's) en elk scenario krijgen een
+    eigen diagram. Verwijzingen naar andere talen worden gelegd waar de naam gevonden wordt: het type van de
+    instantie, de taak van een stub, het startevent, het einde; anders blijft de tekst staan.
+  - **Voorbeeld:** *GPK-voorbeeld laden* zet ook de vijf GPK-scenario’s als model in het project: één
+    simulatie met vier subjecten, vijf scenario’s en een diagram per scenario.
+  - **Kiezen:** de keuzelijst toont de scenario's van het project in de groep *Uit het project*. De
+    interpreter krijgt hetzelfde json-scenario als altijd (`simulatie/scenarioModel.js`:
+    `scenarioUitModel`, `scenarioNaarModel`).
+  - **Het scenario als test:** staat de run stil, dan staat onder de stand of de afloop klopt met `verwacht`:
+    het `einde` of het `gat` waar hij stopt, `via` (een stap waar hij langs moet komen) en verwachte
+    waarden (in de procesvariabelen, op het startobject, of één niveau diep in een variabele). De `reden` is
+    uitleg en wordt niet getoetst (`toetsVerwachting`).
+  - **Nog niet:** de run beperken tot de subjecten van de simulatie; een scenario laten starten met een
+    getekend object uit het object-profiel; formele en materiële tijd in de serialisatie; de
+    Waterstede-scenario's naar het demo-project verhuizen.
+  - Tests: `simulatie/scenarioModel.test.js` (rondgang van alle acht ingebakken scenario's), e2e
+    `65-studio-simulatiemodel`.
 - **GPK-voorbeeld** (13-11): vier processen, Aanvraag oppakken → signaal *zaak in de werkbak* → Kies zaak om te
   behandelen (kandidaatgroep, claim via een onderbrekend boundary event) → signaal *medewerker aan zaak
   gekoppeld* → Zaak behandelen, met beoordelen als call activity. Een signaal staat in het log met wie het

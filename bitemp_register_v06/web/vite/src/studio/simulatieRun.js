@@ -26,6 +26,8 @@ import { getProfieltype, getProfieltypen } from "./profieltypeRegistry";
 import { conditiesNaarCel } from "../diagramprofielen/bpmn/conditiesNaarCel.js";
 import { exporteerV3 } from "../diagramprofielen/canoniek-uml/serialisatie.js";
 import { maakCmBeelden } from "../simulatie/cmVorm.js";
+import { scenarioUitModel, scenarioNaarModel, simulatiesIn, toetsVerwachting } from "../simulatie/scenarioModel.js";
+import { typeZoeker } from "../diagramprofielen/bpmn/bpmnXmlImport.js";
 
 /** Het profiel waar de processen in staan. */
 export const BPMN_PROFIEL = "bpmnMotor05";
@@ -338,7 +340,152 @@ export async function kiesVoorbeeld(nr) {
   zet({ scenarioTekst: tekst, startProces: null, gpk: { beslissingen: gpk.beslissingen, edienst: gpk.edienst } });
 }
 
-/** Zet de vier GPK-processen in het BPMN-profiel van het project, met beslistabel, e-dienstmodel en scenario 4. */
+// ── Scenario's in het project (profiel simulatie, 16-11, ontwerp §12) ──
+
+/** Het profiel waar simulaties en scenario's als model in staan. */
+export const SIMULATIEMODEL_PROFIEL = "simulatiemodel05";
+/** Loopt door over alle aanroepen: twee keer bewaren in dezelfde milliseconde geeft geen dubbele ids. */
+let smTeller = 0;
+const simulatiemodel = () => getProfieltype(SIMULATIEMODEL_PROFIEL)?.useStore?.getState?.() || null;
+
+/** De scenario's die in het project staan, met de simulatie waar ze bij horen. */
+export function scenariosUitProject() {
+  const st = simulatiemodel();
+  if (!st?.elements) return [];
+  const { simulaties, los } = simulatiesIn(st.elements);
+  return [
+    ...simulaties.flatMap((s) => s.scenarios.map((sc) => ({ id: sc.id, naam: sc.naam, beschrijving: sc.data?.beschrijving || "", simulatie: s.simulatie.naam }))),
+    ...los.map((sc) => ({ id: sc.id, naam: sc.naam, beschrijving: sc.data?.beschrijving || "", simulatie: "" })),
+  ];
+}
+
+const elementVan = (ref) => (ref?.profielId && ref?.elementId ? getProfieltype(ref.profielId)?.useStore?.getState?.().elements?.[ref.elementId] || null : null);
+
+/** Een scenario uit het project kiezen: het model wordt het json-scenario in het tekstvak. */
+export function kiesProjectScenario(id) {
+  probeer(() => {
+    const st = simulatiemodel();
+    if (!st) throw new Error("Het profiel Simulatiemodel is niet geladen.");
+    const scenario = scenarioUitModel(st.elements, id, {
+      naamVan: (ref) => elementVan(ref)?.naam || null,
+      procesVan: (ref) => (ref?.elementId ? startbareProcessen().find((p) => p.elementen.has(ref.elementId))?.id || null : null),
+    });
+    Object.assign(S, { scenarioTekst: JSON.stringify(scenario, null, 2), startProces: null });
+  });
+}
+
+/**
+ * Het scenario uit het tekstvak in het project bewaren, als model in het profiel Simulatiemodel:
+ * een nieuw scenario, of het bestaande met dezelfde naam bijgewerkt. Een nieuwe simulatie krijgt
+ * de processen van het project als subjecten. Nieuwe elementen komen op een diagram: de simulatie
+ * met haar subjecten en scenario's op het overzicht, elk scenario met zijn instantie, stubs en
+ * verwachting op een eigen diagram.
+ * @param {any} [gegeven] - een scenario in plaats van dat uit het tekstvak (het GPK-voorbeeld)
+ * @returns {{naam: string, nieuw: boolean}|null}
+ */
+export function bewaarScenarioInProject(gegeven = null) {
+  let uit = null;
+  probeer(() => {
+    const st = simulatiemodel();
+    if (!st) throw new Error("Het profiel Simulatiemodel is niet geladen.");
+    const scenario = gegeven || JSON.parse(scenarioTekst());
+    if (!String(scenario.naam || "").trim()) throw new Error("Geef het scenario eerst een naam.");
+    const startbaar = startbareProcessen();
+    const proces = gegeven ? null : gekozenStartProces(startbaar);
+    const bpmn = bpmnModel().elements;
+    const opNaam = (naam, typen) => {
+      const treffers = Object.values(bpmn).filter((e) => e.naam === naam && (!typen || typen.includes(e.elementType)));
+      return treffers.length === 1 ? { profielId: BPMN_PROFIEL, elementId: treffers[0].id } : null;
+    };
+    const zoekType = typeZoeker(
+      getProfieltypen()
+        .filter((p) => p?.useStore?.getState)
+        .map((p) => ({ id: p.id, elements: p.useStore.getState().elements || {}, elementTypes: p.descriptor?.elementTypes || [] })),
+    );
+    const nieuwId = () => `sm_${Date.now()}_${++smTeller}`;
+    const w = scenarioNaarModel(
+      { ...scenario, start: { ...scenario.start, proces: scenario.start?.proces || proces || undefined } },
+      {
+        elements: st.elements,
+        nieuwId,
+        subjecten: leesProcessen({ model: bpmnModel() }, edienstNu()).processen.map((p) => ({ naam: p.naam, ref: { profielId: BPMN_PROFIEL, diagramId: p.diagramId } })),
+        zoek: {
+          type: (naam) => zoekType(naam).ref || null,
+          plek: (sleutel) => {
+            const el = Object.values(bpmn).find((e) => e.data?.bpmnId === sleutel) || bpmn[sleutel] || (opNaam(sleutel) && bpmn[opNaam(sleutel).elementId]);
+            return el ? { ref: { profielId: BPMN_PROFIEL, elementId: el.id }, naam: el.naam || sleutel } : null;
+          },
+          start: (procesId) => {
+            const p = startbaar.find((x) => x.id === procesId || x.naam === procesId);
+            return p?.start ? { profielId: BPMN_PROFIEL, elementId: p.start.id } : null;
+          },
+          einde: (naam) => opNaam(naam, ["eind-event", "taak"]),
+        },
+      },
+    );
+
+    // Het model bijwerken.
+    const voor = st.actiefDiagramId;
+    for (const id of w.verwijderen) st.deleteElement(id);
+    for (const e of w.toevoegen) st.addElement(e);
+    for (const [id, patch] of Object.entries(w.bijwerken)) st.updateElement(id, patch);
+
+    // De nieuwe elementen op een diagram zetten.
+    const nieuw = new Map(w.toevoegen.filter((e) => !e.source).map((e) => [e.id, e]));
+    const diagrammen = () => Object.values(simulatiemodel().diagrams || {});
+    const diagramMet = (elementId, behalve = null) => diagrammen().find((d) => d.id !== behalve && (d.nodes || []).some((k) => k.elementId === elementId)) || null;
+    const onder = (diagram) => Math.max(0, ...(diagram?.nodes || []).map((k) => (k.position?.y || 0) + 140));
+    let overzicht = diagramMet(w.simulatieId);
+    if (!overzicht) {
+      const id = nieuwId();
+      st.addDiagram({ id, naam: st.elements[w.simulatieId]?.naam || w.toevoegen.find((e) => e.id === w.simulatieId)?.naam || "Simulatie" });
+      st.addElementToDiagram(id, w.simulatieId, { x: 60, y: 40 });
+      [...nieuw.values()].filter((e) => e.elementType === "subject").forEach((e, i) => st.addElementToDiagram(id, e.id, { x: 60 + i * 290, y: 200 }));
+      overzicht = simulatiemodel().diagrams[id];
+    }
+    if (w.nieuw.scenario) {
+      const aantal = (overzicht.nodes || []).filter((k) => simulatiemodel().elements[k.elementId]?.elementType === "scenario").length;
+      st.addElementToDiagram(overzicht.id, w.scenarioId, { x: 60 + aantal * 290, y: 380 });
+    }
+    let eigen = diagramMet(w.scenarioId, overzicht.id);
+    if (!eigen) {
+      const id = nieuwId();
+      st.addDiagram({ id, naam: scenario.naam });
+      st.addElementToDiagram(id, w.scenarioId, { x: 60, y: 40 });
+      eigen = simulatiemodel().diagrams[id];
+    }
+    const y0 = Math.max(240, onder(eigen));
+    w.kinderen.filter((id) => nieuw.has(id)).forEach((id, i) => st.addElementToDiagram(eigen.id, id, { x: 60 + (i % 4) * 290, y: y0 + Math.floor(i / 4) * 190 }));
+    if (voor && simulatiemodel().diagrams[voor]) st.setActiefDiagram(voor);
+    uit = { naam: scenario.naam, nieuw: w.nieuw.scenario };
+  });
+  return uit;
+}
+
+/**
+ * Klopt de afloop van de run met de verwachting van het scenario (`verwacht`)? Null zolang de
+ * run loopt of als het scenario geen verwachting heeft.
+ */
+export function verwachtingVanRun() {
+  if (!S.sim) return null;
+  const stand = S.sim.stand();
+  if (stand.soort === "loopt" || stand.soort === "niet-gestart") return null;
+  let scenario;
+  try {
+    scenario = JSON.parse(scenarioTekst());
+  } catch {
+    return null;
+  }
+  const t = S.sim.toestand();
+  return toetsVerwachting(scenario.verwacht, { stand, variabelen: t.variabelen, object: t.objecten[scenario.start?.id || "startobject"]?.data || {}, log: S.sim.log });
+}
+
+/**
+ * Zet de vier GPK-processen in het BPMN-profiel van het project, met beslistabel, e-dienstmodel en
+ * scenario 4. De vijf GPK-scenario's komen ook als model in het project (profiel Simulatiemodel,
+ * 16-11): een voorbeeld van een simulatie met subjecten, scenario's, instanties, stubs en
+ * verwachtingen. Bestaan ze al, dan worden ze bijgewerkt.
+ */
 export async function laadGpkProces() {
   const gpk = await laadGpk();
   if (klok) clearInterval(klok);
@@ -349,4 +496,5 @@ export async function laadGpkProces() {
   st.laadModel({ diagramTypeId: st.diagramTypeId, elements: gpk.proces.model.elements, diagrams: gpk.proces.model.diagrams, actiefDiagramId: eerste?.id });
   const leeg = !S.scenarioTekst || S.scenarioTekst.includes(`"naam": "${LEEG_SCENARIO.naam}"`);
   zet({ sim: null, m1: null, fout: null, startProces: null, toonProces: null, gpk: { beslissingen: gpk.beslissingen, edienst: gpk.edienst }, ...(leeg ? { scenarioTekst: JSON.stringify(await laadScenario(4), null, 2) } : {}) });
+  if (simulatiemodel()) for (const v of VOORBEELDEN.filter((x) => x.set === "gpk")) bewaarScenarioInProject(v.scenario);
 }

@@ -1087,6 +1087,71 @@ objectdiagram (§11.2); een run als sequence diagram en daarna naspelen en
 vergelijken (§11.3). Ernaast, via TRANSFORMATIES: de export van signaalnaam, filter
 en kandidaatgroep.
 
+## 12. Een simulatie als model: het M2 `simulatie` (Mark 16-11, stap 1 en 2 gebouwd)
+
+**Aanleiding.** Een scenario stond alleen in het tekstvak van de tab of was ingebakken (GPK, Waterstede).
+Mark: maak er een model van, en verhef het tot profiel; dan past het gratis in het project en is het te
+tekenen. De abstractie die daarbij hoort: een *simuleerbaar dynamisch modelonderdeel*. Nu is dat alleen een
+BPMN-proces, maar activity- en sequencediagrammen komen erbij.
+
+### 12.1 Het M2
+
+| Element | Eigenschappen | Verwijst naar |
+|---|---|---|
+| **Simulatie** | naam | *heeft* 1..* subjecten en 1..* scenario's |
+| **Simulatiesubject** | — | een project-element: nu een BPMN-diagram (`verwijstNaar`); later een activity- of sequencediagram, een use case-realisatie |
+| **Scenario** | beschrijving, vulwijze (standaard en per soort gat), toevalsgetal, startvariabelen | *start bij* een startevent (aard `begin`); *start met* een Instantie |
+| **Instantie** | json, sleutel | *instantie van* een element met aard `gegevens` |
+| **Stub** | volgnummer (bezoek), vulwijze, json | *bij* een taak of gateway; *waarde* → een Instantie (in plaats van de eigen json) |
+| **Verwachting** | einde of gat, via, verwachte waarden, reden | het element waar de run stopt |
+
+Begrippen:
+
+- **Vulwijze:** hoe een gat gevuld wordt: met de hand, willekeurig, of uit het scenario (de stubs). Een
+  standaard, per soort gat, en per gat (een stub met een eigen vulwijze en zonder waarde).
+- **Toevalsgetal** (in het json-scenario `zaadje`): het startgetal van de toevalsgenerator, zodat
+  "willekeurig" herhaalbaar is. Het zijn niet de startgegevens.
+- **Volgnummer:** een taak kan in één run vaker langskomen; de eerste stub geldt voor het eerste bezoek.
+- **Reden:** uitleg bij de verwachting, niet getoetst.
+
+**Niveaus.** Het profiel is M2. Een simulatie met haar scenario's is een M1-model. Een Instantie beschrijft
+M0-gegevens (de serialisatie van een instantie van een M1-type) binnen dat M1-model, zoals het object in het
+object-profiel dat al deed. De run zelf (het log) is M0 van de simulatie en wordt niet bewaard.
+
+### 12.2 M3: de aard `instantie`
+
+`ElementType.aard` kende `gegevens` voor typen die data dragen (§11.8). Erbij komt `instantie`: het
+elementtype draagt de gegevens van één instantie van zo'n type. Twee typen hebben hem: de Instantie in dit
+profiel en het object in het object-profiel. De aard staat op het elementtype, niet op het profiel, en is één
+waarde; komt er een type dat beide is, dan wordt het een lijst.
+
+### 12.3 Serialisatie
+
+Nu de geneste json die de interpreter al las (de vorm die beslistabellen en formulieren lezen). Json blijft ook
+de terugval als instanties later getekend worden (object-profiel, in een map per scenario). Formele en
+materiële tijd blijven nu buiten beschouwing; het log van de simulatie heeft al de vorm van registratie plus
+wijziging, dus een formaat dicht bij de replay-bestanden sluit daar later op aan.
+
+### 12.4 Gebouwd (stap 1 en 2)
+
+- **Profiel** `diagramprofielen/simulatie/` (descriptor, vormen), activiteit `simulatiemodelActivity.jsx`
+  (profiel `simulatiemodel05`, verborgen preview), render-dienst en MCP (`profielen.json`) bijgewerkt.
+- **Omzetting** `simulatie/scenarioModel.js` (puur): `scenarioUitModel` (model → json-scenario),
+  `scenarioNaarModel` (json-scenario → wijziging op het model; een bestaand scenario met dezelfde naam wordt
+  bijgewerkt), `simulatiesIn`, `toetsVerwachting`. De interpreter is niet gewijzigd.
+- **Activiteit Simulatie:** *Bewaar in het project*, de groep *Uit het project* in de keuzelijst, en de toets
+  op de verwachting zodra de run stilstaat.
+
+### 12.5 Open
+
+1. De run beperken tot de subjecten van de simulatie (nu doen alle processen van het project mee).
+2. De koppeling taak → beslistabel van naam naar een verwijzing (uuid), zoals bij de DMN-export.
+3. Het scenario laten wijzen naar een getekend object (aard `instantie`) in een andere taal; instanties in een
+   map per scenario.
+4. Een subject dat geen diagram is (use case-realisatie), en een lezer per taal voor activity en sequence.
+5. Alle scenario's van een simulatie in één keer draaien als testset.
+6. De Waterstede-scenario's uit de ingebakken lijst naar het demo-project.
+
 ## Referenties
 
 - W.M.P. van der Aalst, workflow nets en soundness: de drie eisen achter §2.2.

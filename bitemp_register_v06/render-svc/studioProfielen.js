@@ -29,6 +29,7 @@ import { registreerOas31, OAS31_ID } from "../web/vite/src/diagramprofielen/oas3
 import { registreerObject, objectDiagramType } from "../web/vite/src/diagramprofielen/object/index.js";
 import { registreerPuurUml, PUUR_UML_ID } from "../web/vite/src/diagramprofielen/puur-uml/index.js";
 import { registreerRequirements, requirementsDiagramType } from "../web/vite/src/diagramprofielen/requirements/index.js";
+import { registreerSimulatie, SIMULATIE_ID } from "../web/vite/src/diagramprofielen/simulatie/index.js";
 import { registreerShacl, SHACL_ID } from "../web/vite/src/diagramprofielen/shacl/index.js";
 import { registreerSequence, SEQUENCE_ID } from "../web/vite/src/diagramprofielen/sequence/index.js";
 import { registreerStateMachine, STATEMACHINE_ID } from "../web/vite/src/diagramprofielen/statemachine/index.js";
@@ -60,6 +61,7 @@ const PROFIELEN = [
   ["requirements05", registreerRequirements, requirementsDiagramType.id],
   ["sequence05", registreerSequence, SEQUENCE_ID],
   ["shacl05", registreerShacl, SHACL_ID],
+  ["simulatiemodel05", registreerSimulatie, SIMULATIE_ID],
   ["statemachine05", registreerStateMachine, STATEMACHINE_ID],
   ["sysml05", registreerSysml, SYSML_ID],
   ["toegangsregels", registreerToegangsregelProfiel, TOEGANGSREGEL_ID],
