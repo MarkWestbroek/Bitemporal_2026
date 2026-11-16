@@ -86,3 +86,30 @@ test("met een engine-regelset zonder data: true blijft data notatie (info), de u
   assert.ok(diagnostics.some((d) => d.severity === "info" && /notatie voor deze engine/.test(d.message)));
   assert.match(schrijfBpmn({ model: vier.model, diagramId: diagramMet("Aanvraag oppakken"), proces: { id: "aanvraag-oppakken" }, engine: { taken: {}, data: true } }).xml, /<bpmn:dataInput id="aanvraag"/);
 });
+
+test("rondgang tot in het model: de import koppelt het type weer aan het cm-element op naam", async () => {
+  const { bpmnXmlNaarModel, typeZoeker } = await import("../diagramprofielen/bpmn/bpmnXmlImport.js");
+  const { xml } = schrijfBpmn({ model: vier.model, diagramId: diagramMet("Aanvraag oppakken"), proces: { id: "aanvraag-oppakken" } });
+  const cmTypen = [{ id: "entiteit", aard: "gegevens" }, { id: "generalisatie" }];
+  const zoek = typeZoeker([{ id: "diagram05", elements: { e1: { id: "e1", naam: "Aanvraag", elementType: "entiteit" } }, elementTypes: cmTypen }]);
+  const { core, diagnostics } = bpmnXmlNaarModel(xml, { DOMParser, zoekType: zoek });
+  const data = Object.values(core.elements).filter((e) => e.elementType === "data-object");
+  const aanvraag = data.find((e) => e.naam === "Aanvraag");
+  assert.deepEqual(aanvraag.data.type, { profielId: "diagram05", elementId: "e1" });
+  assert.equal(aanvraag.data.rol, "invoer");
+  assert.equal(aanvraag.data.toestand, "ingediend");
+  assert.ok(!data.some((e) => "typeNaam" in e.data), "de hulpwaarde blijft niet achter");
+  assert.equal(data.filter((e) => e.naam === "Zaak").length, 2);
+  assert.ok(!diagnostics.some((d) => d.code === "BPMN-DATATYPE"));
+
+  // Niet gevonden: info; twee keer dezelfde naam: waarschuwing, geen type.
+  const niets = bpmnXmlNaarModel(xml, { DOMParser, zoekType: typeZoeker([]) });
+  assert.ok(niets.diagnostics.some((d) => d.code === "BPMN-DATATYPE" && d.severity === "info" && /staat niet in het project/.test(d.message)));
+  const dubbel = typeZoeker([
+    { id: "a", elements: { x: { id: "x", naam: "aanvraag", elementType: "entiteit" } }, elementTypes: cmTypen },
+    { id: "b", elements: { y: { id: "y", naam: "Aanvraag", elementType: "entiteit" } }, elementTypes: cmTypen },
+  ]);
+  assert.deepEqual(dubbel("Aanvraag"), { treffers: 2 });
+  const tweemaal = bpmnXmlNaarModel(xml, { DOMParser, zoekType: dubbel });
+  assert.ok(tweemaal.diagnostics.some((d) => d.code === "BPMN-DATATYPE" && d.severity === "warning"));
+});

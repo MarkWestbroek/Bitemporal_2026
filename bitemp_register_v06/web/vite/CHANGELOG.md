@@ -42,6 +42,10 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 - **BPMN-XML: data-objecten** (16-11): de schrijver schrijft data-objecten, data stores, invoer/uitvoer van het
   proces (ioSpecification), type (itemDefinition), toestand (dataState) en de data-lijnen; de lezer leest rol en
   toestand terug. Met een engine-regelset alleen bij `data: true` (de GZAC-uitrol verandert niet).
+- **BPMN-import: het type terug** (16-11): de naam van het type uit de XML wordt weer gekoppeld aan het element in het
+  project (aard gegevens); niet gevonden of dubbel geeft een melding.
+- **Gerelateerde elementen: plaatsing in de vrije ruimte** (16-11): nieuwe elementen komen rechts van de start, per
+  niveau een kolom, naar beneden en niet over bestaande elementen; niet meer in een kring die onder de werkbalken viel.
 
 ## [studio/v0.44.0] — 2026-11-15
 

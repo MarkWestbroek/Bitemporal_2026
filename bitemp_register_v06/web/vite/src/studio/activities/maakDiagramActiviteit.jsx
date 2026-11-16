@@ -109,7 +109,7 @@ import RelatiesPaneel from "../../diagramcore/inspector/RelatiesPaneel.jsx";
 import GebruikPaneel from "../../diagramcore/inspector/GebruikPaneel.jsx";
 import { gebruikteIds } from "../../diagramcore/model/gebruik.js";
 import { relatiesVan, verborgenRelatiesVan } from "../../diagramcore/model/relaties.js";
-import { gerelateerdeElementen, ringPosities, kruisGraaf } from "../../diagramcore/model/gerelateerd.js";
+import { gerelateerdeElementen, vrijePosities, kruisGraaf } from "../../diagramcore/model/gerelateerd.js";
 import { wijstNaarOuder } from "../../diagramcore/types/layoutStijl.js";
 import { boomLijn, boomKinderen } from "../../diagramcore/model/lijnvorm.js";
 import { TypeIcoon } from "../../diagramcore/shapes/typeIconen.jsx";
@@ -3003,8 +3003,13 @@ export function maakDiagramActiviteit(opties) {
       if (!gekozen.length) return;
       const s = useStore.getState();
       const nodes = s.diagrams[dId]?.nodes || [];
-      const anker = nodes.find((n) => n.elementId === startIds[0])?.position || layoutApiRef.current?.viewportMidden?.() || { x: 200, y: 200 };
-      const posities = ringPosities(anker, gekozen);
+      // In de vrije ruimte rechts van het startelement, naar beneden (Mark 15-11: de kring zette
+      // elementen boven het startpunt, onder de werkbalken).
+      const maatVan = (n) => ({ width: n.size?.width || 160, height: n.size?.height || 80 });
+      const startNode = nodes.find((n) => n.elementId === startIds[0]);
+      const anker = startNode ? { ...startNode.position, width: maatVan(startNode).width } : layoutApiRef.current?.viewportMidden?.() || { x: 200, y: 200 };
+      const bezet = nodes.filter((n) => n.position).map((n) => ({ x: n.position.x, y: n.position.y, ...maatVan(n) }));
+      const posities = vrijePosities(anker, gekozen, bezet);
       const [eerste, ...rest] = gekozen;
       metHookInEenStap(
         () => { useStore.getState().addElementToDiagram(dId, eerste.id, posities[eerste.id]); naTerugzetten(dId, eerste.id); },

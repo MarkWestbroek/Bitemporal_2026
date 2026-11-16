@@ -33,6 +33,28 @@ function celMaat(type) {
 }
 
 /**
+ * Zoekt het type van een data-object op naam (16-11): het element met die naam in een taal die
+ * gegevens draagt (M3-aard "gegevens": cm-entiteit, UML-klasse, MIM-objecttype, ERD-entiteit).
+ * Hoofdletters tellen niet. Eén treffer = het type; meer = dubbelzinnig; geen = niet gevonden.
+ * @param {{id: string, elements: Record<string, any>, elementTypes: any[]}[]} profielen
+ * @returns {(naam: string) => {ref?: {profielId: string, elementId: string}, treffers: number}}
+ */
+export function typeZoeker(profielen) {
+  return (naam) => {
+    const n = String(naam || "").trim().toLowerCase();
+    if (!n) return { treffers: 0 };
+    const treffers = [];
+    for (const p of profielen || []) {
+      const gegevens = new Set((p.elementTypes || []).filter((t) => t.aard === "gegevens").map((t) => t.id));
+      for (const el of Object.values(p.elements || {})) {
+        if (gegevens.has(el?.elementType) && String(el.naam || "").toLowerCase() === n) treffers.push({ profielId: p.id, elementId: el.id });
+      }
+    }
+    return treffers.length === 1 ? { ref: treffers[0], treffers: 1 } : { treffers: treffers.length };
+  };
+}
+
+/**
  * Zet BPMN-XML om naar een core-model voor het BPMN-profiel. Puur.
  * @param {string} tekst
  * @param {Object} [opts]
@@ -41,8 +63,10 @@ function celMaat(type) {
  * @param {any[]} [opts.elementTypes]
  * @param {string} [opts.bestandsnaam]
  * @param {any} [opts.regelset]
+ * @param {ReturnType<typeof typeZoeker>} [opts.zoekType] - koppelt het type van een data-object (naam uit
+ *   de itemDefinition) weer aan een element in het project
  */
-export function bpmnXmlNaarModel(tekst, { DOMParser, bestaand = {}, elementTypes = [], bestandsnaam = "", regelset = BPMN_XML_NAAR_BPMN } = {}) {
+export function bpmnXmlNaarModel(tekst, { DOMParser, bestaand = {}, elementTypes = [], bestandsnaam = "", regelset = BPMN_XML_NAAR_BPMN, zoekType = null } = {}) {
   const graaf = leesBpmn(tekst, { DOMParser });
   const diagnostics = graaf.waarschuwingen.map((w) => ({ severity: "warning", code: "BPMN-ONDERSTEUNING", message: `${w.melding}${w.tekst ? `: ${w.tekst}` : ""}`, sourceId: null, path: null }));
   const plan = pasRegelsToe(graaf, regelset);
@@ -57,6 +81,24 @@ export function bpmnXmlNaarModel(tekst, { DOMParser, bestaand = {}, elementTypes
     resultaat.core.elements[id] = { ...el, data: { ...el.data, ...patch.data } };
   }
   for (const b of cel.blijft) diagnostics.push({ severity: "warning", code: "BPMN-CONDITIE-JUEL", message: `Conditie ${b.naam || b.id} blijft JUEL: ${b.fout}`, sourceId: b.id, path: null });
+  // Het type van data (itemSubjectRef → structureRef): de naam terug naar een element in het project.
+  for (const [id, el] of Object.entries(resultaat.core.elements)) {
+    if (!("typeNaam" in (el.data || {}))) continue;
+    const { typeNaam, ...data } = el.data;
+    if (typeNaam) {
+      const gevonden = zoekType ? zoekType(typeNaam) : { treffers: 0 };
+      if (gevonden.ref) data.type = gevonden.ref;
+      else
+        diagnostics.push({
+          severity: gevonden.treffers > 1 ? "warning" : "info",
+          code: "BPMN-DATATYPE",
+          message: gevonden.treffers > 1 ? `Type "${typeNaam}" van ${el.naam || id} staat ${gevonden.treffers} keer in het project; kies het in de inspector` : `Type "${typeNaam}" van ${el.naam || id} staat niet in het project; het data-object krijgt geen type`,
+          sourceId: id,
+          path: null,
+        });
+    }
+    resultaat.core.elements[id] = { ...el, data };
+  }
   return { core: resultaat.core, diagnostics, trace: plan.trace, stats: resultaat.stats };
 }
 
@@ -69,9 +111,9 @@ function samenvatting(stats) {
 }
 
 /**
- * @param {{getProfieltype: (id:string)=>any, getModellerenState: ()=>any, DOMParser?: any}} deps
+ * @param {{getProfieltype: (id:string)=>any, getProfieltypen?: ()=>any[], getModellerenState: ()=>any, DOMParser?: any}} deps
  */
-export function registreerBpmnXmlImport({ getProfieltype, getModellerenState, DOMParser = globalThis.DOMParser }) {
+export function registreerBpmnXmlImport({ getProfieltype, getProfieltypen = () => [], getModellerenState, DOMParser = globalThis.DOMParser }) {
   registreerTransformatie({
     id: "import-bpmn-xml",
     label: "BPMN 2.0 XML → BPMN-model",
@@ -101,6 +143,11 @@ export function registreerBpmnXmlImport({ getProfieltype, getModellerenState, DO
         bestaand: { elements: staat.elements, diagrams: staat.diagrams },
         elementTypes: profiel.descriptor?.elementTypes || [],
         bestandsnaam: bron.naam,
+        zoekType: typeZoeker(
+          getProfieltypen()
+            .filter((p) => p?.useStore?.getState)
+            .map((p) => ({ id: p.id, elements: p.useStore.getState().elements || {}, elementTypes: p.descriptor?.elementTypes || [] })),
+        ),
       });
       const diagramIds = Object.keys(resultaat.core.diagrams);
       if (!Object.keys(resultaat.core.elements).length) throw new Error("Geen BPMN-elementen gevonden in het bestand.");
