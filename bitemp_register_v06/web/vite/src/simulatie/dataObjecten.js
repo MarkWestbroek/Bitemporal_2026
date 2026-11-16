@@ -93,3 +93,25 @@ export function objectenBijDataObjecten({ bpmnElementen, elementenVan, toestand,
   }
   return uit;
 }
+
+/**
+ * Past het startobject van het scenario bij het invoer-data-object van het startproces (§11.8 stap 4,
+ * Mark 16-11)? Het invoer-data-object (rol "invoer", met een type) op het diagram van het proces zegt
+ * wat het proces verwacht; het scenario noemt het type van het startobject.
+ * @param {{ bpmnElementen: Record<string, any>, diagram: any, elementenVan: (profielId: string) => Record<string, any> | null, startType: string|null|undefined }} p
+ * @returns {{ dataObject: string, naam: string, typeNaam: string, past: boolean }[]} per invoer-data-object met een type
+ */
+export function toetsStartobject({ bpmnElementen, diagram, elementenVan, startType }) {
+  const uit = [];
+  for (const n of diagram?.nodes || []) {
+    const el = bpmnElementen?.[n.elementId];
+    if (el?.elementType !== "data-object" || el.data?.rol !== "invoer") continue;
+    const ref = el.data?.type;
+    if (!ref?.profielId || !ref?.elementId) continue;
+    const elementen = elementenVan(ref.profielId) || {};
+    if (!elementen[ref.elementId]) continue; // het type staat niet in dit project: niets te toetsen
+    const namen = typeNamen(ref.elementId, elementen);
+    uit.push({ dataObject: el.id, naam: el.naam || el.id, typeNaam: elementen[ref.elementId]?.naam || ref.elementId, past: !!startType && namen.has(String(startType).toLowerCase()) });
+  }
+  return uit;
+}

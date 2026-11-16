@@ -43,3 +43,16 @@ test("objectenBijDataObjecten: het object van het subtype hoort bij het data-obj
   assert.deepEqual(na3.d1.objecten[0], { id: "a1", type: "GehandicaptenparkeerkaartAanvraag", versie: 2, gewijzigd: true, toestand: "beoordeeld", klopt: false });
   assert.deepEqual(na3.d2.objecten.map((o) => [o.id, o.gewijzigd, o.klopt]), [["z1", false, null]], "procesinstanties tellen niet; geen modeltoestand = niets te toetsen");
 });
+
+test("toetsStartobject: het startobject past bij het invoer-data-object, ook als subtype", async () => {
+  const { toetsStartobject } = await import("./dataObjecten.js");
+  const bpmnElementen = {
+    in: { id: "in", naam: "Aanvraag", elementType: "data-object", data: { type: { profielId: "diagram05", elementId: "e_aanvraag" }, rol: "invoer" } },
+    uit: { id: "uit", naam: "Zaak", elementType: "data-object", data: { type: { profielId: "diagram05", elementId: "e_zaak" }, rol: "uitvoer" } },
+  };
+  const diagram = { nodes: [{ elementId: "in" }, { elementId: "uit" }] };
+  const elementenVan = () => cm;
+  assert.deepEqual(toetsStartobject({ bpmnElementen, diagram, elementenVan, startType: "GehandicaptenparkeerkaartAanvraag" }), [{ dataObject: "in", naam: "Aanvraag", typeNaam: "Aanvraag", past: true }]);
+  assert.equal(toetsStartobject({ bpmnElementen, diagram, elementenVan, startType: "Zaak" })[0].past, false);
+  assert.equal(toetsStartobject({ bpmnElementen, diagram, elementenVan, startType: null })[0].past, false);
+});

@@ -149,6 +149,13 @@ test("GPK: eigen activiteit, token op het diagram, gat met de hand, doorlopen to
   await expect(aanvraag.getByTestId("sim-object-versie")).toHaveText("v5");
   await page.getByTestId("sim-cm-json").first().click();
   await expect(page.getByTestId("sim-objecten")).toContainText('"beoordeling": "toegekend"');
+  // De kaart (Mark 15-11): de entiteit met de GE's erin en de waarden.
+  await page.getByTestId("sim-cm-kaart").first().click();
+  const kaart = page.getByTestId("sim-kaart").first();
+  await expect(kaart).toContainText("«entiteit»");
+  await expect(kaart.locator('[data-testid="sim-kaart-ge"][data-pad="Aanvraag.Aanvraagidentificatie"]')).toContainText("GPK-2026-0001");
+  await expect(kaart.getByTestId("sim-kaart-relatie").first()).toBeVisible();
+  await foto(page, "5d-kaart");
   await page.getByTestId("sim-cm-vorm").first().click();
   await foto(page, "5-klaar");
 
@@ -202,6 +209,9 @@ test("data-object met een type toont het object van de run: versie, geel bij een
   await naar(page, "Simulatie");
   await page.getByTestId("sim-laad-gpk").click();
   await expect(page.getByTestId("sim-scenario")).toHaveValue(/GPK 4: toegekend/);
+  // Het startobject past bij het invoer-data-object van Aanvraag oppakken (§11.8 stap 4).
+  await expect(page.getByTestId("sim-startobject-toets")).toHaveAttribute("data-past", "true");
+  await expect(page.getByTestId("sim-startobject-toets")).toContainText("is een Aanvraag");
   // Het data-object "Aanvraag [ingediend]" boven Ontvankelijkheid toetsen staat in het voorbeeld (Mark 15-11).
   const DO = "bp_1794782741400_1";
   const toets = (toestand) =>
@@ -228,7 +238,27 @@ test("data-object met een type toont het object van de run: versie, geel bij een
   // Doorlopen tot het einde: de aanvraag heeft versies erbij (terug naar Aanvraag oppakken om het te zien).
   await page.getByTestId("sim-loop").click();
   await expect(page.getByTestId("sim-stand")).toHaveText(/^Klaar/);
+  // De log (Mark 16-11): schuift mee naar de nieuwste regel, en is met de greep groter te maken.
+  const logvak = page.getByTestId("sim-log");
+  await expect.poll(() => logvak.evaluate((el) => Math.abs(el.scrollHeight - el.clientHeight - el.scrollTop) < 4)).toBe(true);
+  const voor = (await logvak.boundingBox()).height;
+  const greep = await page.getByTestId("sim-log-greep").boundingBox();
+  await page.mouse.move(greep.x + 50, greep.y + 3);
+  await page.mouse.down();
+  await page.mouse.move(greep.x + 50, greep.y - 97, { steps: 4 });
+  await page.mouse.up();
+  await expect.poll(async () => Math.round((await logvak.boundingBox()).height - voor)).toBe(100);
+  await page.getByTestId("sim-log-greep").dblclick();
   await page.getByTestId("sim-processen").getByRole("button", { name: "Aanvraag oppakken" }).click();
   await expect(dobj.getByTestId("sim-dataobject-versie")).not.toHaveText("v1");
   await foto(page, "8-dataobject");
+  // Lijnen en objecten (§11.8 stap 4, Mark 16-11): de medewerker schrijft de aanvraag, maar de lijn leest alleen.
+  await expect(page.getByTestId("sim-processen").getByRole("button", { name: /Zaak behandelen/ }).getByTestId("sim-proces-bevindingen")).toHaveText("1");
+  await page.getByTestId("sim-processen").getByRole("button", { name: /Gehandicaptenparkeerkaart beoordelen/ }).click();
+  await expect(page.getByTestId("sim-lijnen")).toContainText("Aanvraag beoordelen schrijft aanvraag-1 (GehandicaptenparkeerkaartAanvraag)");
+  await expect(page.getByTestId("sim-diagram").locator('[data-testid="sim-lijn-fout"][data-lijn="conn_do_beo_aanvraag"]')).toHaveCount(1);
+  await expect(getekend(page, "bp_aanvraag_beoordelen")).toHaveAttribute("data-sim-lijnfout", "1");
+  await page.getByTestId("sim-processen").getByRole("button", { name: /Zaak behandelen/ }).click();
+  await expect(page.getByTestId("sim-lijnen")).toContainText("Stel beschikking op schrijft aanvraag-1");
+  await foto(page, "9-lijnen");
 });
