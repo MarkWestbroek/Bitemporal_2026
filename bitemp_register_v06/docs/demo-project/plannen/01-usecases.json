@@ -1,0 +1,191 @@
+{
+ "map": "/",
+ "plan": {
+  "uitleg": "Use cases van het evenementenloket van de gemeente Waterstede: wie doet wat rond de evenementenvergunning.",
+  "diagrammen": [
+   {
+    "sleutel": "dUc",
+    "taal": "usecase05",
+    "naam": "Evenementenloket Waterstede",
+    "map": "1 Dienstverlening"
+   }
+  ],
+  "elementen": [
+   {
+    "sleutel": "aOrg",
+    "type": "actor",
+    "naam": "Organisator",
+    "diagram": "dUc"
+   },
+   {
+    "sleutel": "aAdv",
+    "type": "actor",
+    "naam": "Veiligheidsadviseur",
+    "diagram": "dUc"
+   },
+   {
+    "sleutel": "aBeh",
+    "type": "actor",
+    "naam": "Vergunningverlener",
+    "diagram": "dUc"
+   },
+   {
+    "sleutel": "aInw",
+    "type": "actor",
+    "naam": "Inwoner",
+    "diagram": "dUc"
+   },
+   {
+    "sleutel": "sLoket",
+    "type": "systeem",
+    "naam": "Evenementenloket Waterstede",
+    "diagram": "dUc"
+   },
+   {
+    "sleutel": "ucAanvraag",
+    "type": "usecase",
+    "naam": "Vraag evenementenvergunning aan",
+    "diagram": "dUc",
+    "in": "sLoket",
+    "eigenschappen": {
+     "doel": "De organisator wil zijn evenement mogen houden.",
+     "trigger": "De organisator dient het aanvraagformulier in.",
+     "preconditie": "De organisator is ingelogd (eHerkenning of DigiD).",
+     "postconditie": "De aanvraag is geregistreerd en er loopt een behandeling."
+    }
+   },
+   {
+    "sleutel": "ucRisico",
+    "type": "usecase",
+    "naam": "Bepaal de risicoklasse",
+    "diagram": "dUc",
+    "in": "sLoket",
+    "eigenschappen": {
+     "doel": "Vaststellen hoe zwaar de behandeling moet zijn (klasse A, B of C).",
+     "trigger": "Een aanvraag is ontvangen."
+    }
+   },
+   {
+    "sleutel": "ucStatus",
+    "type": "usecase",
+    "naam": "Volg de status van de aanvraag",
+    "diagram": "dUc",
+    "in": "sLoket"
+   },
+   {
+    "sleutel": "ucAdvies",
+    "type": "usecase",
+    "naam": "Geef veiligheidsadvies",
+    "diagram": "dUc",
+    "in": "sLoket"
+   },
+   {
+    "sleutel": "ucBeoordeel",
+    "type": "usecase",
+    "naam": "Beoordeel de aanvraag",
+    "diagram": "dUc",
+    "in": "sLoket"
+   },
+   {
+    "sleutel": "ucBesluit",
+    "type": "usecase",
+    "naam": "Verleen of weiger de vergunning",
+    "diagram": "dUc",
+    "in": "sLoket"
+   },
+   {
+    "sleutel": "ucKalender",
+    "type": "usecase",
+    "naam": "Bekijk de evenementenkalender",
+    "diagram": "dUc",
+    "in": "sLoket"
+   },
+   {
+    "sleutel": "ucBezwaar",
+    "type": "usecase",
+    "naam": "Dien bezwaar in",
+    "diagram": "dUc",
+    "in": "sLoket"
+   }
+  ],
+  "connectoren": [
+   {
+    "type": "associatie",
+    "bron": "aOrg",
+    "doel": "ucAanvraag",
+    "eigenschappen": {
+     "primair": true
+    }
+   },
+   {
+    "type": "associatie",
+    "bron": "aOrg",
+    "doel": "ucStatus",
+    "eigenschappen": {
+     "primair": true
+    }
+   },
+   {
+    "type": "associatie",
+    "bron": "aBeh",
+    "doel": "ucBeoordeel",
+    "eigenschappen": {
+     "primair": true
+    }
+   },
+   {
+    "type": "associatie",
+    "bron": "aBeh",
+    "doel": "ucBesluit",
+    "eigenschappen": {
+     "primair": true
+    }
+   },
+   {
+    "type": "associatie",
+    "bron": "aAdv",
+    "doel": "ucAdvies"
+   },
+   {
+    "type": "associatie",
+    "bron": "aInw",
+    "doel": "ucKalender",
+    "eigenschappen": {
+     "primair": true
+    }
+   },
+   {
+    "type": "associatie",
+    "bron": "aInw",
+    "doel": "ucBezwaar",
+    "eigenschappen": {
+     "primair": true
+    }
+   },
+   {
+    "type": "include",
+    "bron": "ucAanvraag",
+    "doel": "ucRisico"
+   },
+   {
+    "type": "include",
+    "bron": "ucBeoordeel",
+    "doel": "ucBesluit"
+   },
+   {
+    "type": "extend",
+    "bron": "ucAdvies",
+    "doel": "ucBeoordeel",
+    "eigenschappen": {
+     "voorwaarde": "risicoklasse C"
+    }
+   }
+  ],
+  "opstelling": [
+   {
+    "diagram": "dUc",
+    "actie": "automatisch"
+   }
+  ]
+ }
+}

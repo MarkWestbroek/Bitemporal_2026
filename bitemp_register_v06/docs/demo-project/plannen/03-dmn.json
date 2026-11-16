@@ -1,0 +1,128 @@
+{
+ "map": "/",
+ "plan": {
+  "uitleg": "De beslissingen rond een evenementaanvraag als DRD: de risicoklasse bepaalt de behandelroute, en samen met het commerciële karakter de leges. De beslistabellen zelf staan op de beslissingen (03b).",
+  "diagrammen": [
+   {
+    "sleutel": "dDrd",
+    "taal": "dmnDrd05",
+    "naam": "Risicoklasse en leges",
+    "map": "3 Besluiten"
+   }
+  ],
+  "elementen": [
+   {
+    "sleutel": "inAanvraag",
+    "type": "inputData",
+    "naam": "Evenementaanvraag",
+    "diagram": "dDrd"
+   },
+   {
+    "sleutel": "bRisico",
+    "type": "decision",
+    "naam": "Risicoklasse",
+    "diagram": "dDrd",
+    "eigenschappen": {
+     "vraag": "Hoe zwaar moet de behandeling van deze aanvraag zijn: melding (A), reguliere vergunning (B) of vergunning met veiligheidsadvies (C)?"
+    }
+   },
+   {
+    "sleutel": "bLeges",
+    "type": "decision",
+    "naam": "Leges",
+    "diagram": "dDrd",
+    "eigenschappen": {
+     "vraag": "Welk bedrag aan leges is de organisator verschuldigd?"
+    }
+   },
+   {
+    "sleutel": "kApv",
+    "type": "knowledgeSource",
+    "naam": "APV Waterstede, art. 2:25",
+    "diagram": "dDrd"
+   },
+   {
+    "sleutel": "kLeges",
+    "type": "knowledgeSource",
+    "naam": "Legesverordening 2026",
+    "diagram": "dDrd"
+   },
+   {
+    "sleutel": "kmScan",
+    "type": "bkm",
+    "naam": "Risicoscan evenementen",
+    "diagram": "dDrd"
+   }
+  ],
+  "connectoren": [
+   {
+    "type": "infoReq",
+    "bron": "inAanvraag",
+    "doel": "bRisico"
+   },
+   {
+    "type": "infoReq",
+    "bron": "inAanvraag",
+    "doel": "bLeges"
+   },
+   {
+    "type": "infoReq",
+    "bron": "bRisico",
+    "doel": "bLeges"
+   },
+   {
+    "type": "knowReq",
+    "bron": "kmScan",
+    "doel": "bRisico"
+   },
+   {
+    "type": "authReq",
+    "bron": "kApv",
+    "doel": "bRisico"
+   },
+   {
+    "type": "authReq",
+    "bron": "kLeges",
+    "doel": "bLeges"
+   }
+  ],
+  "posities": [
+   {
+    "diagram": "dDrd",
+    "element": "bLeges",
+    "x": 480,
+    "y": 40
+   },
+   {
+    "diagram": "dDrd",
+    "element": "bRisico",
+    "x": 260,
+    "y": 220
+   },
+   {
+    "diagram": "dDrd",
+    "element": "inAanvraag",
+    "x": 480,
+    "y": 420
+   },
+   {
+    "diagram": "dDrd",
+    "element": "kLeges",
+    "x": 740,
+    "y": 50
+   },
+   {
+    "diagram": "dDrd",
+    "element": "kApv",
+    "x": 20,
+    "y": 110
+   },
+   {
+    "diagram": "dDrd",
+    "element": "kmScan",
+    "x": 20,
+    "y": 330
+   }
+  ]
+ }
+}

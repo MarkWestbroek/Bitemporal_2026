@@ -2296,6 +2296,15 @@ Het "Tabel"-menu exporteert context-afhankelijk:
 - DMN-evaluatie integratie met process engine
 - Cross-referentie tussen DRD en tabel (decision → table mapping)
 
+## Demo-project: Omnium demo — gemeente Waterstede (2026-11-16)
+
+Voor nieuwe gebruikers staat op app het project **Omnium demo — gemeente Waterstede** (verzonnen
+gemeente, casus evenementenvergunning): 28 diagrammen in alle 26 talen, 42 kruisverbanden,
+doorklikken tussen talen en een simulatie die werkt op het BPMN- en DMN-model van het project zelf.
+Ophalen: *Project → Van server ophalen…*. De server is de bron; het werkbestand, de plannen waarmee
+het gebouwd is, de drie simulatiescenario's en de test staan in `docs/demo-project/` (zie de
+`README.md` daar).
+
 ## Activiteit Simulatie: BPMN en DMN doorlopen met cm-objecten (2026-11-13)
 
 De activiteit **Simulatie** (groep Modelleren) doorloopt een BPMN-proces met zijn beslistabellen, stap voor
