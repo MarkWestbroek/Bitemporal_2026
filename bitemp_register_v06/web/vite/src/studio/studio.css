@@ -755,3 +755,29 @@
 
 /* Element op geen enkel diagram (melding #5): cursief en iets lichter. */
 .studio-project__ongebruikt { font-style: italic; opacity: 0.75; }
+
+/* ── Beslistabel van een DMN-beslissing (BeslistabelEditor, 16-11) ─────────── */
+.studio-beslistabel__achtergrond {
+  position: fixed; inset: 0; z-index: 10000;
+  background: rgba(15, 23, 42, 0.45);
+  display: flex; align-items: center; justify-content: center;
+}
+.studio-beslistabel {
+  width: min(1280px, calc(100vw - 32px)); height: min(820px, calc(100vh - 32px));
+  display: flex; flex-direction: column;
+  background: var(--s-panel, #fff); color: var(--s-fg, #1e293b);
+  border: 1px solid var(--s-border, #cbd5e1); border-radius: 10px;
+  box-shadow: 0 12px 40px rgba(15, 23, 42, 0.25);
+  overflow: hidden; font-size: 13px;
+}
+.studio-beslistabel__kop {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 14px; border-bottom: 1px solid var(--s-border, #e2e8f0);
+}
+.studio-beslistabel__inhoud { flex: 1; min-height: 0; display: flex; }
+.studio-beslistabel__model {
+  flex: 0 0 300px; min-width: 0; display: flex; flex-direction: column;
+  border-right: 1px solid var(--s-border, #e2e8f0);
+}
+.studio-beslistabel__hint { margin: 0; padding: 8px 10px; font-size: 12px; color: var(--s-fg-muted); }
+.studio-beslistabel__tabel { flex: 1; min-width: 0; overflow: auto; padding: 16px; font-family: system-ui, sans-serif; }

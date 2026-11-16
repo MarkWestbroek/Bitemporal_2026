@@ -13,6 +13,9 @@
  * toegestane waarden uit het metamodel — geen handmatige FEEL-typefouten.
  *
  * Controlled component: geef `table` + `onChange(nieuweTabel)` mee.
+ *
+ * In het project (BeslistabelEditor, 16-11) is de naam van de beslissing leidend: `toonNaam={false}`
+ * verbergt het naamveld. De knop "→ afgeleid veld" staat er alleen met `onPromoveerAdhoc`.
  */
 import { useState } from "react";
 import { FIELDREF_MIME } from "../modelpicker";
@@ -56,7 +59,7 @@ function KolomMeta({ clause }) {
   );
 }
 
-export default function DmnTableEditor({ table, onChange, onRequestBind, onPromoveerAdhoc, doelTypenaam }) {
+export default function DmnTableEditor({ table, onChange, onRequestBind, onPromoveerAdhoc, doelTypenaam, toonNaam = true }) {
   const [dropClause, setDropClause] = useState(null);
 
   const onHeaderDrop = (kant, clauseId) => (e) => {
@@ -109,7 +112,7 @@ export default function DmnTableEditor({ table, onChange, onRequestBind, onPromo
                 ad-hoc
               </button>
             )}
-            {kant === "output" && clause.adhoc && (
+            {kant === "output" && clause.adhoc && onPromoveerAdhoc && (
               <button
                 type="button"
                 className="dmn-link"
@@ -160,11 +163,13 @@ export default function DmnTableEditor({ table, onChange, onRequestBind, onPromo
   return (
     <div className="dmn-root">
       <div className="dmn-toolbar">
-        <input
-          className="dmn-naam"
-          value={table.naam}
-          onChange={(e) => onChange({ ...table, naam: e.target.value })}
-        />
+        {toonNaam && (
+          <input
+            className="dmn-naam"
+            value={table.naam}
+            onChange={(e) => onChange({ ...table, naam: e.target.value })}
+          />
+        )}
         <select
           className="dmn-hit"
           value={table.hitPolicy}

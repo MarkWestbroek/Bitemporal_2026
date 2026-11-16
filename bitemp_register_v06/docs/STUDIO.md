@@ -522,6 +522,17 @@ te wijzigen.
 > store: de inhoud is identiek, hoe je hem ook opent. Zie
 > `activities/modellerenActivity.jsx`.
 >
+> **Beslistabel in het project (Mark, 16-11):** de beslistabel van een DMN-beslissing (profiel
+> `dmn-drd`) leeft op het element, in `data.beslistabel` (vorm van `dmn/dmnModel.js`). De descriptor
+> heeft daarvoor de eigenschap `beslistabel` met het profiel-eigen datatype `"beslistabel"`; de editor
+> (`studio/BeslistabelEditor.jsx`, geregistreerd in `dmnDrdActivity.jsx`) toont in Eigenschappen een
+> samenvatting en opent een dialoog met de ModelPicker op het canonieke projectmodel en de
+> `DmnTableEditor`. Bewerken gebeurt op een kopie; *Opslaan* schrijft één wijziging. De naam van de
+> beslissing is leidend voor de tabelnaam. Lezers van dezelfde tabel: `dmnArtefact` (DMN-XML) en de
+> simulatie; FieldRefs volgen hernoemingen via de uuid (`fieldRefBinding.js`). De klassieke
+> DMN-activiteit (dmn-js + losse tabel) is hiervoor niet meer nodig en is alleen nog voor beheerders
+> zichtbaar. Nog niet: een ad-hoc-uitvoer promoveren tot afgeleid veld vanuit deze dialoog.
+>
 > **Root in plaats van "Niet ingedeeld" (Mark, 16-11):** een diagram zonder map staat in de
 > **root** van de projectboom, onder de mappen; de kop "Niet ingedeeld" is weg. Het projectformaat
 > verandert niet: geen plaatsing = root. Een nieuw diagram van de lege startpagina of via de ＋ bij

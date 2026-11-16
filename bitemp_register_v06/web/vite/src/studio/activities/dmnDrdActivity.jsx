@@ -8,8 +8,12 @@
 import { IconDMN } from "../icons";
 import { registreerDmnDrd, dmnDrdDiagramType, maakElement } from "../../diagramprofielen/dmn-drd/index.js";
 import { maakDiagramActiviteit } from "./maakDiagramActiviteit.jsx";
+import { registreerPropertyTypeEditor, getPropertyTypeEditor } from "../../diagramcore/inspector/propertyTypeEditors.jsx";
+import BeslistabelEditor from "../BeslistabelEditor.jsx";
 
 registreerDmnDrd();
+// Implementatie-deel: de editor van de beslistabel op een beslissing (16-11).
+if (!getPropertyTypeEditor("beslistabel")) registreerPropertyTypeEditor("beslistabel", BeslistabelEditor);
 
 export default maakDiagramActiviteit({
   id: "dmnDrd05",
