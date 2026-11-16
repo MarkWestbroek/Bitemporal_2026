@@ -1619,9 +1619,19 @@ FUNDAMENT probeerde de constructie op cg-test (30-10). De FEEL-engine van
 Operaton leest de dossierwaarden als Map en List, dus de toets op de bijlagen
 werkt. Een dossier zonder pasfoto kreeg de status niet-opgepakt.
 
-Nog niet: de beslistabel bewerken in de Studio (de tabeleditor
-`dmn/DmnTableEditor.jsx` hangt nog niet aan het element), en de reden in het
-dossier bewaren (vraagt een veld in het dossierschema).
+Sinds 16-11 is de beslistabel in de Studio te bewerken (`studio/BeslistabelEditor.jsx`, STUDIO.md
+"Beslistabel in het project"). Nog niet: de reden in het dossier bewaren (vraagt een veld in het
+dossierschema).
+
+**Keten van beslissingen (16-11).** De invoerkolommen volgen uit het DRD; een kolom kan het resultaat
+van een andere beslissing lezen (`bron.soort === "beslissing"`). `maakDmnArtefact` loopt die keten
+af (ook verder terug) en zet alle beslissingen in één `dmn:definitions`: de hoofdbeslissing met de
+identifier van het artefact, de vereiste beslissingen met een id uit hun naam. Elke beslissing krijgt
+per vereiste een `informationRequirement` met `requiredDecision`. De engine rekent de vereiste eerst
+uit en biedt haar uitvoer aan onder de naam van de uitvoerkolom; de invoerexpressie van de kolom is
+die naam (het label blijft de naam van de beslissing). `invoer` (de procesvariabelen op de
+businessRuleTask) bevat de dossierwaarden van de hele keten, niet de tussenresultaten. Een vereiste
+beslissing zonder tabel is een fout (`DMN-KETEN`). Nog niet op cg-test geprobeerd.
 
 **CEL in het model, JUEL en FEEL als uitvoer (besluit Mark 12-11).** De conditie op een sequence flow en de
 invoerexpressie van een beslistabel staan in het model in CEL, net als de afgeleide velden van het canonieke model.

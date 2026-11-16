@@ -12,7 +12,9 @@
  *   expressie; de notatie is in CEL en FEEL gelijk.
  * - **Hit policy**: FIRST (de eerste regel die past) en UNIQUE (precies één).
  * - **Boom**: een beslissing die een andere nodig heeft (`infoReq` in het DRD)
- *   krijgt de uitvoer van die andere in haar context, van onder naar boven.
+ *   krijgt de uitvoer van die andere in haar context, van onder naar boven. Een
+ *   kolom uit het DRD (`bron.soort === "beslissing"`, invoerUitDrd.js, 16-11)
+ *   leest precies de uitvoer waar ze naar wijst (`bron.uitvoerId`).
  *
  * Wat hier niet te lezen is gooit `Onleesbaar`; de simulatie maakt er een gat
  * van.
@@ -103,10 +105,17 @@ export function rekenCel(expressie, context) {
 }
 
 /** De waarde van een invoerkolom. */
-function invoerWaarde(kolom, { object, variabelen, context }) {
+function invoerWaarde(kolom, { object, variabelen, context, perBron }) {
   if (kolom.expressie) return rekenCel(kolom.expressie, context);
+  if (kolom.bron?.soort === "beslissing") {
+    const uit = perBron?.[kolom.bron.elementId];
+    if (!uit) throw new Onleesbaar(`Kolom "${kolom.naam}": de beslissing waar zij naar wijst is niet uitgerekend (staat de pijl nog in het DRD?)`);
+    const w = kolom.bron.uitvoerId ? uit[kolom.bron.uitvoerId] : Object.values(uit)[0];
+    return w === undefined ? null : w;
+  }
   const pad = kolom.fieldRef?.veldpad || "";
-  const naam = kolom.fieldRef?.veldnaam || kolom.naam;
+  // Een invoergegeven zonder modelveld (veldNaam, invoerUitDrd.js) leest dat veld op naam.
+  const naam = kolom.fieldRef?.veldnaam || kolom.veldNaam || kolom.naam;
   if (pad.startsWith("envelop:")) return variabelen[pad.slice("envelop:".length)] ?? null;
   if (naam in (object || {})) return object[naam];
   if (naam in context) return context[naam];
@@ -116,22 +125,24 @@ function invoerWaarde(kolom, { object, variabelen, context }) {
 /**
  * Rekent één tabel uit.
  * @param {any} tabel - `data.beslistabel`
- * @param {{object?: any, variabelen?: Record<string, any>, extra?: Record<string, any>}} bij - het object (de velden
- *   van de cm-instantie), de procesvariabelen en de uitvoer van onderliggende beslissingen
- * @returns {{uitkomst: Record<string, any>|null, regel: string|null, invoer: Record<string, any>}}
+ * @param {{object?: any, variabelen?: Record<string, any>, extra?: Record<string, any>, perBron?: Record<string, Record<string, any>>}} bij - het
+ *   object (de velden van de cm-instantie), de procesvariabelen en de uitvoer van onderliggende beslissingen
+ *   (op naam in `extra`, en per beslissing-id → uitvoerkolom-id in `perBron`)
+ * @returns {{uitkomst: Record<string, any>|null, uitkomstPerKolom: Record<string, any>|null, regel: string|null, invoer: Record<string, any>}}
  */
-export function rekenTabelUit(tabel, { object = {}, variabelen = {}, extra = {} } = {}) {
+export function rekenTabelUit(tabel, { object = {}, variabelen = {}, extra = {}, perBron = {} } = {}) {
   const context = { ...object, ...variabelen, ...extra };
   const beleid = String(tabel.hitPolicy || "UNIQUE").toUpperCase();
   if (beleid !== "FIRST" && beleid !== "UNIQUE") throw new Onleesbaar(`Hit policy "${tabel.hitPolicy}" speelt de simulatie niet na`);
   const invoer = {};
-  for (const kolom of tabel.inputs || []) invoer[kolom.id] = invoerWaarde(kolom, { object, variabelen, context });
+  for (const kolom of tabel.inputs || []) invoer[kolom.id] = invoerWaarde(kolom, { object, variabelen, context, perBron });
   const raak = (tabel.rules || []).filter((regel) => (tabel.inputs || []).every((kolom) => celPast(regel.inputEntries?.[kolom.id], invoer[kolom.id])));
   const benoemd = Object.fromEntries((tabel.inputs || []).map((k) => [k.label || k.naam || k.id, invoer[k.id]]));
-  if (!raak.length) return { uitkomst: null, regel: null, invoer: benoemd };
+  if (!raak.length) return { uitkomst: null, uitkomstPerKolom: null, regel: null, invoer: benoemd };
   if (beleid === "UNIQUE" && raak.length > 1) throw new Onleesbaar(`Hit policy UNIQUE, maar ${raak.length} regels passen (${raak.map((r) => r.id).join(", ")})`);
   const regel = raak[0];
   const uitkomst = {};
+  const uitkomstPerKolom = {};
   for (const kolom of tabel.outputs || []) {
     const t = String(regel.outputEntries?.[kolom.id] ?? "").trim();
     let w;
@@ -141,8 +152,9 @@ export function rekenTabelUit(tabel, { object = {}, variabelen = {}, extra = {} 
       w = rekenCel(t, context);
     }
     uitkomst[kolom.naam || kolom.id] = w;
+    uitkomstPerKolom[kolom.id] = w;
   }
-  return { uitkomst, regel: regel.id, invoer: benoemd };
+  return { uitkomst, uitkomstPerKolom, regel: regel.id, invoer: benoemd };
 }
 
 /**
@@ -176,6 +188,7 @@ export function rekenBeslissingUit({ model, beslissing }, bij = {}, bezocht = ne
   const tabel = beslissing.data?.beslistabel;
   if (!tabel) throw new Onleesbaar(`Beslissing "${beslissing.naam}" heeft geen beslistabel`);
   const extra = { ...(bij.extra || {}) };
+  const perBron = { ...(bij.perBron || {}) };
   const onderliggend = [];
   for (const el of Object.values(model.elements)) {
     if (el.elementType !== "infoReq" || el.target !== beslissing.id) continue;
@@ -184,6 +197,7 @@ export function rekenBeslissingUit({ model, beslissing }, bij = {}, bezocht = ne
     const uit = rekenBeslissingUit({ model, beslissing: bron }, bij, bezocht);
     onderliggend.push({ beslissing: bron.naam, ...uit });
     Object.assign(extra, uit.uitkomst || {});
+    perBron[bron.id] = uit.uitkomstPerKolom || {};
   }
-  return { ...rekenTabelUit(tabel, { ...bij, extra }), onderliggend };
+  return { ...rekenTabelUit(tabel, { ...bij, extra, perBron }), onderliggend };
 }
