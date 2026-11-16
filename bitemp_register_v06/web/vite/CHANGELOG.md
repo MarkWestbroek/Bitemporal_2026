@@ -28,6 +28,7 @@ De single source of truth voor het nummer is `package.json` `"version"`.
   Een getekende lijn «traceert naar» van een invoergegeven naar een element wordt het *gegeven*: heeft het element
   één veld, dan is dat het veld; bij meer velden blijft het veld open om te kiezen. De getekende lijn verdwijnt, de
   lijn uit het gegeven neemt haar plaats in (ook voor lijnen die er al lagen).
+- **Profiel DMN DRD 1.1.0** (16-11): eigenschappen `beslistabel` (beslissing) en `gegeven` (invoergegeven).
 - **M3: datatype `veld-verwijzing`** (16-11): een eigenschap die naar één veld van een element in een andere taal
   wijst, waarde `{profielId, elementId, veldNaam, uuid?}`; met `koppelsoort` volgt er een kruisverband uit, net als
   bij `element-verwijzing`.
