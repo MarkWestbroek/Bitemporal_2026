@@ -17,6 +17,11 @@ De single source of truth voor het nummer is `package.json` `"version"`.
   er geen wezen zijn. De grote knop "＋ Nieuwe map" is weg; de ＋ bij "Mappen" doet hetzelfde.
 
 ### Toegevoegd
+- **DMN: de beslistabel in het project** (Mark 16-11): op een beslissing in een DMN DRD staat in Eigenschappen de
+  regel *beslistabel* met *＋ Maken…* / *✎ Bewerken…*. De dialoog toont links het canonieke model van het project en
+  rechts de tabel (dezelfde tabeleditor als in de klassieke DMN-activiteit): kolommen binden door slepen of *bind…*,
+  keuzelijsten uit het model. *Opslaan* schrijft de tabel in één keer naar `data.beslistabel` van de beslissing, zodat
+  hij meeloopt met sync, branches, de DMN-XML-export en de simulatie (`studio/BeslistabelEditor.jsx`).
 - **Gebruikers → Projecten…** (Mark 16-11): achteraf een gebruiker aan Studio-projecten toewijzen, niet alleen bij
   het uitnodigen. Per project geen toegang / lezen / schrijven, met de eigenaar en een open `*`-rij erbij; alleen
   de gewijzigde projecten worden geschreven. In *Van server ophalen → Toegang…* kies je de gebruiker nu uit een

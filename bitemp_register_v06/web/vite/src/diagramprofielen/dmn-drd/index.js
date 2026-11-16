@@ -37,6 +37,10 @@ const elementTypes = [
     properties: [
       KLEUR_VELD,
       { key: "vraag", label: "vraag (question)", datatype: "tekst" },
+      // De beslistabel zelf (vorm van dmn/dmnModel.js). Bewerken: datatype "beslistabel" →
+      // studio/BeslistabelEditor.jsx (geregistreerd in dmnDrdActivity). Lezers: dmnArtefact
+      // (DMN-XML) en de simulatie.
+      { key: "beslistabel", label: "beslistabel", datatype: "beslistabel" },
     ],
   },
   {
