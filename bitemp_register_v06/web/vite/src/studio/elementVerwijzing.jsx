@@ -20,6 +20,7 @@ import { getProfieltypen, getProfieltype } from "./profieltypeRegistry";
 import { registreerPropertyTypeEditor } from "../diagramcore/inspector/propertyTypeEditors.jsx";
 import { zetHost } from "../diagramcore/tekenaar/host.js";
 import { getDiagramType } from "../diagramcore/types/typeRegistry.js";
+import { veldenVanElement } from "./traceNaarGegeven.js";
 
 /** @param {{profielId?: string, elementId?: string}|null} ref */
 export function resolveerElementRef(ref) {
@@ -169,5 +170,90 @@ function OperatieKeuzeEditor({ regel, waarde, onChange, element, context }) {
   );
 }
 
+export { veldenVanElement };
+
+/**
+ * De actuele stand van een veldverwijzing: het veld zoals het nu in het model staat (naam en
+ * uuid kunnen sinds het kiezen gewijzigd of aangevuld zijn), of null als het weg is.
+ * @param {{profielId?: string, elementId?: string, veldNaam?: string, uuid?: string}|null} ref
+ */
+export function resolveerVeldRef(ref) {
+  const opgelost = resolveerElementRef(ref);
+  if (!opgelost) return null;
+  const veld = zoekVeld(veldenVanElement(opgelost.element), ref);
+  return veld ? { ...opgelost, veld } : null;
+}
+
+/** Het veld van een verwijzing: eerst op uuid (hernoemen gaat mee), anders op naam. */
+function zoekVeld(velden, ref) {
+  return (ref?.uuid && velden.find((v) => v.uuid === ref.uuid)) || velden.find((v) => v.naam === ref?.veldNaam) || null;
+}
+
+/**
+ * Picker profiel → element → veld (datatype "veld-verwijzing", 16-11); waarde
+ * `{profielId, elementId, veldNaam, uuid?}`. Alleen elementen die velden hebben.
+ */
+function VeldVerwijzingEditor({ regel, waarde, onChange }) {
+  const ref = waarde || {};
+  const heeftVelden = (el) => !el.source && veldenVanElement(el).length > 0;
+  const profielen = getProfieltypen().filter(
+    (p) => p.useStore?.getState?.().elements && (!regel.profielen || regel.profielen.includes(p.id)) && Object.values(p.useStore.getState().elements).some(heeftVelden)
+  );
+  const profiel = ref.profielId ? getProfieltype(ref.profielId) : null;
+  const elementen = profiel ? Object.values(profiel.useStore.getState().elements || {}).filter(heeftVelden) : [];
+  const element = profiel && ref.elementId ? profiel.useStore.getState().elements?.[ref.elementId] : null;
+  const velden = veldenVanElement(element);
+  const gekozen = zoekVeld(velden, ref);
+  return (
+    <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 4 }} data-testid={`veld-verwijzing-${regel.key}`}>
+      <div style={{ display: "flex", gap: 4 }}>
+        <select
+          value={ref.profielId || ""}
+          title="taal"
+          style={{ ...selectStijl, flex: "0 1 40%" }}
+          onChange={(e) => onChange(e.target.value ? { profielId: e.target.value, elementId: null } : null)}
+        >
+          <option value="">(geen)</option>
+          {profielen.map((p) => (
+            <option key={p.id} value={p.id}>{p.label}</option>
+          ))}
+        </select>
+        <select
+          value={ref.elementId || ""}
+          title="element"
+          style={selectStijl}
+          disabled={!profiel}
+          onChange={(e) => onChange({ profielId: ref.profielId, elementId: e.target.value || null })}
+        >
+          <option value="">(kies element)</option>
+          {elementen
+            .slice()
+            .sort((a, b) => (a.naam || "").localeCompare(b.naam || ""))
+            .map((el) => (
+              <option key={el.id} value={el.id}>{el.naam || el.id}</option>
+            ))}
+        </select>
+      </div>
+      <select
+        value={gekozen?.naam || (ref.veldNaam ? "__weg__" : "")}
+        title={regel.label || regel.key}
+        style={selectStijl}
+        disabled={!element}
+        onChange={(e) => {
+          const v = velden.find((x) => x.naam === e.target.value);
+          onChange({ profielId: ref.profielId, elementId: ref.elementId, ...(v ? { veldNaam: v.naam, ...(v.uuid ? { uuid: v.uuid } : {}) } : {}) });
+        }}
+      >
+        <option value="">(kies veld)</option>
+        {!gekozen && ref.veldNaam && <option value={"__weg__"}>{ref.veldNaam} (niet meer gevonden)</option>}
+        {velden.map((v) => (
+          <option key={v.naam} value={v.naam}>{v.naam}{v.type ? ` : ${v.type}` : ""}</option>
+        ))}
+      </select>
+    </div>
+  );
+}
+
+registreerPropertyTypeEditor("veld-verwijzing", VeldVerwijzingEditor);
 registreerPropertyTypeEditor("element-verwijzing", ElementVerwijzingEditor);
 registreerPropertyTypeEditor("operatie-keuze", OperatieKeuzeEditor);

@@ -213,3 +213,6 @@ table.dmn-table {
   font-size: 12px;
   color: #64748b;
 }
+
+/* Kolom uit het DRD (invoerUitDrd.js): het veld of de bron onder de naam. */
+.dmn-th-bron { font-size: 11px; color: #64748b; font-weight: 400; }

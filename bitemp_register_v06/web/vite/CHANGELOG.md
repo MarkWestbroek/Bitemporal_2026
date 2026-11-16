@@ -17,6 +17,20 @@ De single source of truth voor het nummer is `package.json` `"version"`.
   er geen wezen zijn. De grote knop "＋ Nieuwe map" is weg; de ＋ bij "Mappen" doet hetzelfde.
 
 ### Toegevoegd
+- **DMN: de invoer van een beslistabel volgt uit het diagram** (Mark 16-11): elke pijl (information requirement)
+  naar een beslissing is een invoerkolom. Een *invoergegeven* levert één kolom; het veld kies je op het
+  invoergegeven zelf (eigenschap *gegeven (veld)*: taal → element → veld), niet meer op de kolom. Een *beslissing*
+  als bron levert haar uitvoer als kolom ("resultaat van de beslissing"), met de keuzelijst van die uitvoer.
+  *+ input* is weg uit de dialoog; een kolom van vóór deze regel gaat over op het invoergegeven met dezelfde naam
+  of hetzelfde veld en houdt haar cellen, en is anders weg te halen. Verdwijnt een pijl, dan blijft de kolom staan
+  met een melding. Het gekozen veld geeft ook een afgeleide lijn «traceert naar» het element.
+  *Tabel wissen…* in de dialoog haalt een (oude) beslistabel helemaal weg, met bevestiging; Ctrl+Z zet hem terug.
+  Een getekende lijn «traceert naar» van een invoergegeven naar een element wordt het *gegeven*: heeft het element
+  één veld, dan is dat het veld; bij meer velden blijft het veld open om te kiezen. De getekende lijn verdwijnt, de
+  lijn uit het gegeven neemt haar plaats in (ook voor lijnen die er al lagen).
+- **M3: datatype `veld-verwijzing`** (16-11): een eigenschap die naar één veld van een element in een andere taal
+  wijst, waarde `{profielId, elementId, veldNaam, uuid?}`; met `koppelsoort` volgt er een kruisverband uit, net als
+  bij `element-verwijzing`.
 - **DMN: de beslistabel in het project** (Mark 16-11): op een beslissing in een DMN DRD staat in Eigenschappen de
   regel *beslistabel* met *＋ Maken…* / *✎ Bewerken…*. De dialoog toont links het canonieke model van het project en
   rechts de tabel (dezelfde tabeleditor als in de klassieke DMN-activiteit): kolommen binden door slepen of *bind…*,

@@ -50,7 +50,13 @@ const elementTypes = [
     shape: "dmn-input-data",
     kleur: "#dcfce7",
     icoon: "invoer",
-    properties: [KLEUR_VELD],
+    properties: [
+      KLEUR_VELD,
+      // Waar de waarde vandaan komt: een veld van een element in een taal die gegevens draagt
+      // (16-11). Hieruit volgen de kolom in de beslistabel (invoerUitDrd.js) en een afgeleide
+      // koppeling «traceert naar» het element.
+      { key: "gegeven", label: "gegeven (veld)", datatype: "veld-verwijzing", koppelsoort: "traceert naar" },
+    ],
   },
   {
     id: "bkm",

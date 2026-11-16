@@ -533,6 +533,33 @@ te wijzigen.
 > DMN-activiteit (dmn-js + losse tabel) is hiervoor niet meer nodig en is alleen nog voor beheerders
 > zichtbaar. Nog niet: een ad-hoc-uitvoer promoveren tot afgeleid veld vanuit deze dialoog.
 >
+> **Invoer uit het DRD (Mark, 16-11):** het diagram is leidend voor de invoer
+> (`diagramprofielen/dmn-drd/invoerUitDrd.js`, puur). Elke `infoReq`-pijl naar de beslissing is een
+> bron: een **invoergegeven** geeft één kolom, een **beslissing** (DMN: required decision) één kolom
+> per uitvoer van haar tabel. Zo'n kolom draagt `bron: {soort, elementId, uitvoerId?}`. Wáár de
+> waarde vandaan komt staat op het invoergegeven: eigenschap `gegeven`, M3-datatype
+> **`veld-verwijzing`** (`{profielId, elementId, veldNaam, uuid?}`, editor in
+> `studio/elementVerwijzing.jsx`; een veld heeft geen eigen id, dus de uuid is de binding en de naam
+> de terugval). Met `koppelsoort: "traceert naar"` volgt er een afgeleide koppeling naar het element
+> uit (`afgeleideKoppelingen.js`). De dialoog brengt de kolommen bij het openen in lijn met het
+> diagram (`metInvoerUitDrd`); wijkt dat af van wat er stond, dan is de tabel meteen op te slaan.
+> Overgang: een kolom zonder `bron` (koppeling op de kolom zelf) gaat over op het invoergegeven met
+> dezelfde naam of hetzelfde veld en houdt haar id en cellen; zolang het invoergegeven geen veld
+> heeft, blijft de `fieldRef` van de kolom gelden. Een kolom waarvan de pijl verdween blijft staan
+> met `bronWeg` en een melding. *Tabel wissen…* (met bevestiging) zet `data.beslistabel` op leeg; met
+> *Maken…* begin je opnieuw, met de invoer uit het diagram. De export (`dmnArtefact`) werkt bestaande bronkolommen bij
+> (`alleenBestaand`) en voegt niets toe; een kolom uit een beslissing geeft daar de waarschuwing
+> `DMN-KETEN`: de vereiste beslissing gaat nog niet mee in het artefact. Ook nog niet: een modelveld
+> op de tabel slepen dat zelf het invoergegeven met pijl maakt.
+>
+> **Getekende «traceert naar» → gegeven (Mark, 16-11):** een met de hand getekende koppeling
+> «traceert naar» van een invoergegeven naar een element wordt omgezet in het gegeven
+> (`studio/traceNaarGegeven.js`, plan puur; `traceNaarGegevenKoppeling.js` draait het na elke
+> wijziging van de koppelingen of een DMN-model, ook bij het laden). Eén veld op het element: dat
+> veld; meer: alleen het element, het veld blijft open. De getekende lijn gaat weg (het gegeven is de
+> bron, de lijn volgt eruit). Heeft het invoergegeven al een gegeven naar hetzelfde element, dan
+> verdwijnt alleen de lijn; naar een ander element blijft de lijn staan.
+>
 > **Root in plaats van "Niet ingedeeld" (Mark, 16-11):** een diagram zonder map staat in de
 > **root** van de projectboom, onder de mappen; de kop "Niet ingedeeld" is weg. Het projectformaat
 > verandert niet: geen plaatsing = root. Een nieuw diagram van de lege startpagina of via de ＋ bij

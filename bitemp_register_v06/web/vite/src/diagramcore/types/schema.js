@@ -59,7 +59,10 @@
  *   Bv. canoniek `tijdprecisie` met `{key: "materieel"}`. Zie diagramcore/model/zichtbaarAls.js.
  * @property {string} [aard]              - bij datatype "element-verwijzing": alleen elementen
  *   waarvan het type deze M3-aard heeft (bv. "gegevens" voor het type van een BPMN-data-object)
- * @property {string} [koppelsoort]       - bij datatype "element-verwijzing" (15-11): de waarde
+ *   "veld-verwijzing" (16-11) wijst één stap verder: naar een veld van een element in een andere
+ *   taal, waarde `{profielId, elementId, veldNaam, uuid?}` (bv. het gegeven van een
+ *   DMN-invoergegeven). De uuid is de binding (hernoemen gaat mee), de naam de leesbare kopie.
+ * @property {string} [koppelsoort]       - bij datatype "element-verwijzing" of "veld-verwijzing" (15-11): de waarde
  *   is ook een kruisverband van deze soort (bv. "traceert naar"), afgeleid en niet los bewaard.
  *   Zie diagramcore/model/afgeleideKoppelingen.js.
  * @property {string[]} [referenceTypes]   - ReferenceType-ids; kandidaten via resolvers
