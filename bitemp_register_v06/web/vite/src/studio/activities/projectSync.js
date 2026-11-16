@@ -218,6 +218,19 @@ export function toegangVoorOpslaan(rijen) {
 }
 
 /** Vervangt alle rijen: [{subject: gebruikersnaam | "*", recht: "lezen" | "schrijven"}] (beheren). */
+/**
+ * De toegangsrijen van een project met het recht van één gebruiker aangepast (gebruikersbeheer →
+ * Projecten…, 16-11). `recht` = "lezen" | "schrijven" | "" (geen rij: geen toegang, tenzij via "*",
+ * eigenaarschap of de beheerdersrol). De overige rijen blijven staan.
+ * @param {{subject: string, recht: string}[]} rijen
+ * @param {string} subject
+ * @param {string} recht
+ */
+export function metRechtVoor(rijen, subject, recht) {
+  const zonder = (rijen || []).filter((r) => r.subject !== subject);
+  return toegangVoorOpslaan(recht ? [...zonder, { subject, recht }] : zonder);
+}
+
 export const zetToegang = (id, toegang) =>
   roep(`/api/studio/projecten/${encodeURIComponent(id)}/toegang`, { methode: "PUT", body: { toegang } });
 

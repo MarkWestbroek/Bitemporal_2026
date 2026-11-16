@@ -9,6 +9,10 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 ## [Unreleased]
 
 ### Toegevoegd
+- **Gebruikers → Projecten…** (Mark 16-11): achteraf een gebruiker aan Studio-projecten toewijzen, niet alleen bij
+  het uitnodigen. Per project geen toegang / lezen / schrijven, met de eigenaar en een open `*`-rij erbij; alleen
+  de gewijzigde projecten worden geschreven. In *Van server ophalen → Toegang…* kies je de gebruiker nu uit een
+  lijst (voor beheerders), met een waarschuwing bij een naam die niet bestaat.
 - **Rondleiding: vier stappen erbij** (Mark 16-11): *Projecten op de server* (Project → Van server ophalen,
   parkeren, Naar server sturen, Live synchroniseren), *De AI-assistent* (rechtsklik op een map; eigen API-sleutel of
   toegangscode), *Experimenteel: Toegangverlening en Simulatie* (en Labs) en *Iets melden* (Alt+M, F8, Mijn
