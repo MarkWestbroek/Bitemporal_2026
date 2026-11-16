@@ -92,14 +92,17 @@ test("rechtsklik Kopiëren / Plakken, en Plakken als kopie dupliceert met de ver
   await page.locator(".dc-contextmenu-item", { hasText: "Plakken (2)" }).click();
   await expect.poll(() => opDiagram(page, "d_d2")).toEqual(["g2", "p2"]);
 
-  // Ctrl+Shift+V: de vraag, en dan nieuwe elementen met "(kopie)", zonder uuid, met de compositie ertussen.
+  // Ctrl+Shift+V: de vraag, en dan nieuwe elementen met "(kopie)", met een eigen uuid (projectformaat 4:
+  // afgeleid uit het nieuwe id, dus niet die van het origineel), met de compositie ertussen.
   await pane.click({ position: { x: 500, y: 600 }, force: true });
   await page.keyboard.press("Control+Shift+v");
   const dlg = page.locator(".studio-dialoog");
   await expect(dlg).toContainText("dupliceren");
   await dlg.getByRole("button", { name: "Dupliceer" }).click();
   const kopieen = () => inStore(page, "diagram05", 'return Object.values(store.getState().elements).filter((e) => (e.naam || "").endsWith("(kopie)")).map((e) => [e.naam, e.data?.uuid || null]).sort();');
-  await expect.poll(kopieen).toEqual([["Naam (kopie)", null], ["Persoon (kopie)", null]]);
+  await expect.poll(kopieen).toEqual([["Naam (kopie)", expect.stringMatching(/^[0-9a-f]{8}-[0-9a-f]{4}-5[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/)], ["Persoon (kopie)", expect.stringMatching(/^[0-9a-f]{8}-[0-9a-f]{4}-5[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/)]]);
+  const origineel = await inStore(page, "diagram05", 'return [store.getState().elements.p2?.data?.uuid, store.getState().elements.g2?.data?.uuid];');
+  expect((await kopieen()).some(([, u]) => origineel.includes(u))).toBe(false);
   const verbonden = await inStore(page, "diagram05", `
     const els = store.getState().elements;
     const p = Object.values(els).find((e) => e.naam === "Persoon (kopie)").id;
@@ -155,9 +158,11 @@ test("diagram kopiëren in de boom en elders plakken: met dezelfde elementen, of
     const p = els.find((e) => e.naam === "Persoon");
     const ge = Object.values(s.elements).find((e) => e.naam === "Naam" && e.id !== "ge");
     const comp = ge && Object.values(s.elements).find((c) => c.elementType === "compositie" && c.source === p.id && c.target === ge.id);
-    return { origineel: ids.filter((i) => i === "po" || i === "ao").length, namen: els.map((e) => e.naam).sort(), uuid: p.data?.uuid || null, geKopie: !!ge, comp: !!comp,
+    return { origineel: ids.filter((i) => i === "po" || i === "ao").length, namen: els.map((e) => e.naam).sort(), uuid: p.data?.uuid || null, uuidOrigineel: s.elements.po?.data?.uuid || null, geKopie: !!ge, comp: !!comp,
       entiteiten: Object.values(s.elements).filter((e) => e.elementType === "entiteit").length };`);
-  expect(info).toEqual({ origineel: 0, namen: ["Adres", "Persoon"], uuid: null, geKopie: true, comp: true, entiteiten: 4 });
+  // Projectformaat 4: de kopie heeft een eigen uuid, niet die van het origineel.
+  expect(info).toEqual({ origineel: 0, namen: ["Adres", "Persoon"], uuid: expect.stringMatching(/^[0-9a-f]{8}-[0-9a-f]{4}-5[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/), uuidOrigineel: expect.anything(), geKopie: true, comp: true, entiteiten: 4 });
+  expect(info.uuid).not.toBe(info.uuidOrigineel);
   // De kopieën staan in "Doel", het origineel in "Bron".
   const losInDoel = (await inDoel()).filter((k) => k.startsWith("el::diagram05::"));
   expect(losInDoel.length).toBe(2);
