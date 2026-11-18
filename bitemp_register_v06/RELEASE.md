@@ -8,6 +8,41 @@
 
 ---
 
+## studio 0.46.0 / render 0.5.0 (2026-11-18)
+
+Akkoord Mark 18-11 ("ja, graag"). De api-release die hierop volgt (0.29.0, sorteren en indexen uit
+marks) en de devloop zijn van BACKEND.
+
+- **Marks (MDA):** aanwijzingen op een modelelement voor een transformatie, los van het model
+  (plan `docs/plans/2026-11-18 Marks — markeringen op het model (plan).md`). Marks staan in lagen
+  met labels; een context is een keuze van lagen in een volgorde. In het werkbestand als `marks`
+  naast `kruisverbanden`; mee in de projectsync (`marks/patchMarks`) en in vergelijken en
+  samenvoegen van een branch.
+- **In de Studio:** sectie *Marks* in Eigenschappen (per element, en per veld een tabel velden ×
+  soorten), *Lagen…* voor lagen, eigen marksoorten en de soorten van transformaties. Op het canvas
+  een ruitje rechtsboven op een element, achter een veldnaam, of in het label van een lijn, met een
+  kaartje bij erboven hangen.
+- **Soorten:** `register.zoeksleutel`, `register.sorteerbaar` en (gereserveerd)
+  `register.tekstzoeken` op een veld van het canonieke model; daarnaast eigen marksoorten van het
+  project (`project.<naam>`), in elke taal.
+- **V3-bijlage:** *Exporteer V3* en de sidecar (`POST /export/v3`, nieuwe optionele velden `marks`
+  en `markContext`) zetten de geldende marks als blok `marks` naast het model; de codegen zoekt
+  per mark het veld op de uuid.
+- **E2e:** de tests 02 en 17 slagen weer (alleen de tests waren verouderd).
+- render 0.5.0: de code van studio 0.46.0, met de marks in `/export/v3` en in het naspelen
+  (`/materialiseer`, `/vergelijk`, `/samenvoegen`). Een render 0.4.9 werkt met deze Studio, maar
+  kent dan geen marks: ze vallen weg bij samenvoegen en bij de serverexport.
+
+Getest: Studio-unit 1790/1790, render-svc 34/34, e2e 185/185.
+
+Uitrol:
+- App: `viz-frontend:0.46.0` en `bitemp-render-svc:0.5.0` via `update.sh`. Geen schemawijziging en
+  geen rebuild voor dit deel.
+- Fundament: frontend 0.46.0 en render 0.5.0, met de devloop van BACKEND (api 0.29.0); wat die
+  vraagt staat in de melding van BACKEND.
+
+---
+
 ## api 0.28.0 / devloop 0.31.0 (2026-11-18)
 
 Akkoord Mark 18-11 ("okee, release maar"). Studio blijft 0.45.0 en render 0.4.9; devloop 0.31.0 is
