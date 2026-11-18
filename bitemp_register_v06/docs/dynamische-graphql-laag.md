@@ -301,8 +301,10 @@ De lijst-queries (`<padnaam>` en `full_<padnaam>_list`) hebben sinds 18-11-2026 
   regel als het filter.
 - Bij een meervoudig GE telt oplopend de laagste waarde en aflopend de hoogste.
 - Een entiteit zonder waarde komt achteraan, in beide richtingen.
-- Na de sleutels volgt altijd de id, oplopend. De volgorde is daardoor bepaald en paginering met
-  `limit`/`offset` blijft stabiel.
+- Na de sleutels volgt altijd de id, in de richting van de laatste sleutel (aflopend sorteren
+  geeft bij gelijke waarden dus de hoogste id eerst). De volgorde is daardoor bepaald en
+  paginering met `limit`/`offset` blijft stabiel. Tot en met api 0.30.0 was de id altijd
+  oplopend; de reden van de wijziging staat in `docs/INDEXEN.md` §Veel gelijke waarden.
 - Zonder `sorteer` is de volgorde op id, zoals altijd.
 - Een onbekend veld of meer dan drie sleutels geeft een fout, geen stille standaardvolgorde.
 - Met een toegangsbeleid is een veld dat het subject niet mag zien ook geen sorteersleutel:

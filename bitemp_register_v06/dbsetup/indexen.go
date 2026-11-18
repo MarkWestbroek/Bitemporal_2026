@@ -132,13 +132,22 @@ func ModelIndexDefinities() []IndexDefinitie {
 			if dataTabel == nil {
 				continue
 			}
+			// Achter de waarde staat de entiteit-id: dan levert de index ook de tweede
+			// sorteersleutel en hoeft PostgreSQL een groep met gelijke waarden niet te lezen
+			// (dynql/sortering.go). Het filter gebruikt het voorvoegsel.
+			metEntiteit := func(kolom string) []string {
+				if ent := meta.EntiteitIDKolom; ent != "" && ent != kolom && heeftKolom(dataTabel, ent) {
+					return []string{kolom, ent}
+				}
+				return []string{kolom}
+			}
 			for _, f := range dataTabel.Fields {
 				tag := model.ParseSchemaTag(f.StructField.Tag.Get("schema"))
 				if tag.Uniek != "" {
 					voegToe(IndexDefinitie{
 						Naam:     indexNaam(dataMeta.Tabelnaam, f.Name, "zoek"),
 						Tabel:    dataMeta.Tabelnaam,
-						Kolommen: []string{f.Name},
+						Kolommen: metEntiteit(f.Name),
 						Soort:    "uniek",
 						Vervangt: indexNaam(dataMeta.Tabelnaam, f.Name, "uniek"),
 						Reden:    fmt.Sprintf("uniekheidscontrole (%s) op %s", tag.Uniek, meta.Typenaam),
@@ -155,7 +164,7 @@ func ModelIndexDefinities() []IndexDefinitie {
 					voegToe(IndexDefinitie{
 						Naam:     indexNaam(dataMeta.Tabelnaam, f.Name, "zoek"),
 						Tabel:    dataMeta.Tabelnaam,
-						Kolommen: []string{f.Name},
+						Kolommen: metEntiteit(f.Name),
 						Soort:    "zoek",
 						Reden:    fmt.Sprintf("mark %s op %s", reden, meta.Typenaam),
 					})
@@ -219,6 +228,21 @@ func createModelIndexes(ctx context.Context, db bun.IDB) {
 		var bestaat bool
 		if err := db.NewRaw(`SELECT to_regclass(?) IS NOT NULL`, pgIdent(def.Tabel)).Scan(ctx, &bestaat); err != nil || !bestaat {
 			continue
+		}
+		// Staat er al een index met deze naam op andere kolommen (api 0.30.0: alleen de
+		// waarde), dan eerst weg: CREATE INDEX IF NOT EXISTS kijkt alleen naar de naam.
+		var kolommen string
+		if err := db.NewRaw(`SELECT COALESCE(string_agg(a.attname, ',' ORDER BY k.ord), '')
+			FROM pg_index i
+			CROSS JOIN LATERAL unnest(i.indkey) WITH ORDINALITY AS k(attnum, ord)
+			JOIN pg_attribute a ON a.attrelid = i.indrelid AND a.attnum = k.attnum
+			WHERE i.indexrelid = to_regclass(?)`, pgIdent(def.Naam)).Scan(ctx, &kolommen); err == nil &&
+			kolommen != "" && kolommen != strings.Join(def.Kolommen, ",") {
+			weg := "DROP INDEX IF EXISTS " + pgIdent(def.Naam)
+			if err := veiligeStap(ctx, db, func() error { _, err := db.ExecContext(ctx, weg); return err }); err != nil {
+				fmt.Printf("WARN: index %s met oude kolommen (%s) niet weggehaald: %v\n", def.Naam, kolommen, err)
+				continue
+			}
 		}
 		stmt := def.SQL(false)
 		if err := veiligeStap(ctx, db, func() error { _, err := db.ExecContext(ctx, stmt); return err }); err != nil {

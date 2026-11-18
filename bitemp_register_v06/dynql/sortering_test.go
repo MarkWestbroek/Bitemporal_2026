@@ -56,7 +56,7 @@ func TestSortering_GEVeldAlsSubqueryMetIDErachter(t *testing.T) {
 		`ORDER BY (SELECT MAX("s1d"."rol") FROM "initiatiefgemeente" AS "s1" JOIN "initiatiefgemeente_data" AS "s1d"`,
 		`"s1d"."initiatief_id" = "s1"."initiatief_id" AND "s1d"."rel_id" = "s1"."rel_id"`,
 		`"s1d"."afvoer" IS NULL`,
-		`WHERE "s1"."initiatief_id" = "initiatief"."id" AND "s1"."afvoer" IS NULL) DESC NULLS LAST, "initiatief"."id" ASC`,
+		`WHERE "s1"."initiatief_id" = "initiatief"."id" AND "s1"."afvoer" IS NULL) DESC NULLS LAST, "initiatief"."id" DESC`,
 	)
 }
 
@@ -206,15 +206,16 @@ func TestSorteringPG_Volgorde(t *testing.T) {
 		{"zonder sorteer: op id", `limit: 10`, []int{1, 2, 3, 4, 5}},
 		{"hub-kolom oplopend, zonder waarde achteraan",
 			`sorteer: [{ veld: "initiatief_gemeenten.gemeente_id" }]`, []int{2, 1, 5, 3, 4}},
+		// 3 en 4 hebben geen waarde: onderling op id, in de richting van de laatste sleutel.
 		{"hub-kolom aflopend: meervoudig telt de hoogste, zonder waarde nog steeds achteraan",
-			`sorteer: [{ veld: "initiatief_gemeenten.gemeente_id", aflopend: true }]`, []int{2, 5, 1, 3, 4}},
+			`sorteer: [{ veld: "initiatief_gemeenten.gemeente_id", aflopend: true }]`, []int{2, 5, 1, 4, 3}},
 		{"op peil vóór de afvoer telt 3 mee",
 			`sorteer: [{ veld: "initiatief_gemeenten.gemeente_id" }], peiltijdstip: "2025-06-01T00:00:00Z"`, []int{2, 3, 1, 5, 4}},
 		{"data-kolom oplopend, gelijke waarde op id",
 			`sorteer: [{ veld: "initiatief_gemeenten.rol" }]`, []int{2, 1, 5, 3, 4}},
 		{"twee sleutels: rol aflopend, dan gemeente aflopend",
 			`sorteer: [{ veld: "initiatief_gemeenten.rol", aflopend: true }, { veld: "initiatief_gemeenten.gemeente_id", aflopend: true }]`,
-			[]int{2, 5, 1, 3, 4}},
+			[]int{2, 5, 1, 4, 3}},
 		{"eigen kolom aflopend", `sorteer: [{ veld: "id", aflopend: true }]`, []int{5, 4, 3, 2, 1}},
 		{"met filter en paginering",
 			`filter: { initiatief_gemeenten: {} }, sorteer: [{ veld: "initiatief_gemeenten.gemeente_id" }], limit: 2, offset: 1`,

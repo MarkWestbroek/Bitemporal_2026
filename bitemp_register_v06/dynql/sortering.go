@@ -16,8 +16,10 @@ package dynql
 //   - Bij een meervoudig GE zijn er meerdere actieve records: oplopend telt de laagste
 //     waarde, aflopend de hoogste.
 //   - Een entiteit zonder waarde komt achteraan, in beide richtingen (NULLS LAST).
-//   - Na de opgegeven sleutels volgt altijd de id, oplopend. Zo is de volgorde bepaald en
-//     blijft paginering met limit/offset stabiel.
+//   - Na de opgegeven sleutels volgt altijd de id, in de richting van de laatste sleutel. Zo
+//     is de volgorde bepaald en blijft paginering met limit/offset stabiel. (Tot api 0.30.0
+//     was dat altijd oplopend; een index op (waarde, id) kan alleen één richting voor beide
+//     aflopen, zie docs/INDEXEN.md.)
 //   - Zonder `sorteer`: op id, zoals altijd.
 //
 // Alles komt uit de MetaRegistry, via dezelfde filterDef als het filter; er staat geen
@@ -114,9 +116,17 @@ func pasSorteringToe(query *bun.SelectQuery, meta model.TypeMeta, sortering []So
 		}
 	}
 	if meta.IDKolom != "" {
-		query = query.OrderExpr("?TableAlias.? ASC", bun.Ident(meta.IDKolom))
+		query = query.OrderExpr("?TableAlias.? "+idRichting(sortering), bun.Ident(meta.IDKolom))
 	}
 	return query, nil
+}
+
+// idRichting: de id sluit de sortering af in de richting van de laatste sleutel.
+func idRichting(sortering []Sortering) string {
+	if n := len(sortering); n > 0 && sortering[n-1].Aflopend {
+		return "DESC"
+	}
+	return "ASC"
 }
 
 // sorteerExpressie bouwt de SQL-expressie van één sleutel:
@@ -204,6 +214,20 @@ func (b *filterBouwer) sorteerToegang(pad string) error {
 // Entiteiten zonder waarde komen niet uit de join. Zij vormen een tweede deel, op id, dat de
 // pagina aanvult als het eerste deel op is. Zo blijft de regel "zonder waarde achteraan, in
 // beide richtingen" gelijk aan de subquery-vorm.
+//
+// Deel 1 heeft twee vormen (18-11-2026, na de meting van FUNDAMENT op 373.000 zaken waarvan
+// 270.000 op één startdatum):
+//
+//   - Zonder filter: ORDER BY <waarde>, <entiteit-id in dezelfde tabel>, beide in dezelfde
+//     richting. De index (waarde, entiteit-id) uit dbsetup/indexen.go levert die volgorde
+//     volledig; PostgreSQL stopt na de pagina, ook als heel veel entiteiten dezelfde waarde
+//     hebben. Met de id van de entiteit zelf als tweede sleutel, of in een andere richting,
+//     moest PostgreSQL de hele groep met gelijke waarde lezen.
+//   - Met een filter: eerst de entiteiten die aan het filter voldoen, met hun waarde, in een
+//     gematerialiseerde CTE; daarna sorteren. Zonder die grens kiest de planner door de LIMIT
+//     de index op de waarde en toetst hij het filter per rij; bij een filter dat weinig
+//     doorlaat leest hij dan bijna de hele index. Filter eerst is nooit duurder dan de
+//     subquery-vorm.
 
 // waardeSortering beschrijft de join waarmee op de waarde zelf gesorteerd kan worden.
 type waardeSortering struct {
@@ -326,9 +350,18 @@ func laadIDsOpWaarde(ctx context.Context, meta model.TypeMeta, v LijstVraag, w *
 		richting = "DESC"
 	}
 	var ids []int64
-	err = q1.OrderExpr("?.? "+richting, bun.Ident(w.waardeAlias()), bun.Ident(w.veld.kolom)).
-		OrderExpr("?TableAlias.? ASC", bun.Ident(meta.IDKolom)).
-		Limit(v.Limit).Offset(v.Offset).Scan(ctx, &ids)
+	if heeftFilter(v.Filter) {
+		// Filter eerst: de CTE is een grens voor de planner.
+		q1 = q1.ColumnExpr("?.? AS sorteerwaarde", bun.Ident(w.waardeAlias()), bun.Ident(w.veld.kolom))
+		err = db.NewRaw("WITH w AS MATERIALIZED (?) SELECT ? FROM w ORDER BY sorteerwaarde "+richting+", ? "+richting+" LIMIT ? OFFSET ?",
+			q1, bun.Ident(meta.IDKolom), bun.Ident(meta.IDKolom), v.Limit, v.Offset).Scan(ctx, &ids)
+	} else {
+		// De tweede sleutel is de entiteit-id in de tabel van de waarde: dezelfde waarde als
+		// de id van de entiteit, maar zo dat de index (waarde, entiteit-id) de volgorde geeft.
+		err = q1.OrderExpr("?.? "+richting, bun.Ident(w.waardeAlias()), bun.Ident(w.veld.kolom)).
+			OrderExpr("?.? "+richting, bun.Ident(w.waardeAlias()), bun.Ident(w.kind.hubMeta.EntiteitIDKolom)).
+			Limit(v.Limit).Offset(v.Offset).Scan(ctx, &ids)
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -360,12 +393,23 @@ func laadIDsOpWaarde(ctx context.Context, meta model.TypeMeta, v LijstVraag, w *
 	geenWaarde := "NOT EXISTS (SELECT 1 FROM " + w.bron(b) + " WHERE " + w.bijEntiteit(b) + ")"
 	var rest []int64
 	err = q2.Where(geenWaarde, b.args...).
-		OrderExpr("?TableAlias.? ASC", bun.Ident(meta.IDKolom)).
+		OrderExpr("?TableAlias.? "+richting, bun.Ident(meta.IDKolom)).
 		Limit(v.Limit-len(ids)).Offset(offset2).Scan(ctx, &rest)
 	if err != nil {
 		return nil, err
 	}
 	return append(ids, rest...), nil
+}
+
+// heeftFilter: is er een filter dat rijen kan weglaten?
+func heeftFilter(filter any) bool {
+	if filter == nil {
+		return false
+	}
+	if f, ok := filter.(map[string]interface{}); ok {
+		return len(f) > 0
+	}
+	return true
 }
 
 // zetOpVolgorde zet een geladen slice (pointer naar []T) in de volgorde van ids.
