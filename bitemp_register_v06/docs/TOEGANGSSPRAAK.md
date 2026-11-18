@@ -180,7 +180,7 @@ Toegangsspraak maar evalueert de bundel. ODRL blijft het uitwisselformaat.
 | Semantiek | |
 |---|---|
 | standaard | `weigeren` (default) of `toestaan` — kopregel `Standaard:` |
-| conflict | `verbod-wint` (default), `toestemming-wint` of `eerste-geldt` (volgorde = prioriteit) — kopregel `Bij conflict:`. ODRL JSON-LD: `prohibit`, `perm`, `nlgov:eersteRegel`; standaard-toestaan als `nlgov:standaard`. De Turtle-export (ODRL-AP-NL) schrijft nog vast `odrl:prohibit` |
+| conflict | `verbod-wint` (default), `toestemming-wint` of `eerste-geldt` (volgorde = prioriteit) — kopregel `Bij conflict:`. ODRL JSON-LD: `prohibit`, `perm`, `nlgov:eersteRegel`; standaard-toestaan als `nlgov:standaard`. De Turtle-export (ODRL-AP-NL) schrijft `odrl:prohibit`, `odrl:perm` of `ts:eersteRegel`, en standaard-toestaan als `ts:standaard` (`TRANSFORMATIES.md` §8.1) |
 | dekking | een regel dekt zijn registerpad en alles eronder, per padsegment; `*` dekt alles |
 | subject | `null` = iedereen (ook anoniem); anders moeten alle kenmerken aanwezig zijn (hoofdletterongevoelig) |
 | voorwaarden | drieweg: waar / onwaar / onbepaald. Kenmerken van de **aanvrager** zijn een gesloten wereld (ontbreken = leeg). Gegevens van de **betrokkene** en PIP-vragen (`bestaat`) zijn onbepaald zolang de PDP ze niet kent. Fail-closed: een toestemming met een onbepaalde voorwaarde geldt níet (staat dan in `Voorwaardelijk`), een verbod met een onbepaalde voorwaarde geldt wél |

@@ -481,10 +481,21 @@ regelt iets anders of mist iets) en `woorden` (alleen anders geschreven).
 
 **Wat alleen via de tekst terugkomt** (de structuur draagt het niet): de volgorde van
 voorwaarden over verzoek en gegevens door elkaar; een doelbinding die ook nog eens in de
-regel stond; `waarvan` bij een begrip en "voor …" bij een bestaansvraag (wel via een
-zinsnede); een verwijzing als rechterterm; de kop van een begrip ("Het dossier is");
-begrippen die geen regel gebruikt; `Standaard:` en `Bij conflict:` (de export schrijft
-vast `odrl:prohibit`).
+regel stond; de kop van een begrip ("Het dossier is"); begrippen die geen regel gebruikt.
+
+**Sinds regelset v3 van de export (19-11) draagt de structuur ook** wat tot dan alleen de
+oude JSON-LD-export (`odrl.js`) zei. Dat is stap 1 van het uitfaseren van die export:
+
+| In de taal | In de ODRL |
+|---|---|
+| `Bij conflict: toestemming gaat voor` / `de eerste regel geldt` | `odrl:conflict odrl:perm` / `ts:eersteRegel` (een `odrl:ConflictTerm`); zonder kopregel `odrl:prohibit` |
+| `Standaard: toestaan` | `ts:standaard "toestaan"` op het beleid (ODRL weigert zelf wat niet is toegestaan, dus alleen toestaan hoeft gezegd) |
+| `waarvan …` bij een begrip | `odrl:refinement` op de gegevensverzameling: de afbakening van de populatie |
+| `er is een … voor de betrokkene` | `ts:voor` op de voorwaarde, naar de operand van wie het geldt |
+| een verwijzing als rechterterm ("… is de afdeling van de aanvrager") | `odrl:rightOperandReference` naar die operand, in plaats van de zin als tekst |
+
+De import leest ze alle vijf terug uit de structuur, ook zonder de zinsneden (getest met
+het beleid `VOLLEDIG_BELEID`).
 
 **ODRL van anderen** leest de import sinds regelset v2 ook, als concept: zie §8.2.
 

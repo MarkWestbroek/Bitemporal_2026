@@ -20,7 +20,7 @@
  *   term — een woord uit de taal dat in het doel een eigen naam nodig heeft:
  *     operand, operator, handeling, plichthandeling, niveau
  *
- * Verbindingen dragen `aard`: regel, grondslag, doel, doet, wie, wat, als, lid,
+ * Verbindingen dragen `aard`: regel, grondslag, doel, afbakening, doet, wie, wat, als, lid,
  * waarbij, onderdeel-van, waarde, zie-ook, niveau, kenmerk.
  *
  * Eén keuze van de lezer verdient uitleg: **waar een voorwaarde aan hangt.**
@@ -59,7 +59,7 @@ const DEFINITIE = {
 
 /** Literal uit de AST → getypeerde waarde. */
 const getypeerd = (term) =>
-  term.type === "getal" ? Number(term.waarde) : term.type === "datum" ? { datum: String(term.waarde) } : { letterlijk: String(term.waarde) };
+  term.soort !== "literal" ? { letterlijk: renderVerwijzing(term) } : term.type === "getal" ? Number(term.waarde) : term.type === "datum" ? { datum: String(term.waarde) } : { letterlijk: String(term.waarde) };
 const ketenSubpad = (keten) => keten.slice().reverse().map((g) => woordenNaarVeldnaam(g.woorden)).join(".");
 
 /**
@@ -130,11 +130,17 @@ export function beleidNaarGraaf(beleid, opties = {}) {
     // De canonieke klare taal reist mee (ts:brontekst): de import neemt haar over als ze
     // aantoonbaar hetzelfde zegt als de ODRL, en houdt zo woordkeus en volgorde (odrlImport.js).
     brontekst: canoniek,
+    // De superpolicy: hoe regels die elkaar tegenspreken worden afgewogen (ODRL kent prohibit en
+    // perm; "de eerste regel geldt" is een eigen term), en wat geldt als geen regel iets zegt
+    // (ODRL weigert dan; alleen "toestaan" hoeft gezegd).
+    conflict: { "toestemming-wint": "odrl:perm", "eerste-geldt": "ts:eersteRegel" }[beleid.conflict] || "odrl:prohibit",
+    standaard: beleid.standaard === "toestaan" ? "toestaan" : "",
     toelichting:
       "Geschreven in Toegangsspraak (klare taal) en daaruit vertaald naar ODRL. Elke regel draagt zijn oorspronkelijke zin als beschrijving." +
       (beleid.doel ? ` Doel: ${beleid.doel}.` : "") +
       (beleid.grondslag ? ` Grondslag: ${beleid.grondslag}.` : ""),
   });
+  if (beleid.conflict === "eerste-geldt") term("ts:eersteRegel", "conflictregel", "de eerste regel geldt");
   if (beleid.grondslag) {
     knoop("grondslag", { aard: "grondslag", tekst: beleid.grondslag });
     verbind("grondslag", "beleid", "grondslag");
@@ -175,6 +181,23 @@ export function beleidNaarGraaf(beleid, opties = {}) {
     });
   }
 
+  /** Een verwijzing als operand: anker en subpad, en bij een pad in het model het registerdeel. */
+  function operandVan(verwijzing) {
+    const vanVorm = renderVerwijzing(verwijzing);
+    if (verwijzing.basis.soort === "type") {
+      const subpad = resolveer(verwijzing.pad || verwijzingNaarPad(verwijzing));
+      return { anker: "veldwaarde", subpad, vanVorm, deel: registerdeel(subpad, vanVorm), id: `ts:veldwaarde.${subpad}` };
+    }
+    const subpad = ketenSubpad(verwijzing.keten);
+    return { anker: verwijzing.basis.anker, subpad, vanVorm, deel: null, id: `ts:${verwijzing.basis.anker}${subpad ? `.${subpad}` : ""}` };
+  }
+  /** De term van een operand in de woordenschat (met de zinsnede als label). */
+  function operandTerm(o) {
+    const id = term(o.id, "operand", o.vanVorm, { anker: o.anker, subpad: o.subpad, definitie: DEFINITIE[o.anker] || "" });
+    if (o.deel) verbind("zie-ook", id, o.deel);
+    return id;
+  }
+
   function voorwaarde(v) {
     const zin = renderVoorwaarde(v, "stelling");
     const id = `vw-${slug(zin)}`;
@@ -187,25 +210,15 @@ export function beleidNaarGraaf(beleid, opties = {}) {
         definitie: DEFINITIE.bestaat,
       });
       term("ts:bestaat", "operator", "bestaat");
-      return knoop(id, { aard: "voorwaarde", tekst: zin, anker: "bestaat", subpad, operator: "bestaat", kern: false, waarde: !e.ontkenning, over: "bron" });
+      // "voor …": voor wie het moet bestaan, als verwijzing naar die operand (ts:voor).
+      const voor = e.voor ? operandTerm(operandVan(e.voor)) : "";
+      return knoop(id, { aard: "voorwaarde", tekst: zin, anker: "bestaat", subpad, operator: "bestaat", kern: false, waarde: !e.ontkenning, voor, over: "bron" });
     }
-    const { basis, keten } = v.links;
-    const vanVorm = renderVerwijzing(v.links);
-    let anker;
-    let subpad;
-    let deel = null;
-    if (basis.soort === "type") {
-      anker = "veldwaarde";
-      subpad = resolveer(v.links.pad || verwijzingNaarPad(v.links));
-      deel = registerdeel(subpad, vanVorm);
-    } else {
-      anker = basis.anker;
-      subpad = ketenSubpad(keten);
-    }
+    const links = operandVan(v.links);
+    const { anker, subpad } = links;
     // De doelbinding in een voorwaarde is dezelfde knoop als die van het beleid.
     if (anker === "aanvraag" && subpad === "doel" && v.operator === "eq" && v.rechts?.soort === "literal") return doelVoorwaarde(v.rechts.waarde);
-    const operand = term(`ts:${anker}${subpad ? `.${subpad}` : ""}`, "operand", vanVorm, { anker, subpad, definitie: DEFINITIE[anker] || "" });
-    if (deel) verbind("zie-ook", operand, deel);
+    operandTerm(links);
     const op = vindOperator(v.operator);
     const kern = Boolean(op?.odrl?.startsWith("odrl:"));
     if (!kern) term(`ts:${v.operator}`, "operator", op?.zin || v.operator);
@@ -213,7 +226,10 @@ export function beleidNaarGraaf(beleid, opties = {}) {
     if (op?.unair) waarde = true;
     else if (op?.lijst) waarde = v.lijst.map(getypeerd);
     else if (op?.tussen) waarde = [getypeerd(v.rechts), getypeerd(v.rechts2)];
-    else waarde = v.rechts.soort === "literal" ? getypeerd(v.rechts) : { letterlijk: renderVerwijzing(v.rechts) };
+    else if (v.rechts.soort === "literal") waarde = getypeerd(v.rechts);
+    // Een verwijzing als rechterterm ("… is de afdeling van de aanvrager"): geen waarde maar een
+    // verwijzing naar die operand (odrl:rightOperandReference).
+    const waardeVerwijzing = !op?.unair && !op?.lijst && !op?.tussen && v.rechts.soort !== "literal" ? operandTerm(operandVan(v.rechts)) : "";
     return knoop(id, {
       aard: "voorwaarde",
       tekst: zin,
@@ -222,6 +238,7 @@ export function beleidNaarGraaf(beleid, opties = {}) {
       operator: v.operator,
       kern,
       waarde,
+      waardeVerwijzing,
       over: anker === "aanvraag" || anker === "aanvrager" ? "verzoek" : "bron",
     });
   }
@@ -277,6 +294,8 @@ export function beleidNaarGraaf(beleid, opties = {}) {
     if (begrip) {
       const { v, pad } = padVan(begrip.wat);
       verbind("onderdeel-van", registerdeel(pad, renderVerwijzing(v)), id);
+      // "waarvan …" bakent de populatie af: een voorwaarde op de verzameling zelf.
+      if (begrip.waarvan) verbind("afbakening", id, voorwaarde(begrip.waarvan));
     }
     return id;
   }

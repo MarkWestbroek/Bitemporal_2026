@@ -1,4 +1,4 @@
-# GBO persoon — Toegangsspraak → ODRL (ODRL-AP-NL), regelset toegangsspraak-naar-odrl-ap-nl v2.
+# GBO persoon — Toegangsspraak → ODRL (ODRL-AP-NL), regelset toegangsspraak-naar-odrl-ap-nl v3.
 # Gegenereerd; niet met de hand wijzigen. Bron in klare taal: beleid/gbo-persoon.toegangsspraak
 #
 #   Beleid "GBO persoon".
@@ -163,7 +163,8 @@ b:vw-er-is-een-toestemming-voor-de-betrokkene a odrl:Constraint ;
     rdfs:label "er is een toestemming voor de betrokkene"@nl ;
     odrl:leftOperand ts:bestaat.toestemming ;
     odrl:operator ts:bestaat ;
-    odrl:rightOperand true .
+    odrl:rightOperand true ;
+    ts:voor ts:betrokkene .
 
 b:vw-aanvrager-autorisatie-naam-en-adres a odrl:Constraint ;
     rdfs:label "de autorisatie van de aanvrager is \"naam-en-adres\""@nl ;
@@ -352,6 +353,10 @@ ts:bestaat.toestemming a odrl:LeftOperand , skos:Concept ;
 
 ts:bestaat a odrl:Operator , skos:Concept ;
     rdfs:label "bestaat"@nl .
+
+ts:betrokkene a odrl:LeftOperand , skos:Concept ;
+    rdfs:label "de betrokkene"@nl ;
+    skos:definition "Gegeven van de persoon over wie de gegevens gaan; pas te toetsen met de gegevens in handen."@nl .
 
 ts:aanvrager.autorisatie a odrl:LeftOperand , skos:Concept ;
     rdfs:label "de autorisatie van de aanvrager"@nl ;

@@ -9,7 +9,7 @@ import { fileURLToPath } from "node:url";
 
 import { parseBeleid } from "./parser.js";
 import { VOORBEELD_BELEID } from "./voorbeeld.js";
-import { VOORBEELDEN, DEMO_BELEID, GBO_BELEID, RIJK_BELEID } from "./fixtures/voorbeelden.js";
+import { VOORBEELDEN, DEMO_BELEID, GBO_BELEID, RIJK_BELEID, VOLLEDIG_BELEID } from "./fixtures/voorbeelden.js";
 import { beleidNaarGraaf } from "./graaf.js";
 import { TOEGANGSSPRAAK_NAAR_ODRL_AP_NL } from "./odrlApNlRegels.js";
 import { toegangsspraakNaarOdrl } from "./odrlExport.js";
@@ -124,7 +124,7 @@ test("ODRL: groep door kenmerken, register als partOf-hiërarchie, bestaansvraag
   assert.match(blok(gbo, "b:vw-het-jaar-van-de-aanvraag-is-ten-hoogste-2024"), /odrl:leftOperand ts:aanvraag\.jaar ;\n {4}odrl:operator odrl:lteq ;\n {4}odrl:rightOperand 2024 \./);
   // De bestaansvraag is geen kenmerk van het verzoek: voorwaarde op de regel.
   assert.match(blok(gbo, "b:regel-persoon-op-bsn"), /odrl:constraint b:vw-er-is-een-toestemming-voor-de-betrokkene \./);
-  assert.match(blok(gbo, "b:vw-er-is-een-toestemming-voor-de-betrokkene"), /odrl:leftOperand ts:bestaat\.toestemming ;\n {4}odrl:operator ts:bestaat ;\n {4}odrl:rightOperand true \./);
+  assert.match(blok(gbo, "b:vw-er-is-een-toestemming-voor-de-betrokkene"), /odrl:leftOperand ts:bestaat\.toestemming ;\n {4}odrl:operator ts:bestaat ;\n {4}odrl:rightOperand true ;\n {4}ts:voor ts:betrokkene \./);
 });
 
 test("ODRL: geneste voorwaarden worden een LogicalConstraint met een lijst in tekstvolgorde", () => {
@@ -138,6 +138,30 @@ test("ODRL: geneste voorwaarden worden een LogicalConstraint met een lijst in te
   assert.match(turtle, /odrl:operator odrl:isAnyOf ;\n {4}odrl:rightOperand "balie" , "post" \./);
   assert.match(blok(turtle, "b:handeling-genest"), /rdf:value odrl:modify/);
   assert.match(blok(turtle, "b:groep-rol-beheerder"), /skos:definition "iemand met rol \\"beheerder\\""@nl/);
+});
+
+test("ODRL: de superpolicy, waarvan, 'voor' en een verwijzing als rechterterm", () => {
+  const uit = toegangsspraakNaarOdrl(VOLLEDIG_BELEID, OPTIES);
+  assert.ok(uit.ok);
+  assert.deepEqual(uit.trace.filter((s) => s.actie === "geen-regel" || s.actie === "overgeslagen"), []);
+  const { turtle } = uit;
+  // Bij conflict en Standaard: ODRL kent prohibit en perm; de rest is eigen woordenschat.
+  assert.match(turtle, /odrl:conflict ts:eersteRegel ;\n {4}ts:standaard "toestaan" ;/);
+  assert.match(blok(turtle, "ts:eersteRegel"), /a odrl:ConflictTerm , skos:Concept ;\n {4}rdfs:label "de eerste regel geldt"@nl \./);
+  assert.match(toegangsspraakNaarOdrl(VOLLEDIG_BELEID.replace("de eerste regel geldt", "toestemming gaat voor"), OPTIES).turtle, /odrl:conflict odrl:perm ;/);
+  // Zonder die kopregels: verbod gaat voor, en geen Standaard (ODRL weigert zelf).
+  const gewoon = toegangsspraakNaarOdrl(RIJK_BELEID, OPTIES).turtle;
+  assert.ok(gewoon.includes("odrl:conflict odrl:prohibit ;") && !gewoon.includes("ts:standaard"));
+  // waarvan: een verfijning op de verzameling (de populatie).
+  assert.match(blok(turtle, "b:gegevens-dossier"), /a odrl:AssetCollection ;[\s\S]*odrl:refinement b:vw-de-status-van-de-gegevens-is-open \./);
+  assert.match(blok(turtle, "b:vw-de-status-van-de-gegevens-is-open"), /odrl:leftOperand ts:gegevens\.status ;\n {4}odrl:operator odrl:eq ;\n {4}odrl:rightOperand "open" \./);
+  // Een verwijzing als rechterterm: geen tekst maar een verwijzing naar die operand.
+  const vw = blok(turtle, "b:vw-de-afdeling-van-de-betrokkene-is-de-afdeling-van-de-aanvrager");
+  assert.match(vw, /odrl:leftOperand ts:betrokkene\.afdeling ;\n {4}odrl:operator odrl:eq ;\n {4}odrl:rightOperandReference ts:aanvrager\.afdeling \./);
+  assert.ok(!vw.includes("odrl:rightOperand "));
+  assert.match(blok(turtle, "ts:aanvrager.afdeling"), /a odrl:LeftOperand , skos:Concept ;\n {4}rdfs:label "de afdeling van de aanvrager"@nl/);
+  // "voor …": voor wie de bestaansvraag geldt.
+  assert.match(blok(turtle, "b:vw-er-is-een-behandelrelatie-voor-de-betrokkene"), /odrl:rightOperand true ;\n {4}ts:voor ts:betrokkene \./);
 });
 
 test("aanvulling: een tweede bron kan knopen en regels toevoegen (realisatie)", () => {

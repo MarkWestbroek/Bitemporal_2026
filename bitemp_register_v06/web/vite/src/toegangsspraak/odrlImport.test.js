@@ -10,7 +10,7 @@ import fs from "node:fs";
 import { parseBeleid } from "./parser.js";
 import { renderBeleid } from "./renderer.js";
 import { VOORBEELD_BELEID } from "./voorbeeld.js";
-import { VOORBEELDEN, GBO_BELEID } from "./fixtures/voorbeelden.js";
+import { VOORBEELDEN, GBO_BELEID, VOLLEDIG_BELEID } from "./fixtures/voorbeelden.js";
 import { toegangsspraakNaarOdrl } from "./odrlExport.js";
 import { odrlNaarToegangsspraak, odrlBrongraaf, importMeldingen, verliesrapport } from "./odrlImport.js";
 import { ODRL_AP_NL_NAAR_TOEGANGSSPRAAK } from "./odrlNaarToegangsspraakRegels.js";
@@ -106,6 +106,33 @@ test("uit de structuur: zinsneden uit de ODRL geven de woorden terug (waarvan, v
   const zonder = naarOdrl(FIJN_BELEID).replace(/^ {4}ts:volgorde \d+ ;\n/gm, "");
   assert.ok(!zonder.includes("ts:volgorde"));
   assert.deepEqual(odrlNaarToegangsspraak(zonder, { negeerBrontekst: true }).beleid.regels.map((x) => x.naam), ["niet afvoeren", "inzage"]);
+});
+
+test("uit de structuur: superpolicy, waarvan, 'voor' en een verwijzing als rechterterm komen terug", () => {
+  const ttl = naarOdrl(VOLLEDIG_BELEID);
+  assert.equal(odrlNaarToegangsspraak(ttl).weg, "brontekst");
+  // Zonder de brontekst, en zonder de zinsneden die de woorden zouden geven: alleen de structuur.
+  const kaal = ttl
+    .replace(/^ {4}rdfs:label "(er is een behandelrelatie|de afdeling van de betrokkene is)[^\n]*\n/gm, "")
+    .replace(/^ {4}skos:definition "alle gegevens van het dossier[^\n]*\n/m, "");
+  assert.ok(!kaal.includes('rdfs:label "er is een behandelrelatie') && !kaal.includes('skos:definition "alle gegevens van het dossier'));
+  for (const bron of [ttl, kaal]) {
+    const r = odrlNaarToegangsspraak(bron, { negeerBrontekst: true });
+    assert.equal(r.weg, "structuur");
+    assert.deepEqual(meldingen(r).filter((c) => c !== "ODRL-VERSCHIL"), []);
+    assert.equal(r.beleid.standaard, "toestaan");
+    assert.equal(r.beleid.conflict, "eerste-geldt");
+    const dossier = r.beleid.begrippen.find((b) => b.soort === "wat");
+    assert.equal(dossier.waarvan.operator, "eq");
+    assert.deepEqual(dossier.waarvan.links.basis, { soort: "anker", lidwoord: "de", anker: "gegevens" });
+    const [afdeling, relatie] = r.beleid.regels[0].voorwaarden.items;
+    assert.equal(afdeling.rechts.soort, "verwijzing", "de rechterterm is een gegeven, geen tekst");
+    assert.equal(afdeling.rechts.basis.anker, "aanvrager");
+    assert.equal(relatie.existentie.voor.basis.anker, "betrokkene");
+    assert.equal(r.tekst, canoniek(VOLLEDIG_BELEID), "dezelfde tekst, ook zonder de zinsneden");
+  }
+  // Met de zinsneden erbij regelt een nieuwe export precies hetzelfde.
+  assert.equal(odrlNaarToegangsspraak(ttl, { negeerBrontekst: true }).verschil.structuur, 0);
 });
 
 test("bewerkte ODRL: de brontekst klopt niet meer, dus de structuur wint", () => {
