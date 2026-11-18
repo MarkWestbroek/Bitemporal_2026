@@ -44,11 +44,19 @@
  *     de gegevens), dan valt het weg met de waarschuwing dat het beleid
  *     daardoor ruimer is.
  *   - Een plicht op het beleid en overerving van een ander beleid kent de taal
- *     niet: gemeld als ruimer.
+ *     niet: gemeld als ruimer. Zo ook een aanbod of verzoek (geen geldend
+ *     beleid) en de conflictregel `odrl:invalid`.
+ *   - Een verbod op elk gebruik (`odrl:use`) wordt uitgeschreven voor elke
+ *     handeling van de taal.
+ *
+ * Wat op het beleid staat geldt voor elke regel zonder eigen (ODRL 2.2 §2.7.1):
+ * partij, gegevens en handeling. De plek van een voorwaarde zegt waar ze over
+ * gaat: een verfijning op de groep over de aanvrager, een verfijning op de
+ * gegevens over de gegevens (de populatie), de rest over de aanvraag.
  *
  * Interpretaties (meldingen ODRL-INTERPRETATIE): een operand uit een ander
- * vocabulaire is een kenmerk van de **aanvrager** als hij een groep bepaalt en
- * anders van de **aanvraag**; een benoemde partij wordt een begrip met het
+ * vocabulaire is een kenmerk van de **aanvrager** als hij een groep bepaalt,
+ * van de **gegevens** als hij de gegevens afbakent en anders van de **aanvraag**; een benoemde partij wordt een begrip met het
  * kenmerk `organisatie`; een asset zonder pad in een register wordt gelezen
  * naar zijn naam en zijn `odrl:partOf`-keten.
  *
@@ -56,7 +64,7 @@
  */
 import { parseBeleid, padNaarVerwijzing, verwijzingNaarPad, verwijzingNaarGroepPad, ANKERS } from "./parser.js";
 import { beleidNaarGraaf } from "./graaf.js";
-import { vindOperator, vindActie, geefPlichten, vindPlicht } from "./operatoren.js";
+import { vindOperator, vindActie, geefActies, geefPlichten, vindPlicht } from "./operatoren.js";
 import { camelNaarWoorden, lidwoordVoor, woordenNaarVeldnaam } from "./woorden.js";
 import { woordVoorHandeling } from "./odrlNaarToegangsspraakRegels.js";
 
@@ -191,9 +199,11 @@ export function planNaarBeleid(plan, opties = {}) {
     meld("info", "ODRL-MEER-BELEID", `De ODRL bevat ${beleidEls.length} beleiden; "${naamVan(beleidEl)}" is gelezen. De andere: ${beleiden.filter((b) => b.sleutel !== beleidEl.sleutel).map((b) => `"${b.naam}"`).join(", ")}.`, beleidEl.sleutel);
   }
   const doelEl = uit(beleidEl.sleutel, "doel")[0]?.el || null;
+  // Eigen ODRL: geschreven door de export van Toegangsspraak (ze noemt haar woordenschat als profiel).
+  const eigen = [beleidEl.data.profiel].flat().includes("ts:profiel");
 
   // Per regel: wat niet te vertalen was. `fataal` = de regel zelf is niet te lezen.
-  let nu = { gemist: [], smaller: [], fataal: [] };
+  let nu = { gemist: [], smaller: [], fataal: [], namen: [] };
   const mis = (tekst) => nu.gemist.push(tekst);
   const interpretaties = new Set();
   const interpreteer = (tekst) => interpretaties.add(tekst);
@@ -202,7 +212,8 @@ export function planNaarBeleid(plan, opties = {}) {
   /**
    * Anker, subpad, operator en waarde van een voorwaarde-element.
    * @param {any} e
-   * @param {"partij"|"regel"} plek  bepaalt de groep (kenmerk van de aanvrager) of hoort bij de regel
+   * @param {"partij"|"gegevens"|"regel"} plek  de plek van de voorwaarde in de ODRL zegt waar ze over gaat:
+   *        verfijning op de groep = de aanvrager, verfijning op de gegevens = de gegevens, de rest = de aanvraag
    */
   function structuur(e, plek) {
     let { anker, subpad } = e.data;
@@ -215,7 +226,7 @@ export function planNaarBeleid(plan, opties = {}) {
       // Een operand uit een ander vocabulaire: kenmerk van de aanvrager (bij een groep) of van de aanvraag.
       const woorden = naamWoorden(camelNaarWoorden(e.data.vreemd).join(" "), { streng: true, klein: true });
       if (woorden.length) {
-        anker = plek === "partij" ? "aanvrager" : "aanvraag";
+        anker = plek === "partij" ? "aanvrager" : plek === "gegevens" ? "gegevens" : "aanvraag";
         subpad = woordenNaarVeldnaam(woorden);
         interpreteer(`De operand "${el.get(e.data.vreemdIri)?.naam || e.data.vreemd}" komt uit een ander vocabulaire; hij is gelezen als "${lidwoordVoor(woorden[woorden.length - 1])} ${woorden.join(" ")} van de ${anker}".`);
       }
@@ -223,8 +234,11 @@ export function planNaarBeleid(plan, opties = {}) {
     // Is de waarde een begrip (de doelbinding, een afdeling, een partij), dan is ze een verbinding — of een lijst ervan.
     const begrippen = uit(e.sleutel, "waarde").sort((a, b) => (Number(a.data.positie) || 0) - (Number(b.data.positie) || 0));
     const waarde = begrippen.length > 1 ? begrippen.map((c) => ({ letterlijk: naamVan(c.el) })) : begrippen.length ? { letterlijk: naamVan(begrippen[0].el) } : e.data.waarde;
-    // Alleen een vergelijking van ODRL of van de eigen woordenschat is dezelfde als die van de taal.
-    const bekend = !e.data.operatorIri || /^(odrl|ts):/.test(e.data.operatorIri);
+    // Buiten de eigen export is zo'n begrip een IRI of code; in de tekst staat zijn naam.
+    if (begrippen.length && !eigen) nu.namen.push(...begrippen.map((c) => naamVan(c.el)));
+    // Alleen een vergelijking van ODRL, van de eigen woordenschat (ts:) of van het NLGov-profiel
+    // (nlgov:, de JSON-LD-export) is dezelfde als die van de taal.
+    const bekend = !e.data.operatorIri || /^(odrl|ts|nlgov):/.test(e.data.operatorIri);
     return { anker: anker || "", subpad: subpad || "", operator: bekend ? e.data.operator || "" : "", operatorNaam: el.get(e.data.operatorIri)?.naam || e.data.operator || "", waarde };
   }
   const sleutelVan = (s) => [s.anker, s.subpad, s.operator, waardeSleutel(s.waarde)].join("|");
@@ -325,9 +339,9 @@ export function planNaarBeleid(plan, opties = {}) {
     const over = items.filter(Boolean);
     return over.length ? { soort, items: over } : null;
   }
-  const item = (e, pad) => {
+  const item = (e, pad, plek = "regel") => {
     if (e.type === "voorwaardegroep") return groep(e, pad);
-    if (e.type === "voorwaarde") return voorwaarde(e);
+    if (e.type === "voorwaarde") return voorwaarde(e, plek);
     mis(`"${naamVan(e)}" is geen voorwaarde die Toegangsspraak kent`);
     return null;
   };
@@ -438,7 +452,8 @@ export function planNaarBeleid(plan, opties = {}) {
   }
 
   function wat(regelEl) {
-    const doel = uit(regelEl.sleutel, "wat")[0]?.el;
+    // De gegevens van de regel, anders die van het beleid (ODRL 2.2 §2.7.1).
+    const doel = (uit(regelEl.sleutel, "wat")[0] || uit(beleidEl.sleutel, "wat")[0])?.el;
     if (!doel) {
       nu.fataal.push("er staan geen gegevens bij (odrl:target), of het zijn geen gegevens die Toegangsspraak kan lezen");
       return null;
@@ -494,10 +509,14 @@ export function planNaarBeleid(plan, opties = {}) {
    * zegt dan meer dan de ODRL), een woord dat minder omvat dan de ODRL-handeling
    * of een handeling die wegvalt is `smaller`.
    */
-  function handelingenVan(regelEl) {
-    const knopen = uit(regelEl.sleutel, "doet").map((c) => c.el);
+  function handelingenVan(regelEl, verbod) {
+    const eigenKnopen = uit(regelEl.sleutel, "doet").map((c) => c.el);
     // Zonder eigen knoop staat de handeling als IRI op de regel (odrl:action odrl:read) — of een lijst ervan.
-    const iris = [regelEl.data.handeling].flat().filter((x) => typeof x === "string" && x && !el.has(x));
+    const eigenIris = [regelEl.data.handeling].flat().filter((x) => typeof x === "string" && x && !el.has(x));
+    // Zonder eigen handeling geldt die van het beleid (ODRL 2.2 §2.7.1).
+    const vanBeleid = !eigenKnopen.length && !eigenIris.length;
+    const knopen = vanBeleid ? uit(beleidEl.sleutel, "doet").map((c) => c.el) : eigenKnopen;
+    const iris = vanBeleid ? [beleidEl.data.handeling].flat().filter((x) => typeof x === "string" && x && !el.has(x)) : eigenIris;
     const bronnen = [...knopen.map((k) => ({ knoop: k, iri: k.type === "handeling" ? k.data.bron || "" : k.sleutel, woord: k.type === "handeling" && k.data.actie ? k.data.actie : "" })), ...iris.map((iri) => ({ knoop: null, iri, woord: "" }))];
     const woorden = [];
     const onbekend = [];
@@ -508,7 +527,12 @@ export function planNaarBeleid(plan, opties = {}) {
         continue;
       }
       if (gevonden.smaller) mis(`de handeling "${gevonden.naam}" is een bijzondere vorm van ${gevonden.boven}; Toegangsspraak kent daarvoor alleen het bredere "${gevonden.woord}"`);
-      else if (gevonden.ruim) nu.smaller.push(`de handeling ${gevonden.naam} omvat meer dan "${gevonden.woord}"`);
+      else if (gevonden.ruim && verbod) {
+        // Een verbod op elk gebruik: uitgeschreven voor elke handeling die de taal kent, zodat het niet ruimer wordt.
+        interpreteer(`De handeling ${gevonden.naam} omvat elk gebruik; het verbod is uitgeschreven voor elke handeling die Toegangsspraak kent.`);
+        for (const a of geefActies()) if (!woorden.includes(a.woord)) woorden.push(a.woord);
+        continue;
+      } else if (gevonden.ruim) nu.smaller.push(`de handeling ${gevonden.naam} omvat meer dan "${gevonden.woord}"`);
       else if (!gevonden.exact) interpreteer(`De handeling ${gevonden.naam} is gelezen als "${gevonden.woord}".`);
       if (!woorden.includes(gevonden.woord)) woorden.push(gevonden.woord);
     }
@@ -528,11 +552,11 @@ export function planNaarBeleid(plan, opties = {}) {
   let ruimer = false;
   regelEls.forEach((regelEl, index) => {
     telling.regels += 1;
-    nu = { gemist: [], smaller: [], fataal: [] };
+    nu = { gemist: [], smaller: [], fataal: [], namen: [] };
     const verbod = regelEl.data.modaliteit === "mag-niet";
     // Een naam staat tussen aanhalingstekens; een regel zonder naam (een lege knoop) krijgt zijn nummer.
     const naam = (regelEl.naam || (/^_:/.test(regelEl.sleutel) ? `regel ${index + 1}` : lokaleNaam(regelEl.sleutel))).replace(/["“”]/g, "'");
-    const { woorden, knopen: handelingen } = handelingenVan(regelEl);
+    const { woorden, knopen: handelingen } = handelingenVan(regelEl, verbod);
     const w = wie(regelEl);
     const gegevens = wat(regelEl);
 
@@ -540,7 +564,11 @@ export function planNaarBeleid(plan, opties = {}) {
     const isBeleidsdoel = (e) => !verbod && doelEl && e.type === "voorwaarde" && e.data.anker === "aanvraag" && e.data.subpad === "doel" && e.data.operator === "eq" && uit(e.sleutel, "waarde")[0]?.el === doelEl;
     const opVerzoek = handelingen.flatMap((h) => uit(h.sleutel, "als").map((c) => c.el)).filter((e, i, alle) => alle.indexOf(e) === i && !w.kenmerkIds.has(e.sleutel) && !isBeleidsdoel(e));
     const opGegevens = uit(regelEl.sleutel, "als").map((c) => c.el);
-    const items = [...opVerzoek, ...opGegevens].map((e) => item(e, new Set())).filter(Boolean);
+    // Een verfijning op de gegevens zelf bakent de populatie af ("alle gegevens van … waarvan …").
+    // In de regel is dat een voorwaarde over de gegevens.
+    const doelwit = (uit(regelEl.sleutel, "wat")[0] || uit(beleidEl.sleutel, "wat")[0])?.el;
+    const afbakening = doelwit ? uit(doelwit.sleutel, "als").map((c) => c.el) : [];
+    const items = [...[...opVerzoek, ...opGegevens].map((e) => item(e, new Set())), ...afbakening.map((e) => item(e, new Set(), "gegevens"))].filter(Boolean);
     const voorwaarden = !items.length ? null : items.length === 1 ? items[0] : { soort: "en", items };
 
     const plichten = [];
@@ -568,6 +596,18 @@ export function planNaarBeleid(plan, opties = {}) {
       ruimer = true;
       meld("warning", "ODRL-RUIMER", `${soort} "${naam}" is ruimer dan in de ODRL: ${verruimt.join("; ")}.`, regelEl.sleutel);
     }
+    // Een begrip als waarde staat er met zijn naam. Vergelijkt de uitvoering op een code of IRI, dan
+    // slaat de voorwaarde nooit aan: bij een toestemming strenger, bij een verbod ruimer.
+    if (nu.namen.length) {
+      const namen = [...new Set(nu.namen)].map((n) => `"${n}"`).join(", ");
+      if (verbod) ruimer = true;
+      meld(
+        verbod ? "warning" : "info",
+        "ODRL-WAARDE-NAAM",
+        `${soort} "${naam}" vergelijkt met ${namen}: in de ODRL een begrip (een IRI), hier zijn naam. Vergelijkt de uitvoering op een code of IRI, zet die dan in de tekst${verbod ? "; anders slaat het verbod niet aan" : ""}.`,
+        regelEl.sleutel,
+      );
+    }
     if (verstrengt.length) meld("info", "ODRL-STRENGER", `${soort} "${naam}" is strenger dan in de ODRL: ${verstrengt.join("; ")}.`, regelEl.sleutel);
     telling.overgenomen += 1;
     // Meer handelingen op één regel: per woord van de taal een regel.
@@ -575,6 +615,17 @@ export function planNaarBeleid(plan, opties = {}) {
   });
 
   // ── wat de taal op het beleid niet kent ──────────────────────────────────
+  if (beleidEl.data.status) {
+    ruimer = true;
+    meld("warning", "ODRL-GEEN-OVEREENKOMST", `"${naamVan(beleidEl)}" is een ${beleidEl.data.status} (odrl:${beleidEl.data.status === "aanbod" ? "Offer" : "Request"}), geen geldend beleid: het geldt pas als overeenkomst. De regels zijn wel gelezen.`, beleidEl.sleutel);
+  }
+  // De conflictregel van ODRL (§2.9). De eigen export schrijft altijd odrl:prohibit; daar zegt het dus niets.
+  let conflict = null;
+  if (!eigen && beleidEl.data.conflict === "perm") conflict = "toestemming-wint";
+  if (!eigen && beleidEl.data.conflict === "invalid") {
+    ruimer = true;
+    meld("warning", "ODRL-CONFLICT", "De ODRL verklaart het hele beleid ongeldig zodra twee regels elkaar tegenspreken (odrl:invalid). Toegangsspraak kent dat niet: hier gaat bij een conflict het verbod voor.", beleidEl.sleutel);
+  }
   for (const c of uit(beleidEl.sleutel, "plicht-van-beleid")) {
     ruimer = true;
     meld("warning", "ODRL-PLICHT-BELEID", `Het beleid legt de plicht "${naamVan(c.el)}" op. Toegangsspraak kent alleen plichten bij een regel; deze is niet overgenomen.`, c.el.sleutel);
@@ -596,6 +647,7 @@ export function planNaarBeleid(plan, opties = {}) {
     // Eerst wie, dan wat — de gebruikelijke volgorde onder "Begrippen.".
     begrippen: [...lijst.filter((b) => b.soort === "wie"), ...lijst.filter((b) => b.soort === "wat")],
     regels,
+    ...(conflict ? { conflict } : {}),
   };
   return { beleid, beleiden, gekozen: beleidEl.sleutel, telling, diagnostics };
 }

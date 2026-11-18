@@ -27,7 +27,10 @@ De single source of truth voor het nummer is `package.json` `"version"`.
   kies je er één. Je krijgt een concept in klare taal met onder de editor wat er is overgenomen, hoe een eigen
   operand, handeling of partij is gelezen, en wat is weggelaten. Het concept wordt nooit ongemerkt ruimer dan de
   ODRL: een toestemming met iets dat Toegangsspraak niet kan zeggen valt weg, tenzij je kiest haar toch over te
-  nemen; dan staat erbij dat ze ruimer is. Een verbod blijft staan.
+  nemen; dan staat erbij dat ze ruimer is. Een verbod blijft staan. Wat op het beleid zelf staat (partij, gegevens,
+  handeling) geldt voor elke regel; een afbakening van de gegevens wordt een voorwaarde over de gegevens; een verbod
+  op elk gebruik wordt uitgeschreven per handeling; een aanbod of verzoek wordt gelezen met de waarschuwing dat het
+  geen geldend beleid is.
 - **Instellingen van een schrijver als paneel** (Mark 18-11): *BPMN voor GZAC* is geen lijst regels maar de stand
   van de BPMN-schrijver. Die toont de activiteit nu als paneel in groepen (engine, wachtpunten, taken, berichten,
   proceskoppeling), met uitleg per instelling, schakelaars voor ja/nee en gekleurde placeholders. Alleen-lezen.

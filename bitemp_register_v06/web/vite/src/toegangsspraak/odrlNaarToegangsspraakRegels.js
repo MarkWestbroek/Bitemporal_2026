@@ -29,8 +29,10 @@
  *   - een operand uit een ander vocabulaire (`vlierdam:zoektype`): de bouwer
  *     leest hem als kenmerk van de aanvraag of de aanvrager;
  *   - een partij (`odrl:Party`) en een asset zonder pad in een register;
- *   - het anker naar de uitvoering (`apnl:verwerkingsverzoek`): dat is
- *     realisatie, geen norm, en valt bewust weg.
+ *   - het anker naar de uitvoering (`apnl:verwerkingsverzoek` met
+ *     `apnl:conformsToPolicy`): dat is realisatie, geen norm, en valt bewust weg;
+ *   - wat op het beleid staat en voor elke regel geldt: partij, gegevens,
+ *     handeling en de conflictregel.
  *
  * Wat hier geen regel heeft komt in de trace als "geen-regel": dat is het
  * verliesrapport van de import. Wat wél een regel heeft maar niet in de taal
@@ -82,6 +84,26 @@ const handeling = ({ odrl, woord, exact, ruim }) => ({
   ...(exact ? {} : { meld: true }),
 });
 
+/** Een beleid. `handeling` en `conflict` gelden voor al zijn regels (ODRL 2.2 §2.7.1 en §2.9). */
+const beleid = (naam, klasse, status) => ({
+  naam,
+  bij: "knoop",
+  als: { klasse },
+  maak: {
+    type: "beleid",
+    data: {
+      status,
+      geldigVanaf: "{schema.validFrom}",
+      geldigTot: "{schema.validThrough}",
+      uitgegeven: "{dct.issued}",
+      brontekst: "{ts.brontekst}",
+      profiel: "{odrl.profile}",
+      handeling: "{odrl.action}",
+      conflict: "{odrl.conflict|lokaal}",
+    },
+  },
+});
+
 const groep = (predicaat) => ({
   naam: `Voorwaardegroep zonder type (${predicaat})`,
   bij: "knoop",
@@ -91,21 +113,16 @@ const groep = (predicaat) => ({
 
 export const ODRL_AP_NL_NAAR_TOEGANGSSPRAAK = {
   id: "odrl-ap-nl-naar-toegangsspraak",
-  versie: 2,
+  versie: 3,
   titel: "ODRL (ODRL-AP-NL) → Toegangsspraak",
   bron: "odrl-ap-nl",
   doel: "toegangsspraak",
   regels: [
     // ── Het beleid ──────────────────────────────────────────────────────────
-    {
-      naam: "Beleid",
-      bij: "knoop",
-      als: { klasse: ["odrl:Set", "odrl:Policy", "odrl:Agreement", "odrl:Offer", "odrl:Request"] },
-      maak: {
-        type: "beleid",
-        data: { geldigVanaf: "{schema.validFrom}", geldigTot: "{schema.validThrough}", uitgegeven: "{dct.issued}", brontekst: "{ts.brontekst}", profiel: "{odrl.profile}" },
-      },
-    },
+    beleid("Beleid", ["odrl:Set", "odrl:Policy", "odrl:Agreement"], ""),
+    // Een aanbod en een verzoek gelden pas als overeenkomst: de bouwer leest ze, met een waarschuwing.
+    beleid("Beleid (aanbod)", "odrl:Offer", "aanbod"),
+    beleid("Beleid (verzoek)", "odrl:Request", "verzoek"),
     { naam: "Grondslag", bij: "knoop", als: { klasse: "dct:LegalResource" }, maak: { type: "grondslag" } },
 
     // ── Regels ──────────────────────────────────────────────────────────────
@@ -131,7 +148,9 @@ export const ODRL_AP_NL_NAAR_TOEGANGSSPRAAK = {
 
     // ── Voorwaarden ─────────────────────────────────────────────────────────
     // Het anker naar de uitvoering (ODRL Visualisation Note §7) is realisatie, geen norm.
-    { naam: "Anker naar de uitvoering", bij: "knoop", als: { "odrl:leftOperand": "apnl:verwerkingsverzoek" }, negeer: true },
+    // Alleen in de vorm "het verzoek voldoet aan <de uitvoering>": elke andere voorwaarde op het
+    // verwerkingsverzoek is een gewone voorwaarde (operand van elders) en valt dus niet stil weg.
+    { naam: "Anker naar de uitvoering", bij: "knoop", als: { "odrl:leftOperand": "apnl:verwerkingsverzoek", "odrl:operator": "apnl:conformsToPolicy" }, negeer: true },
     // Eerst de operanden van ODRL en ODRL-AP-NL.
     voorwaarde("Voorwaarde: doelbinding", "odrl:purpose", { anker: "aanvraag", subpad: "doel" }),
     voorwaarde("Voorwaarde: tijdstip van de aanvraag", "odrl:dateTime", { anker: "aanvraag", subpad: "tijdstip" }),

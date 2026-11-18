@@ -253,9 +253,11 @@ test("ODRL van elders: het beleid wordt nooit ongemerkt ruimer dan de ODRL", () 
   // Een verbod blijft staan. Zonder de onvertaalbare voorwaarde geldt het vaker (strenger) …
   assert.match(r.tekst, / {2}Regel "Niet wissen"\.\n {4}Iedereen mag alle gegevens van een voertuiggegevens niet afvoeren\./);
   assert.match(melding("ODRL-STRENGER", "Niet wissen"), /is strenger dan in de ODRL/);
-  // … maar een verbod op elk gebruik is in de taal maar deels te zeggen: dat is ruimer, en dat staat er.
-  assert.match(r.tekst, /Iedereen mag alle gegevens van een voertuiggegevens niet bekijken\./);
-  assert.match(melding("ODRL-RUIMER", "Geen ander gebruik"), /odrl:use omvat meer dan "bekijken"/);
+  // … en een verbod op elk gebruik (odrl:use) is uitgeschreven voor elke handeling die de taal kent.
+  for (const woord of ["bekijken", "opvoeren", "veranderen", "corrigeren", "afvoeren", "registreren", "exporteren"]) {
+    assert.ok(r.tekst.includes(`  Regel "Geen ander gebruik (${woord})".\n    Iedereen mag alle gegevens van een voertuiggegevens niet ${woord}.`), woord);
+  }
+  assert.equal(melding("ODRL-RUIMER", "Geen ander gebruik"), "", "uitgeschreven is het verbod niet ruimer");
   // Overerving kent de taal niet.
   assert.ok(codes(r).includes("ODRL-ERFT"));
   assert.equal(codes(r).at(-1), "ODRL-RUIMER-DAN-BRON", "de slotwaarschuwing");
@@ -266,7 +268,7 @@ test("ODRL van elders: het beleid wordt nooit ongemerkt ruimer dan de ODRL", () 
   assert.match(ruim.tekst, /Een medewerkers Vergunningen mag alle gegevens van een voertuiggegevens bekijken\./);
   assert.match(ruim.tekst, /De Gemeente Waterstede is: iemand met organisatie "Gemeente Waterstede"\./);
   assert.match(ruim.tekst, /De Gemeente Waterstede mag alle gegevens van een voertuiggegevens exporteren\./);
-  assert.equal(ruim.diagnostics.filter((d) => d.code === "ODRL-RUIMER").length, 3);
+  assert.equal(ruim.diagnostics.filter((d) => d.code === "ODRL-RUIMER").length, 2);
   assert.ok(parseBeleid(ruim.tekst).ok);
 });
 
@@ -318,6 +320,74 @@ ex:afdrukken a odrl:Permission ; dct:title "afdrukken"@nl ; odrl:action odrl:pri
   assert.deepEqual(r.telling, { regels: 3, overgenomen: 2, weggelaten: 1 });
   assert.ok(!codes(r).includes("ODRL-RUIMER-DAN-BRON"), "alles wat wegviel maakt het beleid strenger");
   assert.ok(parseBeleid(r.tekst).ok);
+});
+
+test("ODRL van elders: geen stille verruiming (bevindingen uit de uitvoering)", () => {
+  const kop = `@prefix odrl: <http://www.w3.org/ns/odrl/2/> .
+@prefix apnl: <https://standaarden.overheid.nl/odrl-ap-nl/> .
+@prefix dct:  <http://purl.org/dc/terms/> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix ex:   <https://example.org/beleid/> .
+ex:personen a odrl:AssetCollection ; rdfs:label "personen"@nl .
+`;
+  const lees = (ttl, opties) => odrlNaarToegangsspraak(kop + ttl, opties);
+
+  // 1. Een verfijning op de gegevens bakent de populatie af: een voorwaarde over de gegevens.
+  const populatie = lees(`ex:b a odrl:Set ; dct:title "Populatie"@nl ; odrl:permission ex:r .
+ex:r a odrl:Permission ; dct:title "wijk"@nl ; odrl:action odrl:read ;
+    odrl:target [ a odrl:AssetCollection ; rdfs:label "personen"@nl ; odrl:refinement [ odrl:leftOperand ex:wijk ; odrl:operator odrl:eq ; odrl:rightOperand "Noord" ] ] .`);
+  assert.match(populatie.tekst, /Iedereen mag alle gegevens van een personen bekijken\n {4}als de wijk van de gegevens "Noord" is\./);
+  // Is die afbakening niet te vertalen, dan valt de toestemming weg in plaats van ruimer te worden.
+  const onvertaalbaar = lees(`ex:b a odrl:Set ; dct:title "Populatie"@nl ; odrl:permission ex:r .
+ex:r a odrl:Permission ; dct:title "wijk"@nl ; odrl:action odrl:read ;
+    odrl:target [ a odrl:AssetCollection ; rdfs:label "personen"@nl ; odrl:refinement [ odrl:leftOperand ex:wijk ; odrl:operator ex:ligtIn ; odrl:rightOperand "Noord" ] ] .`);
+  assert.deepEqual(onvertaalbaar.telling, { regels: 1, overgenomen: 0, weggelaten: 1 });
+
+  // 2. Alleen "voldoet aan de uitvoering" is het anker; een andere voorwaarde op het verwerkingsverzoek blijft.
+  const geenAnker = lees(`ex:b a odrl:Set ; dct:title "Verwerking"@nl ; odrl:permission ex:r .
+ex:r a odrl:Permission ; dct:title "alleen bij parkeren"@nl ; odrl:target ex:personen ;
+    odrl:action [ <http://www.w3.org/1999/02/22-rdf-syntax-ns#value> odrl:read ;
+        odrl:refinement [ odrl:leftOperand apnl:verwerkingsverzoek ; odrl:operator odrl:eq ; odrl:rightOperand "parkeren" ] ] .`);
+  assert.match(geenAnker.tekst, /als het verwerkingsverzoek van de aanvraag "parkeren" is\./);
+
+  // 3. Een aanbod is geen geldend beleid.
+  const aanbod = lees(`ex:b a odrl:Offer ; dct:title "Aanbod"@nl ; odrl:permission [ a odrl:Permission ; odrl:action odrl:read ; odrl:target ex:personen ] .`);
+  assert.ok(aanbod.diagnostics.some((d) => d.code === "ODRL-GEEN-OVEREENKOMST" && /is een aanbod \(odrl:Offer\), geen geldend beleid/.test(d.message)));
+  assert.equal(codes(aanbod).at(-1), "ODRL-RUIMER-DAN-BRON");
+
+  // 4. Een begrip als waarde staat er met zijn naam: bij een verbod een waarschuwing, bij een toestemming een opmerking.
+  const begrip = lees(`ex:doel a skos:Concept ; rdfs:label "Parkeren"@nl .
+ex:b a odrl:Set ; dct:title "Doel"@nl ; odrl:permission ex:mag ; odrl:prohibition ex:magNiet .
+ex:mag a odrl:Permission ; dct:title "mag"@nl ; odrl:action odrl:read ; odrl:target ex:personen ;
+    odrl:constraint [ odrl:leftOperand odrl:purpose ; odrl:operator odrl:eq ; odrl:rightOperand ex:doel ] .
+ex:magNiet a odrl:Prohibition ; dct:title "mag niet"@nl ; odrl:action odrl:delete ; odrl:target ex:personen ;
+    odrl:constraint [ odrl:leftOperand odrl:purpose ; odrl:operator odrl:eq ; odrl:rightOperand ex:doel ] .`);
+  const naam = begrip.diagnostics.filter((d) => d.code === "ODRL-WAARDE-NAAM");
+  assert.deepEqual(naam.map((d) => d.severity), ["info", "warning"]);
+  assert.match(naam[1].message, /Het verbod "mag niet" vergelijkt met "Parkeren": in de ODRL een begrip \(een IRI\), hier zijn naam\..*anders slaat het verbod niet aan/);
+  assert.equal(codes(begrip).at(-1), "ODRL-RUIMER-DAN-BRON");
+  // De eigen export schrijft de doelbinding ook als begrip; daar is de naam de waarde.
+  assert.ok(!odrlNaarToegangsspraak(naarOdrl(VOORBEELD_BELEID), { negeerBrontekst: true }).diagnostics.some((d) => d.code === "ODRL-WAARDE-NAAM"));
+
+  // 5. Gegevens, handeling en partij op het beleid gelden voor elke regel zonder eigen (ODRL 2.2 §2.7.1).
+  const bovenaan = lees(`ex:b a odrl:Agreement ; dct:title "Bovenaan"@nl ; odrl:target ex:personen ; odrl:action odrl:read ; odrl:conflict odrl:perm ;
+    odrl:permission [ a odrl:Permission ; dct:title "mag"@nl ] ; odrl:prohibition [ a odrl:Prohibition ; dct:title "mag niet"@nl ; odrl:action odrl:delete ] .`);
+  assert.deepEqual(bovenaan.telling, { regels: 2, overgenomen: 2, weggelaten: 0 });
+  assert.match(bovenaan.tekst, / {2}Regel "mag"\.\n {4}Iedereen mag alle gegevens van een personen bekijken\./);
+  assert.match(bovenaan.tekst, / {2}Regel "mag niet"\.\n {4}Iedereen mag alle gegevens van een personen niet afvoeren\./);
+  // De conflictregel van ODRL: odrl:perm is "toestemming gaat voor"; odrl:invalid kent de taal niet.
+  assert.match(bovenaan.tekst, /^Beleid "Bovenaan"\.\n {2}Bij conflict: toestemming gaat voor\./);
+  const ongeldig = lees(`ex:b a odrl:Set ; dct:title "Ongeldig"@nl ; odrl:conflict odrl:invalid ; odrl:permission [ a odrl:Permission ; odrl:action odrl:read ; odrl:target ex:personen ] .`);
+  assert.ok(ongeldig.diagnostics.some((d) => d.code === "ODRL-CONFLICT"));
+
+  // 6. De vergelijkingen van het NLGov-profiel (de JSON-LD-export) heten als die van de taal.
+  const nlgov = lees(`@prefix nlgov: <https://standaarden.overheid.nl/odrl/terms/> .
+ex:b a odrl:Set ; dct:title "NLGov"@nl ; odrl:permission [ a odrl:Permission ; odrl:action odrl:read ; odrl:target ex:personen ;
+    odrl:constraint [ odrl:leftOperand ex:naam ; odrl:operator nlgov:begintMet ; odrl:rightOperand "A" ] ] .`);
+  assert.match(nlgov.tekst, /als de naam van de aanvraag met "A" begint\./);
+
+  for (const r of [populatie, geenAnker, aanbod, begrip, bovenaan, nlgov]) assert.ok(parseBeleid(r.tekst).ok);
 });
 
 test("randgevallen: een fout in de Turtle en ODRL zonder beleid komen als melding terug", () => {
