@@ -93,6 +93,10 @@ func createModelTables(ctx context.Context, db bun.IDB) error {
 				}
 			}
 
+			// Een bestaande kolom met een ander type dan het model (een veld dat van tekst naar
+			// tijdstip, ja/nee of getal ging) wordt niet omgezet, wel gemeld (kolomtypen.go).
+			meldKolomtypeAfwijkingen(ctx, db, dbModel, meta.Tabelnaam)
+
 			// Compatibiliteit met oudere schema's:
 			// sommige oude entiteitstabellen gebruikten "<tabelnaam>_id" als PK-kolom
 			// in plaats van de huidige conventie "id". Zonder deze migratie falen

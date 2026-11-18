@@ -2132,3 +2132,19 @@ meerdere RELs. Plan met zeven stappen:
 `plans/2026-11-07 Referentielijst-instanties — richting, binding en domein (plan).md`. Na de demo
 van 09-11, vóór de rebuild uit het Studio-project (stap 1 raakt de Studio).
 
+## 43. Kolomnaam van datumvelden wijkt af van andere velden (2026-11-18)
+
+De codegen geeft een veld van type `Date` een expliciete bun-tag met de veldnaam zoals hij in JSON
+staat (`cmd/codegen/conventions.go`, `bun:"<naam>,type:date"`). Andere velden hebben geen tag en
+krijgen van bun de snake_case-naam. Een veld `uitgebrachtOp` heet als datum dus `"uitgebrachtOp"`
+(met hoofdletter, altijd tussen aanhalingstekens in SQL) en als tekst of tijdstip
+`uitgebracht_op`. Gevonden op cg-test door FUNDAMENT: toen zulke velden van tekst naar datum
+gingen, kwam er een tweede kolom naast de oude te staan.
+
+Het werkt wel: de API leest en schrijft de datumkolom. De gevolgen zijn een inconsistente
+naamgeving en een vervallen tekstkolom na een typewijziging.
+
+**Besluit Mark 18-11: nu laten staan.** Rechtzetten betekent in elk bestaand register kolommen
+hernoemen (alle datumvelden met een naam van meer dan één woord), in één stap met de codegen.
+Open: of en wanneer; een nieuw register zou het zonder migratie goed kunnen krijgen. Zie ook
+`docs/KOLOMTYPEN.md`.
