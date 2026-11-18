@@ -8,6 +8,47 @@
 
 ---
 
+## api 0.30.1 / devloop 0.33.1 (2026-11-18)
+
+Akkoord Mark 18-11 ("Ja, graag", op de vraag om te committen, te mergen en uit te brengen met
+uitrol op app). Devloop 0.33.1 is api 0.30.1 met studio 0.47.0 en render 0.5.1 (ongewijzigd).
+Aanleiding: de hermeting van FUNDAMENT op het register met zaken (373.726 zaken, 16 gebruikers).
+Zoeken op identificatie ging van 301 naar 2,4 ms, maar sorteren op startdatum werd niet sneller
+en binnen één zaaktype veel trager (823 ms werd ruim 10 s, met time-outs). In dat register
+hebben 270.790 zaken dezelfde startdatum. Uitleg: `docs/INDEXEN.md` §Veel gelijke waarden.
+
+- **De index op een waarde heeft de entiteit-id erachter** (`dbsetup/indexen.go`), en de
+  sorteervraag sorteert op de waarde en die id in dezelfde richting (`dynql/sortering.go`).
+  PostgreSQL hoeft een groep met gelijke waarden dan niet meer te lezen. Proef (373.000 zaken,
+  72% op één datum): 309 ms wordt 0,3 ms.
+- **Zichtbare wijziging: bij gelijke waarden volgt de id de richting van de laatste
+  sorteersleutel.** Aflopend sorteren geeft bij gelijke waarden (en bij entiteiten zonder
+  waarde) de hoogste id eerst; dat was altijd oplopend. Het geldt in alle sorteervormen.
+- **Met een filter eerst filteren, dan sorteren** (gematerialiseerde CTE). De planner liep
+  anders de index op de waarde af en toetste het filter per rij. Proef bij een filter van 1%:
+  250 ms wordt 23 ms, gelijk aan api 0.29.0. Met een filter is er dus geen winst ten opzichte
+  van 0.29.0, wel bij een breed filter.
+
+Het GraphQL-schema en de REST-routes zijn niet gewijzigd.
+
+Getest: `go test ./...` (alleen de bekende node-test van de EA-import faalt in de worktree); de
+regressiesuite met tag `integration` groen; `TestSorterenOpWaarde` draait 419 sorteervragen in
+de oude en de nieuwe vorm, 0 verschillen; nieuw: `TestCreateModelIndexes_VervangtIndexMetOudeKolommen`.
+De queryplannen zijn bekeken met handgeschreven SQL van dezelfde vorm op nagebouwde tabellen.
+Niet getest: onder gelijktijdige belasting en op het register zelf (FUNDAMENT meet opnieuw).
+
+Uitrol:
+- **Schemawijziging: ja, automatisch.** Bij de start haalt de API elke index
+  `ix_<tabel>_<kolom>_zoek` met alleen de waarde weg en maakt hem opnieuw aan op (waarde,
+  entiteit-id), zonder `CONCURRENTLY`. Op een grote tabel duurt de eerste start iets langer.
+  Mislukt het weghalen, dan blijft de oude index staan en start de API gewoon.
+- **Rebuild uit het Studio-project: nee.**
+- **Andere stap: nee.** De noodrem `GRAPHQL_KLASSIEK_LADEN=1` blijft werken.
+- App: `bitemp-go-api:0.30.1` via `update.sh`. pf: niet uitgerold. Fundament:
+  `bitemp-devloop:0.33.1`, door FUNDAMENT.
+
+---
+
 ## studio 0.47.0 / render 0.5.1 (2026-11-18)
 
 Akkoord Mark 18-11 ("Ja, release het werk maar mee"). In dezelfde ronde als api 0.30.0; de devloop

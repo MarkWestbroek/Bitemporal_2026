@@ -74,3 +74,21 @@ func namen(defs []IndexDefinitie, soort string) []string {
 	}
 	return uit
 }
+
+// Een index op een waarde heeft de entiteit-id als tweede kolom: zo levert hij ook de tweede
+// sorteersleutel (dynql/sortering.go) en hoeft een groep met gelijke waarden niet gelezen.
+func TestModelIndexDefinities_WaardeMetEntiteitID(t *testing.T) {
+	n := 0
+	for _, d := range ModelIndexDefinities() {
+		if d.Soort != "uniek" && d.Soort != "zoek" {
+			continue
+		}
+		n++
+		if len(d.Kolommen) != 2 {
+			t.Errorf("%s: verwacht (waarde, entiteit-id), kreeg %v", d.Naam, d.Kolommen)
+		}
+	}
+	if n == 0 {
+		t.Skip("geen unieke velden of marks in dit model")
+	}
+}

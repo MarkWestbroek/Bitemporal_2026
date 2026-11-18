@@ -117,6 +117,9 @@ func TestSorterenOpWaarde(t *testing.T) {
 				docs[sleutel+"/op/ver-voorbij"] = fmt.Sprintf("{ r: %s(%s, limit: 3, offset: 5000) { id } }", v.Name, op)
 				docs[sleutel+"/op/filter"] = fmt.Sprintf(
 					"{ r: %s(%s, filter: { id: { gte: 2 } }, limit: 4, offset: 1) { id } }", v.Name, op)
+				// Met een filter gaat deel 1 via "filter eerst" (de CTE), in beide richtingen.
+				docs[sleutel+"/af/filter"] = fmt.Sprintf(
+					"{ r: %s(%s, filter: { id: { gte: 2 } }, limit: 4, offset: 1) { id } }", v.Name, af)
 				docs[sleutel+"/af/peil"] = fmt.Sprintf(
 					`{ r: %s(%s, peiltijdstip: "2000-01-01T00:00:00Z", limit: 5) { id } }`, v.Name, af)
 				docs[sleutel+"/af/full"] = fmt.Sprintf("{ r: full_%s_list(%s, limit: 5, offset: 1) { id } }", v.Name, af)

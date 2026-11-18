@@ -49,8 +49,8 @@ type LijstVraag struct {
 	Limit, Offset int
 	// Volledig: met alle onderliggende GE's en relaties (full_<padnaam>_list).
 	Volledig bool
-	// Sortering: leeg = op id, oplopend. Na de opgegeven sleutels volgt altijd de id
-	// (sortering.go). Een lader die een sleutel niet aankan, geeft een fout.
+	// Sortering: leeg = op id, oplopend. Na de opgegeven sleutels volgt altijd de id, in de
+	// richting van de laatste sleutel (sortering.go). Een lader die een sleutel niet aankan, geeft een fout.
 	Sortering []Sortering
 }
 

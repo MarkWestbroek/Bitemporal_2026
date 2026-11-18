@@ -26,7 +26,7 @@ verandert nooit wat een vraag teruggeeft, alleen hoe snel.
 | Soort | Waar | Vorm | Dient |
 |---|---|---|---|
 | `doel` | elke relatie-hub | `(doel_id, bron_id)` | de omgekeerde relatie: "welke bronnen wijzen naar dit record" (`gerelateerde_<bron>` in GraphQL) |
-| `uniek` | de `_Data`-tabel van een GE met een veld `uniek=<bereik>` | `(kolom)`, naam `…_zoek` | de uniekheidscontrole bij elke opvoer (`handlers/registration_uniek.go`, `bezetDoor`) én het filter van een lijst op dat veld |
+| `uniek` | de `_Data`-tabel van een GE met een veld `uniek=<bereik>` | `(kolom, entiteit-id)`, naam `…_zoek` | de uniekheidscontrole bij elke opvoer (`handlers/registration_uniek.go`, `bezetDoor`) én het filter van een lijst op dat veld |
 
 - Geen van beide vraagt een aanwijzing in het model. De doelkant volgt uit het bestaan van de
   relatie, de unieke index uit de bestaande eigenschap `uniek` van het veld.
@@ -81,7 +81,7 @@ De weg van mark naar index:
 | 1 | Studio, sidecar `/export/v3` | de geldende marks voor de gekozen context, als `marks` naast `model` |
 | 2 | `handlers/rebuild_uit_project.go` | stuurt de marks van het project mee en zet de bijlage als sleutel `marks` in het kale model |
 | 3 | `cmd/codegen` (`model.PasRegisterMarksToe`) | zoekt per mark het veld op zijn uuid en zet `zoeksleutel` / `sorteerbaar` in de schema-tag van de `_Data`-struct |
-| 4 | `dbsetup/indexen.go` | maakt per gemarkeerd veld de index `ix_<tabel>_<kolom>_zoek` op `(kolom)` |
+| 4 | `dbsetup/indexen.go` | maakt per gemarkeerd veld de index `ix_<tabel>_<kolom>_zoek` op `(kolom, entiteit-id)` |
 
 - Beide marksoorten geven dezelfde index. Hij is niet partieel, zodat ook een vraag op een
   peiltijdstip hem gebruikt.
@@ -205,6 +205,43 @@ Ontwerp en proefmeting: `docs/plans/2026-11-18 Sorteren via de index — ontwerp
 - **Ja/nee-velden.** De subquery-vorm kan niet op een ja/nee-veld sorteren (`MIN`/`MAX` bestaat
   daar niet voor in PostgreSQL; de vraag gaf een fout). De join-vorm kan het wel.
 - **Noodrem:** `GRAPHQL_KLASSIEK_LADEN=1` zet ook deze vorm uit.
+
+### Veel gelijke waarden (18-11-2026, na de meting op het register)
+
+FUNDAMENT mat api 0.30.0 op het register met zaken (373.726 zaken, 16 gebruikers). Zoeken op
+identificatie ging van 301 naar 2,4 ms. Sorteren op startdatum werd niet sneller, en binnen één
+zaaktype veel trager (823 ms werd ruim 10 s, met time-outs). Twee oorzaken, beide hersteld:
+
+- **De tweede sorteersleutel kwam niet uit de index.** 270.790 zaken hadden dezelfde
+  startdatum. De query sorteerde op `startdatum DESC, zaak.id ASC` en de index stond alleen op
+  `(startdatum)`: PostgreSQL moest de hele groep met die datum lezen om de eerste 50 te vinden.
+  Herstel: de index is `(kolom, entiteit-id)`, en de query sorteert op de waarde en de
+  entiteit-id uit dezelfde tabel, **beide in dezelfde richting**. Eén index kan `(waarde ASC,
+  id ASC)` en `(waarde DESC, id DESC)` leveren, niet `(waarde DESC, id ASC)`. Daarom volgt de
+  id nu de richting van de laatste sleutel, in alle sorteervormen (ook de subquery-vorm, zodat
+  de volgorde niet van de vorm afhangt). Dat is een zichtbare wijziging: aflopend sorteren
+  geeft bij gelijke waarden de hoogste id eerst.
+- **Met een filter liep de planner de index op de waarde af** en toetste het filter per rij;
+  bij een zaaktype met 1% van de zaken gooide hij 99% weg. Herstel: met een filter gaat deel 1
+  via een gematerialiseerde CTE: eerst de entiteiten die aan het filter voldoen met hun
+  waarde, dan sorteren. Dat kost evenveel als de subquery-vorm bij een smal filter en minder
+  bij een breed filter. De index op de waarde wordt met een filter dus niet gebruikt om te
+  sorteren.
+
+Een bestaande index `…_zoek` met alleen de waarde (api 0.30.0) wordt bij de start weggehaald
+en opnieuw aangemaakt met de entiteit-id erbij.
+
+Proef op nagebouwde tabellen (373.000 zaken, 72% op één datum, één gebruiker, eerste 50
+aflopend op startdatum; geen meting op het register):
+
+| Vraag | api 0.30.0 | Hersteld |
+|---|---|---|
+| alle zaken | 309 ms (2,1 miljoen pagina's gelezen) | 0,3 ms (400) |
+| alle zaken, tiende pagina | (als boven) | 0,7 ms |
+| zaken van één zaaktype (1%) | 250 ms (2,2 miljoen) | 23 ms (34.000); subquery-vorm: 20 ms |
+| zaken van de helft van de zaaktypen | niet gemeten | 140 ms |
+
+De eerdere proef hieronder had de datums gelijk gespreid; daardoor viel dit niet op.
 
 Proefmeting (nagebouwde tabellen, 102.000 zaken, één gebruiker; geen meting op het register):
 
