@@ -99,7 +99,18 @@ func modelUitProject(ctx context.Context, projectID, profiel string, stappen []s
 	stappen = append(stappen, fmt.Sprintf("Studio-project %q (%s): profiel %s uit de snapshot, versie %d, t/m volgnummer %d",
 		stand.Naam, projectID, profiel, stand.Versie, stand.TotVolgnummer))
 
-	verzoek, _ := json.Marshal(map[string]any{"profiel": deel, "profielId": profiel})
+	// Marks van het project (lagen, contexten, marks) gaan mee, zodat de sidecar de bijlage
+	// `marks` naast het model kan leggen (18-11-2026). Zonder marks blijft het verzoek zoals het
+	// was; een sidecar van vóór de marks kent de sleutel niet en hoeft hem dan ook niet te zien.
+	invoer := map[string]any{"profiel": deel, "profielId": profiel}
+	marks, err := laadProjectMarks(ctx, projectID)
+	if err != nil {
+		return weiger(http.StatusInternalServerError, "", "Marks van het project lezen mislukt: "+err.Error(), nil)
+	}
+	if len(marks) > 0 {
+		invoer["marks"] = marks
+	}
+	verzoek, _ := json.Marshal(invoer)
 	if len(verzoek) > renderMaxBytes {
 		return weiger(http.StatusRequestEntityTooLarge, "te_groot",
 			fmt.Sprintf("Het profiel is groter dan %d bytes; de sidecar neemt het niet aan.", renderMaxBytes), nil)
@@ -137,7 +148,62 @@ func modelUitProject(ctx context.Context, projectID, profiel string, stappen []s
 	if string(meldingen) == "null" || string(meldingen) == "[]" {
 		meldingen = nil
 	}
-	return kaalV3(antw.Model), meldingen, bron, stappen, nil
+	model, aantalMarks := kaalV3MetMarks(antw.Model)
+	if aantalMarks > 0 {
+		stappen = append(stappen, fmt.Sprintf("Marks: %d geldende mark(s) als bijlage bij het model", aantalMarks))
+	}
+	return model, meldingen, bron, stappen, nil
+}
+
+// laadProjectMarks haalt het onderdeel `marks` (lagen, contexten, marks) uit de snapshot van een
+// project. Leeg = het project heeft geen marks.
+var laadProjectMarks = func(ctx context.Context, id string) (json.RawMessage, error) {
+	var deel *string
+	err := DB.NewSelect().Table("studio_projecten").ColumnExpr("(inhoud->'marks')::text").
+		Where("id = ?", id).Scan(ctx, &deel)
+	if isNoRows(err) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	if deel == nil || *deel == "null" {
+		return nil, nil
+	}
+	return json.RawMessage(*deel), nil
+}
+
+// kaalV3MetMarks pakt de envelop uit (kaalV3) en zet de bijlage `marks`, die in de envelop naast
+// `model` staat, als sleutel `marks` in het kale model. Zo reist ze mee naar de codegen, de
+// domeinbepaling en de opgeslagen schema_json. Zonder bijlage blijft het model byte-voor-byte
+// zoals kaalV3 het geeft. Geeft ook het aantal marks terug.
+func kaalV3MetMarks(b json.RawMessage) (json.RawMessage, int) {
+	kaal := kaalV3(b)
+	var env struct {
+		Marks json.RawMessage `json:"marks"`
+	}
+	if json.Unmarshal(b, &env) != nil || len(env.Marks) == 0 || string(env.Marks) == "null" {
+		return kaal, 0
+	}
+	var bijlage struct {
+		Marks []json.RawMessage `json:"marks"`
+	}
+	if json.Unmarshal(env.Marks, &bijlage) != nil || len(bijlage.Marks) == 0 {
+		return kaal, 0
+	}
+	var velden map[string]json.RawMessage
+	if json.Unmarshal(kaal, &velden) != nil {
+		return kaal, 0
+	}
+	if _, al := velden["marks"]; al { // het kale model had ze al: niet overschrijven
+		return kaal, len(bijlage.Marks)
+	}
+	velden["marks"] = env.Marks
+	uit, err := json.Marshal(velden)
+	if err != nil {
+		return kaal, 0
+	}
+	return uit, len(bijlage.Marks)
 }
 
 // kaalV3 pakt een V3-envelop uit. De sidecar geeft het bestand van *Exporteer V3* in de Studio:

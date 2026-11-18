@@ -19,8 +19,15 @@ package dbsetup
 //	         zoekt bij elke opvoer op die waarde; zonder index is dat een scan per opvoer,
 //	         en wordt een grote seed steeds trager.
 //
-// Indexen op zoeksleutels en sorteerbare velden volgen in stap 4, als de aanwijzing in het
-// model staat. Uitleg: docs/INDEXEN.md.
+// Stap 4 voegt de index toe die een aanwijzing vraagt:
+//
+//	zoek     een veld met de mark register.zoeksleutel of register.sorteerbaar (schema-tag
+//	         zoeksleutel / sorteerbaar, door de codegen gezet uit de marks-bijlage): (kolom)
+//	         op de _Data-tabel. Niet partieel, zodat ook een vraag op een peiltijdstip hem
+//	         gebruikt. Dient het filter (eq, in, bereik). Het sorteren van lijsten gebruikt
+//	         hem in de huidige vorm nog niet (dynql/sortering.go).
+//
+// Uitleg: docs/INDEXEN.md.
 
 import (
 	"context"
@@ -42,7 +49,7 @@ type IndexDefinitie struct {
 	Tabel    string   // tabelnaam
 	Kolommen []string // SQL-kolomnamen, in volgorde
 	Waar     string   // optionele WHERE van een partiële index (zonder het woord WHERE)
-	Soort    string   // "doel" | "uniek"
+	Soort    string   // "doel" | "uniek" | "zoek"
 	Reden    string   // voor logregels en het script: waar de index voor dient
 }
 
@@ -120,18 +127,33 @@ func ModelIndexDefinities() []IndexDefinitie {
 				continue
 			}
 			for _, f := range dataTabel.Fields {
-				bereik := model.ParseSchemaTag(f.StructField.Tag.Get("schema")).Uniek
-				if bereik == "" {
-					continue
+				tag := model.ParseSchemaTag(f.StructField.Tag.Get("schema"))
+				if tag.Uniek != "" {
+					voegToe(IndexDefinitie{
+						Naam:     indexNaam(dataMeta.Tabelnaam, f.Name, "uniek"),
+						Tabel:    dataMeta.Tabelnaam,
+						Kolommen: []string{f.Name},
+						Waar:     "afvoer IS NULL",
+						Soort:    "uniek",
+						Reden:    fmt.Sprintf("uniekheidscontrole (%s) op %s", tag.Uniek, meta.Typenaam),
+					})
 				}
-				voegToe(IndexDefinitie{
-					Naam:     indexNaam(dataMeta.Tabelnaam, f.Name, "uniek"),
-					Tabel:    dataMeta.Tabelnaam,
-					Kolommen: []string{f.Name},
-					Waar:     "afvoer IS NULL",
-					Soort:    "uniek",
-					Reden:    fmt.Sprintf("uniekheidscontrole (%s) op %s", bereik, meta.Typenaam),
-				})
+				// Marks register.zoeksleutel en register.sorteerbaar: dezelfde index op de kolom.
+				if tag.Zoeksleutel || tag.Sorteerbaar {
+					reden := "zoeksleutel"
+					if !tag.Zoeksleutel {
+						reden = "sorteerbaar"
+					} else if tag.Sorteerbaar {
+						reden = "zoeksleutel en sorteerbaar"
+					}
+					voegToe(IndexDefinitie{
+						Naam:     indexNaam(dataMeta.Tabelnaam, f.Name, "zoek"),
+						Tabel:    dataMeta.Tabelnaam,
+						Kolommen: []string{f.Name},
+						Soort:    "zoek",
+						Reden:    fmt.Sprintf("mark %s op %s", reden, meta.Typenaam),
+					})
+				}
 			}
 		}
 	}

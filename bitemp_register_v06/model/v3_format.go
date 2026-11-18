@@ -25,6 +25,7 @@ type V3Model struct {
 	Diagrammen                []V3Diagram                  `json:"diagrammen,omitempty"`                // genoemde diagrams (A4-omgekeerd: IDE-layout-export)
 	Notities                  []V3Notitie                  `json:"notities,omitempty"`                  // C8: vrije tekst-notities (gele post-its) op canvas
 	Constraints               []V3Constraint               `json:"constraints,omitempty"`               // C8: UML constraints (lichtblauwe rounded-rects) met scope-edges
+	Marks                     *V3MarksBijlage              `json:"marks,omitempty"`                     // marks die in de gekozen context gelden (bijlage naast het model, v3_marks.go)
 }
 
 // V3Domein beschrijft de metadata van een domein in het model.
@@ -269,7 +270,12 @@ type V3Veld struct {
 	// bereik: "entiteit" (onder alle exemplaren van dit type), "domein" (over alle velden met
 	// uniek=domein in het domein) of "register" (over alle velden met uniek=register). Leeg = niet
 	// uniek. Gecontroleerd bij registratie (handlers/registration_uniek.go).
-	Uniek               string `json:"uniek,omitempty"`
+	Uniek string `json:"uniek,omitempty"`
+	// Zoeksleutel en Sorteerbaar komen niet uit het veld zelf maar uit de marks-bijlage
+	// (register.zoeksleutel, register.sorteerbaar; PasRegisterMarksToe). Ze staan daarom niet
+	// in de JSON van het veld.
+	Zoeksleutel         bool   `json:"-"`
+	Sorteerbaar         bool   `json:"-"`
 	Description         string `json:"description,omitempty"`
 	Afgeleid            bool   `json:"afgeleid,omitempty"`
 	AfleidingsregelTaal string `json:"afleidingsregelTaal,omitempty"`
