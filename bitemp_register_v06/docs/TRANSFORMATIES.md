@@ -624,6 +624,25 @@ configuratie, niet in code of bestanden. Op de backlog als **TRANS-1**.
 4. **Stapelen** als relatie tussen regelsets (§7.7), zodra het bereik `map` met
    meerdere profielen er is.
 
+**Bijgesteld 18-11 (Mark): de plek is het sidecar-project.** Zo noemt Mark het project waarin de
+M2's en de transformaties vastliggen (in PROF-1 tot nu toe "profielenproject"): het zit half
+vastgegroeid aan de tool. Zonder geladen profielen valt de tool om; zonder transformaties werkt
+hij wel, maar beperkt. Het is dus de essentie van de tool plus een belangrijk aanvullend deel, in
+projectvorm. Profielen en transformaties leunen op elkaar en staan er daarom samen in. Stap 2 en 3 hierboven gingen uit
+van een bestand als bewaarplek. Mark: transformaties worden **modelelementen** in het project met
+de M2's (het profielenproject van PROF-1), naast de profielen waartussen ze afbeelden. Het
+JSON-bestand blijft de uitwisselvorm, niet de bewaarplek. De volgorde wordt daarmee:
+
+1. Live view als lezer. **Gebouwd, §9.6.**
+2. Een M2 voor transformaties en de omzetting regelset ↔ modelelement. **Gebouwd, §9.8.**
+3. Het profielenproject (PROF-1 stap 1): de ingebouwde profielen en hun regelsets daarheen
+   exporteren.
+4. De catalogus laadt uit dat project; de transformaties halen hun regelset uit de catalogus in
+   plaats van uit de code.
+5. Bewerken in de view (regeltabel en instellingenpaneel) als modeloperaties: sync, historie en
+   branches komen dan mee. Een branch is een conceptversie van een regelset.
+6. Stapelen als relatie tussen regelsets (§7.7).
+
 ### 9.6 Stap 1 gebouwd: de view Transformaties (2026-11-18)
 
 De Studio heeft een activiteit **Transformaties** (groep beheer, preview). Links de regelsets,
@@ -738,6 +757,50 @@ als terugval; afspraak met FORMULIER-WIDGET).
 over de bron, maar een doel met gaten die uit de bron gevuld worden (Mark: "van achter naar
 voor"). Dat is een derde soort naast regels en schrijverinstellingen: een **sjabloon**. Kandidaat
 voor de gaten is JSONata (JSON → JSON, draait in de browser); nog niet geprobeerd.
+
+### 9.8 Een transformatie als modelelement (2026-11-18)
+
+Besluit Mark 18-11: een regelset is een modelelement in het profielenproject. Dat is M1-opslag
+van M2-inhoud, precies zoals een getekend profiel in het Profiel-ontwerp: het element beschrijft
+een afbeelding tussen talen, en de Studio bewaart, synchroniseert en vertakt het als elk ander
+element.
+
+Het Profiel-ontwerp heeft er een elementtype bij, **«transformatie»** (`transformatieDef`), met
+twee veldtypen. De definitie en de omzetting staan in `transformatie/regelsetModel.js` (puur):
+
+| Deel van de regelset | In het model |
+|---|---|
+| titel | de naam van het element |
+| id, versie, bron, doel | eigenschappen `code`, `versie` (+ `versieIsGetal`), `bron`, `doel` |
+| richting, schrijver (uit de catalogus) | eigenschappen `richting`, `schrijver` |
+| `regels` | compartiment **regels**: één veld per regel, in volgorde. Per veld `bij`, `als` (JSON), `actie` (maak/zet/negeer), `dan` (JSON van de maak of zet), `meld` |
+| elke andere sleutel (de stand van een schrijver, `enveloppen`) | compartiment **instellingen**: één veld per sleutel, met de waarde als JSON |
+
+- **Een regel is een veld, geen element** (§9.1): zijn plaats in het compartiment is zijn
+  prioriteit. Het samenvoegen per veld van een branch werkt daarmee per regel.
+- **`als` en `dan` blijven JSON** in een tekstveld: dezelfde JSON als in het bestand, met
+  dezelfde validator. Ze verder uitsplitsen naar velden is een latere stap van de bewerker.
+- **Heen en terug zonder verlies**: `regelsetNaarElement` en `elementNaarRegelset`. De test
+  `regelsetModel.test.js` eist dat voor alle ingebouwde regelsets, ook na een gang door JSON.
+  Wat niet te lezen is (kapotte JSON, een regel zonder actie) komt als fout terug en levert geen
+  regelset op; er wordt niets stil weggelaten.
+- **Code blijft code**: lezers, schrijvers en de toepasser. Het element wijst de schrijver aan op
+  naam; het schema van zijn instellingen hoort bij de schrijver (§9.7) en reist niet mee.
+
+In de Studio (activiteit *Profiel-ontwerp*, menu *Ontwerp*):
+
+- **Bekijk de transformaties als ontwerp** zet alle regelsets uit de catalogus op een diagram
+  *Transformaties*, per richting een rij.
+- **Meld de transformaties van dit diagram aan** leest de elementen terug en meldt ze aan bij de
+  catalogus met vindplaats `ontwerp`. De activiteit *Transformaties* toont en proefdraait dan de
+  getekende versie; de proefbron en het schema van de ingebouwde regelset met dezelfde code
+  blijven staan. Dit geldt tot een herlaad, want het Profiel-ontwerp bewaart zijn inhoud niet.
+
+**Nog niet:** `bron` en `doel` zijn tekst en geen verwijzing naar een profiel. In het
+profielenproject worden dat kruisverbanden tussen de transformatie en de twee profielen (PROF-1:
+een profiel is daar een map). De transformaties zelf draaien nog op de regelset uit de code
+(stap 4); aanmelden verandert dus alleen wat de view toont en proefdraait. Bewaren vraagt het
+profielenproject (stap 3).
 
 ## 10. BPMN 2.0 XML en DMN XML → eigen model (2026-10-10)
 

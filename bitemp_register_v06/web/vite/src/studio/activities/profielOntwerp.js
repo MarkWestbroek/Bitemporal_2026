@@ -25,6 +25,7 @@
 
 import { handlerInfo } from "../../diagramcore/types/handlerCatalogus.js";
 import { AARD_CONNECTOR, AARD_ELEMENT } from "../../diagramcore/types/layoutStijl.js";
+import { TRANSFORMATIE_ELEMENTTYPE, TRANSFORMATIE_FIELDTYPES } from "../../transformatie/regelsetModel.js";
 
 export const PROFIEL_ONTWERP_ID = "profiel-ontwerp";
 
@@ -56,6 +57,8 @@ export const profielOntwerpKern = {
         { key: "beschrijving", label: "beschrijving", datatype: "tekst" },
       ],
     },
+    // Regels en instellingen van een transformatie (TRANS-1, transformatie/regelsetModel.js).
+    ...TRANSFORMATIE_FIELDTYPES,
   ],
   elementTypes: [
     {
@@ -216,6 +219,8 @@ export const profielOntwerpKern = {
       ],
       compartments: [],
     },
+    // Een regelset als modelelement, naast de profielen waartussen hij afbeeldt (TRANS-1).
+    TRANSFORMATIE_ELEMENTTYPE,
     {
       id: "notitie",
       label: "Notitie",
