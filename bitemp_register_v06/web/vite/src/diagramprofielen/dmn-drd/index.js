@@ -37,6 +37,10 @@ const elementTypes = [
     properties: [
       KLEUR_VELD,
       { key: "vraag", label: "vraag (question)", datatype: "tekst" },
+      // De beslistabel zelf (vorm van dmn/dmnModel.js). Bewerken: datatype "beslistabel" →
+      // studio/BeslistabelEditor.jsx (geregistreerd in dmnDrdActivity). Lezers: dmnArtefact
+      // (DMN-XML) en de simulatie.
+      { key: "beslistabel", label: "beslistabel", datatype: "beslistabel" },
     ],
   },
   {
@@ -46,7 +50,13 @@ const elementTypes = [
     shape: "dmn-input-data",
     kleur: "#dcfce7",
     icoon: "invoer",
-    properties: [KLEUR_VELD],
+    properties: [
+      KLEUR_VELD,
+      // Waar de waarde vandaan komt: een veld van een element in een taal die gegevens draagt
+      // (16-11). Hieruit volgen de kolom in de beslistabel (invoerUitDrd.js) en een afgeleide
+      // koppeling «traceert naar» het element.
+      { key: "gegeven", label: "gegeven (veld)", datatype: "veld-verwijzing", koppelsoort: "traceert naar" },
+    ],
   },
   {
     id: "bkm",
@@ -208,6 +218,10 @@ export function drdRijenPosities({ ids, elements, edges, perRij = 5 }) {
 
 export const dmnDrdDiagramType = {
   id: DMN_DRD_ID,
+  // Profielversie (STUDIO.md "Profielversie in het project"). 1.1.0 (16-11): eigenschap
+  // `beslistabel` op de beslissing (bewerkbaar in de Studio) en `gegeven` (veld-verwijzing) op het
+  // invoergegeven; minor, oude projecten blijven geldig.
+  versie: "1.1.0",
   label: "DMN DRD",
   // Beschrijving: vóór 2026-10-12 "toelichting" (en uit EA "notes") → M3 data.beschrijving.
   oudeBeschrijvingSleutels: ["toelichting", "notes"],

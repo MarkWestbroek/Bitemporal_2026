@@ -74,12 +74,16 @@ func main() {
 		os.Exit(1)
 	}
 
+	// Vóór het afleiden: spreekt type/format het gegevenstype tegen, dan is het model fout.
+	typeFouten := typeGegevenstypeFouten(v3, *domein)
+
 	// Velden zonder goType (extern geleverd V3 met alleen type/format/datatype): afleiden.
 	if meldingen := vulGoTypesAan(&v3); len(meldingen) > 0 {
 		fmt.Printf("  %d veld(en) zonder goType; afgeleid uit type/format/verplicht/enum (eerste: %s)\n", len(meldingen), meldingen[0])
 	}
 
 	validationErrors := validateV3Model(v3, *domein)
+	validationErrors = append(validationErrors, typeFouten...)
 	validationErrors = append(validationErrors, padnaamBotsingen(v3, *domein)...)
 	validationErrors = append(validationErrors, typenaamBotsingen(v3, *domein)...)
 	validationErrors = append(validationErrors, tabelnaamTeLang(v3, *domein)...)
@@ -109,16 +113,13 @@ func main() {
 			fmt.Fprintln(os.Stderr, "V3 model validatie mislukt:\n  - "+fout)
 			os.Exit(1)
 		}
+		// Vóór het filteren: welke domeinen gebruiken welke enum (nodig voor gedeelde enums).
+		effectief := func(ent model.V3Entiteit) string { return model.EffectiefDomein(ent.Domein, v3.Naam, *domein) }
+		enumGebruik := model.EnumGebruikPerDomein(v3.Entiteiten, effectief)
+
 		filtered := v3.Entiteiten[:0]
-		includeLegeDomeinen := *domein == "register"
-		// Als het model-niveau naam overeenkomt met het gevraagde domein, dan worden
-		// entiteiten zonder domein-veld ook opgenomen (editor-v2 exporteert domein niet altijd).
-		modelNaamMatchesDomein := v3.Naam == *domein
 		for _, ent := range v3.Entiteiten {
-			zelfdeDomein := ent.Domein == *domein
-			registerBasis := includeLegeDomeinen && ent.Domein == ""
-			modelBasis := modelNaamMatchesDomein && ent.Domein == ""
-			if zelfdeDomein || registerBasis || modelBasis {
+			if effectief(ent) == *domein {
 				filtered = append(filtered, ent)
 			} else {
 				fmt.Printf("  Overgeslagen (domein=%q): %s\n", ent.Domein, ent.Typenaam)
@@ -126,29 +127,20 @@ func main() {
 		}
 		v3.Entiteiten = filtered
 
-		// Verwijder enums die niet meer gerefereerd worden door de resterende entiteiten.
-		usedEnums := map[string]bool{}
-		for _, ent := range v3.Entiteiten {
-			for _, ge := range ent.Gegevenselementen {
-				for _, v := range ge.Velden {
-					if v.Enum != "" {
-						usedEnums[v.Enum] = true
-					}
-				}
-			}
-			for _, rel := range ent.Relaties {
-				for _, v := range rel.Velden {
-					if v.Enum != "" {
-						usedEnums[v.Enum] = true
-					}
-				}
-			}
-		}
+		// Houd alleen de enums over die dit domein moet genereren. Een enum die meerdere
+		// domeinen gebruiken komt in precies één domein (zie model/v3_enum_domein.go); de andere
+		// domeinen verwijzen naar hetzelfde Go-type in package model.
 		filteredEnums := v3.Enums[:0]
 		for _, e := range v3.Enums {
-			if usedEnums[e.GoType] {
-				filteredEnums = append(filteredEnums, e)
+			gebruikers := enumGebruik[e.GoType]
+			if !gebruikers[*domein] {
+				continue
 			}
+			if eigenaar := model.EnumGenererendDomein(e.Domein, gebruikers); eigenaar != *domein {
+				fmt.Printf("  Enum %s: gedeeld, wordt gegenereerd in domein %q (dat domein moet meegebouwd zijn)\n", e.GoType, eigenaar)
+				continue
+			}
+			filteredEnums = append(filteredEnums, e)
 		}
 		v3.Enums = filteredEnums
 	}

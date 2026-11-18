@@ -44,6 +44,7 @@ import React, {
 } from "react";
 import { menuBus } from "../menuBus";
 import useStudioStore from "../useStudioStore";
+import { useToonUuids } from "../uuidZichtbaar.js";
 import { vraagNaam, vraagBevestiging, vraagKeuze, vraagReview, toonMelding } from "../naamDialog.jsx";
 import { useBeeldenStore, kopieerDiagramAlsLink, kopieerDiagramAlsSvgLink } from "../gedeeldeBeelden.js";
 
@@ -77,8 +78,12 @@ import { metVreemdeElementen, ontleedVreemdeId, vreemdeId, vreemdeProfielen } fr
 import { useVreemdeSelectie, zetVreemdeSelectie, LosGetoondContext } from "../vreemdeSelectie.js";
 import { gebruikInHetProject } from "../gebruikInProject.js";
 import { metKoppelingen, isKoppelingId, isKoppelType, linkIdVan, refVanCanvasId } from "../../diagramcore/model/koppellijnen.js";
+import { afgeleideKoppelingen, isAfgeleideLink } from "../../diagramcore/model/afgeleideKoppelingen.js";
+import MarksPaneel from "../MarksPaneel.jsx";
+import { useMarksStore } from "../marksStore.js";
+import { markRegels, schermContext } from "../../marks/marksPaneel.js";
 import { useKruisStore, useKoppelsoorten } from "./koppelingenActivity.jsx";
-import { openVerwijzing, alleDiagrammen, naamVanVerwijzing } from "../doorklik.js";
+import { openVerwijzing, alleDiagrammen, naamVanVerwijzing, diagrammenViaType } from "../doorklik.js";
 import VerwezenDoorPaneel from "../VerwezenDoorPaneel.jsx";
 import { doorklikVan } from "../../diagramcore/model/verwijstNaar.js";
 import { lidConnectoren } from "../../diagramcore/types/containerVoor.js";
@@ -96,6 +101,7 @@ const leesExportOpties = () => {
   return { achtergrondModus: s.achtergrond, schaal: s.schaal, marge: s.marge };
 };
 import { koppelModelStore } from "../sync/operaties.js";
+import { startUuidAanvulling } from "../uuidAanvulling.js";
 import { createDiagramStore, inEenUndoStap } from "../../diagramcore/model/createDiagramStore.js";
 import { UITLIJN_MODES } from "../../diagramcore/layout/uitlijnen.js";
 import { ANKER_PREFIX } from "../../diagramcore/canvas/materialiseerConnectoren.js";
@@ -106,7 +112,7 @@ import RelatiesPaneel from "../../diagramcore/inspector/RelatiesPaneel.jsx";
 import GebruikPaneel from "../../diagramcore/inspector/GebruikPaneel.jsx";
 import { gebruikteIds } from "../../diagramcore/model/gebruik.js";
 import { relatiesVan, verborgenRelatiesVan } from "../../diagramcore/model/relaties.js";
-import { gerelateerdeElementen, ringPosities } from "../../diagramcore/model/gerelateerd.js";
+import { gerelateerdeElementen, vrijePosities, kruisGraaf } from "../../diagramcore/model/gerelateerd.js";
 import { wijstNaarOuder } from "../../diagramcore/types/layoutStijl.js";
 import { boomLijn, boomKinderen } from "../../diagramcore/model/lijnvorm.js";
 import { TypeIcoon } from "../../diagramcore/shapes/typeIconen.jsx";
@@ -267,6 +273,8 @@ export function maakDiagramActiviteit(opties) {
   // Projectsync (plan 2026-10-07, stap 2): elke modelactie wordt een benoemde
   // operatie in de outbox; undo/redo en migraties vangt het diff-vangnet.
   koppelModelStore(id, useStore);
+  // Projectformaat 4 (15-11): ontbrekende uuid's aanvullen, afgeleid (uuid v5; studio/uuidAanvulling.js).
+  if (koppeling?.vulUuids) startUuidAanvulling(id, useStore, koppeling.vulUuids);
   // Model-migratie (DiagramType.hooks.migreerModel): een persistente sandbox
   // bewaart de vorm van het moment van inladen. Breng hem bij — direct na het
   // hydrateren én na elke latere laad (project-import, herlaad). Buiten de
@@ -2174,11 +2182,34 @@ export function maakDiagramActiviteit(opties) {
     const kruisLinks = useKruisStore((s) => s.links);
     // De soortenlijst van het project (bewerkbaar in Koppelingen): de lijntypen en hun stijl.
     const koppelsoorten = useKoppelsoorten();
+    // Marks van het project en de context van deze gebruiker (voor het teken op het canvas).
+    const markLagen = useMarksStore((s) => s.lagen);
+    const markContexten = useMarksStore((s) => s.contexten);
+    const markLijst = useMarksStore((s) => s.marks);
+    const markContext = useMarksStore((s) => s.actieveContext);
+    const markStand = useMemo(() => ({ lagen: markLagen, contexten: markContexten, marks: markLijst }), [markLagen, markContexten, markLijst]);
     const canvasModel = useMemo(() => {
       const v = metVreemdeElementen({ elements, descriptor, diagram, bron: vreemdeBron });
-      return metKoppelingen({ elements: v.elements, descriptor: v.descriptor, diagram, eigenProfielId: id, links: kruisLinks, soorten: koppelsoorten });
+      // Plus de afgeleide koppelingen (15-11): een eigenschap met een koppelsoort (het type van
+      // een BPMN-data-object «traceert naar» het cm-element) tekent als koppellijn.
+      const links = [...kruisLinks, ...afgeleideKoppelingen({ profielId: id, elements, elementTypes: descriptor.elementTypes })];
+      const model = metKoppelingen({ elements: v.elements, descriptor: v.descriptor, diagram, eigenProfielId: id, links, soorten: koppelsoorten });
+      // Marks (18-11): een teken op elk eigen element waar marks op gelden (op het element of
+      // op een veld ervan). Afgeleid gegeven `data._marks`, zoals `vreemd`; het wordt niet bewaard.
+      if (!markStand.marks.length) return model;
+      const context = schermContext(markStand, markContext);
+      let metMarks = null;
+      for (const n of diagram?.nodes || []) {
+        const el = elements[n.elementId];
+        if (!el || !model.elements[el.id]) continue;
+        const regels = markRegels({ st: markStand, context, profielId: id, descriptorId: descriptor.id, element: el });
+        if (!regels.length) continue;
+        metMarks = metMarks || { ...model.elements };
+        metMarks[el.id] = { ...model.elements[el.id], data: { ...model.elements[el.id].data, _marks: regels } };
+      }
+      return metMarks ? { ...model, elements: metMarks } : model;
       // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [elements, diagram, vreemdTik, kruisLinks, koppelsoorten]);
+    }, [elements, diagram, vreemdTik, kruisLinks, koppelsoorten, markStand, markContext]);
 
     // Tips na een toestandsovergang (hints.js): het eerste element op een diagram, en de
     // eerste relatie in dit profiel. Alleen bij een toename tijdens de sessie, niet bij laden.
@@ -2388,7 +2419,15 @@ export function maakDiagramActiviteit(opties) {
                   const elDk = s.elements[voorkomenRef?.elementId || nodeId];
                   const verw = doorklikVan(elDk, elementTypesById[elDk?.elementType], id);
                   const naam = verw ? naamVanVerwijzing(verw) : null;
-                  return naam ? [{ id: "open-verwijzing", label: `Open ${naam}`, icoon: "⧉", onClick: () => openVerwijzing(verw) }] : [];
+                  if (naam) return [{ id: "open-verwijzing", label: `Open ${naam}`, icoon: "⧉", onClick: () => openVerwijzing(verw) }];
+                  // Zonder eigen doorklik: de diagrammen waarop het type staat (15-11).
+                  if (verw) return [];
+                  return diagrammenViaType(elDk, elementTypesById[elDk?.elementType]).map((d) => ({
+                    id: `open-via-type-${d.profielId}-${d.diagramId}`,
+                    label: `Open ${d.naam}`,
+                    icoon: "⧉",
+                    onClick: () => openVerwijzing(d),
+                  }));
                 })(),
                 {
                   id: "zoek-in-boom",
@@ -2934,9 +2973,18 @@ export function maakDiagramActiviteit(opties) {
       const dId = s0.actiefDiagramId;
       if (!dId || !startIds.length) return;
       const opDiagram = new Set((s0.diagrams[dId]?.nodes || []).map((n) => n.elementId));
+      // Kruisverbanden (de matrix én de afgeleide, 15-11) doen mee, en ook de verbindingen binnen
+      // die andere taal (Mark: "mag ook in een vreemde taal verder gaan"): een element daar komt
+      // als verwijzing (vreemd element) op dit diagram.
+      const { koppelingen, vreemdeKnopen } = kruisGraaf({
+        eigenProfielId: id,
+        startIds,
+        links: [...useKruisStore.getState().links, ...afgeleideKoppelingen({ profielId: id, elements: s0.elements, elementTypes: descriptor.elementTypes })],
+        bronVan: vreemdeBron,
+      });
       const kandidatenVoor = (diepte) =>
-        gerelateerdeElementen({ startIds, elements: s0.elements, opDiagram, elementTypesById, diepte });
-      const startNaam = startIds.length === 1 ? s0.elements[startIds[0]]?.naam || startIds[0] : `${startIds.length} elementen`;
+        gerelateerdeElementen({ startIds, elements: s0.elements, opDiagram, elementTypesById, diepte, koppelingen, vreemdeKnopen });
+      const startNaam = startIds.length === 1 ? s0.elements[startIds[0]]?.naam || vreemdeKnopen[startIds[0]]?.naam || startIds[0] : `${startIds.length} elementen`;
       const heeftLayout = (descriptor.layouts || []).length > 0;
       const uitkomst = await vraagReview({
         titel: `Gerelateerde elementen van ${startNaam}`,
@@ -2978,8 +3026,13 @@ export function maakDiagramActiviteit(opties) {
       if (!gekozen.length) return;
       const s = useStore.getState();
       const nodes = s.diagrams[dId]?.nodes || [];
-      const anker = nodes.find((n) => n.elementId === startIds[0])?.position || layoutApiRef.current?.viewportMidden?.() || { x: 200, y: 200 };
-      const posities = ringPosities(anker, gekozen);
+      // In de vrije ruimte rechts van het startelement, naar beneden (Mark 15-11: de kring zette
+      // elementen boven het startpunt, onder de werkbalken).
+      const maatVan = (n) => ({ width: n.size?.width || 160, height: n.size?.height || 80 });
+      const startNode = nodes.find((n) => n.elementId === startIds[0]);
+      const anker = startNode ? { ...startNode.position, width: maatVan(startNode).width } : layoutApiRef.current?.viewportMidden?.() || { x: 200, y: 200 };
+      const bezet = nodes.filter((n) => n.position).map((n) => ({ x: n.position.x, y: n.position.y, ...maatVan(n) }));
+      const posities = vrijePosities(anker, gekozen, bezet);
       const [eerste, ...rest] = gekozen;
       metHookInEenStap(
         () => { useStore.getState().addElementToDiagram(dId, eerste.id, posities[eerste.id]); naTerugzetten(dId, eerste.id); },
@@ -3526,6 +3579,11 @@ export function maakDiagramActiviteit(opties) {
                     const etDk = element && (descriptor.elementTypes || []).find((t) => t.id === element.elementType);
                     const verw = doorklikVan(element, etDk, id);
                     if (verw && openVerwijzing(verw)) return true;
+                    // Zonder eigen doorklik: via het type (15-11) het eerste diagram waarop dat staat.
+                    if (!verw) {
+                      const viaType = diagrammenViaType(element, etDk)[0];
+                      if (viaType && openVerwijzing(viaType)) return true;
+                    }
                     const doelId = element?.data?.gedragDiagramId;
                     if (!doelId || !useStore.getState().diagrams[doelId]) {
                       // Uitwerking (M3 `uitwerking`, 15-10): de projectboom weet welke
@@ -3793,6 +3851,17 @@ export function maakDiagramActiviteit(opties) {
   function KoppelingInspector({ linkId, diagramId, onKlaar }) {
     const link = useKruisStore((s) => s.links.find((l) => l.id === linkId));
     const soorten = useKoppelsoorten();
+    if (isAfgeleideLink(linkId)) {
+      // Afgeleid uit een eigenschap (15-11): hier niets te wijzigen.
+      return (
+        <div className="studio-inspector-pad dc-inspector" data-testid="koppeling-afgeleid">
+          <h3>Koppeling (afgeleid)</h3>
+          <div className="dc-inspector-type">
+            Volgt uit een eigenschap van het element (bv. het type van een data-object). Wijzig of wis die eigenschap om de koppeling te veranderen.
+          </div>
+        </div>
+      );
+    }
     if (!link) {
       return <div className="studio-inspector-pad" style={{ color: "var(--s-fg-muted)" }}>Deze koppeling bestaat niet meer.</div>;
     }
@@ -3872,9 +3941,11 @@ export function maakDiagramActiviteit(opties) {
     const elements = useStore((s) => s.elements);
     const diagrams = useStore((s) => s.diagrams);
     // Kiezer over alle profielen (verwijst naar, 20-10) en ↗ om het gekozen diagram te openen.
+    // toonUuids: beheer-voorkeur (uuidZichtbaar.js); de inspector toont dan de uuid's.
+    const toonUuids = useToonUuids();
     const editorContext = React.useMemo(
-      () => ({ elements, diagrams, profielId: id, alleDiagrammen: alleDiagrammen(), openDiagram: openVerwijzing }),
-      [elements, diagrams]
+      () => ({ elements, diagrams, profielId: id, alleDiagrammen: alleDiagrammen(), openDiagram: openVerwijzing, toonUuids }),
+      [elements, diagrams, toonUuids]
     );
 
     // Kandidaten via de ReferenceResolvers van het profiel (plan §4.5b).
@@ -3958,6 +4029,8 @@ export function maakDiagramActiviteit(opties) {
             }
           }}
         />
+        {/* Marks (18-11): aanwijzingen voor transformaties, los van het model. */}
+        <MarksPaneel profielId={id} descriptorId={descriptor.id} element={element} />
         {!elementType?.isConnector && (
           <RelatiesPaneel
             relaties={relatiesVan(element.id, elements, diagrams[actief], elementTypesById)}

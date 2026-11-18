@@ -120,3 +120,25 @@ export function spoorVan(log, objectId) {
     .map((regel) => ({ nr: regel.nr, wat: regel.wat, wijzigingen: regel.wijzigingen.filter((m) => m.id === objectId || m.van === objectId || m.naar === objectId) }))
     .filter((regel) => regel.wijzigingen.some((m) => ["maak", "zet", "overgang", "verbind", "ontbind"].includes(m.soort)));
 }
+
+/**
+ * De versies van een object (Mark 14-11): elke stap die het object raakt (maak, zet, overgang,
+ * verbind, ontbind) is een nieuwe versie, zoals elke registratie met een wijziging op een
+ * object in het bitemporele register. Versie 1 is de stap waarin het gemaakt werd.
+ * `velden` zijn de velden (platte vorm, hoogste niveau) die in die stap veranderden;
+ * `relaties` de relaties die erbij kwamen (+) of weggingen (−).
+ * @returns {{versie: number, nr: number, wat: string, velden: string[], relaties: string[]}[]}
+ */
+export function versiesVan(log, objectId) {
+  return spoorVan(log, objectId).map((regel, i) => {
+    const velden = new Set();
+    const relaties = [];
+    for (const m of regel.wijzigingen) {
+      if (m.soort === "maak" && m.id === objectId) Object.keys(m.data || {}).forEach((k) => velden.add(k));
+      else if (m.soort === "zet" && m.id === objectId) Object.keys(m.velden || {}).forEach((k) => velden.add(k));
+      else if (m.soort === "overgang" && m.id === objectId) velden.add(m.veld);
+      else if (m.soort === "verbind" || m.soort === "ontbind") relaties.push(`${m.soort === "ontbind" ? "−" : "+"}${m.rol || "relatie"} ${m.van === objectId ? `→ ${m.naar}` : `← ${m.van}`}`);
+    }
+    return { versie: i + 1, nr: regel.nr, wat: regel.wat, velden: [...velden], relaties };
+  });
+}

@@ -92,6 +92,7 @@ test("Van server ophalen: alleen-lezen-project zonder beheer; Toegang… opslaan
     }
     return r.fulfill({ json: { project_id: "probeer-0001", eigenaar: "mark", toegang: [{ subject: "*", recht: "lezen" }] } });
   });
+  await page.route("**/api/gebruikers", (r) => r.fulfill({ json: [{ id: "g1", gebruikersnaam: "anna" }, { id: "g2", gebruikersnaam: "mark" }] }));
   await page.evaluate(async () => {
     const { useProjectServerStore } = await import(location.origin + "/viz/react/src/studio/activities/ProjectServerDialoog.jsx");
     useProjectServerStore.getState().openen({ onKies: () => {} });
@@ -106,8 +107,50 @@ test("Van server ophalen: alleen-lezen-project zonder beheer; Toegang… opslaan
   await expect(paneel).toContainText("Iedereen die is ingelogd");
   await expect(paneel).toContainText("mark");
   await paneel.locator("button", { hasText: "+ gebruiker" }).click();
+  // De bestaande gebruikers als keuzelijst; een onbekende naam geeft een waarschuwing.
+  await expect(paneel.locator("datalist option")).toHaveCount(2);
+  await paneel.locator('input[aria-label="Gebruikersnaam"]').fill("annna");
+  await expect(paneel).toContainText("niet bij een bestaande gebruiker");
   await paneel.locator('input[aria-label="Gebruikersnaam"]').fill(" anna ");
+  await expect(paneel).not.toContainText("niet bij een bestaande gebruiker");
   await paneel.locator("button", { hasText: "Opslaan" }).click();
   await expect(paneel).toContainText("Opgeslagen");
   expect(opgeslagen).toEqual({ toegang: [{ subject: "*", recht: "lezen" }, { subject: "anna", recht: "schrijven" }] });
+});
+
+test("Gebruikers → Projecten…: achteraf een project toewijzen, alleen het gewijzigde project wordt geschreven", async ({ page }) => {
+  const puts = [];
+  await openStudio(page);
+  await page.route("**/api/auth/me", (r) => r.fulfill({ json: { gebruikersnaam: "mark", rol: "admin" } }));
+  await page.route("**/api/gebruikers", (r) => r.fulfill({ json: [
+    { id: "g-anna", gebruikersnaam: "anna", status: "actief", mag_inloggen: true, heeft_wachtwoord: true, rollen: [{ rel_id: "r1", rol: "modelleur" }] },
+  ] }));
+  await page.route("**/api/gebruikers/uitnodigingen", (r) => r.fulfill({ json: { aan: false, uitnodigingen: [] } }));
+  await page.route("**/api/studio/projecten", (r) => r.fulfill({ json: PROJECTEN }));
+  const toegang = {
+    "probeer-0001": { eigenaar: "mark", toegang: [{ subject: "*", recht: "lezen" }, { subject: "hugo", recht: "schrijven" }] },
+    "productie-01": { eigenaar: "hugo", toegang: [{ subject: "anna", recht: "lezen" }] },
+  };
+  await page.route("**/api/studio/projecten/*/toegang", (r) => {
+    const id = r.request().url().split("/projecten/")[1].split("/")[0];
+    if (r.request().method() === "PUT") {
+      puts.push({ id, ...r.request().postDataJSON() });
+      return r.fulfill({ status: 204, body: "" });
+    }
+    return r.fulfill({ json: { project_id: id, ...toegang[id] } });
+  });
+  await page.evaluate(async () => {
+    const st = await import(location.origin + "/viz/react/src/studio/useStudioStore.js");
+    st.default.getState().setActief("gebruikers");
+  });
+  await page.getByRole("button", { name: "Projecten…" }).click();
+  const paneel = page.getByTestId("gebruiker-projecten");
+  await expect(paneel.locator('[data-project-id="productie-01"] select')).toHaveValue("lezen");
+  await expect(paneel.locator('[data-project-id="probeer-0001"] select')).toHaveValue("");
+  await expect(paneel.locator('[data-project-id="probeer-0001"]')).toContainText("iedereen: lezen");
+  await paneel.locator('[data-project-id="probeer-0001"] select').selectOption("schrijven");
+  await paneel.getByRole("button", { name: "Opslaan (1)" }).click();
+  await expect(paneel).toContainText("Opgeslagen");
+  // Alleen Probeer, met de bestaande rijen erbij.
+  expect(puts).toEqual([{ id: "probeer-0001", toegang: [{ subject: "*", recht: "lezen" }, { subject: "hugo", recht: "schrijven" }, { subject: "anna", recht: "schrijven" }] }]);
 });

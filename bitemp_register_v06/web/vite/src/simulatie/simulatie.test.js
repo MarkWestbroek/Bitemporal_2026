@@ -421,3 +421,45 @@ test("claim: wie het eerst koppelt wint; de taak van de ander stopt via het onde
   assert.ok(!sim.log.some((r) => r.plek === "kies_einde"));
   assert.deepEqual(sim.log.find((r) => r.signaal).signaal.ontvangers, ["Medewerker aan zaak gekoppeld op Kies zaak om te behandelen"]);
 });
+
+test("signaalfilter met de ontvanger: een boundary event reageert alleen op zijn eigen zaak (url == ontvanger.zaakUrl, Mark 16-11)", () => {
+  const claim = (filter) =>
+    klein(
+      modelMet({
+        werkbak: {
+          knopen: [
+            ["s", "start-event"],
+            ["splits", "parallel"],
+            ["kies", "taak", { taakSoort: "user", naam: "Kies zaak om te behandelen" }],
+            ["al", "boundary-event", { soort: "signaal", signaal: "gekoppeld", onderbrekend: true, randVan: "kies", filter, naam: "Door een ander gekoppeld" }],
+            ["al_einde", "eind-event", { naam: "Al toegewezen" }],
+            ["router", "taak", { taakSoort: "service", naam: "Wijs automatisch toe" }],
+            ["gekoppeld", "eind-event", { soort: "signaal", signaal: "gekoppeld" }],
+            ["kies_einde", "eind-event"],
+          ],
+          flows: [["s", "splits"], ["splits", "kies"], ["splits", "router"], ["router", "gekoppeld"], ["kies", "kies_einde"], ["al", "al_einde"]],
+        },
+      }),
+      { start: { proces: "werkbak", object: { url: "https://stub.example/zaken/1" } }, vulwijze: { standaard: "hand" } },
+    );
+  const eigen = claim("url == ontvanger.zaakUrl");
+  assert.equal(eigen.loop().soort, "uitkomst", "de eigen zaak: de taak stopt via het boundary event");
+  assert.ok(eigen.log.some((r) => r.plek === "al_einde"));
+
+  const ander = claim("url != ontvanger.zaakUrl");
+  assert.equal(ander.loop().soort, "gat", "niet voor deze zaak: de taak blijft openstaan");
+  assert.deepEqual(ander.log.find((r) => r.signaal).signaal.ontvangers, []);
+
+  // Een signal-start loopt nog niet: daar is ontvanger een leesfout, met de reden in het log.
+  const start = klein(
+    modelMet({
+      werper: { knopen: [["w_start", "start-event"], ["w_einde", "eind-event", { soort: "signaal", signaal: "zaak-in-werkbak" }]], flows: [["w_start", "w_einde"]] },
+      luister: { knopen: [["l_start", "start-event", { soort: "signaal", signaal: "zaak-in-werkbak", filter: "url == ontvanger.zaakUrl" }], ["l_einde", "eind-event"]], flows: [["l_start", "l_einde"]] },
+    }),
+    { start: { proces: "werper", object: { url: "z" } } },
+  );
+  start.loop();
+  const geweigerd = start.log.find((r) => r.signaal).signaal.geweigerd;
+  assert.equal(geweigerd[0].waar, "luister");
+  assert.match(geweigerd[0].reden, /ontvanger/);
+});

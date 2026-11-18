@@ -227,7 +227,8 @@
         "id": "conn_1794147798572_2",
         "data": {
           "sourceHandle": null,
-          "targetHandle": null
+          "targetHandle": null,
+          "knikken": null
         },
         "naam": "koppel medewerker als zaakbehandelaar",
         "source": "bp_1794147740492_6",
@@ -784,7 +785,8 @@
           "signaal": "medewerker-gekoppeld",
           "onderbrekend": true,
           "randVan": "bp_1794147740492_6",
-          "bpmnId": "al-gekoppeld"
+          "bpmnId": "al-gekoppeld",
+          "filter": "url == ontvanger.zaakUrl"
         }
       },
       "bp_kies_al_toegewezen": {
@@ -833,6 +835,227 @@
           "conditie": "",
           "standaard": false
         }
+      },
+      "bp_1794782741400_1": {
+        "id": "bp_1794782741400_1",
+        "naam": "Aanvraag",
+        "elementType": "data-object",
+        "compartimenten": [],
+        "data": {
+          "type": {
+            "profielId": "diagram05",
+            "elementId": "Aanvraag"
+          },
+          "verwijstNaar": {
+            "profielId": "diagram05",
+            "diagramId": "d05_1793994426048"
+          },
+          "rol": "invoer",
+          "toestand": "ingediend"
+        }
+      },
+      "conn_1794782744368_1": {
+        "id": "conn_1794782744368_1",
+        "naam": "",
+        "elementType": "data-associatie",
+        "source": "bp_1794782741400_1",
+        "target": "bp_ontvankelijkheid_toetsen",
+        "compartimenten": [],
+        "data": {
+          "sourceHandle": null,
+          "targetHandle": null
+        }
+      },
+      "conn_do_aanvraag_documenten": {
+        "id": "conn_do_aanvraag_documenten",
+        "naam": "",
+        "elementType": "data-associatie",
+        "source": "bp_1794782741400_1",
+        "target": "bp_document_koppelen",
+        "compartimenten": [],
+        "data": {
+          "sourceHandle": null,
+          "targetHandle": null
+        }
+      },
+      "bp_do_zaak": {
+        "id": "bp_do_zaak",
+        "naam": "Zaak",
+        "elementType": "data-object",
+        "compartimenten": [],
+        "data": {
+          "rol": "uitvoer"
+        }
+      },
+      "conn_do_zaak_aanmaken": {
+        "id": "conn_do_zaak_aanmaken",
+        "naam": "",
+        "elementType": "data-associatie",
+        "source": "bp_zaak_aanmaken",
+        "target": "bp_do_zaak",
+        "compartimenten": [],
+        "data": {
+          "sourceHandle": null,
+          "targetHandle": null
+        }
+      },
+      "conn_do_zaak_rol": {
+        "id": "conn_do_zaak_rol",
+        "naam": "",
+        "elementType": "data-associatie",
+        "source": "bp_rol_aanvrager_aanmaken",
+        "target": "bp_do_zaak",
+        "compartimenten": [],
+        "data": {
+          "sourceHandle": null,
+          "targetHandle": null
+        }
+      },
+      "conn_do_zaak_documenten": {
+        "id": "conn_do_zaak_documenten",
+        "naam": "",
+        "elementType": "data-associatie",
+        "source": "bp_document_koppelen",
+        "target": "bp_do_zaak",
+        "compartimenten": [],
+        "data": {
+          "sourceHandle": null,
+          "targetHandle": null
+        }
+      },
+      "bp_do_zaak_ontvangen": {
+        "id": "bp_do_zaak_ontvangen",
+        "naam": "Zaak",
+        "elementType": "data-object",
+        "compartimenten": [],
+        "data": {
+          "rol": "uitvoer",
+          "toestand": "Ontvangen"
+        }
+      },
+      "conn_do_zaak_status": {
+        "id": "conn_do_zaak_status",
+        "naam": "",
+        "elementType": "data-associatie",
+        "source": "bp_status_ontvangen",
+        "target": "bp_do_zaak_ontvangen",
+        "compartimenten": [],
+        "data": {
+          "sourceHandle": null,
+          "targetHandle": null
+        }
+      },
+      "bp_do_zb_aanvraag": {
+        "id": "bp_do_zb_aanvraag",
+        "naam": "Aanvraag",
+        "elementType": "data-object",
+        "compartimenten": [],
+        "data": {
+          "type": {
+            "profielId": "diagram05",
+            "elementId": "Aanvraag"
+          },
+          "verwijstNaar": {
+            "profielId": "diagram05",
+            "diagramId": "d05_1793994426048"
+          }
+        }
+      },
+      "conn_do_zb_aanvraag": {
+        "id": "conn_do_zb_aanvraag",
+        "naam": "",
+        "elementType": "data-associatie",
+        "source": "bp_do_zb_aanvraag",
+        "target": "bp_beoordeel_aanvraag",
+        "compartimenten": [],
+        "data": {
+          "sourceHandle": null,
+          "targetHandle": null
+        }
+      },
+      "bp_do_beschikking": {
+        "id": "bp_do_beschikking",
+        "naam": "Beschikking",
+        "elementType": "data-object",
+        "compartimenten": [],
+        "data": {
+          "rol": "uitvoer"
+        }
+      },
+      "conn_do_beschikking_op": {
+        "id": "conn_do_beschikking_op",
+        "naam": "",
+        "elementType": "data-associatie",
+        "source": "bp_1794147923356_9",
+        "target": "bp_do_beschikking",
+        "compartimenten": [],
+        "data": {
+          "sourceHandle": null,
+          "targetHandle": null
+        }
+      },
+      "conn_do_beschikking_af": {
+        "id": "conn_do_beschikking_af",
+        "naam": "",
+        "elementType": "data-associatie",
+        "source": "bp_1794148355126_18",
+        "target": "bp_do_beschikking",
+        "compartimenten": [],
+        "data": {
+          "sourceHandle": null,
+          "targetHandle": null
+        }
+      },
+      "bp_do_beo_aanvraag": {
+        "id": "bp_do_beo_aanvraag",
+        "naam": "Aanvraag",
+        "elementType": "data-object",
+        "compartimenten": [],
+        "data": {
+          "type": {
+            "profielId": "diagram05",
+            "elementId": "Aanvraag"
+          },
+          "rol": "invoer",
+          "verwijstNaar": {
+            "profielId": "diagram05",
+            "diagramId": "d05_1793994426048"
+          }
+        }
+      },
+      "conn_do_beo_aanvraag": {
+        "id": "conn_do_beo_aanvraag",
+        "naam": "",
+        "elementType": "data-associatie",
+        "source": "bp_do_beo_aanvraag",
+        "target": "bp_aanvraag_beoordelen",
+        "compartimenten": [],
+        "data": {
+          "sourceHandle": null,
+          "targetHandle": null
+        }
+      },
+      "bp_do_kies_zaak": {
+        "id": "bp_do_kies_zaak",
+        "naam": "Zaak",
+        "elementType": "data-object",
+        "compartimenten": [],
+        "data": {
+          "rol": "invoer",
+          "toestand": "in werkbak"
+        }
+      },
+      "conn_do_kies_zaak": {
+        "id": "conn_do_kies_zaak",
+        "naam": "",
+        "elementType": "data-associatie",
+        "source": "bp_do_kies_zaak",
+        "target": "bp_1794147740492_6",
+        "compartimenten": [],
+        "data": {
+          "sourceHandle": null,
+          "targetHandle": null
+        }
       }
     },
     "diagrams": {
@@ -843,26 +1066,26 @@
         "nodes": [
           {
             "position": {
-              "x": 182.42867216747285,
-              "y": 313.0365598765282
+              "x": 187.68100590856477,
+              "y": 323.7451527793766
             },
             "elementId": "bp_1794147319067_1"
           },
           {
             "position": {
-              "x": 1217.5036932292876,
-              "y": 399.3726989401168
+              "x": 1322.683827712493,
+              "y": 323.7451527793766
             },
             "elementId": "bp_1794147356930_2"
           },
           {
             "size": {
-              "width": 238,
-              "height": 115
+              "width": 190,
+              "height": 94
             },
             "position": {
-              "x": 823.9495397549442,
-              "y": 269.1662089217536
+              "x": 878.3741813591259,
+              "y": 291.7451527793766
             },
             "elementId": "bp_1794147923356_9"
           },
@@ -872,15 +1095,15 @@
               "height": 182
             },
             "position": {
-              "x": 241,
-              "y": -76
+              "x": 249.6659325080343,
+              "y": -103.26886172375123
             },
             "elementId": "bp_1794148119629_13"
           },
           {
             "position": {
-              "x": 710.559592002029,
-              "y": -5.828338654709668
+              "x": 316.5856778968338,
+              "y": -27.26886172375123
             },
             "elementId": "bp_1794148147741_14"
           },
@@ -890,22 +1113,22 @@
               "height": 51
             },
             "position": {
-              "x": 448.2618736153427,
-              "y": -18.377373846248076
+              "x": 434.5158042365772,
+              "y": -37.76886172375123
             },
             "elementId": "bp_1794148161413_15"
           },
           {
             "position": {
-              "x": 336.56096194118714,
-              "y": 1.0908642153556514
+              "x": 702.4459305763206,
+              "y": -27.268861723751225
             },
             "elementId": "bp_1794148180085_16"
           },
           {
             "position": {
-              "x": 708.559592002029,
-              "y": 311.0365598765282
+              "x": 713.8119257431209,
+              "y": 321.7451527793766
             },
             "elementId": "bp_1794148303822_17"
           },
@@ -915,15 +1138,15 @@
               "height": 94
             },
             "position": {
-              "x": 661.1110528643238,
-              "y": 477.14772100504103
+              "x": 878.3741813591259,
+              "y": 510.80761178133196
             },
             "elementId": "bp_1794148355126_18"
           },
           {
             "position": {
-              "x": 1134.9856159851104,
-              "y": 395.96429543881777
+              "x": 1178.1053268495295,
+              "y": 321.7451527793766
             },
             "elementId": "bp_1794148434134_19"
           },
@@ -933,32 +1156,47 @@
               "height": 60
             },
             "position": {
-              "x": 640,
-              "y": 165
+              "x": 424.6659325080343,
+              "y": 150.67541506483317
             },
             "elementId": "bp_1794150207705_20"
           },
           {
             "position": {
-              "x": 333.7481412174958,
-              "y": 311.0365598765282
+              "x": 339.0004749585877,
+              "y": 321.7451527793766
             },
             "elementId": "bp_1794150396697_22"
           },
           {
             "elementId": "bp_beoordeel_aanvraag",
             "position": {
-              "x": 440,
-              "y": 290
+              "x": 447.9182662491262,
+              "y": 314.7451527793766
+            }
+          },
+          {
+            "elementId": "bp_do_zb_aanvraag",
+            "position": {
+              "x": 482.3919808104681,
+              "y": 418.7032103310227
+            }
+          },
+          {
+            "elementId": "bp_do_beschikking",
+            "position": {
+              "x": 929.3741813591259,
+              "y": 418.27638228035426
             }
           }
         ],
         "lijnen": {
           "conn_1794148443174_13": {
-            "knikken": []
+            "knikken": [],
+            "vorm": "bezier"
           },
           "conn_1794148445823_14": {
-            "vorm": "boom",
+            "vorm": "bezier",
             "knikken": [],
             "verschuiving": 17
           },
@@ -980,9 +1218,19 @@
                 "x": 2,
                 "y": 12
               }
-            }
+            },
+            "vorm": "bezier",
+            "knikken": []
           },
           "conn_1794150409233_21": {
+            "vorm": "bezier",
+            "knikken": []
+          },
+          "conn_1794150219866_16": {
+            "vorm": "bezier",
+            "knikken": []
+          },
+          "conn_1794148364326_10": {
             "vorm": "bezier",
             "knikken": []
           }
@@ -997,48 +1245,78 @@
         "nodes": [
           {
             "position": {
-              "x": 434.37640380859375,
-              "y": 360.56390380859375
+              "x": 423.67719938705864,
+              "y": 355.48791243388706
             },
             "elementId": "bp_1794147706108_5"
           },
           {
             "position": {
-              "x": 520.3764038085938,
-              "y": 346.56390380859375
+              "x": 520.3080411771246,
+              "y": 333.98791243388706
             },
-            "elementId": "bp_1794147740492_6"
+            "elementId": "bp_1794147740492_6",
+            "size": {
+              "width": 201,
+              "height": 73
+            }
           },
           {
             "position": {
-              "x": 573.3764038085938,
-              "y": 501.56390380859375
+              "x": 516.9624168586814,
+              "y": 525.8802774939007
             },
             "elementId": "bp_1794147781548_7"
           },
           {
             "position": {
-              "x": 772.3764038085938,
-              "y": 356.56390380859375
+              "x": 781.7055663299063,
+              "y": 355.48791243388706
             },
             "elementId": "bp_1794147824940_8"
           },
           {
             "elementId": "bp_kies_al_gekoppeld",
             "position": {
-              "x": 616.3764038085938,
-              "y": 392.56390380859375
+              "x": 139.77547957657407,
+              "y": 60
             }
           },
           {
             "elementId": "bp_kies_al_toegewezen",
             "position": {
-              "x": 740.3764038085938,
-              "y": 466.56390380859375
+              "x": 777.1594107684688,
+              "y": 502.5677461888085
+            }
+          },
+          {
+            "elementId": "bp_do_kies_zaak",
+            "position": {
+              "x": 597,
+              "y": 209
             }
           }
         ],
-        "diagramType": "bpmn-motor"
+        "diagramType": "bpmn-motor",
+        "lijnen": {
+          "conn_1794147798572_2": {
+            "verschuiving": -2,
+            "labelOffsets": {
+              "midden": {
+                "x": -26,
+                "y": 32
+              }
+            },
+            "sourceHandle": null,
+            "targetHandle": null,
+            "knikken": [],
+            "vorm": "bezier"
+          },
+          "bp_kies_f_al": {
+            "vorm": "bezier",
+            "knikken": []
+          }
+        }
       },
       "bp_diagram_Diagram_gpk_beoordelen": {
         "id": "bp_diagram_Diagram_gpk_beoordelen",
@@ -1051,8 +1329,8 @@
               "height": 36
             },
             "position": {
-              "x": 152,
-              "y": 102
+              "x": 105.6875560280064,
+              "y": 102.22265598063458
             },
             "elementId": "bp_start_2"
           },
@@ -1062,8 +1340,8 @@
               "height": 80
             },
             "position": {
-              "x": 240,
-              "y": 80
+              "x": 229.83334482625773,
+              "y": 80.22265598063458
             },
             "elementId": "bp_aanvraag_beoordelen"
           },
@@ -1073,8 +1351,8 @@
               "height": 36
             },
             "position": {
-              "x": 542,
-              "y": 102
+              "x": 606.1249224227604,
+              "y": 102.22265598063458
             },
             "elementId": "bp_einde_2"
           },
@@ -1084,10 +1362,17 @@
               "height": 80
             },
             "position": {
-              "x": 392,
-              "y": 80
+              "x": 417.979133624509,
+              "y": 80.22265598063458
             },
             "elementId": "bp_uitkomst_vastleggen"
+          },
+          {
+            "elementId": "bp_do_beo_aanvraag",
+            "position": {
+              "x": 243.7344019365416,
+              "y": -28.96876939430991
+            }
           }
         ],
         "diagramType": "bpmn-motor"
@@ -1136,8 +1421,8 @@
               "height": 80
             },
             "position": {
-              "x": 540,
-              "y": 220
+              "x": 545.4069550533294,
+              "y": 287.04624266128553
             },
             "elementId": "bp_status_niet_opgepakt"
           },
@@ -1147,8 +1432,8 @@
               "height": 36
             },
             "position": {
-              "x": 692,
-              "y": 242
+              "x": 697.4069550533294,
+              "y": 309.04624266128553
             },
             "elementId": "bp_niet_opgepakt"
           },
@@ -1206,9 +1491,51 @@
               "y": 102
             },
             "elementId": "bp_einde"
+          },
+          {
+            "elementId": "bp_1794782741400_1",
+            "position": {
+              "x": 224.54550548753917,
+              "y": -35.4884373129416
+            }
+          },
+          {
+            "elementId": "bp_do_zaak",
+            "position": {
+              "x": 716.2560135093688,
+              "y": 200.6744359573364
+            }
+          },
+          {
+            "elementId": "bp_do_zaak_ontvangen",
+            "position": {
+              "x": 982.4768786693571,
+              "y": 196.34887191467283
+            }
           }
         ],
-        "diagramType": "bpmn-motor"
+        "diagramType": "bpmn-motor",
+        "lijnen": {
+          "conn_do_aanvraag_documenten": {
+            "verschuiving": -3,
+            "sourceHandle": null,
+            "targetHandle": null,
+            "knikken": [
+              {
+                "x": 887,
+                "y": 8
+              }
+            ]
+          },
+          "bp_f9": {
+            "knikken": [
+              {
+                "x": 424,
+                "y": 324
+              }
+            ]
+          }
+        }
       }
     }
   }

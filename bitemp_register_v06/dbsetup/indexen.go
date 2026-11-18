@@ -1,0 +1,200 @@
+package dbsetup
+
+// indexen.go — indexen als patroon uit het metamodel (akkoord Mark 18-11-2026, stap 1).
+//
+// Eén bronfunctie, ModelIndexDefinities, leidt uit de MetaRegistry af welke indexen een
+// register nodig heeft. Twee afnemers gebruiken dezelfde lijst:
+//
+//   - CreateTables (start en rebuild): CREATE INDEX IF NOT EXISTS, zie createModelIndexes;
+//   - later het script voor bestaande registers: CREATE INDEX CONCURRENTLY (stap 5),
+//     via IndexDefinitie.SQL(true).
+//
+// Stap 1 bevat alleen de indexen die geen aanwijzing in het model nodig hebben:
+//
+//	doel     de doelkant van een relatie-hub: (doel_id, bron_id). Zonder deze index is elke
+//	         omgekeerde vraag ("welke zaken wijzen naar deze rol") een scan van de hele
+//	         relatietabel (dynql makeReverseRelationResolver).
+//	uniek    een veld met schema-tag uniek=<bereik>: (kolom) WHERE afvoer IS NULL op de
+//	         _Data-tabel. De uniekheidscontrole (handlers/registration_uniek.go, bezetDoor)
+//	         zoekt bij elke opvoer op die waarde; zonder index is dat een scan per opvoer,
+//	         en wordt een grote seed steeds trager.
+//
+// Indexen op zoeksleutels en sorteerbare velden volgen in stap 4, als de aanwijzing in het
+// model staat. Uitleg: docs/INDEXEN.md.
+
+import (
+	"context"
+	"fmt"
+	"hash/crc32"
+	"reflect"
+	"sort"
+	"strings"
+
+	"github.com/MarkWestbroek/Bitemporal_2026/bitemp_register_v06/model"
+	"github.com/uptrace/bun"
+	"github.com/uptrace/bun/dialect/pgdialect"
+	"github.com/uptrace/bun/schema"
+)
+
+// IndexDefinitie beschrijft één index die uit het model volgt.
+type IndexDefinitie struct {
+	Naam     string   // indexnaam, hooguit 63 tekens
+	Tabel    string   // tabelnaam
+	Kolommen []string // SQL-kolomnamen, in volgorde
+	Waar     string   // optionele WHERE van een partiële index (zonder het woord WHERE)
+	Soort    string   // "doel" | "uniek"
+	Reden    string   // voor logregels en het script: waar de index voor dient
+}
+
+// SQL geeft het CREATE INDEX-statement. Met concurrently=true blokkeert het aanmaken geen
+// schrijvers; dat mag niet binnen een transactie en is bedoeld voor bestaande registers.
+func (d IndexDefinitie) SQL(concurrently bool) string {
+	var b strings.Builder
+	b.WriteString("CREATE INDEX ")
+	if concurrently {
+		b.WriteString("CONCURRENTLY ")
+	}
+	fmt.Fprintf(&b, "IF NOT EXISTS %s ON %s (", pgIdent(d.Naam), pgIdent(d.Tabel))
+	for i, k := range d.Kolommen {
+		if i > 0 {
+			b.WriteString(", ")
+		}
+		b.WriteString(pgIdent(k))
+	}
+	b.WriteString(")")
+	if d.Waar != "" {
+		b.WriteString(" WHERE " + d.Waar)
+	}
+	return b.String()
+}
+
+// indexTabellen: bun's tabelschema, dezelfde bron als CreateTables en het GraphQL-filter,
+// zodat kolomnamen exact kloppen (bv. agbCode → agbcode).
+var indexTabellen = pgdialect.New().Tables()
+
+// ModelIndexDefinities leidt de indexen af uit de MetaRegistry, gesorteerd op naam.
+func ModelIndexDefinities() []IndexDefinitie {
+	var uit []IndexDefinitie
+	gezien := map[string]bool{}
+	voegToe := func(d IndexDefinitie) {
+		if !gezien[d.Naam] {
+			gezien[d.Naam] = true
+			uit = append(uit, d)
+		}
+	}
+
+	for _, meta := range model.MetaRegistry {
+		if meta.Tabelnaam == "" {
+			continue
+		}
+		tabel := bunTabel(meta)
+		if tabel == nil {
+			continue
+		}
+
+		// Doelkant van een relatie-hub.
+		if meta.Metatype == model.MetatypeRelatie && meta.SecondaireEntiteitIDKolom != "" &&
+			heeftKolom(tabel, meta.SecondaireEntiteitIDKolom) {
+			kolommen := []string{meta.SecondaireEntiteitIDKolom}
+			if meta.EntiteitIDKolom != "" && meta.EntiteitIDKolom != meta.SecondaireEntiteitIDKolom &&
+				heeftKolom(tabel, meta.EntiteitIDKolom) {
+				kolommen = append(kolommen, meta.EntiteitIDKolom)
+			}
+			voegToe(IndexDefinitie{
+				Naam:     indexNaam(meta.Tabelnaam, meta.SecondaireEntiteitIDKolom, "doel"),
+				Tabel:    meta.Tabelnaam,
+				Kolommen: kolommen,
+				Soort:    "doel",
+				Reden:    "omgekeerde relatie van " + meta.Typenaam,
+			})
+		}
+
+		// Unieke velden: de waarde staat in de _Data-tabel van een GE-hub.
+		if meta.GESubtype == model.GESubtypeHub && meta.DataTypenaam != "" {
+			dataMeta, ok := model.MetaRegistry.GetTypeMeta(meta.DataTypenaam)
+			if !ok || dataMeta.Tabelnaam == "" {
+				continue
+			}
+			dataTabel := bunTabel(dataMeta)
+			if dataTabel == nil {
+				continue
+			}
+			for _, f := range dataTabel.Fields {
+				bereik := model.ParseSchemaTag(f.StructField.Tag.Get("schema")).Uniek
+				if bereik == "" {
+					continue
+				}
+				voegToe(IndexDefinitie{
+					Naam:     indexNaam(dataMeta.Tabelnaam, f.Name, "uniek"),
+					Tabel:    dataMeta.Tabelnaam,
+					Kolommen: []string{f.Name},
+					Waar:     "afvoer IS NULL",
+					Soort:    "uniek",
+					Reden:    fmt.Sprintf("uniekheidscontrole (%s) op %s", bereik, meta.Typenaam),
+				})
+			}
+		}
+	}
+
+	sort.Slice(uit, func(i, j int) bool { return uit[i].Naam < uit[j].Naam })
+	return uit
+}
+
+// bunTabel: het tabelschema van de struct waarmee CreateTables de tabel aanmaakt
+// (DBFactory als die er is, anders Factory).
+func bunTabel(meta model.TypeMeta) *schema.Table {
+	var rep any
+	switch {
+	case meta.DBFactory != nil:
+		rep = meta.DBFactory()
+	case meta.Factory != nil:
+		rep = meta.Factory()
+	default:
+		return nil
+	}
+	t := reflect.TypeOf(rep)
+	for t != nil && t.Kind() == reflect.Ptr {
+		t = t.Elem()
+	}
+	if t == nil || t.Kind() != reflect.Struct {
+		return nil
+	}
+	return indexTabellen.Get(t)
+}
+
+func heeftKolom(tabel *schema.Table, kolom string) bool {
+	for _, f := range tabel.Fields {
+		if f.Name == kolom {
+			return true
+		}
+	}
+	return false
+}
+
+// indexNaam bouwt ix_<tabel>_<kolom>_<soort>. PostgreSQL kapt namen af op 63 tekens; twee
+// lange namen kunnen dan samenvallen. Een te lange naam wordt daarom zelf ingekort, met een
+// hash van de volledige naam erachter.
+func indexNaam(tabel, kolom, soort string) string {
+	naam := fmt.Sprintf("ix_%s_%s_%s", tabel, kolom, soort)
+	if len(naam) <= 63 {
+		return naam
+	}
+	hash := fmt.Sprintf("_%08x", crc32.ChecksumIEEE([]byte(naam)))
+	return naam[:63-len(hash)] + hash
+}
+
+// createModelIndexes maakt de indexen uit ModelIndexDefinities aan. Niet-fataal, net als de
+// enkelvoudig-invariant: een index die mislukt mag de start niet blokkeren. Een tabel die
+// niet bestaat (domein niet gebouwd, zie gebouwde_domeinen) wordt stil overgeslagen.
+func createModelIndexes(ctx context.Context, db bun.IDB) {
+	for _, def := range ModelIndexDefinities() {
+		var bestaat bool
+		if err := db.NewRaw(`SELECT to_regclass(?) IS NOT NULL`, pgIdent(def.Tabel)).Scan(ctx, &bestaat); err != nil || !bestaat {
+			continue
+		}
+		stmt := def.SQL(false)
+		if err := veiligeStap(ctx, db, func() error { _, err := db.ExecContext(ctx, stmt); return err }); err != nil {
+			fmt.Printf("WARN: index %s niet aangemaakt (%s): %v\n", def.Naam, def.Reden, err)
+		}
+	}
+}

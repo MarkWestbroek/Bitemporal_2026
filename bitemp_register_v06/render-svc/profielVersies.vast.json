@@ -8,8 +8,8 @@
     "vingerafdruk": "5b6cafde94bb9300"
   },
   "bpmnMotor05": {
-    "versie": "1.1.0",
-    "vingerafdruk": "8e54dede243f8b9c"
+    "versie": "1.2.0",
+    "vingerafdruk": "3bfee4cb054a5225"
   },
   "business05": {
     "versie": "1.0.0",
@@ -32,16 +32,16 @@
     "vingerafdruk": "4a8e13ff2eeda515"
   },
   "diagram05": {
-    "versie": "1.0.0",
-    "vingerafdruk": "91cc35d0cc18450e"
+    "versie": "1.1.0",
+    "vingerafdruk": "fb6b8e73498a2f59"
   },
   "dmnDrd05": {
-    "versie": "1.0.0",
-    "vingerafdruk": "a3dd0fd0608e567e"
+    "versie": "1.1.0",
+    "vingerafdruk": "9ad3eef860193526"
   },
   "erd05": {
-    "versie": "1.0.0",
-    "vingerafdruk": "94748fbe8f34318c"
+    "versie": "1.1.0",
+    "vingerafdruk": "3fa82a0d401bf923"
   },
   "formulierdiagram": {
     "versie": "1.0.0",
@@ -52,20 +52,20 @@
     "vingerafdruk": "ba9b072565a3062b"
   },
   "mim05": {
-    "versie": "1.0.0",
-    "vingerafdruk": "157943467c0f2dec"
+    "versie": "1.1.0",
+    "vingerafdruk": "9a0937daf8c97d08"
   },
   "oas05": {
     "versie": "1.0.0",
     "vingerafdruk": "4f90a7b946f0681f"
   },
   "object05": {
-    "versie": "1.0.0",
-    "vingerafdruk": "b92ed12d0ad03157"
+    "versie": "1.1.0",
+    "vingerafdruk": "973c6c9f3ae65209"
   },
   "puurUml05": {
-    "versie": "1.0.0",
-    "vingerafdruk": "5180290c7568e27a"
+    "versie": "1.1.0",
+    "vingerafdruk": "052797212bbb309f"
   },
   "requirements05": {
     "versie": "1.0.0",
@@ -78,6 +78,10 @@
   "shacl05": {
     "versie": "1.0.0",
     "vingerafdruk": "cec17212e1383cd0"
+  },
+  "simulatiemodel05": {
+    "versie": "1.0.0",
+    "vingerafdruk": "aef765c4f1bbf24a"
   },
   "statemachine05": {
     "versie": "1.0.0",

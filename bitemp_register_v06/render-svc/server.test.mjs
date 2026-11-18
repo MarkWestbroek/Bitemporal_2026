@@ -72,7 +72,7 @@ test("taal=studio: elk diagram van een echt project voldoet aan de eisen, byte-g
 
 test("taal=studio: alle profielen registreren zonder browser", { skip: zonderBundel }, async () => {
   const { profielIds, descriptorVan } = await import(bundelUrl);
-  assert.equal(profielIds.length, 26); // 26 sinds het SHACL-profiel (studio 0.34.0)
+  assert.equal(profielIds.length, 27); // 27 sinds het simulatiemodel (16-11); 26 sinds het SHACL-profiel (studio 0.34.0)
   for (const id of profielIds) assert.ok(descriptorVan(id)?.elementTypes?.length, id);
 });
 
@@ -158,6 +158,87 @@ test("POST /vergelijk: fouten in de invoer als problem+json", async () => {
   const p = { profiel: {} };
   assert.equal((await post("/vergelijk", { basis: p, tak: p, main: p, kleur: "rood" })).status, 400);
   assert.equal((await post("/vergelijk", { basis: p, tak: { profiel: {}, ops: "x" }, main: p })).status, 400);
+});
+
+// ── Branch terugmergen, stap 1 (14-11) ───────────────────────────────────────────────────────
+
+test("POST /samenvoegen: de branch gaat naar MAIN, de branch haalt MAIN op, de basis is de uitkomst", async () => {
+  const el = (id, naam) => ({ id, naam, elementType: "entiteit", compartimenten: [], data: {} });
+  const werkbestand = {
+    formaat: "studio-project",
+    versie: 3,
+    structuur: { mappen: { dienst: { id: "dienst", naam: "Dienst", ouderId: null } }, plaatsing: { "el::diagram05::D": "dienst", "el::diagram05::G": "dienst" } },
+    profielen: { diagram05: { diagramTypeId: "diagram05", elements: { D: el("D", "D"), G: el("G", "G") }, diagrams: {}, meta: {} } },
+  };
+  const op = (volgnummer, zet, wis = []) => ({ volgnummer, store: "model:diagram05", op: "patchElementen", args: [{ zet, wis }] });
+  const plaats = (volgnummer, sleutel) => ({ volgnummer, store: "structuur", op: "patchStructuur", args: [{ zetPlaatsing: { [sleutel]: "dienst" } }] });
+  const basis = { profiel: werkbestand, ops: [] };
+  const tak = { profiel: werkbestand, ops: [op(1, { D: el("D", "D'") }), op(2, { H: el("H", "Nieuw") }), plaats(3, "el::diagram05::H")] };
+  const main = { profiel: werkbestand, ops: [op(1, { G: el("G", "G'") })] };
+  const r = await post("/samenvoegen", { basis, tak, main, mapId: "dienst" });
+  assert.equal(r.status, 200);
+  const uit = await r.json();
+  assert.deepEqual(uit.conflicten, []);
+  assert.deepEqual(uit.buitenMap, []);
+  const zetMain = uit.opsMain.filter((o) => o.op === "patchElementen").flatMap((o) => Object.keys(o.args[0].zet)).sort();
+  assert.deepEqual(zetMain, ["D", "H"], "naar MAIN: D' en H");
+  const zetTak = uit.opsTak.filter((o) => o.op === "patchElementen").flatMap((o) => Object.keys(o.args[0].zet));
+  assert.deepEqual(zetTak, ["G"], "naar de branch: G' van MAIN");
+  assert.equal(uit.basis.profielen.diagram05.elements.D.naam, "D'");
+  assert.equal(uit.basis.profielen.diagram05.elements.G.naam, "G'");
+  assert.equal(uit.basis.structuur.plaatsing["el::diagram05::H"], "dienst");
+});
+
+test("POST /samenvoegen: een conflict geeft geen ops", async () => {
+  const el = (id, naam) => ({ id, naam, elementType: "entiteit", compartimenten: [], data: {} });
+  const werkbestand = { formaat: "studio-project", versie: 3, structuur: { mappen: {}, plaatsing: {} }, profielen: { diagram05: { diagramTypeId: "diagram05", elements: { E: el("E", "E") }, diagrams: {}, meta: {} } } };
+  const op = (zet) => ({ volgnummer: 1, store: "model:diagram05", op: "patchElementen", args: [{ zet, wis: [] }] });
+  const r = await post("/samenvoegen", { basis: { profiel: werkbestand }, tak: { profiel: werkbestand, ops: [op({ E: el("E", "E'") })] }, main: { profiel: werkbestand, ops: [op({ E: el("E", "E(b)") })] } });
+  const uit = await r.json();
+  assert.deepEqual(uit.conflicten, [{ soort: "element", profielId: "diagram05", id: "E", velden: ["naam"] }]);
+  assert.deepEqual(uit.opsMain, []);
+  assert.deepEqual(uit.opsTak, []);
+  assert.equal(uit.basis, null);
+});
+
+// ── Branch terugmergen, stap 2: keuze per eenheid (14-11) ────────────────────────────────────
+
+test("POST /samenvoegen met keuze: conflict beslist, niet gekozen blijft in de branch, samenhang bewaakt", async () => {
+  const el = (id, naam, extra = {}) => ({ id, naam, elementType: "entiteit", compartimenten: [], data: {}, ...extra });
+  const werkbestand = { formaat: "studio-project", versie: 3, structuur: { mappen: {}, plaatsing: {} }, profielen: { diagram05: { diagramTypeId: "diagram05", elements: { E: el("E", "E"), F: el("F", "F") }, diagrams: {}, meta: {} } } };
+  const op = (volgnummer, zet) => ({ volgnummer, store: "model:diagram05", op: "patchElementen", args: [{ zet, wis: [] }] });
+  const basis = { profiel: werkbestand };
+  const tak = { profiel: werkbestand, ops: [op(1, { E: el("E", "E'") }), op(2, { F: el("F", "F'") })] };
+  const main = { profiel: werkbestand, ops: [op(1, { E: el("E", "E(b)") })] };
+
+  // E (conflict) naar de branch, F niet: MAIN krijgt E', de branch houdt F'.
+  let r = await post("/samenvoegen", { basis, tak, main, keuze: { "element:diagram05:E": true, "element:diagram05:F": false } });
+  assert.equal(r.status, 200);
+  let uit = await r.json();
+  assert.deepEqual(uit.conflicten, []);
+  assert.deepEqual(uit.opgelost, [{ soort: "element", profielId: "diagram05", id: "E", velden: ["naam"], gekozen: "tak" }]);
+  assert.equal(uit.basis.profielen.diagram05.elements.E.naam, "E'");
+  assert.equal(uit.basis.profielen.diagram05.elements.F.naam, "F");
+  assert.deepEqual(uit.opsTak, [], "de branch had E' al en houdt F'");
+
+  // Een relatie kiezen zonder haar bron: samenhang, geen ops.
+  const tak2 = { profiel: werkbestand, ops: [op(1, { H: el("H", "H") }), op(2, { R: el("R", "R", { source: "H", target: "E" }) })] };
+  r = await post("/samenvoegen", { basis, tak: tak2, main: { profiel: werkbestand }, keuze: { "element:diagram05:H": false } });
+  uit = await r.json();
+  assert.deepEqual(uit.samenhang, [{ kant: "main", fout: "element diagram05/R: source H ontbreekt" }]);
+  assert.deepEqual(uit.opsMain, []);
+
+  // Terugzetten: F in de branch terug naar MAIN; MAIN verandert niet.
+  r = await post("/samenvoegen", { basis, tak, main, keuze: { "element:diagram05:E": false, "element:diagram05:F": "terug" } });
+  uit = await r.json();
+  assert.equal(r.status, 200);
+  assert.ok(!uit.opsMain.some((o) => o.op === "patchElementen" && "F" in o.args[0].zet), "F gaat niet naar MAIN");
+  const zetTak = uit.opsTak.filter((o) => o.op === "patchElementen").map((o) => o.args[0].zet.F).filter(Boolean);
+  assert.deepEqual(zetTak.map((f) => f.naam), ["F"], "de branch krijgt F van MAIN terug");
+
+  // Een ongeldige keuze is een 400.
+  assert.equal((await post("/samenvoegen", { basis, tak, main, keuze: { x: "ja" } })).status, 400);
+  assert.equal((await post("/vergelijk", { basis, tak, main, keuze: {} })).status, 400, "/vergelijk kent geen keuze");
 });
 
 // ── Eén profiel nagespeeld (10-11, laag 2 van de werkplaats) ─────────────────────────────────

@@ -281,6 +281,26 @@ werkbestanden passen niet onder de standaardgrens van 5 MB (`RENDER_SVC_MAX_BYTE
 heeft daarom een eigen grens, `RENDER_SVC_MAX_BYTES_VERGELIJK` (standaard 32 MB), zodat er in
 compose of k8s niets ingesteld hoeft te worden.
 
+### `POST /samenvoegen` (sidecar): branch samenvoegen met MAIN — ✅ uitgebracht (render 0.4.5, 14-11; keuze in 0.4.6)
+
+Branch terugmergen, stap 1 (plan "2026-11-14 Branch terugmergen"). Zelfde body en grens als
+`/vergelijk`. De sidecar speelt de drie kanten na, voegt per eenheid samen (drieweg,
+`studio/takken/samenvoegen.js`: wat alleen in de branch veranderde gaat mee, de rest volgt MAIN) en
+maakt de patch-operaties die MAIN en de branch in de samengevoegde stand brengen. Die speelt hij
+daarna zelf na op de echte stores; wijkt de uitkomst af, dan 422. Antwoord 200:
+`{conflicten: [{soort, profielId, id}], opgelost: […], buitenMap: [verschil], samenhang: [{kant, fout}],
+opsMain: [{store, op, args}], opsTak: […], basis: werkbestand|null, telling, verschillen, meldingen,
+renderVersie}`. Bij conflicten (zonder keuze) of samenhangfouten zijn de ops leeg en `basis` is
+`null`.
+
+**Stap 2 (render 0.4.6, 14-11):** optioneel `keuze: {<sleutel>: true|false|"terug"}` (alleen
+op `/samenvoegen`; `/vergelijk` geeft 400). `"terug"`: de branch neemt de versie van MAIN over. Gekozen gaat naar MAIN, niet gekozen blijft in de branch
+(`opsTak` brengt de branch naar `nieuwTak`); een conflict blokkeert dan niet maar staat in `opgelost`
+met `gekozen: "tak"|"main"`. `samenhang` noemt verwijzingen die de keuze nieuw stuk maakt (relatie
+zonder bron/doel, node zonder element, kruisverband zonder kant, plaatsing zonder map). `/vergelijk`
+geeft per verschil `sleutel`, `mapId` en `ouderId`, en `mappen` (naam en ouder) voor de keuzeboom. Ook als `/api/samenvoegen`. De API roept hem aan voor
+`POST /api/studio/projecten/:id/samenvoegen` en schrijft het resultaat weg.
+
 ### `POST /materialiseer` (sidecar): één profiel nagespeeld — ✅ gebouwd (10-11, nog niet uitgebracht)
 
 Voor `GET /api/studio/projecten/:id/model/:profiel` (BACKEND) en laag 2 van de werkplaats op
@@ -373,6 +393,7 @@ npm run profielversies                     # na een versieverhoging van een prof
 node render-svc/server.mjs            # luistert op 127.0.0.1:8095; POST /api/render/svg (of /render/svg)
                                       # werkt zonder DB/Go-API; handig voor lokaal testen vanuit Imprint
 node --test render-svc/server.test.mjs   # (map-argument werkt niet op Windows)
+node --test render-svc/samenvoegScenario.test.mjs   # branch terugmergen: scenario's over meerdere rondes
 
 # Go-API: RENDER_SVC_URL (standaard http://127.0.0.1:8095)
 go test ./handlers/ -run TestRenderSvg

@@ -1,0 +1,857 @@
+{
+ "map": "/",
+ "plan": {
+  "uitleg": "Van de overige UML-achtige talen elk één klein voorbeeld in hetzelfde domein: activity (als uitwerking onder de use case), requirements, object, UML-klassen, composite structure, communication, component en deployment, en SysML.",
+  "diagrammen": [
+   {
+    "sleutel": "dAct",
+    "taal": "activity05",
+    "naam": "Aanvraag indienen (activity)",
+    "map": "8 Meer talen"
+   },
+   {
+    "sleutel": "dReq",
+    "taal": "requirements05",
+    "naam": "Eisen aan het evenementenloket",
+    "map": "8 Meer talen"
+   },
+   {
+    "sleutel": "dObj",
+    "taal": "object05",
+    "naam": "Voorbeeld: Rietpop Festival (objecten)",
+    "map": "8 Meer talen"
+   },
+   {
+    "sleutel": "dUml",
+    "taal": "puurUml05",
+    "naam": "Beslisservice (UML-klassen)",
+    "map": "8 Meer talen"
+   },
+   {
+    "sleutel": "dCs",
+    "taal": "compositeStructure05",
+    "naam": "Evenementenloket van binnen (composite structure)",
+    "map": "8 Meer talen"
+   },
+   {
+    "sleutel": "dCom",
+    "taal": "communication05",
+    "naam": "Advies vragen (communication)",
+    "map": "8 Meer talen"
+   },
+   {
+    "sleutel": "dCd",
+    "taal": "componentDeployment05",
+    "naam": "Componenten en uitrol",
+    "map": "8 Meer talen"
+   },
+   {
+    "sleutel": "dSys",
+    "taal": "sysml05",
+    "naam": "Mobiele geluidsmeter (SysML)",
+    "map": "8 Meer talen"
+   }
+  ],
+  "elementen": [
+   {
+    "sleutel": "acPOrg",
+    "type": "partitie",
+    "naam": "Organisator",
+    "diagram": "dAct"
+   },
+   {
+    "sleutel": "acPLoket",
+    "type": "partitie",
+    "naam": "Evenementenloket",
+    "diagram": "dAct"
+   },
+   {
+    "sleutel": "acBegin",
+    "type": "begin",
+    "naam": "",
+    "diagram": "dAct",
+    "in": "acPOrg"
+   },
+   {
+    "sleutel": "acInlog",
+    "type": "actie",
+    "naam": "Log in",
+    "diagram": "dAct",
+    "in": "acPOrg"
+   },
+   {
+    "sleutel": "acVul",
+    "type": "actie",
+    "naam": "Vul het aanvraagformulier in",
+    "diagram": "dAct",
+    "in": "acPOrg"
+   },
+   {
+    "sleutel": "acControle",
+    "type": "actie",
+    "naam": "Controleer de invoer",
+    "diagram": "dAct",
+    "in": "acPLoket"
+   },
+   {
+    "sleutel": "acGeldig",
+    "type": "beslissing",
+    "naam": "Volledig?",
+    "diagram": "dAct",
+    "in": "acPLoket"
+   },
+   {
+    "sleutel": "acRegistreer",
+    "type": "actie",
+    "naam": "Registreer de aanvraag",
+    "diagram": "dAct",
+    "in": "acPLoket"
+   },
+   {
+    "sleutel": "acBevestig",
+    "type": "actie",
+    "naam": "Stuur de ontvangstbevestiging",
+    "diagram": "dAct",
+    "in": "acPLoket"
+   },
+   {
+    "sleutel": "acEind",
+    "type": "eind",
+    "naam": "",
+    "diagram": "dAct",
+    "in": "acPLoket"
+   },
+   {
+    "sleutel": "rqDigitaal",
+    "type": "requirement",
+    "naam": "Digitaal aanvragen",
+    "diagram": "dReq",
+    "eigenschappen": {
+     "reqId": "EVE-01",
+     "tekst": "Een organisator kan een evenementenvergunning volledig digitaal aanvragen.",
+     "status": "goedgekeurd",
+     "prioriteit": "hoog",
+     "soort": "functioneel"
+    }
+   },
+   {
+    "sleutel": "rqStatus",
+    "type": "requirement",
+    "naam": "Status volgen",
+    "diagram": "dReq",
+    "eigenschappen": {
+     "reqId": "EVE-02",
+     "tekst": "De organisator ziet op elk moment de status van zijn aanvraag.",
+     "status": "goedgekeurd",
+     "prioriteit": "middel",
+     "soort": "functioneel"
+    }
+   },
+   {
+    "sleutel": "rqTermijn",
+    "type": "requirement",
+    "naam": "Beslistermijn acht weken",
+    "diagram": "dReq",
+    "eigenschappen": {
+     "reqId": "EVE-03",
+     "tekst": "Op een aanvraag wordt binnen acht weken beslist (Awb art. 4:13).",
+     "status": "goedgekeurd",
+     "prioriteit": "hoog",
+     "soort": "performance"
+    }
+   },
+   {
+    "sleutel": "rqUitleg",
+    "type": "requirement",
+    "naam": "Uitlegbare risicoklasse",
+    "diagram": "dReq",
+    "eigenschappen": {
+     "reqId": "EVE-04",
+     "tekst": "De risicoklasse volgt uit een beslistabel die een medewerker kan lezen en uitleggen.",
+     "status": "voorgesteld",
+     "prioriteit": "hoog",
+     "soort": "functioneel"
+    }
+   },
+   {
+    "sleutel": "rqFeature",
+    "type": "feature",
+    "naam": "Evenementenloket",
+    "diagram": "dReq",
+    "eigenschappen": {
+     "reqId": "F-1",
+     "tekst": "Het digitale loket voor evenementen van de gemeente Waterstede."
+    }
+   },
+   {
+    "sleutel": "rqUc",
+    "type": "verwijzing",
+    "naam": "Vraag evenementenvergunning aan",
+    "diagram": "dReq",
+    "eigenschappen": {
+     "stereotype": "use case"
+    }
+   },
+   {
+    "sleutel": "rqDmn",
+    "type": "verwijzing",
+    "naam": "Risicoklasse",
+    "diagram": "dReq",
+    "eigenschappen": {
+     "stereotype": "beslissing"
+    }
+   },
+   {
+    "sleutel": "obAanvraag",
+    "type": "object",
+    "naam": "aanvraag3",
+    "diagram": "dObj",
+    "eigenschappen": {
+     "klassifierLabel": "Evenementaanvraag",
+     "toestand": "in behandeling"
+    },
+    "velden": [
+     {
+      "naam": "aanvraagnummer = \"EVE-2027-0003\""
+     },
+     {
+      "naam": "naam = \"Rietpop Festival\""
+     },
+     {
+      "naam": "verwachtAantalBezoekers = 6500"
+     },
+     {
+      "naam": "risicoklasse = C"
+     }
+    ]
+   },
+   {
+    "sleutel": "obOrg",
+    "type": "object",
+    "naam": "rietpop",
+    "diagram": "dObj",
+    "eigenschappen": {
+     "klassifierLabel": "Organisator"
+    },
+    "velden": [
+     {
+      "naam": "naam = \"Stichting Rietpop\""
+     },
+     {
+      "naam": "kvkNummer = \"00000000\""
+     }
+    ]
+   },
+   {
+    "sleutel": "obLocatie",
+    "type": "object",
+    "naam": "uiterwaard",
+    "diagram": "dObj",
+    "eigenschappen": {
+     "klassifierLabel": "Evenementlocatie"
+    },
+    "velden": [
+     {
+      "naam": "omschrijving = \"Uiterwaard aan de Rietkade\""
+     },
+     {
+      "naam": "plaats = \"Waterstede\""
+     }
+    ]
+   },
+   {
+    "sleutel": "obAdviezen",
+    "type": "multiobject",
+    "naam": "adviezen",
+    "diagram": "dObj",
+    "eigenschappen": {
+     "klassifierLabel": "Veiligheidsadvies"
+    }
+   },
+   {
+    "sleutel": "umIf",
+    "type": "interface",
+    "naam": "Beslisregel",
+    "diagram": "dUml",
+    "velden": [
+     {
+      "naam": "pasToe(aanvraag)",
+      "type": "Uitkomst"
+     }
+    ]
+   },
+   {
+    "sleutel": "umRisico",
+    "type": "klasse",
+    "naam": "RisicoklasseRegel",
+    "diagram": "dUml",
+    "velden": [
+     {
+      "naam": "drempelBezoekers",
+      "type": "int"
+     },
+     {
+      "naam": "versie",
+      "type": "String"
+     }
+    ]
+   },
+   {
+    "sleutel": "umLeges",
+    "type": "klasse",
+    "naam": "LegesRegel",
+    "diagram": "dUml",
+    "velden": [
+     {
+      "naam": "tarieven",
+      "type": "Map<Risicoklasse, Bedrag>"
+     }
+    ]
+   },
+   {
+    "sleutel": "umService",
+    "type": "klasse",
+    "naam": "Beslisservice",
+    "diagram": "dUml",
+    "velden": [
+     {
+      "naam": "regels",
+      "type": "List<Beslisregel>"
+     }
+    ]
+   },
+   {
+    "sleutel": "umUitkomst",
+    "type": "datatype",
+    "naam": "Uitkomst",
+    "diagram": "dUml",
+    "velden": [
+     {
+      "naam": "waarde",
+      "type": "String"
+     },
+     {
+      "naam": "toelichting",
+      "type": "String"
+     }
+    ]
+   },
+   {
+    "sleutel": "umEnum",
+    "type": "enumeratie",
+    "naam": "Risicoklasse",
+    "diagram": "dUml",
+    "velden": [
+     {
+      "naam": "A"
+     },
+     {
+      "naam": "B"
+     },
+     {
+      "naam": "C"
+     }
+    ]
+   },
+   {
+    "sleutel": "csLoket",
+    "type": "klasse",
+    "naam": "Evenementenloket",
+    "diagram": "dCs"
+   },
+   {
+    "sleutel": "csForm",
+    "type": "part",
+    "naam": "formulier",
+    "diagram": "dCs",
+    "in": "csLoket",
+    "eigenschappen": {
+     "typeLabel": "Formuliermotor",
+     "multipliciteit": "1"
+    }
+   },
+   {
+    "sleutel": "csStatus",
+    "type": "part",
+    "naam": "statuspagina",
+    "diagram": "dCs",
+    "in": "csLoket",
+    "eigenschappen": {
+     "typeLabel": "Statusweergave",
+     "multipliciteit": "1"
+    }
+   },
+   {
+    "sleutel": "csClient",
+    "type": "part",
+    "naam": "apiClient",
+    "diagram": "dCs",
+    "in": "csLoket",
+    "eigenschappen": {
+     "typeLabel": "EvenementenApiClient",
+     "multipliciteit": "1"
+    }
+   },
+   {
+    "sleutel": "csIf",
+    "type": "interface",
+    "naam": "Evenementen-API",
+    "diagram": "dCs"
+   },
+   {
+    "sleutel": "coBeh",
+    "type": "actor",
+    "naam": "Vergunningverlener",
+    "diagram": "dCom"
+   },
+   {
+    "sleutel": "coZaak",
+    "type": "object",
+    "naam": "zaak",
+    "diagram": "dCom",
+    "eigenschappen": {
+     "klassifierLabel": "Zaaksysteem"
+    }
+   },
+   {
+    "sleutel": "coBrw",
+    "type": "object",
+    "naam": "brandweer",
+    "diagram": "dCom",
+    "eigenschappen": {
+     "klassifierLabel": "Adviesdienst"
+    }
+   },
+   {
+    "sleutel": "coPol",
+    "type": "object",
+    "naam": "politie",
+    "diagram": "dCom",
+    "eigenschappen": {
+     "klassifierLabel": "Adviesdienst"
+    }
+   },
+   {
+    "sleutel": "cdPlatform",
+    "type": "node",
+    "naam": "Gemeentelijk platform",
+    "diagram": "dCd"
+   },
+   {
+    "sleutel": "cdK8s",
+    "type": "executieomgeving",
+    "naam": "Kubernetes",
+    "diagram": "dCd",
+    "in": "cdPlatform"
+   },
+   {
+    "sleutel": "cdLoket",
+    "type": "component",
+    "naam": "Evenementenloket",
+    "diagram": "dCd",
+    "in": "cdK8s"
+   },
+   {
+    "sleutel": "cdRegister",
+    "type": "component",
+    "naam": "Evenementenregister",
+    "diagram": "dCd",
+    "in": "cdK8s"
+   },
+   {
+    "sleutel": "cdApi",
+    "type": "interface",
+    "naam": "Evenementen-API",
+    "diagram": "dCd",
+    "in": "cdK8s"
+   },
+   {
+    "sleutel": "cdDbNode",
+    "type": "node",
+    "naam": "Databaseserver",
+    "diagram": "dCd"
+   },
+   {
+    "sleutel": "cdDb",
+    "type": "artifact",
+    "naam": "evenementen (PostgreSQL)",
+    "diagram": "dCd",
+    "in": "cdDbNode",
+    "eigenschappen": {
+     "bestandsnaam": "evenementen.sql"
+    }
+   },
+   {
+    "sleutel": "cdTelefoon",
+    "type": "device",
+    "naam": "Telefoon van de organisator",
+    "diagram": "dCd"
+   },
+   {
+    "sleutel": "syMeter",
+    "type": "blok",
+    "naam": "Geluidsmeter",
+    "diagram": "dSys",
+    "velden": [
+     {
+      "naam": "bereik",
+      "type": "Decibel"
+     },
+     {
+      "naam": "meetinterval",
+      "type": "Seconde"
+     }
+    ]
+   },
+   {
+    "sleutel": "sySensor",
+    "type": "blok",
+    "naam": "Microfoon",
+    "diagram": "dSys"
+   },
+   {
+    "sleutel": "syModem",
+    "type": "blok",
+    "naam": "4G-modem",
+    "diagram": "dSys"
+   },
+   {
+    "sleutel": "syAccu",
+    "type": "blok",
+    "naam": "Accu",
+    "diagram": "dSys",
+    "velden": [
+     {
+      "naam": "capaciteit",
+      "type": "Wattuur"
+     }
+    ]
+   },
+   {
+    "sleutel": "syDb",
+    "type": "waardetype",
+    "naam": "Decibel",
+    "diagram": "dSys"
+   },
+   {
+    "sleutel": "syReq",
+    "type": "requirement",
+    "naam": "Geluidsnorm bewaken",
+    "diagram": "dSys",
+    "eigenschappen": {
+     "reqId": "GEL-1",
+     "tekst": "De meter meldt binnen één minuut een overschrijding van 85 dB(A) op de gevel."
+    }
+   }
+  ],
+  "connectoren": [
+   {
+    "type": "controlestroom",
+    "bron": "acBegin",
+    "doel": "acInlog"
+   },
+   {
+    "type": "controlestroom",
+    "bron": "acInlog",
+    "doel": "acVul"
+   },
+   {
+    "type": "controlestroom",
+    "bron": "acVul",
+    "doel": "acControle"
+   },
+   {
+    "type": "controlestroom",
+    "bron": "acControle",
+    "doel": "acGeldig"
+   },
+   {
+    "type": "controlestroom",
+    "bron": "acGeldig",
+    "doel": "acVul",
+    "eigenschappen": {
+     "guard": "onvolledig"
+    }
+   },
+   {
+    "type": "controlestroom",
+    "bron": "acGeldig",
+    "doel": "acRegistreer",
+    "eigenschappen": {
+     "guard": "volledig"
+    }
+   },
+   {
+    "type": "controlestroom",
+    "bron": "acRegistreer",
+    "doel": "acBevestig"
+   },
+   {
+    "type": "controlestroom",
+    "bron": "acBevestig",
+    "doel": "acEind"
+   },
+   {
+    "type": "aggregatie",
+    "bron": "rqFeature",
+    "doel": "rqDigitaal"
+   },
+   {
+    "type": "aggregatie",
+    "bron": "rqFeature",
+    "doel": "rqStatus"
+   },
+   {
+    "type": "aggregatie",
+    "bron": "rqFeature",
+    "doel": "rqTermijn"
+   },
+   {
+    "type": "derive",
+    "bron": "rqUitleg",
+    "doel": "rqTermijn"
+   },
+   {
+    "type": "realisatie",
+    "bron": "rqUc",
+    "doel": "rqDigitaal"
+   },
+   {
+    "type": "realisatie",
+    "bron": "rqDmn",
+    "doel": "rqUitleg"
+   },
+   {
+    "type": "link",
+    "bron": "obAanvraag",
+    "doel": "obOrg",
+    "eigenschappen": {
+     "doelRol": "ingediend door"
+    }
+   },
+   {
+    "type": "link",
+    "bron": "obAanvraag",
+    "doel": "obLocatie",
+    "eigenschappen": {
+     "doelRol": "vindt plaats op"
+    }
+   },
+   {
+    "type": "link",
+    "bron": "obAdviezen",
+    "doel": "obAanvraag",
+    "eigenschappen": {
+     "doelRol": "gaat over"
+    }
+   },
+   {
+    "type": "realisatie",
+    "bron": "umRisico",
+    "doel": "umIf"
+   },
+   {
+    "type": "realisatie",
+    "bron": "umLeges",
+    "doel": "umIf"
+   },
+   {
+    "type": "aggregatie",
+    "bron": "umService",
+    "doel": "umRisico",
+    "eigenschappen": {
+     "doelKardinaliteit": "1"
+    }
+   },
+   {
+    "type": "aggregatie",
+    "bron": "umService",
+    "doel": "umLeges",
+    "eigenschappen": {
+     "doelKardinaliteit": "1"
+    }
+   },
+   {
+    "type": "dependency",
+    "bron": "umIf",
+    "doel": "umUitkomst"
+   },
+   {
+    "type": "dependency",
+    "bron": "umRisico",
+    "doel": "umEnum"
+   },
+   {
+    "type": "connector",
+    "bron": "csForm",
+    "doel": "csClient"
+   },
+   {
+    "type": "connector",
+    "bron": "csStatus",
+    "doel": "csClient"
+   },
+   {
+    "type": "gebruikt",
+    "bron": "csClient",
+    "doel": "csIf"
+   },
+   {
+    "type": "link",
+    "bron": "coBeh",
+    "doel": "coZaak",
+    "naam": "1: vraag adviezen aan()"
+   },
+   {
+    "type": "link",
+    "bron": "coZaak",
+    "doel": "coBrw",
+    "naam": "2a: adviesverzoek(aanvraag)"
+   },
+   {
+    "type": "link",
+    "bron": "coZaak",
+    "doel": "coPol",
+    "naam": "2b: adviesverzoek(aanvraag)"
+   },
+   {
+    "type": "realisatie",
+    "bron": "cdRegister",
+    "doel": "cdApi"
+   },
+   {
+    "type": "gebruikt",
+    "bron": "cdLoket",
+    "doel": "cdApi"
+   },
+   {
+    "type": "communicatiepad",
+    "bron": "cdPlatform",
+    "doel": "cdDbNode",
+    "eigenschappen": {
+     "protocol": "TLS / PostgreSQL"
+    }
+   },
+   {
+    "type": "communicatiepad",
+    "bron": "cdTelefoon",
+    "doel": "cdPlatform",
+    "eigenschappen": {
+     "protocol": "HTTPS"
+    }
+   },
+   {
+    "type": "dependency",
+    "bron": "cdRegister",
+    "doel": "cdDb",
+    "eigenschappen": {
+     "stereotype": "use"
+    }
+   },
+   {
+    "type": "compositie",
+    "bron": "syMeter",
+    "doel": "sySensor"
+   },
+   {
+    "type": "compositie",
+    "bron": "syMeter",
+    "doel": "syModem"
+   },
+   {
+    "type": "compositie",
+    "bron": "syMeter",
+    "doel": "syAccu"
+   },
+   {
+    "type": "afhankelijkheid",
+    "bron": "syMeter",
+    "doel": "syDb"
+   },
+   {
+    "type": "trace",
+    "bron": "syMeter",
+    "doel": "syReq",
+    "eigenschappen": {
+     "soort": "satisfy"
+    }
+   }
+  ],
+  "opstelling": [
+   {
+    "diagram": "dAct",
+    "actie": "leesvolgorde-tb"
+   },
+   {
+    "diagram": "dReq",
+    "actie": "leesvolgorde-tb"
+   },
+   {
+    "diagram": "dUml",
+    "actie": "leesvolgorde-tb"
+   },
+   {
+    "diagram": "dCs",
+    "actie": "leesvolgorde-tb"
+   },
+   {
+    "diagram": "dCd",
+    "actie": "leesvolgorde-tb"
+   },
+   {
+    "diagram": "dSys",
+    "actie": "leesvolgorde-tb"
+   }
+  ],
+  "posities": [
+   {
+    "diagram": "dObj",
+    "element": "obAdviezen",
+    "x": 260,
+    "y": 40
+   },
+   {
+    "diagram": "dObj",
+    "element": "obAanvraag",
+    "x": 260,
+    "y": 200
+   },
+   {
+    "diagram": "dObj",
+    "element": "obOrg",
+    "x": 20,
+    "y": 440
+   },
+   {
+    "diagram": "dObj",
+    "element": "obLocatie",
+    "x": 500,
+    "y": 440
+   },
+   {
+    "diagram": "dCom",
+    "element": "coBeh",
+    "x": 40,
+    "y": 130
+   },
+   {
+    "diagram": "dCom",
+    "element": "coZaak",
+    "x": 300,
+    "y": 120
+   },
+   {
+    "diagram": "dCom",
+    "element": "coBrw",
+    "x": 640,
+    "y": 30
+   },
+   {
+    "diagram": "dCom",
+    "element": "coPol",
+    "x": 640,
+    "y": 210
+   }
+  ]
+ }
+}

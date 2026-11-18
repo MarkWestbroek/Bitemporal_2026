@@ -17,7 +17,10 @@ import { clientId } from "../sync/outbox.js";
 import { nieuwRuimteId } from "../../diagramcore/model/opslagRuimte.js";
 
 export const PROJECT_FORMAAT = "studio-project";
-export const PROJECT_FORMAAT_VERSIE = 3; // v3: zonder tabs/actieveTab en zonder viewports (werkruimte-laag)
+// v3: zonder tabs/actieveTab en zonder viewports (werkruimte-laag).
+// v4 (15-11): elk modelelement en veld van canoniek-uml heeft een uuid (`data.uuid`); de Studio
+// vult ontbrekende aan bij het openen en na elke eigen wijziging (studio/uuidAanvulling.js).
+export const PROJECT_FORMAAT_VERSIE = 4;
 export const STANDAARD_PROJECTNAAM = "Naamloos project";
 
 /** Nieuw project-id: UUID (de server accepteert 8–64 tekens uit [A-Za-z0-9_-]). */
@@ -53,7 +56,9 @@ export function bestandsstamVoor(naam) {
  *   tabs uit v1/v2 blijven in `data.tabs` staan en dienen als eerste
  *   werkruimte als die lokaal nog niet bestaat;
  * - v3 (2026-10-07): tabs, actieve tab en viewports zitten niet meer in het
- *   werkbestand — dat is werkruimte (per gebruiker), geen project.
+ *   werkbestand — dat is werkruimte (per gebruiker), geen project;
+ * - v4 (2026-11-15): uuid's op modelelementen en velden. Een v3-bestand laadt gewoon; de
+ *   uuid-aanvulling (uuidAanvulling.js) maakt het daarna v4.
  *
  * @param {any} data
  * @param {{bestandsnaam?: string}} [opties]
@@ -100,6 +105,11 @@ export class ProjectSyncFout extends Error {
     this.anderen = Array.isArray(extra.anderen) ? extra.anderen : [];
     /** bij 409 branch_bestaat (afsplitsen): het id van de bestaande branch */
     this.projectId = extra.projectId || null;
+    /** bij 409 van …/samenvoegen: de conflicten, of de wijzigingen buiten de map */
+    this.conflicten = Array.isArray(extra.conflicten) ? extra.conflicten : [];
+    this.buitenMap = Array.isArray(extra.buitenMap) ? extra.buitenMap : [];
+    /** bij 409 samenhang (stap 2): verwijzingen die de keuze stuk zou maken, `{kant, fout}` */
+    this.samenhang = Array.isArray(extra.samenhang) ? extra.samenhang : [];
   }
 }
 
@@ -130,7 +140,9 @@ async function roep(pad, { methode = "GET", body, headers = {} } = {}) {
         : resp.status === 403
           ? "Geen rechten voor deze actie."
           : `Serverfout ${resp.status}.`);
-    throw new ProjectSyncFout(bericht, resp.status, json?.server, { reden: json?.reden, anderen: json?.anderen, projectId: json?.projectId });
+    throw new ProjectSyncFout(bericht, resp.status, json?.server, {
+      reden: json?.reden, anderen: json?.anderen, projectId: json?.projectId, conflicten: json?.conflicten, buitenMap: json?.buitenMap, samenhang: json?.samenhang,
+    });
   }
   return json;
 }
@@ -156,6 +168,16 @@ export const haalProjectOp = (id) => roep(`/api/studio/projecten/${encodeURIComp
  *                    main?: {laatsteVolgnummer: number}, tak?: {laatsteVolgnummer: number}}>}
  */
 export const vergelijkMetMain = (id) => roep(`/api/studio/projecten/${encodeURIComponent(id)}/vergelijk`);
+
+/**
+ * Branch terugmergen (14-11): naar MAIN, daarna haalt de branch MAIN op. Stap 1 zonder `keuze`:
+ * alles mee. Stap 2 met `keuze` (sleutel → bool): alleen het gekozene; wat niet gekozen is blijft
+ * in de branch. → `{main: {ops}, tak: {ops}, basisVolgnummer, telling, opgelost}`. 409 met `reden`
+ * "conflicten" (`conflicten`, alleen zonder keuze), "samenhang" (`samenhang`), "buiten_map"
+ * (`buitenMap`; opnieuw met `ookBuitenMap`) of "volgnummer_verschoven" (opnieuw vergelijken).
+ */
+export const samenvoegenMetMain = (id, { ookBuitenMap = false, keuze = null } = {}) =>
+  roep(`/api/studio/projecten/${encodeURIComponent(id)}/samenvoegen`, { methode: "POST", body: { ookBuitenMap, ...(keuze ? { keuze } : {}) } });
 
 /** Aanmaken (versie 1). 409 als het id al bestaat. */
 export const maakProjectAan = ({ id, naam, inhoud }) =>
@@ -196,6 +218,19 @@ export function toegangVoorOpslaan(rijen) {
 }
 
 /** Vervangt alle rijen: [{subject: gebruikersnaam | "*", recht: "lezen" | "schrijven"}] (beheren). */
+/**
+ * De toegangsrijen van een project met het recht van één gebruiker aangepast (gebruikersbeheer →
+ * Projecten…, 16-11). `recht` = "lezen" | "schrijven" | "" (geen rij: geen toegang, tenzij via "*",
+ * eigenaarschap of de beheerdersrol). De overige rijen blijven staan.
+ * @param {{subject: string, recht: string}[]} rijen
+ * @param {string} subject
+ * @param {string} recht
+ */
+export function metRechtVoor(rijen, subject, recht) {
+  const zonder = (rijen || []).filter((r) => r.subject !== subject);
+  return toegangVoorOpslaan(recht ? [...zonder, { subject, recht }] : zonder);
+}
+
 export const zetToegang = (id, toegang) =>
   roep(`/api/studio/projecten/${encodeURIComponent(id)}/toegang`, { methode: "PUT", body: { toegang } });
 

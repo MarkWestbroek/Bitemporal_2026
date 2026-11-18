@@ -12,6 +12,11 @@
  * - regel: per kolom-id de tekst van de cel (FEEL unary test of expressie;
  *   leeg = "-", elke waarde), en `toelichting` (description).
  *
+ * Keten (16-11): `vereist` zijn de beslissingen die de hoofdbeslissing (direct of verder terug)
+ * nodig heeft. Ze komen in hetzelfde bestand, en elke beslissing krijgt per vereiste beslissing een
+ * `informationRequirement` met `requiredDecision`. De engine rekent ze eerst uit en biedt hun
+ * uitvoer aan onder de naam van de uitvoerkolom; de invoerkolom leest die naam.
+ *
  * Engine-neutraal: DMN 1.3 kent geen engine-dialect in de tabel zelf. Hoe de
  * engine de invoer vult (bij GZAC: input-parameters op de businessRuleTask)
  * staat in de BPMN-regelset.
@@ -56,12 +61,28 @@ const attrs = (obj) =>
 
 /**
  * @param {Object} invoer
- * @param {{id: string, naam?: string, tabel: any}} invoer.beslissing - decision-id (= artefact-identifier), naam en beslistabel
+ * @param {{id: string, naam?: string, tabel: any, vereistIds?: string[]}} invoer.beslissing - decision-id (= artefact-identifier), naam en beslistabel
+ * @param {{id: string, naam?: string, tabel: any, vereistIds?: string[]}[]} [invoer.vereist] - de vereiste beslissingen (keten)
  * @param {string} [invoer.namespace]
  * @returns {{xml: string, diagnostics: any[]}}
  */
-export function schrijfDmn({ beslissing, namespace = "http://bpmn.io/schema/dmn" }) {
+export function schrijfDmn({ beslissing, vereist = [], namespace = "http://bpmn.io/schema/dmn" }) {
   const diagnostics = [];
+  const r = [];
+  for (const b of [beslissing, ...vereist]) r.push(...schrijfBeslissing(b, diagnostics));
+  const id = beslissing.id;
+  const xml = [
+    `<?xml version="1.0" encoding="UTF-8"?>`,
+    `<dmn:definitions${attrs({ "xmlns:dmn": NS.dmn, id: `Definitions_${id}`, name: beslissing.naam || id, namespace })}>`,
+    ...r,
+    `</dmn:definitions>`,
+    "",
+  ].join("\n");
+  return { xml, diagnostics };
+}
+
+/** Eén `dmn:decision` met haar vereisten en tabel, als regels. */
+function schrijfBeslissing(beslissing, diagnostics) {
   const meld = (message, sourceId = null) => diagnostics.push({ severity: "warning", code: "DMN-SCHRIJVER", message, sourceId, path: null });
   const tabel = beslissing.tabel || {};
   const inputs = tabel.inputs || [];
@@ -72,6 +93,11 @@ export function schrijfDmn({ beslissing, namespace = "http://bpmn.io/schema/dmn"
   const id = beslissing.id;
   const r = [];
   r.push(`  <dmn:decision${attrs({ id, name: beslissing.naam || tabel.naam || id })}>`);
+  for (const v of beslissing.vereistIds || []) {
+    r.push(`    <dmn:informationRequirement${attrs({ id: `${id}-vereist-${v}` })}>`);
+    r.push(`      <dmn:requiredDecision${attrs({ href: `#${v}` })} />`);
+    r.push(`    </dmn:informationRequirement>`);
+  }
   r.push(`    <dmn:decisionTable${attrs({ id: `${id}-tabel`, hitPolicy })}>`);
   inputs.forEach((c, i) => {
     const naam = c.naam || c.fieldRef?.veldnaam;
@@ -111,13 +137,5 @@ export function schrijfDmn({ beslissing, namespace = "http://bpmn.io/schema/dmn"
   }
   r.push(`    </dmn:decisionTable>`);
   r.push(`  </dmn:decision>`);
-
-  const xml = [
-    `<?xml version="1.0" encoding="UTF-8"?>`,
-    `<dmn:definitions${attrs({ "xmlns:dmn": NS.dmn, id: `Definitions_${id}`, name: beslissing.naam || id, namespace })}>`,
-    ...r,
-    `</dmn:definitions>`,
-    "",
-  ].join("\n");
-  return { xml, diagnostics };
+  return r;
 }

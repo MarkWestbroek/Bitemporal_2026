@@ -1,7 +1,8 @@
 # Branch terugmergen: keuze per wijziging en samenhang (plan)
 
-*14-11-2026. Opgesteld met Claude, na gesprek met Mark. Status: plan met besluiten (§6), nog
-niet gebouwd.*
+*14-11-2026. Opgesteld met Claude, na gesprek met Mark. Status: plan met besluiten (§6);
+stap 1 (§5) uitgebracht in studio 0.41.0 / api 0.26.0 / render 0.4.5; stap 2a (vinkjes in een
+boom, terugzetten) in studio 0.42.0 / api 0.27.0 / render 0.4.6. Zie §7.*
 
 Vervolg op branch stap 1 (*Verschil met MAIN…*, zie `docs/STUDIO.md` "Branch = afgeleid
 project"). Daar laat de Studio zien wat er verschilt; mergen gaat nog met de hand. Dit plan
@@ -176,3 +177,111 @@ M0-set afhangt, en dus wanneer een opgeslagen simulatie na een merge niet meer p
 - **Wie mag mergen:** eigenlijk een modelleur met rechten op die map. Zo fijn is de toegang
   (FTV/PBAC) nog niet; voorlopig is de granulariteit het project: wie mag schrijven op het
   MAIN-project, mag mergen. Later verfijnen met toegang op map-niveau.
+
+## 7. Stand van de bouw
+
+**Stap 1 — uitgebracht 14-11 (studio 0.41.0 / api 0.26.0 / render 0.4.5, live op app en Fundament).**
+
+- Studio: knop *Samenvoegen naar MAIN* in *Verschil met MAIN…*: uit bij een conflict of als er
+  nog eigen wijzigingen te verzenden zijn; bevestiging met de aantallen; wijzigingen buiten de map
+  alleen na bevestiging.
+- Kern: `web/vite/src/studio/takken/samenvoegen.js` (`voegSamen`, `opsVoorVerschil`).
+- Sidecar: `POST /samenvoegen` (`samenvoegProjecten`), met vangnet: de ops worden op de echte stores
+  nagespeeld en moeten precies de samengevoegde stand geven.
+- API: `POST /api/studio/projecten/:id/samenvoegen`. Eén transactie: ops naar ouder en branch,
+  controle op de laatste volgnummers, basis vervangen.
+- Getest: unit (samenvoegen), render-svc, Go tegen Postgres, e2e met gemockte API. Nog niet getest:
+  de hele keten met echte API, sidecar en twee open Studio's (na uitrol op een testproject doen).
+- Uitbrengen vraagt api + render-svc + studio samen; een oudere sidecar geeft 502 ("te oud").
+
+**Grenzen van stap 1:** volgorde-alleen-wijzigingen in de boom uit de branch gaan niet mee;
+bundels en de soortenlijst gaan als geheel (per bundel, lijst in één keer).
+
+**Stap 2a — uitgebracht 14-11 (studio 0.42.0 / api 0.27.0 / render 0.4.6).**
+
+- Keuze per **eenheid**: element (ook relatie), diagram, map, koppeling. Een verplaatsing hoort bij
+  haar element of diagram. Sleutel `<soort>:<profielId>:<id>` (`verschilSleutel` in
+  `verschilMetMain.js`); bundels en de soortenlijst staan niet in de boom en gaan mee.
+- Studio: de lijst per status is een **boom met vinkjes** (`studio/takken/keuzeBoom.js`): map →
+  submap → diagram of element → relatie onder haar bron (of kind onder zijn boomouder). Een vinkje
+  op een ouder zet alles eronder; half gekozen = driestandenvinkje. Koppelingen tussen talen en
+  eenheden zonder map in eigen groepen; wat alleen op MAIN veranderde apart (komt altijd mee).
+  Standaard aan, behalve een **conflict** (uit = MAIN houdt de zijne; aan = de versie van de branch)
+  en wat **buiten de map** ligt.
+- Kern: `voegSamen({…, keuze})` geeft `samengevoegd` (nieuwe MAIN en nieuwe basis) én `nieuwTak`:
+  wat niet gekozen is, blijft in de branch en komt bij de volgende vergelijking terug (weer
+  aangevinkt; het onthouden van "nee" is stap 4). Een conflict blokkeert met een keuze niet meer.
+- **Vangnet samenhang** (tot de samenhanggraaf van stap 3 er is): `samenhangFouten` zoekt
+  verwijzingen naar iets wat er niet is (relatie-`source`/`target`, `nodes[].elementId` op een
+  diagram, kruisverband-kanten, plaatsing/map naar een ontbrekende map). Alleen wat de keuze **nieuw**
+  stuk maakt telt, in MAIN of in de branch; dan weigert de API met `409 reden "samenhang"`.
+- API: body `{ookBuitenMap?, keuze?}`; zonder `keuze` geldt stap 1. Sidecar: `keuze` op
+  `/samenvoegen`; antwoord met `opgelost` en `samenhang`.
+- Getest: unit (`samenvoegen.test.js`, `keuzeBoom.test.js`, `verschilMetMain.test.js`), render-svc,
+  Go (`TestMetKeuze`), e2e 63 (boom, keuze in de POST, buiten de map, 409 samenhang).
+- **Scenario's over meerdere rondes** (Mark 14-11: "standaard in de test"):
+  `render-svc/samenvoegScenario.test.mjs`, in `npm test` van render-svc. Een nagebootste server
+  (logs per project, basis vervangen zoals de Go-handler) speelt met de echte profielstores na:
+  (1) Marks voorbeeld in twee rondes, (2) nieuw/weg/terugzetten incl. "geen kleur", (3) weg tegen
+  gewijzigd, ook zonder keuze, (4) relatie zonder bron, in MAIN én in de branch, (5) nieuwe submap
+  en verplaatsen, (6) koppeling zonder element, (7) alleen bijwerken, (8) drie rondes doorwerken.
+  Na elke ronde: MAIN nagespeeld = de nieuwe basis, en het resterende verschil is precies wat niet
+  gekozen werd.
+
+- **Terugzetten naar MAIN** (Mark 14-11, bij het proberen: "per ongeluk een kleur gewijzigd"):
+  per regel de knop ↶, keuze `"terug"`. De branch neemt de versie van MAIN letterlijk over, ook
+  "geen kleur" (een kleur met dezelfde waarde terugzetten is níet gelijk: MAIN had geen veld
+  `kleur`). Een element dat alleen in de branch bestaat gaat eruit, een in de branch verwijderd
+  element komt terug; bij een conflict wint MAIN aan beide kanten. MAIN verandert niet. Ctrl+Z
+  helpt hier niet: ongedaan maken werkt alleen op eigen, lokale stappen.
+
+**Stap 2a+ — schuifje met drie standen (uitgebracht in studio 0.43.0 / render 0.4.7; voorstel Mark).**
+Het vinkje en de knop ↶ zijn één schuifje per regel: **↶ links** = MAIN overnemen in de branch
+(`"terug"`), **– midden** = niets doen (`false`), **→ rechts** = naar MAIN (`true`; bij een conflict
+"MAIN overschrijven", in rood). De tekst achter de regel zegt wat de stand doet, per status
+(`schuifTeksten`): nieuw = "toevoegen aan MAIN" / "niet toevoegen (weg uit de branch)", weg = "ook
+uit MAIN verwijderen" / "terugzetten in de branch", gewijzigd = "wijziging naar MAIN" / "versie van
+MAIN terug". Op een map zet het schuifje alles eronder; verschillen de kinderen, dan "gemengd".
+Alleen Studio: de server kende de drie waarden al. Dat een toevoeging ook "de inhoud van de map"
+verandert, telt bewust niet apart: de plaatsing hoort bij het element.
+
+**Gevonden bij het proberen op Fundament (Mark 14-11):** een plaatsing kan naar een **element**
+wijzen (`el::<profiel>::<id>`, element als ouder in de boom), bv. het diagram *Besluit* onder het
+package "besluit". De vergelijking keek alleen naar mappen, dus zulke diagrammen stonden "buiten de
+map" en "zonder map". Nu volgt `verschilMetMain` de keten tot een echte map (`elementVanPlaatsing`),
+krijgt het diagram het package als `ouderId`, en staat een ongewijzigd package als ouder in de
+keuzeboom (`context`). Het vangnet meldt ook een plaatsing onder een ontbrekend element. Scenario 9.
+Ook gevonden: **diagrambundels** (`structuur.bundels`) gingen wel mee, maar onzichtbaar en zonder
+keuze, ook als hun diagrammen niet meegingen. Nu staan ze als eenheid `bundel` in de vergelijking en
+in de groep "Diagrambundels" van de boom (in de scope als een van hun diagrammen erin ligt); het
+vangnet meldt een tab naar een ontbrekend diagram. Scenario 10. Verder toont de boom het **type uit het
+profiel** (Entiteit, Gegevenselement, Package (domein), Compositie, …) in plaats van "element".
+
+**Stap 2b — per veld (gebouwd 14/15-11, nog niet uitgebracht; Mark: "het is nog niet op veld
+niveau, toch?").**
+- Een element dat in alle drie de standen bestaat, wordt **per veld** samengevoegd (`veldenVan`:
+  elke eigenschap, elke `data.*`-sleutel, elk compartiment `compartiment.<type>`; de plaatsing is
+  het veld `map`). Wijzigen branch en MAIN verschillende velden, dan gaan beide mee: geen conflict
+  meer. Alleen hetzelfde veld aan beide kanten is een conflict; `conflicten[].velden` noemt het.
+- `verschilMetMain` geeft per element `veldDetails` (`perVeldStatus`); de status is "conflict" alleen
+  bij een veldconflict.
+- Kiezen: een element met twee of meer gewijzigde velden krijgt in de boom een regel per veld
+  (`kiesbareVelden`), met eigen schuifje; de keuze heet `<elementsleutel>#<veld>` en gaat voor die op
+  het element. De schuif van het element zet alle velden. Labels uit het profiel
+  (PropertyType.label, compartimenten).
+- **Velden binnen een compartiment** (15-11): elk veld is een eigen veld van het element,
+  `compartiment.<type>/uuid:<uuid>` (de veld-uuid `data.uuid`, gezet bij de V3-export, besluit
+  Mark 31-10 — Mark 15-11: zo laten), anders `…/naam:<naam>`, anders `…/pos:<i>`. Een veld zonder
+  uuid krijgt de uuid van zijn naamgenoot in een andere versie (`uuidPerVeldnaam`): een export
+  onderweg is dan geen "weg + nieuw". Hernoemen is één wijziging: met uuid altijd, zonder uuid als
+  het nieuwe veld op de plek staat van een verdwenen basisveld van hetzelfde type (`lijnVeldenUit`;
+  Mark 15-11: "ik heb alleen hernoemd").
+  Velden van MAIN eerst, nieuwe uit de branch achteraan; een volgorde-alleen-wijziging gaat niet mee.
+- Nog als geheel: diagrammen.
+- FTV/ODRL (gesprek met GQL-ODRL-EXEC, 15-11): een policy-target op attribuutniveau kan de veld-uuid
+  naast het naampad dragen (bron: pad + uuid-keten; ODRL-IRI `<basis>/register/<model>/veld/<uuid>`).
+  Codegen laat de veld-uuid nu vallen (MetaRegistry kent hem niet per veld): punt voor BACKEND.
+- Tests: `samenvoegen.test.js` (9 per veld), `keuzeBoom.test.js`, scenario's 11 en 12, e2e 63.
+
+**Nog open in stap 2:** velden binnen een compartiment (veldenlijst) apart samenvoegen; diagrammen per
+veld/node; buiten de map alleen-lezen in de branch.

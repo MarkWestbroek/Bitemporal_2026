@@ -211,7 +211,7 @@ export async function verdeelOverProfielen(bron, packageId, pakketLabel = "", { 
       (pakketLabel ? `${pakketLabel}\n\n` : "") +
       (regels.length
         ? `Verwerkt (Ctrl+Z per profiel maakt het ongedaan):\n${regels.join("\n")}\n\n` +
-          (naImport ? "De EA-boom (pakketten, use cases, activities) staat als mappen in het project." : `De diagrammen staan onder "Niet ingedeeld" bij hun profiel.`)
+          (naImport ? "De EA-boom (pakketten, use cases, activities) staat als mappen in het project." : `De diagrammen staan in de root van de projectboom.`)
         : "Geen diagrammen of elementen gevonden die een profiel kent.") +
       (rest.length ? `\n\nNiet in een profiel: ${rest.map(([s, n]) => `${s} (${n})`).join(", ")}` : "") +
       (meldingen.length ? `\n\n${meldingen.join("\n")}` : ""),

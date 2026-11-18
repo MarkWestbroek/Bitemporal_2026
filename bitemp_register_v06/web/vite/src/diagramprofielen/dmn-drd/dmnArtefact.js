@@ -28,6 +28,11 @@
  * traceregels dragen de uuid mee (`bronUuid`), zodat een artefact ook na een
  * hernoeming naar zijn bron terug te voeren is.
  *
+ * Keten (16-11): leest een kolom het resultaat van een andere beslissing (pijl in het DRD), dan gaat
+ * die beslissing mee in hetzelfde DMN-bestand als `requiredDecision`, en zo verder terug. De kolom
+ * leest de uitvoer onder de naam van de uitvoerkolom; `invoer` bevat de dossierwaarden van de hele
+ * keten.
+ *
  * Zelfde artefactvorm als de andere inrichtingsartefacten; de payload is de
  * XML-tekst en payloadHash = sha256 over de UTF-8-tekst (zoals bpmn).
  *
@@ -39,6 +44,8 @@ import { doelVersieRange } from "../../transformatie/doelVersie.js";
 import { schrijfDmn } from "../../transformatie/dmnXmlSchrijver.js";
 import { fieldRefsOpUuid, verversFieldRef } from "../../modelpicker/modelTree.js";
 import { pickerTypesUitV3 } from "../../modelpicker/pickerTypesUitV3.js";
+import { bronnenVan, metInvoerUitDrd } from "./invoerUitDrd.js";
+import { bpmnIdUit } from "../../transformatie/bpmnXmlSchrijver.js";
 
 export const SCHRIJVER_ID = "dmn-xml-schrijver@0.1.0";
 export const REGELSET = { id: "dmn-beslistabel", versie: "0.1.0" };
@@ -99,26 +106,106 @@ export async function maakDmnArtefact({ modelBestand, edienst, identifier, objec
   const diagnostics = [];
   // Binding via de uuid: het naampad van nu uit het V3-model.
   const index = v3Model ? fieldRefsOpUuid(pickerTypesUitV3(v3Model)) : null;
-  const tabel = {
-    ...opgeslagen,
-    inputs: (opgeslagen.inputs || []).map((c) => {
-      const ref = c.fieldRef;
-      if (!ref?.uuid || !index) return c;
-      if (!index.has(ref.uuid)) {
-        diagnostics.push({ severity: "warning", code: "DMN-UUID", message: `Veld "${ref.veldpad}" (kolom "${c.label || c.naam || ref.veldnaam}") staat niet meer in het model; het opgeslagen naampad is gebruikt`, sourceId: c.id, path: null });
-        return c;
-      }
-      const nieuw = verversFieldRef(ref, index);
-      return nieuw === ref ? c : { ...c, fieldRef: nieuw };
-    }),
+  const elements = model?.elements || {};
+
+  /**
+   * De tabel van een beslissing zoals ze de deur uitgaat. Kolommen uit het DRD
+   * (invoerUitDrd.js, 16-11): naam en veld volgen het invoergegeven van nu. De export voegt
+   * geen kolommen toe; dat doet de editor bij het opslaan. Daarna: elke FieldRef via de uuid
+   * naar het naampad van nu.
+   */
+  const tabelVan = (b) => {
+    const bijgewerkt = metInvoerUitDrd(
+      b.data.beslistabel,
+      bronnenVan(elements, b.id),
+      (gegeven, kolom) => (gegeven?.uuid && index?.get(gegeven.uuid)) || (kolom?.fieldRef?.uuid && kolom.fieldRef.uuid === gegeven?.uuid ? kolom.fieldRef : null) || (index ? null : kolom?.fieldRef || null),
+      { alleenBestaand: true }
+    );
+    return {
+      ...bijgewerkt,
+      inputs: (bijgewerkt.inputs || []).map((c) => {
+        const ref = c.fieldRef;
+        if (!ref?.uuid || !index) return c;
+        if (!index.has(ref.uuid)) {
+          diagnostics.push({ severity: "warning", code: "DMN-UUID", message: `Veld "${ref.veldpad}" (kolom "${c.label || c.naam || ref.veldnaam}") staat niet meer in het model; het opgeslagen naampad is gebruikt`, sourceId: c.id, path: null });
+          return c;
+        }
+        const nieuw = verversFieldRef(ref, index);
+        return nieuw === ref ? c : { ...c, fieldRef: nieuw };
+      }),
+    };
   };
+
+  // De keten (16-11): de hoofdbeslissing en alle beslissingen die zij, direct of verder terug,
+  // als invoer heeft (information requirement in het DRD). Ze gaan samen in één DMN-bestand.
+  const keten = [];
+  const perElement = new Map();
+  const ids = new Set();
+  const uniekId = (basis) => {
+    let id = basis;
+    for (let i = 2; ids.has(id); i++) id = `${basis}-${i}`;
+    ids.add(id);
+    return id;
+  };
+  const voegToe = (b, id) => {
+    const schakel = { el: b, id, tabel: tabelVan(b), vereistIds: [] };
+    perElement.set(b.id, schakel);
+    keten.push(schakel);
+    return schakel;
+  };
+  const wachtrij = [voegToe(el, uniekId(keuzes.identifier))];
+  while (wachtrij.length) {
+    const schakel = wachtrij.shift();
+    const vereist = [...new Set(schakel.tabel.inputs.filter((c) => c.bron?.soort === "beslissing" && !c.bronWeg).map((c) => c.bron.elementId))];
+    for (const vid of vereist) {
+      const v = elements[vid];
+      if (!v?.data?.beslistabel) {
+        diagnostics.push({ severity: "error", code: "DMN-KETEN", message: `Beslissing "${v?.naam || vid}" is invoer van "${schakel.el.naam}", maar heeft geen beslistabel`, sourceId: vid, path: null });
+        continue;
+      }
+      // Een kring kan het DRD niet hebben (een pijl wijst naar een beslissing die al in de keten
+      // staat): dan alleen de vereiste aangeven, niet nog eens toevoegen.
+      const bestaand = perElement.get(vid) || null;
+      const doel = bestaand || voegToe(v, uniekId(bpmnIdUit(v.naam) || vid));
+      if (!bestaand) wachtrij.push(doel);
+      schakel.vereistIds.push(doel.id);
+    }
+  }
+  // Een kolom uit een andere beslissing leest de uitvoer daarvan onder de naam van die uitvoer.
+  for (const schakel of keten) {
+    schakel.tabel = {
+      ...schakel.tabel,
+      inputs: schakel.tabel.inputs.map((c) => {
+        if (c.bron?.soort !== "beslissing" || c.bronWeg) return c;
+        const outs = perElement.get(c.bron.elementId)?.tabel.outputs || [];
+        const out = c.bron.uitvoerId ? outs.find((o) => o.id === c.bron.uitvoerId) : outs[0];
+        const uitvoerNaam = out?.naam || out?.fieldRef?.veldnaam;
+        if (!uitvoerNaam) {
+          diagnostics.push({ severity: "error", code: "DMN-KETEN", message: `Kolom "${c.naam}" in "${schakel.el.naam}": de uitvoer van "${elements[c.bron.elementId]?.naam || c.bron.elementId}" is niet gevonden of heeft geen naam`, sourceId: c.id, path: null });
+          return c;
+        }
+        return { ...c, naam: uitvoerNaam, label: c.label || c.naam };
+      }),
+    };
+  }
   if (!objecttype) diagnostics.push({ severity: "error", code: "DMN-OBJECTTYPE", message: "Geen objecttype-artefact: daaruit volgt waar elk veld in het dossier staat", sourceId: null, path: null });
 
-  // Per kolom: waar de engine de waarde vindt.
+  // Per kolom (van alle beslissingen in de keten): waar de engine de waarde vindt. De uitvoer van
+  // een vereiste beslissing rekent de engine zelf uit; die hoort hier niet bij.
   const invoer = [];
-  for (const c of tabel.inputs || []) {
+  const gezien = new Set();
+  for (const c of keten.flatMap((s) => s.tabel.inputs || [])) {
+    if (c.bronWeg) {
+      const b = c.bron?.soort === "beslissing" ? elements[c.bron.elementId] : null;
+      // Een beslissing die nog wel in het diagram staat maar haar tabel kwijt is: dat zeggen.
+      if (b?.elementType === "decision" && !b.data?.beslistabel) diagnostics.push({ severity: "error", code: "DMN-KETEN", message: `Kolom "${c.naam || c.id}" leest het resultaat van "${b.naam}", maar die beslissing heeft geen beslistabel`, sourceId: c.id, path: null });
+      else diagnostics.push({ severity: "warning", code: "DMN-BRON", message: `De bron van kolom "${c.naam || c.id}" staat niet meer in het diagram`, sourceId: c.id, path: null });
+    }
+    if (c.bron?.soort === "beslissing") continue;
     let veldpad = c.fieldRef?.veldpad;
     const naamVar = c.naam || c.fieldRef?.veldnaam;
+    if (gezien.has(naamVar)) continue;
+    gezien.add(naamVar);
     if (!veldpad) {
       diagnostics.push({ severity: "error", code: "DMN-VELD", message: `Kolom "${c.label || c.id}" is niet gebonden aan een modelveld`, sourceId: c.id, path: null });
       continue;
@@ -142,11 +229,17 @@ export async function maakDmnArtefact({ modelBestand, edienst, identifier, objec
     invoer.push({ naam: naamVar, ...plek, veldpad, uuid: c.fieldRef.uuid });
   }
 
-  const { xml, diagnostics: schrijf } = schrijfDmn({ beslissing: { id: keuzes.identifier, naam: keuzes.naam || el.naam, tabel }, namespace: keuzes.namespace });
+  const [hoofd, ...vereist] = keten;
+  const { xml, diagnostics: schrijf } = schrijfDmn({
+    beslissing: { id: hoofd.id, naam: keuzes.naam || el.naam, tabel: hoofd.tabel, vereistIds: hoofd.vereistIds },
+    vereist: vereist.map((s) => ({ id: s.id, naam: s.el.naam, tabel: s.tabel, vereistIds: s.vereistIds })),
+    namespace: keuzes.namespace,
+  });
   diagnostics.push(...schrijf);
 
   const traceregels = [
     { bronGE: el.id, regel: "Beslistabel → decisionTable", doelPad: `#${keuzes.identifier}`, actie: "aangemaakt" },
+    ...vereist.map((s) => ({ bronGE: s.el.id, regel: "Vereiste beslissing → decision + requiredDecision", doelPad: `#${s.id}`, actie: "aangemaakt" })),
     ...invoer.map((x) => ({ bronGE: x.veldpad, regel: x.bron === "variabele" ? "Envelopveld → procesvariabele" : "Modelveld → dossierwaarde (JSON-pointer)", doelPad: `#${keuzes.identifier}/input/${x.naam}`, actie: "aangemaakt", ...(x.uuid ? { bronUuid: x.uuid } : {}) })),
   ];
   const artefact = {

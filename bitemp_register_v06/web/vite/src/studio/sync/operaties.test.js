@@ -19,7 +19,9 @@ import {
   MODEL_OPS,
   STRUCTUUR_OPS,
   herschikOpVolgorde,
+  koppelStore,
 } from "./operaties.js";
+import { create } from "zustand";
 
 let teller = 0;
 
@@ -255,4 +257,41 @@ test("laadModel stuurt alleen het verschil; dezelfde (oude) kopie opnieuw laden 
   assert.deepEqual(Object.keys(ops[0].args[0].zet), ["A"]);
   assert.deepEqual(ops[0].args[0].wis, []);
   klaar();
+});
+
+// Mark 14-11: een automatische plaatsing (BOOM-1) binnen een modelactie werd nooit een operatie,
+// want de sync legt alleen de buitenste actie vast (over alle stores). Daarom zet de Studio die
+// plaatsing als microtaak, ná de modelactie (modellerenActivity plaatsBijDiagrammen).
+test("actie in een andere store tíjdens een actie: niet vastgelegd; als microtaak erna wel", async () => {
+  const g = maakGekoppeld();
+  const structuur = create((set) => ({ plaatsing: {}, plaatsPerMap: (perMap) => set((s) => {
+    const plaatsing = { ...s.plaatsing };
+    for (const [mapId, keys] of Object.entries(perMap)) for (const k of keys) plaatsing[k] = mapId;
+    return { plaatsing };
+  }) }));
+  koppelStore("structuur-proef", structuur, { ops: { plaatsPerMap: null }, velden: ["plaatsing"] });
+  const structuurOps = [];
+  const af = abonneer((op) => op.store === "structuur-proef" && structuurOps.push(op));
+  let uitstellen = false;
+  const afModel = g.store.subscribe((s, v) => {
+    if (s.elements === v.elements) return;
+    const perMap = { kaart: Object.keys(s.elements).filter((id) => !v.elements[id]).map((id) => `el::${g.profielId}::${id}`) };
+    if (uitstellen) queueMicrotask(() => structuur.getState().plaatsPerMap(perMap));
+    else structuur.getState().plaatsPerMap(perMap);
+  });
+  try {
+    g.store.getState().addElement(el("A"));
+    assert.equal(structuur.getState().plaatsing[`el::${g.profielId}::A`], "kaart", "lokaal wel geplaatst");
+    assert.deepEqual(structuurOps, [], "maar niet vastgelegd: de fout van vóór 14-11");
+    uitstellen = true;
+    g.store.getState().addElement(el("B"));
+    await Promise.resolve();
+    assert.deepEqual(structuurOps.map((o) => [o.op, o.args[0]]), [["plaatsPerMap", { kaart: [`el::${g.profielId}::B`] }]]);
+    assert.ok(g.ops.some((o) => o.op === "addElement"), "de modelactie zelf blijft een operatie");
+  } finally {
+    afModel();
+    af();
+    ontkoppelStore("structuur-proef");
+    g.klaar();
+  }
 });

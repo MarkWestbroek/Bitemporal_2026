@@ -16,6 +16,7 @@
  *
  * Kleuren komen overeen met defaultKleur() in umleditor/metamodel/types.js.
  */
+import { startNaam } from "../../diagramcore/types/startNaam.js";
 import { naamBotsingen, domeinVanElement } from "./uniekeNamen.js";
 import { vouwOudeComposities, hernoemGebruikLabels, GEBRUIKT_LABEL } from "./migratie.js";
 import { vouwOudeGeneralisaties, synchroniseerGebruik, herstelRefTypeLabels } from "./afgeleideConnectoren.js";
@@ -305,6 +306,9 @@ const elementTypes = [
   {
     id: "entiteit",
     label: "Entiteit",
+    // M3 aard (15-11): draagt gegevens; het type van een BPMN-data-object kan hiernaar wijzen.
+    aard: "gegevens",
+    lidwoord: "de",
     kort: "ENT",
     erft: "representatie",
     stereotype: "«entiteit»",
@@ -366,6 +370,7 @@ const elementTypes = [
   {
     id: "gegevenselement",
     label: "Gegevenselement",
+    lidwoord: "het",
     kort: "GE",
     erft: "representatie",
     stereotype: "«gegevenselement»",
@@ -484,6 +489,7 @@ const elementTypes = [
   {
     id: "enumeratie",
     label: "Enumeratie",
+    lidwoord: "de",
     kort: "ENUM",
     stereotype: "«enumeratie»",
     shape: "class-box",
@@ -497,6 +503,7 @@ const elementTypes = [
   {
     id: "gegevenstype",
     label: "Gegevenstype",
+    lidwoord: "het",
     kort: "TYPE",
     stereotype: "«gegevenstype»",
     shape: "class-box",
@@ -557,6 +564,7 @@ const elementTypes = [
   {
     id: "referentielijstInstantie",
     label: "Referentielijst-instantie",
+    lidwoord: "de",
     kort: "REF",
     stereotype: "«instantie»",
     shape: "class-box",
@@ -573,6 +581,7 @@ const elementTypes = [
     // hem heen en terug naar het domein-veld van V3.
     id: "package",
     label: "Package (domein)",
+    lidwoord: "het",
     kort: "PKG",
     stereotype: "«package»",
     shape: "package",
@@ -590,6 +599,7 @@ const elementTypes = [
   {
     id: "notitie",
     label: "Notitie",
+    lidwoord: "de",
     kort: "NOT",
     shape: "note",
     icoon: "notitie",
@@ -599,6 +609,7 @@ const elementTypes = [
   {
     id: "constraint",
     label: "Constraint",
+    lidwoord: "de",
     kort: "CON",
     stereotype: "«constraint»",
     shape: "rounded",
@@ -610,6 +621,7 @@ const elementTypes = [
   {
     id: "boundary",
     label: "Kader",
+    lidwoord: "het",
     kort: "KADER",
     shape: "boundary",
     icoon: "kader",
@@ -825,6 +837,9 @@ const referenceResolvers = {
 /** @type {import("../../diagramcore/types/schema.js").DiagramType} */
 export const canoniekUmlDiagramType = {
   id: CANONIEK_UML_ID,
+  // Profielversie (STUDIO.md "Profielversie in het project"). 1.1.0 (15-11): aard "gegevens" op
+  // de typen die data dragen (het type van een BPMN-data-object wijst ernaar); minor.
+  versie: "1.1.0",
   label: "Canoniek datamodel",
   // Beschrijving: vóór 2026-10-12 het profielveld "description" (de V3-naam) → M3 data.beschrijving; de adapter vertaalt naar V3 `description`.
   oudeBeschrijvingSleutels: ["description"],
@@ -950,7 +965,7 @@ export function maakElement(elementTypeId) {
   const id = `el_${Date.now()}_${_teller}`;
   const element = {
     id,
-    naam: `Nieuw${et.label.replace(/[^A-Za-z]/g, "")}`,
+    naam: startNaam(et),
     elementType: et.id,
     compartimenten: [],
     data: {},

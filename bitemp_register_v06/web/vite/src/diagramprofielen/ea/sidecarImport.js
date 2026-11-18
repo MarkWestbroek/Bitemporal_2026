@@ -32,6 +32,7 @@ import { leesPerProfiel, wortelPakket, telOvergeslagen } from "./eaLezers.js";
 import { vergelijkMetStore, pasPlanToe, standaardKeuzes, herschrijfOpBestaandeIds } from "./vergelijkImport.js";
 import { plaatsEaInProjectboomPlan, mapPadPlan } from "./eaProjectboom.js";
 import { deelboomPakketten } from "./qeaHulp.js";
+import { normaliseerMarks, heeftMarks, patchMarks as patchMarksPuur } from "../../marks/marks.js";
 
 /** Client-id waaronder de sidecar in het operatielog staat (max 64 tekens). */
 export const SIDECAR_CLIENT_ID = `sidecar-${typeof process !== "undefined" ? process.pid : 0}`;
@@ -45,7 +46,7 @@ export const PATCH_MAX_SLEUTELS = 2000;
 
 /**
  * @typedef {{modellen: Map<string, any>, structuur: any, profielVoor: (profielId: string, diagramTypeId?: string|null) => any,
- *            kruis: {links: any[]}, origineel: any}} Stand
+ *            kruis: {links: any[]}, marks: {stand: any, aanwezig: boolean}, origineel: any}} Stand
  */
 
 /**
@@ -78,7 +79,9 @@ export function maakStand(werkbestand = {}) {
   // Kruisverbanden: geen store nodig, alleen de lijst (patchLinks = upsert/wis op id).
   // `soorten`: de soortenlijst van het project (`koppelsoorten`, 07-11); undefined = niet in het werkbestand.
   const kruis = { links: Array.isArray(werkbestand?.kruisverbanden) ? [...werkbestand.kruisverbanden] : [], soorten: werkbestand?.koppelsoorten };
-  return { modellen, structuur, profielVoor, kruis, origineel: werkbestand || {} };
+  // Marks (18-11): ook alleen de stand; patchMarks is puur (marks/marks.js).
+  const marks = { stand: normaliseerMarks(werkbestand?.marks), aanwezig: werkbestand?.marks !== undefined };
+  return { modellen, structuur, profielVoor, kruis, marks, origineel: werkbestand || {} };
 }
 
 /** patchLinks {zet, wis} op de kruisverbanden van de stand. */
@@ -116,6 +119,7 @@ export function bouwWerkbestand(stand, { id, naam } = {}) {
     structuur: { mappen: s.mappen, plaatsing, plaatsingVolgorde: Object.keys(plaatsing), ...(Object.keys(s.bundels || {}).length ? { bundels: s.bundels } : {}) },
     kruisverbanden: stand.kruis.links,
     ...(stand.kruis.soorten !== undefined ? { koppelsoorten: stand.kruis.soorten ?? undefined } : {}),
+    ...(stand.marks && (stand.marks.aanwezig || heeftMarks(stand.marks.stand)) ? { marks: stand.marks.stand } : {}),
     profielen,
   };
 }
@@ -134,6 +138,11 @@ export function speelOpsNa(stand, ops) {
     if (o.store === "kruis") {
       if (o.op === "patchLinks") { pasKruisToe(stand, o.args?.[0]); toegepast++; }
       else if (o.op === "zetSoorten") { stand.kruis.soorten = o.args?.[0] ?? null; toegepast++; }
+      else overgeslagen++;
+      continue;
+    }
+    if (o.store === "marks") {
+      if (o.op === "patchMarks") { stand.marks.stand = patchMarksPuur(stand.marks.stand, o.args?.[0]); toegepast++; }
       else overgeslagen++;
       continue;
     }

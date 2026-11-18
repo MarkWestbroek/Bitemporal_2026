@@ -87,8 +87,10 @@ export const BPMN_XML_NAAR_BPMN = {
     { naam: "Inclusieve gateway", bij: "knoop", als: { aard: "inclusiveGateway" }, maak: { type: "inclusief" } },
     { naam: "Event-based gateway", bij: "knoop", als: { aard: "eventBasedGateway" }, maak: { type: "event-gateway" } },
     { naam: "Complexe gateway", bij: "knoop", als: { aard: "complexGateway" }, maak: { type: "complex" } },
-    { naam: "Data-object", bij: "knoop", als: { aard: ["dataObjectReference", "dataObject"] }, maak: { type: "data-object", data: { verzameling: "{verzameling}" } } },
-    { naam: "Data store", bij: "knoop", als: { aard: "dataStoreReference" }, maak: { type: "data-store" } },
+    { naam: "Data-object", bij: "knoop", als: { aard: ["dataObjectReference", "dataObject"] }, maak: { type: "data-object", data: { verzameling: "{verzameling}", toestand: "{toestand}", typeNaam: "{typeNaam}" } } },
+    // De invoer en uitvoer van het proces (ioSpecification, 16-11): een data-object met rol.
+    { naam: "Data-invoer van het proces", bij: "knoop", als: { aard: ["dataInput", "dataOutput"] }, maak: { type: "data-object", data: { verzameling: "{verzameling}", toestand: "{toestand}", rol: "{rol}", typeNaam: "{typeNaam}" } } },
+    { naam: "Data store", bij: "knoop", als: { aard: "dataStoreReference" }, maak: { type: "data-store", data: { toestand: "{toestand}", typeNaam: "{typeNaam}" } } },
     { naam: "Tekstannotatie", bij: "knoop", als: { aard: "textAnnotation" }, maak: { type: "notitie", naam: "", data: { tekst: "{tekst}" } } },
 
     // ── Groepen ──

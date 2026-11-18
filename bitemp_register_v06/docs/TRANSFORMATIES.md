@@ -1514,8 +1514,33 @@ Wat de schrijver en de regelset daarvoor doen:
 (niet JCS, afspraak FUNDAMENT). bronmodelHash = sha256 over JCS van het
 BPMN-model.
 
-Nog niet in de schrijver: pools/lanes, message flows, data-objecten, notities,
-boundary events en de inhoud van subprocessen (melding `BPMN-SCHRIJVER`).
+Nog niet in de schrijver: notities, boundary events en de inhoud van subprocessen
+(melding `BPMN-SCHRIJVER`). Pools, lanes en message flows zijn notatie (info).
+
+**Data-objecten (16-11, ontwerp Simulatie §11.8).** De schrijver schrijft data in de
+vorm die bpmn.io ook schrijft:
+
+| Omnium | BPMN 2.0 |
+|---|---|
+| data-object (intern) | `dataObject` + `dataObjectReference` |
+| data-object met rol invoer / uitvoer | `dataInput` / `dataOutput` in de `ioSpecification` van het proces (met `inputSet`/`outputSet`) |
+| data store | `dataStore` (definitions) + `dataStoreReference` |
+| type (`{profielId, elementId}`) | `itemDefinition` met `structureRef` = de naam van het type (`typeNaam`, standaard het elementId), via `itemSubjectRef` |
+| toestand | `dataState` |
+| lijn data → taak | `dataInputAssociation`, doel een property `__targetRef_placeholder` op de taak |
+| lijn taak → data | `dataOutputAssociation` |
+| lezen en schrijven | allebei |
+
+Met een **engine-regelset** alleen als die `data: true` zet; anders blijft data notatie
+(info-melding). Operaton maakt van een `dataObject` met een type procesvariabelen, en
+de GZAC-uitrol mag daar niet ongemerkt door veranderen. De **lezer** leest de invoer
+en uitvoer van het proces terug als data-object met rol, en `dataState` als toestand;
+het type komt terug als naam (`typeNaam` op de knoop). De import (`bpmnXmlImport.js`,
+`typeZoeker`) koppelt die naam weer aan een element in het project met M3-aard
+`gegevens` (cm-entiteit, UML-klasse, MIM-objecttype, ERD-entiteit; hoofdletters tellen
+niet). Eén treffer wordt het type; geen treffer geeft een info-melding, meer treffers
+een waarschuwing (kies het type dan in de inspector). Melding `BPMN-DATATYPE`. Tests: `bpmnXmlSchrijverData.test.js`
+(ook tegen het schema van bpmn-moddle, zonder waarschuwingen).
 
 ### 11.12 Ontvankelijkheid: beslistabel (DMN) in het oppakproces (2026-10-30)
 
@@ -1594,9 +1619,19 @@ FUNDAMENT probeerde de constructie op cg-test (30-10). De FEEL-engine van
 Operaton leest de dossierwaarden als Map en List, dus de toets op de bijlagen
 werkt. Een dossier zonder pasfoto kreeg de status niet-opgepakt.
 
-Nog niet: de beslistabel bewerken in de Studio (de tabeleditor
-`dmn/DmnTableEditor.jsx` hangt nog niet aan het element), en de reden in het
-dossier bewaren (vraagt een veld in het dossierschema).
+Sinds 16-11 is de beslistabel in de Studio te bewerken (`studio/BeslistabelEditor.jsx`, STUDIO.md
+"Beslistabel in het project"). Nog niet: de reden in het dossier bewaren (vraagt een veld in het
+dossierschema).
+
+**Keten van beslissingen (16-11).** De invoerkolommen volgen uit het DRD; een kolom kan het resultaat
+van een andere beslissing lezen (`bron.soort === "beslissing"`). `maakDmnArtefact` loopt die keten
+af (ook verder terug) en zet alle beslissingen in één `dmn:definitions`: de hoofdbeslissing met de
+identifier van het artefact, de vereiste beslissingen met een id uit hun naam. Elke beslissing krijgt
+per vereiste een `informationRequirement` met `requiredDecision`. De engine rekent de vereiste eerst
+uit en biedt haar uitvoer aan onder de naam van de uitvoerkolom; de invoerexpressie van de kolom is
+die naam (het label blijft de naam van de beslissing). `invoer` (de procesvariabelen op de
+businessRuleTask) bevat de dossierwaarden van de hele keten, niet de tussenresultaten. Een vereiste
+beslissing zonder tabel is een fout (`DMN-KETEN`). Nog niet op cg-test geprobeerd.
 
 **CEL in het model, JUEL en FEEL als uitvoer (besluit Mark 12-11).** De conditie op een sequence flow en de
 invoerexpressie van een beslistabel staan in het model in CEL, net als de afgeleide velden van het canonieke model.

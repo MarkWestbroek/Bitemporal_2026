@@ -930,7 +930,7 @@ boundary events nu of later.
 | Niveau | Wat |
 |---|---|
 | M2 (profiel bpmn-motor) | `signaal` (signaalnaam) op start-, tussen-, eind- en boundary event; `filter` (CEL over de lading) op een vangend signaal; `eenPerZaak` op een signal-start; `kandidaatgroep` op een user task. `bericht` ook op een boundary event. |
-| Kern (`simulatie.js`) | Signaal werpen (eind- of tussen-event) is een omroep, met drie soorten ontvangers: een wachtend vangend tussen-event, een boundary event op een taak waar een token staat (onderbrekend: de taak stopt, een open gat vervalt, een aangeroepen kind breekt af, het token gaat langs het boundary event; niet-onderbrekend: er komt een token bij), en een proces met een signal-start. Het filter wordt per ontvanger op de lading geëvalueerd; een onleesbaar filter telt als "past niet", met de reden. Met `eenPerZaak` start een proces niet als er voor de zaak al een instantie loopt; dat staat als weigering in het log (`regel.signaal = {naam, ontvangers, geweigerd}`). Een signal-einde rondt eerst het eigen pad af en roept dan om. |
+| Kern (`simulatie.js`) | Signaal werpen (eind- of tussen-event) is een omroep, met drie soorten ontvangers: een wachtend vangend tussen-event, een boundary event op een taak waar een token staat (onderbrekend: de taak stopt, een open gat vervalt, een aangeroepen kind breekt af, het token gaat langs het boundary event; niet-onderbrekend: er komt een token bij), en een proces met een signal-start. Het filter wordt per ontvanger op de lading geëvalueerd; een onleesbaar filter telt als "past niet", met de reden. Een ontvanger die al loopt (tussen- en boundary event) ziet daarnaast zichzelf als `ontvanger` (`zaakUrl`, `variabelen`): `url == ontvanger.zaakUrl` = alleen voor deze zaak (Mark 16-11). In een run met één zaak past dat altijd; het filter is er voor het model en de engine. Bij een signal-start is `ontvanger` een leesfout. Met `eenPerZaak` start een proces niet als er voor de zaak al een instantie loopt; dat staat als weigering in het log (`regel.signaal = {naam, ontvangers, geweigerd}`). Een signal-einde rondt eerst het eigen pad af en roept dan om. |
 | M1 (voorbeeld) | `src/simulatie/fixtures/gpk-vier-processen.bpmn-model.json`, met een script afgeleid van de fixture van Fundament: Aanvraag oppakken eindigt met signaal `zaak-in-werkbak`; Kies zaak om te behandelen start daarop (filter `aanvraagtype.code == 'GPK'`, één per zaak), met de user task voor kandidaatgroep `behandelaars-gpk`, een onderbrekend boundary event *Medewerker aan zaak gekoppeld* → *Al toegewezen*, en signal-einde `medewerker-gekoppeld`; Zaak behandelen start daarop en roept *Beoordeel aanvraag* aan (call activity, uitvoer `uitkomst`). Het e-dienstmodel van Fundament krijgt de vier process-id's via `metProcessen` (procesmodel.js). De fixture van Fundament (drie processen) blijft: de BPMN-export wordt ertegen getoetst. |
 | Scherm | Het GPK-voorbeeld laadt de vier processen; het log toont een signaal met zijn ontvangers en weigeringen; het gat noemt de kandidaatgroep; de sprongmelding noemt het signaal. |
 
@@ -976,11 +976,214 @@ het model. Het model verandert nooit; het stijlblok leeft in één browsertab.
 | 8 (ZGW-acties, de zaak) | **Zaak hoort in het cm.** Geen spiegel van Open Zaak: de zaak is een cm-object met status, rollen (aanvrager, behandelaar na het claimen) en documenten; zaak aanmaken, rol koppelen, document koppelen en zaakstatus zetten worden `maak`, `verbind` en overgangen in de store. De stub-url blijft als verwijzing naar het externe register. |
 | 14 (de vorm van een object) | **De cm-vorm, met de state erbij.** Een object in de store is de entiteit met haar gegevenselementen zoals het cm ze kent, plus de toestand (state) van het object. De platte vorm van het objecttype wordt een afgeleide (via de traceregels), voor de beslistabel en de formulieren. |
 
+**State (Mark 14-11, toelichting):** de state is simpelweg de verzameling velden met een
+waarde: de totale objecttoestand als M0. Verplichte velden hebben altijd een waarde,
+optionele mogen leeg zijn. Een element zonder velden: dan is het bestaan de state. Een
+GE (compositie) en een relatie vanuit de entiteit zijn ook state; een relatie mag
+optioneel zijn, maar als ze er is moet het doel bekend zijn, en de verplichte velden op
+de relatie. Geen toestandsmachine. Andere talen kunnen het anders doen; we beginnen bij
+het cm.
+
+**POC (14-11), vóór het model van Zaak en Beslissing klaar is:** de GPK-aanvraag in de
+cm-vorm in het objectenpaneel (`simulatie/cmVorm.js`). De store blijft plat; de cm-vorm
+is de omkering van de traceregels van het objecttype-artefact (modelpad → plek in de
+platte vorm), met de structuur uit `v3Graaf`. Velden die niet in het objecttype staan
+zijn *onbekend*; relaties die de e-dienst niet inbedt (GpkAanvraagMedischAdvies) staan
+erbij als niet in het objecttype. De toets: verplicht veld zonder waarde, verplichte
+relatie die ontbreekt, relatie zonder bekend doel; de GE's van een Partij zijn
+alternatieven (verplicht telt alleen als het GE er is). Wat op het object staat maar
+nergens in het cm (beoordeling, behandelaar) staat apart als *buiten het cm*. Volgende
+stap: de store zelf in de cm-vorm, met de platte vorm als afgeleide, zodra Zaak en
+Beslissing in het cm staan.
+
+**Versies (14-11, Mark: "zo volgt het wat in een bitemporeel Omnium-register zou
+gebeuren"):** elke stap die een object raakt is een versie, zoals een registratie met
+wijzigingen. De store bewaart geen kopie per stap: de versie is het log tot en met die
+stap, opnieuw afgespeeld. In het objectenpaneel: het versienummer, de velden die in de
+getoonde versie veranderden (gemarkeerd), en een oude versie bekijken zonder de run terug
+te zetten. Buiten beschouwing (Mark): data-hubs, correctie en ongedaanmaking.
+
+### 11.8 Idee (Mark 15-11): de objecten in het procesdiagram, via een data-element (voorstel)
+
+Mark wil de objecten later ook in het BPMN-diagram zien, als hij de gegevens daar tekent. In
+BPMN is dat een data object of data store; liever wil hij daar een element uit een taal die
+gegevens draagt: een cm-entiteit, een UML-klasse, een MIM-objecttype (OAS liever niet), maar
+geen activiteit of ander gedragselement.
+
+Voorstel:
+
+1. **Het data object blijft het BPMN-anker en krijgt een type** dat naar dat element wijst: een
+   kruisverband tussen talen (M2 → M2, koppelingen-matrix), geen vervanging. Zo blijft de
+   BPMN-export geldig (`dataObjectReference` met `itemSubjectRef`) en weet de simulatie welk
+   object erbij hoort.
+2. **Welke elementen mogen:** alles wat gegevens draagt. Dat is een eigenschap op M3, geen
+   lijst per profiel: een `aard` "gegevens" (naast begin, eind, baan) voor elementtypen met
+   velden. Profielen zetten die aard op entiteit, klasse, objecttype; de keuzelijst bij het data
+   object leest de aard.
+3. **Weergave:** het data object tekent naar keuze als zichzelf (het BPMN-symbool) of als het
+   element waarnaar het wijst (een compacte doos met de velden), via de ene tekenaar.
+4. **In de simulatie:** op het data object de state van het object (velden met waarde, de
+   accenten van de laatste stap, het versienummer). De data-associaties (taak → data object)
+   zeggen welke taak welk object schrijft; de simulatie kan toetsen dat een taak die een object
+   wijzigt ook een associatie heeft, en omgekeerd.
+
+**Gebouwd (15-11), stap 1 en 2:** de M3-aard "gegevens" (canoniek, puur-UML, MIM, ERD); op data-object
+en data store het type (bestaande `element-verwijzing` met `regel.aard`), de rol (invoer/uitvoer, pijltje) en
+de toestand (onder de naam); op de data-associatie de richting "lezen en schrijven" (Mark: bestaat in BPMN
+als twee associaties). BPMN zelf: `dataObject` + `dataObjectReference`, `itemSubjectRef`, `isCollection`,
+`dataState`; `dataInputAssociation` = lezen, `dataOutputAssociation` = schrijven; Data Input / Data Output
+zijn de parameters van het proces (ioSpecification). Nog te doen: stap 4 en de XML-export/-import
+(TRANSFORMATIES).
+
+**Gebouwd (15-11), stap 3:** het data-object in de tekening van de simulatie toont het object van de run
+(type = naam van het type of van een subtype), met versie, geel bij een wijziging in de laatste stap, rood
+gestippeld als de toestand niet klopt met de modeltoestand, en een klik toont het object onder het diagram
+(`simulatie/dataObjecten.js`). Wat opviel: in GPK 4 blijft de status van de aanvraag de hele run *ingediend*;
+de status leeft nu op de Zaak (extern), niet op het object. Dat hoort bij het Zaak-model van Mark.
+Nog open in stap 4: de associaties toetsen (schrijft een taak een object zonder lijn met schrijven, en
+omgekeerd), het data-object met rol invoer als startobject (type van het scenario-object), en het object in de
+vorm van de cm-entiteit met de GE's erin (Mark 15-11: "die vorm kan nuttig zijn"), met waarden in plaats van
+typen.
+
+**Gebouwd (16-11), stap 4a — lijnen en objecten:** de run toetst de data-associaties (`simulatie/dataLijnen.js`,
+`toetsLijnen`): *leest wat er nog niet is* (de taak loopt en er is geen object van het type), *schrijft niet* (een
+schrijvende lijn, maar de taak raakte geen object van dat type) en *schrijft zonder lijn* (de taak schreef een object,
+op zijn diagram staat een data-object van dat type, zonder schrijvende lijn). Een externe actie (zaak aanmaken, rol,
+status) telt als schrijven van de zaak. In de tekening een rode stippellijn over de lijn en een rood uitroepteken op de
+taak, met de reden als tooltip; onder het diagram de lijst voor dat diagram. Wat GPK 4 laat zien: *Aanvraag
+beoordelen* en *Stel beschikking op* schrijven de aanvraag (de simulatie zet de formuliervelden van een user task
+op het object van de afhandeling), terwijl het model daar alleen een lezende lijn of een Beschikking heeft. Dat is
+de vraag waar het formulierresultaat landt: op de aanvraag, de zaak of een eigen object (Beoordeling, Beschikking);
+hoort bij het Zaak/Beslissing-model van Mark.
+
+**Gebouwd (16-11), stap 4b — het startobject:** onder het scenario staat of het type van het startobject past bij
+het invoer-data-object (rol invoer, met een type) van het startproces, ook als subtype (`toetsStartobject`). Staat
+het type niet in het project, dan is er niets te toetsen.
+
+**Gebouwd (16-11), stap 4c — de kaart:** naast *cm-vorm* en *JSON* een derde weergave *kaart*: de entiteit als vak
+(«entiteit», naam) met de GE's als vakken erin, zoals de ENT in het cm-diagram waarin het GE in de ENT zit, maar
+met de waarden van het object. Relaties als regel met een pijl, het doel als vak eronder; overerving als dunne
+kop *uit Aanvraag*. Een lichte kaart in beide thema's. Daarmee is stap 4 klaar; de kaart naast het data-object in
+de tekening (in plaats van onder het diagram) is een mogelijke vervolgstap.
+
+**Tracering (Mark 15-11, gebouwd):** het type ís de tracering; een losse dependency zou hetzelfde feit
+dubbel bewaren. Daarom een **afgeleide koppeling** «traceert naar» (M3 `koppelsoort` op de eigenschap), als
+lijn op het diagram en gevolgd door *Gerelateerde elementen toevoegen* (dat nu ook kruisverbanden naar een andere
+taal volgt). Niet automatisch op het diagram. Voor grote objecten (de gpk-aanvraag) een subdiagram: dat kan al
+met de vaste doorklik *verwijst naar*; zonder eigen doorklik opent het data-object het cm-diagram waarop zijn
+type staat (gebouwd). Gerelateerde elementen loopt ook in de andere taal verder (gebouwd).
+
+**Open (Mark 15-11): Ontvankelijkheid toetsen per aanvraagtype.** Verschillen alleen de regels, dan een
+beslistaak met een beslistabel per type (`decisionRef` als expressie); verschillen ook de stappen, dan een call
+activity met een subproces per type (`calledElement` als expressie). De inhoud is aan FUNSIM; wij zorgen dat
+Studio en simulatie een wisselend doel per type volgen.
+
+Dit overlapt met §11.2 (objecten als objectdiagram): het procesdiagram zelf wordt de plek waar
+je de objecten ziet. Volgorde: na de store in de cm-vorm (§11.7).
+
 Stap 2, in volgorde: main binnenhalen met Beslissing en beschikking (vraag 12);
 Zaak in het cm en in de simulatie; de store naar de cm-vorm met state; objecten als
 objectdiagram (§11.2); een run als sequence diagram en daarna naspelen en
 vergelijken (§11.3). Ernaast, via TRANSFORMATIES: de export van signaalnaam, filter
 en kandidaatgroep.
+
+## 12. Een simulatie als model: het M2 `simulatie` (Mark 16-11, stap 1 en 2 gebouwd)
+
+**Aanleiding.** Een scenario stond alleen in het tekstvak van de tab of was ingebakken (GPK, Waterstede).
+Mark: maak er een model van, en verhef het tot profiel; dan past het gratis in het project en is het te
+tekenen. De abstractie die daarbij hoort: een *simuleerbaar dynamisch modelonderdeel*. Nu is dat alleen een
+BPMN-proces, maar activity- en sequencediagrammen komen erbij.
+
+### 12.1 Het M2
+
+| Element | Eigenschappen | Verwijst naar |
+|---|---|---|
+| **Simulatie** | naam | *heeft* 1..* subjecten en 1..* scenario's |
+| **Simulatiesubject** | — | een project-element: nu een BPMN-diagram (`verwijstNaar`); later een activity- of sequencediagram, een use case-realisatie |
+| **Scenario** | beschrijving, vulwijze (standaard en per soort gat), toevalsgetal, startvariabelen | *start bij* een startevent (aard `begin`); *start met* een Instantie |
+| **Instantie** | json, sleutel | *instantie van* een element met aard `gegevens` |
+| **Stub** | volgnummer (bezoek), vulwijze, json | *bij* een taak of gateway; *waarde* → een Instantie (in plaats van de eigen json) |
+| **Verwachting** | einde of gat, via, verwachte waarden, reden | het element waar de run stopt |
+
+Begrippen:
+
+- **Vulwijze:** hoe een gat gevuld wordt: met de hand, willekeurig, of uit het scenario (de stubs). Een
+  standaard, per soort gat, en per gat (een stub met een eigen vulwijze en zonder waarde).
+- **Toevalsgetal** (in het json-scenario `zaadje`): het startgetal van de toevalsgenerator, zodat
+  "willekeurig" herhaalbaar is. Het zijn niet de startgegevens.
+- **Volgnummer:** een taak kan in één run vaker langskomen; de eerste stub geldt voor het eerste bezoek.
+- **Reden:** uitleg bij de verwachting, niet getoetst.
+
+**Niveaus.** Het profiel is M2. Een simulatie met haar scenario's is een M1-model. Een Instantie beschrijft
+M0-gegevens (de serialisatie van een instantie van een M1-type) binnen dat M1-model, zoals het object in het
+object-profiel dat al deed. De run zelf (het log) is M0 van de simulatie en wordt niet bewaard.
+
+### 12.2 M3: de aard `instantie`
+
+`ElementType.aard` kende `gegevens` voor typen die data dragen (§11.8). Erbij komt `instantie`: het
+elementtype draagt de gegevens van één instantie van zo'n type. Twee typen hebben hem: de Instantie in dit
+profiel en het object in het object-profiel. De aard staat op het elementtype, niet op het profiel, en is één
+waarde; komt er een type dat beide is, dan wordt het een lijst.
+
+### 12.3 Serialisatie
+
+Nu de geneste json die de interpreter al las (de vorm die beslistabellen en formulieren lezen). Json blijft ook
+de terugval als instanties later getekend worden (object-profiel, in een map per scenario). Formele en
+materiële tijd blijven nu buiten beschouwing; het log van de simulatie heeft al de vorm van registratie plus
+wijziging, dus een formaat dicht bij de replay-bestanden sluit daar later op aan.
+
+### 12.4 Gebouwd (stap 1 en 2)
+
+- **Profiel** `diagramprofielen/simulatie/` (descriptor, vormen), activiteit `simulatiemodelActivity.jsx`
+  (profiel `simulatiemodel05`, verborgen preview), render-dienst en MCP (`profielen.json`) bijgewerkt.
+- **Omzetting** `simulatie/scenarioModel.js` (puur): `scenarioUitModel` (model → json-scenario),
+  `scenarioNaarModel` (json-scenario → wijziging op het model; een bestaand scenario met dezelfde naam wordt
+  bijgewerkt), `simulatiesIn`, `toetsVerwachting`. De interpreter is niet gewijzigd.
+- **Activiteit Simulatie:** *Bewaar in het project*, de groep *Uit het project* in de keuzelijst, en de toets
+  op de verwachting zodra de run stilstaat.
+
+- **Subjecten** (16-11): een scenario uit het project draait op de subjecten van zijn simulatie
+  (`subjectenVan`, `m1Voor` in `simulatieRun.js`); zonder subjecten op alle processen.
+- **Testset** (16-11): *Alle scenario's toetsen* draait elk scenario van het project en toetst de afloop aan
+  zijn verwachting (`draaiTestset`).
+- **Cm-vorm zonder e-dienstmodel** (16-11): de structuur rechtstreeks uit het cm van het project, elk veld op
+  zijn veldnaam (`maakCmBeeldDirect`). Daarmee heeft een project zonder e-dienstmodel (het demo-project) ook
+  de boom en de kaart.
+- **De kaart in de tekening** (16-11, §11.8): de kaart van het object hangt naast het aangeklikte data-object.
+
+### 12.6 Het object als objectdiagram (Mark 16-11, gebouwd)
+
+De kaart van 15-11 was een eigen vorm, met `veld: waarde`. Dat klopt niet met UML: `:` wijst naar het type,
+`=` geeft de waarde (een slot; in een klasse de standaardwaarde). EA laat in de *run state* van een object
+ook andere operatoren toe (`attr1 > 10`): het object is dan geen foto van één instantie maar een eis aan de
+toestand. Dat is hier alleen bruikbaar bij de Verwachting van een scenario, die nu alleen `=` kent (open).
+
+In de tekening is een object daarom een klein objectdiagram in de vormen van het cm
+(`simulatie/objectVorm.js`):
+
+| In het cm | In de objectweergave |
+|---|---|
+| entiteit met ingebedde GE's ("neem op in Entiteit") | het hoofdobject «entiteit», kop `naam : Type`; de enkelvoudige GE's genest met `veld = waarde`; ouder en subtype samen |
+| meervoudig GE | per voorkomen een los object «gegevenselement», compositielijn naar het hoofdobject |
+| relatie met eigen velden | per voorkomen een los object «relatie», lijn naar het hoofdobject, pijl naar het doel |
+| het doel van een relatie | een eigen object «entiteit», met zijn GE's genest |
+| referentielijst binnen een GE | een waarde op het veld: `type = GPK (Gehandicaptenparkeerkaart)` |
+| kardinaliteit, typen, materieel | niet getoond (materieel kan later tot waarden leiden: aanvang en einde) |
+
+Lege velden staan er nooit in. Meervoudig blijft los omdat het als object niet te nesten is: als klasse wel,
+als object niet. Getekend in de simulatie zelf, in de stijl van het canvas; de echte weg (de tekenaar van het
+canvas, als instanties in een objectdiagram) valt samen met "instanties tekenen" (§12.5 punt 2).
+
+### 12.5 Open
+
+1. De koppeling taak → beslistabel van naam naar een verwijzing (uuid), zoals bij de DMN-export.
+2. Het scenario laten wijzen naar een getekend object (aard `instantie`) in een andere taal; instanties in een
+   map per scenario.
+3. Een subject dat geen diagram is (use case-realisatie), en een lezer per taal voor activity en sequence.
+4. De Waterstede-scenario's uit de ingebakken lijst naar het demo-project (wacht op een release met het profiel).
+5. Zonder e-dienstmodel: hoe een relatie in het object is ingebed (nu onbekend).
+6. Operatoren in de Verwachting (`leges > 100`), naar de run state van EA.
+7. Afgeleide velden (`/weergavenaam`) in de objectweergave: de simulatie rekent ze nog niet uit.
 
 ## Referenties
 

@@ -13,6 +13,14 @@
  * toegestane waarden uit het metamodel — geen handmatige FEEL-typefouten.
  *
  * Controlled component: geef `table` + `onChange(nieuweTabel)` mee.
+ *
+ * In het project (BeslistabelEditor, 16-11) is de naam van de beslissing leidend: `toonNaam={false}`
+ * verbergt het naamveld. De knop "→ afgeleid veld" staat er alleen met `onPromoveerAdhoc`.
+ *
+ * `invoerUitDiagram` (16-11): de invoerkolommen volgen uit het DRD (invoerUitDrd.js). Een kolom
+ * met `bron` toont haar bron en is hier niet te binden; "+ input" vervalt. Een kolom zonder bron
+ * (van vóór deze regel) of met een verdwenen bron is weg te halen via `onVerwijderKolom`.
+ * `extraMeldingen` komen bij de eigen validatie.
  */
 import { useState } from "react";
 import { FIELDREF_MIME } from "../modelpicker";
@@ -56,7 +64,7 @@ function KolomMeta({ clause }) {
   );
 }
 
-export default function DmnTableEditor({ table, onChange, onRequestBind, onPromoveerAdhoc, doelTypenaam }) {
+export default function DmnTableEditor({ table, onChange, onRequestBind, onPromoveerAdhoc, doelTypenaam, toonNaam = true, invoerUitDiagram = false, onVerwijderKolom, extraMeldingen = [] }) {
   const [dropClause, setDropClause] = useState(null);
 
   const onHeaderDrop = (kant, clauseId) => (e) => {
@@ -67,9 +75,41 @@ export default function DmnTableEditor({ table, onChange, onRequestBind, onPromo
     onChange(kant === "input" ? bindInput(table, clauseId, ref) : bindOutput(table, clauseId, ref));
   };
 
-  const meldingen = valideerTabel(table);
+  const meldingen = [...extraMeldingen, ...valideerTabel(table, { invoer: !invoerUitDiagram })];
+
+  // Kolom uit het diagram: de bron (invoergegeven of beslissing) met daaronder het veld.
+  const renderBronHeader = (clause) => (
+    <th key={clause.id} className="dmn-th-input" data-testid={`dmn-kolom-${clause.bron.soort}`}>
+      <div className="dmn-th-inner">
+        <span className={"dmn-th-label dmn-th-veld" + (clause.bronWeg ? " dmn-th-unbound" : "")}>{clause.naam}</span>
+        <span className="dmn-th-meta">
+          <span className="dmn-chip">{clause.bron.soort === "beslissing" ? "beslissing" : "invoergegeven"}</span>
+          <KolomMeta clause={clause} />
+        </span>
+        <span className="dmn-th-actions">
+          {clause.bronWeg ? (
+            <span className="dmn-th-unbound">niet meer in het diagram</span>
+          ) : clause.bron.soort === "beslissing" ? (
+            <span className="dmn-th-bron">resultaat van de beslissing</span>
+          ) : clause.fieldRef ? (
+            <span className="dmn-th-bron">{clause.fieldRef.veldpad}</span>
+          ) : clause.veldNaam ? (
+            <span className="dmn-th-bron">{clause.veldNaam}</span>
+          ) : (
+            <span className="dmn-th-unbound">nog geen veld</span>
+          )}
+          {clause.bronWeg && onVerwijderKolom && (
+            <button type="button" className="dmn-link dmn-link-danger" title="Kolom weghalen" onClick={() => onVerwijderKolom(clause.id, "input")}>
+              ✕
+            </button>
+          )}
+        </span>
+      </div>
+    </th>
+  );
 
   const renderHeader = (clause, kant, index) => {
+    if (kant === "input" && clause.bron) return renderBronHeader(clause);
     const gebonden = Boolean(clause.fieldRef);
     return (
       <th
@@ -109,7 +149,12 @@ export default function DmnTableEditor({ table, onChange, onRequestBind, onPromo
                 ad-hoc
               </button>
             )}
-            {kant === "output" && clause.adhoc && (
+            {onVerwijderKolom && (kant === "output" ? table.outputs.length > 1 : invoerUitDiagram) && (
+              <button type="button" className="dmn-link dmn-link-danger" title="Kolom weghalen" onClick={() => onVerwijderKolom(clause.id, kant)}>
+                ✕
+              </button>
+            )}
+            {kant === "output" && clause.adhoc && onPromoveerAdhoc && (
               <button
                 type="button"
                 className="dmn-link"
@@ -160,11 +205,13 @@ export default function DmnTableEditor({ table, onChange, onRequestBind, onPromo
   return (
     <div className="dmn-root">
       <div className="dmn-toolbar">
-        <input
-          className="dmn-naam"
-          value={table.naam}
-          onChange={(e) => onChange({ ...table, naam: e.target.value })}
-        />
+        {toonNaam && (
+          <input
+            className="dmn-naam"
+            value={table.naam}
+            onChange={(e) => onChange({ ...table, naam: e.target.value })}
+          />
+        )}
         <select
           className="dmn-hit"
           value={table.hitPolicy}
@@ -178,9 +225,11 @@ export default function DmnTableEditor({ table, onChange, onRequestBind, onPromo
           ))}
         </select>
         <span style={{ flex: 1 }} />
-        <button type="button" className="dmn-btn" onClick={() => onChange(voegInputToe(table))}>
-          + input
-        </button>
+        {!invoerUitDiagram && (
+          <button type="button" className="dmn-btn" onClick={() => onChange(voegInputToe(table))}>
+            + input
+          </button>
+        )}
         <button type="button" className="dmn-btn" onClick={() => onChange(voegOutputToe(table))}>
           + output
         </button>
@@ -190,7 +239,11 @@ export default function DmnTableEditor({ table, onChange, onRequestBind, onPromo
       </div>
 
       <div className="dmn-hint">
-        Sleep een veld vanuit het canoniek model op een kolomkop, of klik <b>bind…</b>.
+        {invoerUitDiagram ? (
+          <>De invoerkolommen volgen uit de pijlen in het diagram. Uitvoer: sleep een veld op de kolomkop, klik <b>bind…</b> of kies <b>ad-hoc</b>.</>
+        ) : (
+          <>Sleep een veld vanuit het canoniek model op een kolomkop, of klik <b>bind…</b>.</>
+        )}
       </div>
 
       <div className="dmn-table-wrap">
@@ -200,7 +253,7 @@ export default function DmnTableEditor({ table, onChange, onRequestBind, onPromo
               <th className="dmn-corner" rowSpan={2}>
                 #
               </th>
-              <th className="dmn-th-input" colSpan={table.inputs.length}>
+              <th className="dmn-th-input" colSpan={Math.max(table.inputs.length, 1)}>
                 Inputs (when)
               </th>
               <th className="dmn-th-output" colSpan={table.outputs.length}>
@@ -210,6 +263,7 @@ export default function DmnTableEditor({ table, onChange, onRequestBind, onPromo
             </tr>
             <tr>
               {table.inputs.map((c, i) => renderHeader(c, "input", i))}
+              {table.inputs.length === 0 && <th className="dmn-th-input"><span className="dmn-th-unbound">geen invoer: teken een pijl naar deze beslissing</span></th>}
               {table.outputs.map((c, i) => renderHeader(c, "output", i))}
             </tr>
           </thead>
@@ -218,6 +272,7 @@ export default function DmnTableEditor({ table, onChange, onRequestBind, onPromo
               <tr key={rule.id}>
                 <td className="dmn-rownum">{idx + 1}</td>
                 {table.inputs.map((c) => renderCel(rule, c, "input"))}
+                {table.inputs.length === 0 && <td />}
                 {table.outputs.map((c) => renderCel(rule, c, "output"))}
                 <td className="dmn-rownum">
                   <button

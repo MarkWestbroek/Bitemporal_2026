@@ -156,9 +156,10 @@ export function zetCel(table, ruleId, clauseId, kant, waarde) {
  * expliciet ad-hoc zijn. Dit dwingt de regel "data bestaat niet buiten het
  * canoniek model" af. Retourneert een lijst meldingen (leeg = geldig).
  */
-export function valideerTabel(table) {
+export function valideerTabel(table, { invoer = true } = {}) {
   const meldingen = [];
-  table.inputs.forEach((c, i) => {
+  // invoer: false → de invoerkolommen volgen uit het DRD en worden daar beoordeeld (invoerUitDrd.js).
+  if (invoer) table.inputs.forEach((c, i) => {
     if (!c.fieldRef) meldingen.push({ niveau: "fout", tekst: `Input-kolom ${i + 1} is niet gebonden aan een veld.` });
   });
   table.outputs.forEach((c, i) => {

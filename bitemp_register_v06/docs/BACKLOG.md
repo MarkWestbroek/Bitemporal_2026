@@ -2038,7 +2038,9 @@ referentielijstinstantie (niet `id`: dat is op GE/relatie al een edge-id).
 - Identiteit binnen de tool (zandbakken, experimenten, voorstellen naast elkaar; delta, merge);
   besluit Mark 31-10. Artefacten verwijzen **niet** naar de uuid, maar op naampad.
 - Bedacht bij een V3-export uit de Studio (`uuids.js`, `vulUuids`), nooit bij een import;
-  daarna stabiel. De delta matcht eerst op uuid (een hernoeming wordt "gewijzigd · naam"),
+  daarna stabiel. **Sinds projectformaat 4 (15-11)** vult de Studio ze zelf aan, na het openen en na
+  elke eigen wijziging, afgeleid (uuid v5; `studio/uuidAanvulling.js`); voor bestaande projecten op
+  een server: `scripts/projecten-uuids-aanvullen.mjs`. De delta matcht eerst op uuid (een hernoeming wordt "gewijzigd · naam"),
   dan op het uit de namen afgeleide id.
 - ✅ **BACKEND (31-10):** `UUID string json:"uuid,omitempty"` op V3Entiteit, V3Gegevenselement,
   V3Relatie, V3Veld, V3Enum, V3Datatype en V3ReferentielijstInstantie (`model/v3_format.go`); de
@@ -2115,3 +2117,34 @@ Open:
 - `zetVariabelen` en de berichtnaam naar CEL, met de aanroep van de GZAC-bean in de regelset (`bpmnGzacRegels.js`).
 - FEEL → CEL bij de DMN-import. (JUEL → CEL bij de BPMN-import en de knop Naar CEL: gedaan 13-11.)
 - Fase 3: ketens met een andere partij (kopie, Berichttype en Procescontract), de semi-permanente store.
+
+## 42. Referentielijst-instanties: richting van de items-relatie, binding en domein (2026-11-07)
+
+Bij het indelen in domeinen bleek `register` aan `np-loc` te hangen via `AdellijkeTitelsTitel`
+(CODEGEN §12). Oorzaak: de items-relatie is een kind van `Referentielijst` (sleutel
+`referentielijst_id + rel_id`) en krijgt diens domein, zodat de pijl omlaag wijst;
+`VoegOnderliggendGEToe` compenseert dat maar vuurt niet (de codegen leest `V3Relatie.Domein` niet).
+Daarnaast bestaat de referentielijst-instantie alleen op M1: geen systeemnaam op de tabel, geen
+seed, geen afgedwongen binding (D5/R4). **Besluit Mark 07-11:** richting omdraaien (item → lijst,
+REL in het domein van het item), instantie echt maken (seed via de registratieflow, systeemnaam ↔
+id, 422 bij verkeerde `referentielijst_id`, `domein` in V3), meerdere lijsten per item-type als
+meerdere RELs. Plan met zeven stappen:
+`plans/2026-11-07 Referentielijst-instanties — richting, binding en domein (plan).md`. Na de demo
+van 09-11, vóór de rebuild uit het Studio-project (stap 1 raakt de Studio).
+
+## 43. Kolomnaam van datumvelden wijkt af van andere velden (2026-11-18)
+
+De codegen geeft een veld van type `Date` een expliciete bun-tag met de veldnaam zoals hij in JSON
+staat (`cmd/codegen/conventions.go`, `bun:"<naam>,type:date"`). Andere velden hebben geen tag en
+krijgen van bun de snake_case-naam. Een veld `uitgebrachtOp` heet als datum dus `"uitgebrachtOp"`
+(met hoofdletter, altijd tussen aanhalingstekens in SQL) en als tekst of tijdstip
+`uitgebracht_op`. Gevonden op cg-test door FUNDAMENT: toen zulke velden van tekst naar datum
+gingen, kwam er een tweede kolom naast de oude te staan.
+
+Het werkt wel: de API leest en schrijft de datumkolom. De gevolgen zijn een inconsistente
+naamgeving en een vervallen tekstkolom na een typewijziging.
+
+**Besluit Mark 18-11: nu laten staan.** Rechtzetten betekent in elk bestaand register kolommen
+hernoemen (alle datumvelden met een naam van meer dan één woord), in één stap met de codegen.
+Open: of en wanneer; een nieuw register zou het zonder migratie goed kunnen krijgen. Zie ook
+`docs/KOLOMTYPEN.md`.

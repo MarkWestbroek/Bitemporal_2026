@@ -1,11 +1,11 @@
 {
   "name": "render-svc",
-  "version": "0.4.4",
+  "version": "0.4.9",
   "private": true,
   "type": "module",
   "scripts": {
     "bouw": "node bouw.mjs",
-    "test": "node bouw.mjs && node --test server.test.mjs profielVersies.test.mjs",
+    "test": "node bouw.mjs && node --test server.test.mjs profielVersies.test.mjs samenvoegScenario.test.mjs m3Dekking.test.mjs",
     "profielversies": "node bouw.mjs && node profielVersies.mjs --bijwerken"
   },
   "devDependencies": {

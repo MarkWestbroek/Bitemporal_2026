@@ -8,6 +8,233 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
 
+### Toegevoegd
+- **Marks in Eigenschappen en op het canvas** (Mark 18-11): de sectie *Marks* toont per element en per veld welke
+  marks gelden en laat je ze zetten in een laag; *Lagen…* beheert de lagen en welke meedoen, in welke volgorde.
+  Een element met marks draagt op het canvas een teken (◆ met het aantal). Eerste soorten: zoeksleutel,
+  sorteerbaar en tekstzoeken op een veld van het canonieke model (voor de indexen van het register).
+- **Marks, de onderlaag** (plan 2026-11-18, stap 2 en 3): marks (MDA) zijn aanwijzingen op een
+  modelelement voor een transformatie, los van het model. Lagen met labels, contexten (een keuze van lagen in een
+  volgorde), effectieve marks, marksoorten per transformatie (`register.zoeksleutel`, `register.sorteerbaar`). Ze
+  staan in het werkbestand (`marks`), lopen mee in de projectsync (`marks/patchMarks`) en in het vergelijken en
+  samenvoegen van een branch.
+
+### Gewijzigd
+- **Rondleiding: scenario's uit het project** (16-11): de stap over de Labs-activiteiten wijst nu naar de
+  scenario's van het demo-project (*Scenario kiezen… → Uit het project*, map *9 Simulatie*) en naar *Alle
+  scenario's toetsen*, in plaats van naar de ingebakken keuzelijst.
+
+## [studio/v0.45.0] — 2026-11-16
+
+Samen met render 0.4.9 (api blijft 0.27.0; devloop door FUNDAMENT).
+
+### Gewijzigd
+- **Projectboom: root in plaats van "Niet ingedeeld"** (Mark 16-11): een diagram zonder map staat in de root, onder
+  de mappen, met zijn taal-icoon. Een nieuw diagram van de startpagina of via de ＋ bij "Mappen" komt daar. De
+  klassieke editors (Canoniek model IDE (v1), DMN-model, BPMN-proces, Berichtdefinities) lopen niet mee in het
+  project en staan alleen nog voor een beheerder in de boom, op de startpagina en in *Nieuw diagram*
+  (`studio/beheerZicht.js`). Het elementenvak onderaan heet "<taal> — niet op een diagram" en verdwijnt zolang
+  er geen wezen zijn. De grote knop "＋ Nieuwe map" is weg; de ＋ bij "Mappen" doet hetzelfde.
+
+### Toegevoegd
+- **DMN: de invoer van een beslistabel volgt uit het diagram** (Mark 16-11): elke pijl (information requirement)
+  naar een beslissing is een invoerkolom. Een *invoergegeven* levert één kolom; het veld kies je op het
+  invoergegeven zelf (eigenschap *gegeven (veld)*: taal → element → veld), niet meer op de kolom. Een *beslissing*
+  als bron levert haar uitvoer als kolom ("resultaat van de beslissing"), met de keuzelijst van die uitvoer.
+  *+ input* is weg uit de dialoog; een kolom van vóór deze regel gaat over op het invoergegeven met dezelfde naam
+  of hetzelfde veld en houdt haar cellen, en is anders weg te halen. Verdwijnt een pijl, dan blijft de kolom staan
+  met een melding. Het gekozen veld geeft ook een afgeleide lijn «traceert naar» het element.
+  *Tabel wissen…* in de dialoog haalt een (oude) beslistabel helemaal weg, met bevestiging; Ctrl+Z zet hem terug.
+  Een getekende lijn «traceert naar» van een invoergegeven naar een element wordt het *gegeven*: heeft het element
+  één veld, dan is dat het veld; bij meer velden blijft het veld open om te kiezen. De getekende lijn verdwijnt, de
+  lijn uit het gegeven neemt haar plaats in (ook voor lijnen die er al lagen).
+- **DMN: keten in export en simulatie** (16-11): leest een kolom het resultaat van een andere beslissing, dan gaat
+  die beslissing (en wat zij weer nodig heeft) mee in hetzelfde DMN-bestand als `requiredDecision`; de procesinvoer
+  bevat de dossierwaarden van de hele keten. De simulatie leest de uitvoer waar de kolom naar wijst.
+- **Profiel DMN DRD 1.1.0** (16-11): eigenschappen `beslistabel` (beslissing) en `gegeven` (invoergegeven).
+- **M3: datatype `veld-verwijzing`** (16-11): een eigenschap die naar één veld van een element in een andere taal
+  wijst, waarde `{profielId, elementId, veldNaam, uuid?}`; met `koppelsoort` volgt er een kruisverband uit, net als
+  bij `element-verwijzing`.
+- **DMN: de beslistabel in het project** (Mark 16-11): op een beslissing in een DMN DRD staat in Eigenschappen de
+  regel *beslistabel* met *＋ Maken…* / *✎ Bewerken…*. De dialoog toont links het canonieke model van het project en
+  rechts de tabel (dezelfde tabeleditor als in de klassieke DMN-activiteit): kolommen binden door slepen of *bind…*,
+  keuzelijsten uit het model. *Opslaan* schrijft de tabel in één keer naar `data.beslistabel` van de beslissing, zodat
+  hij meeloopt met sync, branches, de DMN-XML-export en de simulatie (`studio/BeslistabelEditor.jsx`).
+- **Simulatie: alle scenario's toetsen, en de run op de subjecten** (16-11): *Alle scenario's toetsen* draait elk
+  scenario van het project en zet erbij of de afloop klopt met de verwachting. Een scenario uit het project
+  draait alleen op de subjecten (processen) van zijn simulatie.
+- **Simulatie: cm-vorm zonder e-dienstmodel** (16-11): de boom en de kaart van een object komen dan rechtstreeks
+  uit het canonieke model van het project, elk veld op zijn veldnaam.
+- **Simulatie: het object als objectdiagram in de tekening** (Mark 16-11): een klik op een data-object zet het
+  object ernaast in de vormen van het cm: het hoofdobject «entiteit» met kop `naam : Type` en de enkelvoudige
+  gegevenselementen genest als `veld = waarde`; meervoudige gegevenselementen en relaties (met hun doel) als
+  losse objecten met lijnen. Te verslepen, meer dan één tegelijk; rechtsklik sluit het of wijst het aan in het
+  objectenpaneel.
+- **Simulatie: wat er niet is, staat er niet** (Mark 16-11): afwezige gegevenselementen en lege alternatieven
+  komen niet meer in de cm-vorm en de kaart; met *lege velden verbergen* ook de lege optionele velden niet.
+- **Simulatiemodel in een eigen map** (16-11): de diagrammen van een bewaard scenario komen in de projectboom in
+  een map met de naam van de simulatie.
+- **Gebruikers → Projecten…** (Mark 16-11): achteraf een gebruiker aan Studio-projecten toewijzen, niet alleen bij
+  het uitnodigen. Per project geen toegang / lezen / schrijven, met de eigenaar en een open `*`-rij erbij; alleen
+  de gewijzigde projecten worden geschreven. In *Van server ophalen → Toegang…* kies je de gebruiker nu uit een
+  lijst (voor beheerders), met een waarschuwing bij een naam die niet bestaat.
+- **Scenario's in het project: het profiel Simulatiemodel** (Mark 16-11): een nieuwe modeltaal `simulatie`
+  (profiel `simulatiemodel05`) met Simulatie, Simulatiesubject, Scenario, Instantie, Stub en Verwachting. In
+  de activiteit Simulatie zet *Bewaar in het project* het scenario als model in het project; de keuzelijst
+  toont die scenario's onder *Uit het project*. Staat de run stil, dan staat erbij of de afloop klopt met de
+  verwachting van het scenario (einde of gat, via, waarden). *GPK-voorbeeld laden* zet de vijf GPK-scenario’s
+  als voorbeeld in het project.
+- **M3-aard `instantie`**: voor een elementtype dat de gegevens van één instantie draagt (de Instantie in het
+  simulatiemodel, het object in het object-profiel; profiel Object 1.1.0).
+- **Rondleiding: vier stappen erbij** (Mark 16-11): *Projecten op de server* (Project → Van server ophalen,
+  parkeren, Naar server sturen, Live synchroniseren), *De AI-assistent* (rechtsklik op een map; eigen API-sleutel of
+  toegangscode), *Experimenteel: Toegangverlening en Simulatie* (en Labs) en *Iets melden* (Alt+M, F8, Mijn
+  meldingen). Wie de rondleiding al zag, vindt hem terug onder Help → Rondleiding. Daarna (16-11): de stappen wijzen op het
+  demo-project *Omnium demo — gemeente Waterstede* en op de Waterstede-scenario's in de simulatie.
+- **Simulatie: Waterstede-scenario's in de keuzelijst** (16-11, voor het demo-project): buurtfeest, jaarmarkt en
+  festival, in een eigen groep naast de GPK-scenario's. Ze draaien op het BPMN en DMN van het project zelf en
+  brengen geen GPK-beslistabel of -e-dienstmodel mee.
+- **Simulatie: het data-object toont het object van de run** (Mark 15-11): bij een data-object met een type (ook
+  via een subtype) een kenmerk met de versie, geel als het object net veranderde, rood gestippeld als de
+  toestand niet klopt met die op het model; een klik toont het object onder het diagram.
+- **GPK-voorbeeld: layout van Mark** (15-11): *GPK-voorbeeld laden* geeft nu Marks uitlijning van Zaak behandelen
+  (bogen) en data-objecten in alle processen: Aanvraag [ingediend] (invoer, type cm-Aanvraag) bij
+  Ontvankelijkheid toetsen en Documenten koppelen, Zaak en Zaak [Ontvangen] (uitvoer) bij de servicetaken,
+  Aanvraag bij Beoordeel aanvraag en Aanvraag beoordelen, Beschikking (uitvoer) bij opstellen en afwijzen.
+  Zaak en Beschikking nog zonder type: dat komt met het Zaak/Beslissing-model. De losse berichtenlijn van
+  Vraag aanvulling bij klant naar de pool Klantportaal (per ongeluk ontstaan) is eruit.
+- **M3 als gegevens** (plan 2026-11-15, stap 1): `diagramcore/types/m3.js` beschrijft het M3 per pakket
+  (Definitie, Stijl, Implementatie) met typen, kardinaliteit en enumeraties uit de code; controletests
+  tegen `schema.js` (`m3.test.js`) en tegen alle profielen (`render-svc/m3Dekking.test.mjs`). In `schema.js`
+  zijn de gaten beschreven die de tests vonden (o.a. `DiagramType.hooks`, `shapeSets`, `PropertyType.aard`);
+  vier hooks erbij in `handlerCatalogus.js`.
+- **Signaalfilter: alleen voor deze zaak** (Mark 16-11): een vangend tussen- of boundary event dat al loopt ziet in
+  zijn filter ook zichzelf als `ontvanger` (`ontvanger.zaakUrl`, `ontvanger.variabelen`). In het GPK-voorbeeld
+  heeft het boundary event op *Kies zaak om te behandelen* `url == ontvanger.zaakUrl`; het staat nu op de rand
+  van de taak. *Kies zaak* krijgt het data-object Zaak [in werkbak] als invoer.
+- **Simulatie met de pijltjestoetsen** (Mark 16-11): → een stap, ← een regel terug.
+- **Simulatie: lijnen en objecten** (Mark 16-11, ontwerp §11.8 stap 4): de run toetst de data-associaties (leest
+  wat er nog niet is, schrijft niet, schrijft zonder lijn); rode stippellijn en uitroepteken in de tekening, met de
+  reden, en een lijst onder het diagram.
+- **Simulatie: startobject getoetst** (Mark 16-11): past het type van het startobject bij het invoer-data-object van
+  het startproces? Onder het scenario, ook voor subtypen.
+- **Simulatie: het object als kaart** (Mark 15/16-11): de entiteit met haar GE's erin en de waarden, zoals de ENT in
+  het cm-diagram; derde weergave naast cm-vorm en JSON.
+- **Simulatie: log op maat** (Mark 16-11): de log is met een greep groter of kleiner te maken en schuift mee naar de
+  nieuwste regel. *Lijnen en objecten* boven de tekening, met een rood getal op de procesknop.
+- **GPK-voorbeeld: Marks layout van 16-11** voor alle vier processen, met de doorklik naar het cm-diagram op de
+  Aanvraag-objecten.
+- **BPMN-XML: data-objecten** (16-11): de schrijver schrijft data-objecten, data stores, invoer/uitvoer van het
+  proces (ioSpecification), type (itemDefinition), toestand (dataState) en de data-lijnen; de lezer leest rol en
+  toestand terug. Met een engine-regelset alleen bij `data: true` (de GZAC-uitrol verandert niet).
+- **BPMN-import: het type terug** (16-11): de naam van het type uit de XML wordt weer gekoppeld aan het element in het
+  project (aard gegevens); niet gevonden of dubbel geeft een melding.
+- **Gerelateerde elementen: plaatsing in de vrije ruimte** (16-11): nieuwe elementen komen rechts van de start, per
+  niveau een kolom, naar beneden en niet over bestaande elementen; niet meer in een kring die onder de werkbalken viel.
+
+### Opgelost
+- **Lijnen naast het vak na vergroten en terugzetten** (Mark 16-11): na een resize met de muis hield React Flow
+  de gesleepte maat op zijn node vast. Kwam de maat daarna langs een andere weg terug (ongedaan maken, een
+  wijziging van een ander, uitlijnen), dan tekende het vak klein, maar bleven omhulling en aanhechtpunten groot
+  en eindigden de lijnen in het niets. Buiten een lopende resize beslist nu de bewaarde maat
+  (`DiagramCanvas.jsx`; e2e `65-studio-resize-terug`). E2e-verwachtingen bijgewerkt voor projectformaat 4
+  (een kopie krijgt een eigen afgeleide uuid) en canoniek-uml 1.1.0.
+
+## [studio/v0.44.0] — 2026-11-15
+
+Samen met render 0.4.8 en devloop 0.30.2 (api 0.27.0).
+
+### Toegevoegd
+- **Simulatie: het object in de cm-vorm** (POC, Mark 14-11): de GPK-aanvraag in het objectenpaneel als entiteit
+  met GE's en relaties, met de toets op de state (verplicht ingevuld, relatie met bekend doel) en wat buiten het cm
+  staat. **Versies per object**: elke stap die een object raakt is een versie; gewijzigde velden geel; oude
+  versies bekijken.
+
+- **BPMN-data-object met een type** (Mark 15-11): het type wijst naar een element in een taal die gegevens draagt
+  (M3-aard `gegevens`: cm-entiteit, UML-klasse, MIM-objecttype, ERD-entiteit); rol invoer/uitvoer (Data Input /
+  Data Output, met pijltje), toestand (dataState, onder de naam als *[ingediend]*); op de data-associatie
+  "lezen en schrijven" (pijl aan beide kanten). Profielversies: BPMN 1.2.0; canoniek, puur-UML, MIM, ERD 1.1.0.
+- **Het type is ook de tracering** (Mark 15-11): uit het type volgt een afgeleide koppeling «traceert naar»
+  (M3 `koppelsoort` op een element-verwijzing; niet los bewaard). **Gerelateerde elementen toevoegen** volgt nu ook
+  kruisverbanden naar een andere taal: zo zet je de cm-Aanvraag naast het data-object, met de lijn erbij.
+  En daar verder: vanaf de cm-Aanvraag komen ook de andere cm-entiteiten erbij. Een dubbelklik op het data-object
+  zonder eigen *verwijst naar* opent het cm-diagram waarop zijn type staat. De titel van het venster noemt de naam.
+- **Samenvoegen naar MAIN per veld** (Mark 14-11). Wijzigen de branch en MAIN verschillende velden van hetzelfde
+  element (bv. de naam in de branch, de beschrijving op MAIN), dan gaan beide mee; alleen hetzelfde veld aan
+  beide kanten is nog een conflict. Een element met twee of meer gewijzigde velden krijgt in de boom een regel
+  per veld met een eigen schuifje (naam, eigenschappen met hun label, map, en elk veld in een compartiment, zoals
+  `veld1`). Velden worden gekoppeld op hun uuid, anders op naam; een hernoemd veld zonder
+  uuid op dezelfde plek telt als hernoeming, niet als weg + nieuw. Vraagt render-svc 0.4.8 (api ongewijzigd: de
+  sleutel `…#veld` reist mee in `keuze`).
+- **Uuid's tonen (beheer)** (Mark 15-11): Studio-instellingen → Modelleren → "Uuid's tonen in de eigenschappen",
+  alleen voor een beheerder (of als de login uit staat). Dan staat de uuid van het element en van elk veld in de
+  eigenschappen, alleen-lezen en te kopiëren. `studio/uuidZichtbaar.js`; e2e-spec 64.
+- **Projectformaat 4: uuid's altijd aanwezig** (Mark 15-11). Elk modelelement en elk veld van het canonieke model
+  krijgt een uuid zodra het een naam heeft, en een ouder project bij het openen; niet meer pas bij de V3-export.
+  De uuid is afgeleid (uuid v5) uit het project en het element (een veld: element, compartiment en naam), zodat
+  twee mensen die tegelijk een oud project openen dezelfde uuid's krijgen, en een branch dezelfde als zijn MAIN.
+  Eenmaal gezet blijft hij, ook bij hernoemen. Geen undo-stap; met alleen leesrecht niet. Voor alle projecten op
+  een server in één keer: `scripts/projecten-uuids-aanvullen.mjs` (beheerder; eerst zonder `--toepassen` kijken).
+  `studio/uuidAanvulling.js`, `canoniek-uml/uuids.js` (`uuidV5`, `afgeleideUuidMaker`).
+
+### Opgelost
+- **Donker thema** (Mark 15-11): de naam onder een BPMN-data-object of -data store (en de band van een pool of
+  lane) was op het donkere canvas niet te lezen. Tekst op het canvas zelf gebruikt nu het token
+  `--diagram-canvastekst` (tekenaar `inktOpCanvas`, terugval de gewone tekstkleur). De tekening in Simulatie volgt
+  het thema (dezelfde tokens als het canvas). Raakt de tekenaar, dus ook de render-API.
+
+## [studio/v0.43.0] — 2026-11-14
+
+Samen met render 0.4.7 en devloop 0.30.1 (api 0.27.0).
+
+### Gewijzigd
+- **Samenvoegen naar MAIN: schuifje met drie standen** (voorstel Mark 14-11) in plaats van vinkje plus ↶.
+  Per regel: ↶ MAIN overnemen in de branch, – niets doen (blijft in de branch), → naar MAIN (bij een
+  conflict: MAIN overschrijven, in rood). Achter de regel staat wat de stand doet, passend bij de status
+  (nieuw: "toevoegen aan MAIN", weg: "ook uit MAIN verwijderen", …). Op een map geldt het schuifje voor
+  alles eronder; verschillen de kinderen, dan staat het op "gemengd".
+
+### Opgelost
+- **Samenvoegen naar MAIN: diagrammen onder een package stonden "buiten de map"** (gemeld door Mark 14-11 op
+  Fundament). Een plaatsing onder een element (element als ouder in de boom) volgt nu de keten tot de map;
+  de keuzeboom toont het package als ouder, zoals de projectboom. Vraagt render-svc (`/vergelijk`, `/samenvoegen`).
+- **Samenvoegen naar MAIN: diagrambundels** gingen onzichtbaar mee, ook zonder hun diagrammen. Nu staan ze in de
+  boom (groep "Diagrambundels") met een eigen schuifje, en een bundel zonder haar diagrammen wordt geweigerd.
+- **Samenvoegen naar MAIN: het type uit het profiel** (Entiteit, Gegevenselement, Package (domein), …) in plaats van
+  "element" (Mark 14-11).
+- **De automatische plaatsing van een element in de map van zijn diagram ging niet naar de server** (gemeld door
+  Mark 14-11). De projectboom toonde het element in de map, maar alleen lokaal: de sync legde de plaatsing niet vast,
+  omdat ze binnen de actie "element op diagram" (of "diagram in map") gebeurde. Anderen, de server en *Verschil met
+  MAIN* zagen het element "zonder map". Nu is het een eigen operatie; bestaande projecten herstellen bij het openen.
+- **Startnaam met het goede lidwoord:** NieuweEntiteit, NieuweEnumeratie, NieuwGegevenselement (Mark 14-11). Het
+  elementtype (M3) heeft een optioneel `lidwoord` ("de"/"het"); canoniek model, MIM, OAS, GraphQL en het
+  superprofiel (notitie, constraint, diagramverwijzing) vullen het in.
+
+## [studio/v0.42.0] — 2026-11-14
+
+Samen met render 0.4.6, api 0.27.0 en devloop 0.30.0.
+
+### Toegevoegd
+- **Samenvoegen naar MAIN: kiezen met vinkjes** (branch terugmergen, stap 2a; Mark 14-11). *Verschil met
+  MAIN…* toont het verschil als boom: map → submap → diagram of element → relatie onder haar bron. Een
+  vinkje op een ouder zet alles eronder; half gekozen staat half. Gekozen gaat naar MAIN, niet gekozen
+  blijft in de branch en komt bij de volgende vergelijking terug. Een conflict blokkeert niet meer: uit =
+  MAIN houdt de zijne, aan = de versie van de branch. Wat buiten de map ligt staat standaard uit. Een
+  keuze die een verwijzing stuk maakt (relatie zonder haar bron, …) weigert de server met een melding.
+  Per regel zet **↶** een wijziging in de branch terug naar de versie van MAIN (ook "geen kleur").
+  Vraagt api en render-svc met `keuze` op `…/samenvoegen`.
+
+## [studio/v0.41.0] — 2026-11-14
+
+Samen met render 0.4.5, api 0.26.0 en devloop 0.29.0.
+
+### Toegevoegd
+- **Samenvoegen naar MAIN** (branch terugmergen, stap 1; Mark 14-11): in *Verschil met MAIN…* van een
+  branch. Alles uit de branch gaat naar MAIN, een conflict blokkeert, en daarna haalt de branch MAIN
+  op, zodat beide gelijk zijn. Wijzigingen buiten de afgesplitste map gaan alleen na bevestiging mee.
+  Vraagt api met `POST …/samenvoegen` en render-svc met `/samenvoegen`. Kiezen per wijziging volgt
+  (plan "Branch terugmergen").
+
 ## [studio/v0.40.0] — 2026-11-14
 
 Samen met render 0.4.4 (api 0.25.0).

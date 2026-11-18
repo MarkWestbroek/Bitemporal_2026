@@ -1,0 +1,1110 @@
+{
+ "map": "/",
+ "plan": {
+  "uitleg": "Het aanvraagformulier (formulierdiagram op het canonieke model), de Evenementen-API als OAS 3.1 en als GraphQL-schema, en het indienen van een aanvraag als sequence-diagram.",
+  "diagrammen": [
+   {
+    "sleutel": "dFrm",
+    "taal": "formulierdiagram",
+    "naam": "Aanvraagformulier evenement",
+    "map": "4 Gegevens"
+   },
+   {
+    "sleutel": "dOas",
+    "taal": "oas05",
+    "naam": "Evenementen-API (OAS 3.1)",
+    "map": "5 Koppelvlakken"
+   },
+   {
+    "sleutel": "dGql",
+    "taal": "graphql05",
+    "naam": "Evenementen (GraphQL)",
+    "map": "5 Koppelvlakken"
+   },
+   {
+    "sleutel": "dSeq",
+    "taal": "sequence05",
+    "naam": "Aanvraag indienen via de API",
+    "map": "5 Koppelvlakken"
+   }
+  ],
+  "elementen": [
+   {
+    "sleutel": "fForm",
+    "type": "formulier",
+    "naam": "Aanvraag evenementenvergunning",
+    "diagram": "dFrm",
+    "eigenschappen": {
+     "doeltype": "Evenementaanvraag",
+     "status": "actief",
+     "isStandaard": true,
+     "definitieVersie": "1.0"
+    }
+   },
+   {
+    "sleutel": "fEvenement",
+    "type": "groep",
+    "naam": "Het evenement",
+    "diagram": "dFrm"
+   },
+   {
+    "sleutel": "fDatum",
+    "type": "rij",
+    "naam": "Wanneer",
+    "diagram": "dFrm"
+   },
+   {
+    "sleutel": "fBijz",
+    "type": "groep",
+    "naam": "Bijzonderheden",
+    "diagram": "dFrm"
+   },
+   {
+    "sleutel": "fWeg",
+    "type": "conditioneel",
+    "naam": "Bij een wegafsluiting",
+    "diagram": "dFrm",
+    "eigenschappen": {
+     "conditieVeld": "Evenementaanvraag.Evenementgegevens.wegafsluiting",
+     "conditieOp": "gelijk",
+     "conditieWaarde": "true"
+    }
+   },
+   {
+    "sleutel": "fLocaties",
+    "type": "lijst",
+    "naam": "Locaties",
+    "diagram": "dFrm",
+    "eigenschappen": {
+     "bron": "Evenementaanvraag.vindt plaats op",
+     "min": 1
+    }
+   },
+   {
+    "sleutel": "oApi",
+    "type": "api",
+    "naam": "Evenementen-API",
+    "diagram": "dOas",
+    "eigenschappen": {
+     "oasVersie": "3.1.0",
+     "versie": "1.0.0",
+     "beschrijving": "Evenementaanvragen indienen en volgen, en de evenementenkalender van Waterstede lezen."
+    }
+   },
+   {
+    "sleutel": "oServer",
+    "type": "server",
+    "naam": "https://api.waterstede.example/evenementen/v1",
+    "diagram": "dOas",
+    "eigenschappen": {
+     "beschrijving": "Productie (verzonnen adres)"
+    }
+   },
+   {
+    "sleutel": "oPost",
+    "type": "operatie",
+    "naam": "dienAanvraagIn",
+    "diagram": "dOas",
+    "eigenschappen": {
+     "method": "post",
+     "pad": "/aanvragen",
+     "samenvatting": "Dien een evenementaanvraag in",
+     "tag": "aanvragen"
+    }
+   },
+   {
+    "sleutel": "oGet",
+    "type": "operatie",
+    "naam": "leesAanvraag",
+    "diagram": "dOas",
+    "eigenschappen": {
+     "method": "get",
+     "pad": "/aanvragen/{id}",
+     "samenvatting": "Lees een aanvraag met zijn status",
+     "tag": "aanvragen"
+    }
+   },
+   {
+    "sleutel": "oKalender",
+    "type": "operatie",
+    "naam": "leesKalender",
+    "diagram": "dOas",
+    "eigenschappen": {
+     "method": "get",
+     "pad": "/kalender",
+     "samenvatting": "De verleende evenementen in een periode",
+     "tag": "kalender"
+    }
+   },
+   {
+    "sleutel": "oAanvraag",
+    "type": "schema",
+    "naam": "Evenementaanvraag",
+    "diagram": "dOas",
+    "eigenschappen": {
+     "beschrijving": "Een aanvraag voor een evenementenvergunning."
+    },
+    "velden": [
+     {
+      "naam": "id",
+      "type": "string (uuid)",
+      "verplicht": true
+     },
+     {
+      "naam": "aanvraagnummer",
+      "type": "string",
+      "verplicht": true
+     },
+     {
+      "naam": "naam",
+      "type": "string",
+      "verplicht": true
+     },
+     {
+      "naam": "datumVan",
+      "type": "string (date)",
+      "verplicht": true
+     },
+     {
+      "naam": "datumTot",
+      "type": "string (date)"
+     },
+     {
+      "naam": "verwachtAantalBezoekers",
+      "type": "integer",
+      "verplicht": true
+     },
+     {
+      "naam": "alcohol",
+      "type": "boolean"
+     },
+     {
+      "naam": "wegafsluiting",
+      "type": "boolean"
+     }
+    ]
+   },
+   {
+    "sleutel": "oOrg",
+    "type": "schema",
+    "naam": "Organisator",
+    "diagram": "dOas",
+    "velden": [
+     {
+      "naam": "naam",
+      "type": "string",
+      "verplicht": true
+     },
+     {
+      "naam": "kvkNummer",
+      "type": "string"
+     },
+     {
+      "naam": "email",
+      "type": "string (email)",
+      "verplicht": true
+     }
+    ]
+   },
+   {
+    "sleutel": "oLocatie",
+    "type": "schema",
+    "naam": "Evenementlocatie",
+    "diagram": "dOas",
+    "velden": [
+     {
+      "naam": "omschrijving",
+      "type": "string",
+      "verplicht": true
+     },
+     {
+      "naam": "postcode",
+      "type": "string"
+     },
+     {
+      "naam": "plaats",
+      "type": "string",
+      "verplicht": true
+     }
+    ]
+   },
+   {
+    "sleutel": "oEvenement",
+    "type": "schema",
+    "naam": "Kalenderitem",
+    "diagram": "dOas",
+    "velden": [
+     {
+      "naam": "naam",
+      "type": "string",
+      "verplicht": true
+     },
+     {
+      "naam": "datumVan",
+      "type": "string (date)",
+      "verplicht": true
+     },
+     {
+      "naam": "datumTot",
+      "type": "string (date)"
+     },
+     {
+      "naam": "plaats",
+      "type": "string"
+     }
+    ]
+   },
+   {
+    "sleutel": "oProbleem",
+    "type": "schema",
+    "naam": "Probleem",
+    "diagram": "dOas",
+    "eigenschappen": {
+     "beschrijving": "Foutantwoord volgens RFC 9457 (application/problem+json)."
+    },
+    "velden": [
+     {
+      "naam": "type",
+      "type": "string (uri)"
+     },
+     {
+      "naam": "title",
+      "type": "string"
+     },
+     {
+      "naam": "status",
+      "type": "integer"
+     },
+     {
+      "naam": "detail",
+      "type": "string"
+     }
+    ]
+   },
+   {
+    "sleutel": "oStatus",
+    "type": "enum",
+    "naam": "AanvraagStatus",
+    "diagram": "dOas",
+    "velden": [
+     {
+      "naam": "ingediend"
+     },
+     {
+      "naam": "in_behandeling"
+     },
+     {
+      "naam": "melding_bevestigd"
+     },
+     {
+      "naam": "verleend"
+     },
+     {
+      "naam": "geweigerd"
+     }
+    ]
+   },
+   {
+    "sleutel": "oRisico",
+    "type": "enum",
+    "naam": "Risicoklasse",
+    "diagram": "dOas",
+    "velden": [
+     {
+      "naam": "A"
+     },
+     {
+      "naam": "B"
+     },
+     {
+      "naam": "C"
+     }
+    ]
+   },
+   {
+    "sleutel": "qSchema",
+    "type": "schema",
+    "naam": "Evenementen",
+    "diagram": "dGql",
+    "eigenschappen": {
+     "beschrijving": "Het GraphQL-schema van het evenementenregister."
+    }
+   },
+   {
+    "sleutel": "qQuery",
+    "type": "object",
+    "naam": "Query",
+    "diagram": "dGql",
+    "velden": [
+     {
+      "naam": "aanvraag(id: ID!)",
+      "type": "Evenementaanvraag"
+     },
+     {
+      "naam": "aanvragen(status: AanvraagStatus)",
+      "type": "[Evenementaanvraag!]!"
+     },
+     {
+      "naam": "kalender(van: Date!, tot: Date!)",
+      "type": "[Evenementaanvraag!]!"
+     }
+    ]
+   },
+   {
+    "sleutel": "qMutation",
+    "type": "object",
+    "naam": "Mutation",
+    "diagram": "dGql",
+    "velden": [
+     {
+      "naam": "dienAanvraagIn(invoer: AanvraagInvoer!)",
+      "type": "Evenementaanvraag!"
+     }
+    ]
+   },
+   {
+    "sleutel": "qAanvraag",
+    "type": "object",
+    "naam": "Evenementaanvraag",
+    "diagram": "dGql",
+    "velden": [
+     {
+      "naam": "id",
+      "type": "ID!"
+     },
+     {
+      "naam": "aanvraagnummer",
+      "type": "String!"
+     },
+     {
+      "naam": "naam",
+      "type": "String!"
+     },
+     {
+      "naam": "datumVan",
+      "type": "Date!"
+     },
+     {
+      "naam": "verwachtAantalBezoekers",
+      "type": "Int!"
+     },
+     {
+      "naam": "status",
+      "type": "AanvraagStatus!"
+     },
+     {
+      "naam": "risicoklasse",
+      "type": "Risicoklasse"
+     },
+     {
+      "naam": "organisator",
+      "type": "Organisator!"
+     },
+     {
+      "naam": "locaties",
+      "type": "[Evenementlocatie!]!"
+     },
+     {
+      "naam": "vergunning",
+      "type": "Evenementenvergunning"
+     }
+    ]
+   },
+   {
+    "sleutel": "qOrg",
+    "type": "object",
+    "naam": "Organisator",
+    "diagram": "dGql",
+    "velden": [
+     {
+      "naam": "naam",
+      "type": "String!"
+     },
+     {
+      "naam": "kvkNummer",
+      "type": "String"
+     },
+     {
+      "naam": "aanvragen",
+      "type": "[Evenementaanvraag!]!"
+     }
+    ]
+   },
+   {
+    "sleutel": "qLocatie",
+    "type": "object",
+    "naam": "Evenementlocatie",
+    "diagram": "dGql",
+    "velden": [
+     {
+      "naam": "omschrijving",
+      "type": "String!"
+     },
+     {
+      "naam": "plaats",
+      "type": "String!"
+     }
+    ]
+   },
+   {
+    "sleutel": "qVergunning",
+    "type": "object",
+    "naam": "Evenementenvergunning",
+    "diagram": "dGql",
+    "velden": [
+     {
+      "naam": "vergunningnummer",
+      "type": "String!"
+     },
+     {
+      "naam": "verleendOp",
+      "type": "Date!"
+     },
+     {
+      "naam": "voorschriften",
+      "type": "[String!]!"
+     }
+    ]
+   },
+   {
+    "sleutel": "qInvoer",
+    "type": "input",
+    "naam": "AanvraagInvoer",
+    "diagram": "dGql",
+    "velden": [
+     {
+      "naam": "naam",
+      "type": "String!"
+     },
+     {
+      "naam": "datumVan",
+      "type": "Date!"
+     },
+     {
+      "naam": "verwachtAantalBezoekers",
+      "type": "Int!"
+     },
+     {
+      "naam": "alcohol",
+      "type": "Boolean"
+     },
+     {
+      "naam": "wegafsluiting",
+      "type": "Boolean"
+     }
+    ]
+   },
+   {
+    "sleutel": "qStatus",
+    "type": "enum",
+    "naam": "AanvraagStatus",
+    "diagram": "dGql",
+    "velden": [
+     {
+      "naam": "INGEDIEND"
+     },
+     {
+      "naam": "IN_BEHANDELING"
+     },
+     {
+      "naam": "MELDING_BEVESTIGD"
+     },
+     {
+      "naam": "VERLEEND"
+     },
+     {
+      "naam": "GEWEIGERD"
+     }
+    ]
+   },
+   {
+    "sleutel": "qRisico",
+    "type": "enum",
+    "naam": "Risicoklasse",
+    "diagram": "dGql",
+    "velden": [
+     {
+      "naam": "A"
+     },
+     {
+      "naam": "B"
+     },
+     {
+      "naam": "C"
+     }
+    ]
+   },
+   {
+    "sleutel": "qDate",
+    "type": "scalar",
+    "naam": "Date",
+    "diagram": "dGql"
+   },
+   {
+    "sleutel": "sOrg",
+    "type": "levenslijn",
+    "naam": "Organisator",
+    "diagram": "dSeq"
+   },
+   {
+    "sleutel": "sLoket",
+    "type": "levenslijn",
+    "naam": "Evenementenloket",
+    "diagram": "dSeq"
+   },
+   {
+    "sleutel": "sApi",
+    "type": "levenslijn",
+    "naam": "Evenementen-API",
+    "diagram": "dSeq"
+   },
+   {
+    "sleutel": "sBeslis",
+    "type": "levenslijn",
+    "naam": "Beslisservice",
+    "diagram": "dSeq"
+   },
+   {
+    "sleutel": "sRegister",
+    "type": "levenslijn",
+    "naam": "Evenementenregister",
+    "diagram": "dSeq"
+   }
+  ],
+  "connectoren": [
+   {
+    "type": "bevat",
+    "bron": "fForm",
+    "doel": "fEvenement",
+    "eigenschappen": {
+     "volgorde": 1
+    }
+   },
+   {
+    "type": "bevat",
+    "bron": "fEvenement",
+    "doel": "fDatum",
+    "eigenschappen": {
+     "volgorde": 1
+    }
+   },
+   {
+    "type": "bevat",
+    "bron": "fForm",
+    "doel": "fBijz",
+    "eigenschappen": {
+     "volgorde": 2
+    }
+   },
+   {
+    "type": "bevat",
+    "bron": "fBijz",
+    "doel": "fWeg",
+    "eigenschappen": {
+     "volgorde": 1
+    }
+   },
+   {
+    "type": "bevat",
+    "bron": "fForm",
+    "doel": "fLocaties",
+    "eigenschappen": {
+     "volgorde": 3
+    }
+   },
+   {
+    "type": "servers",
+    "bron": "oApi",
+    "doel": "oServer"
+   },
+   {
+    "type": "ref",
+    "bron": "oPost",
+    "doel": "oAanvraag",
+    "eigenschappen": {
+     "rolnaam": "requestBody / 201"
+    }
+   },
+   {
+    "type": "ref",
+    "bron": "oPost",
+    "doel": "oProbleem",
+    "eigenschappen": {
+     "rolnaam": "422"
+    }
+   },
+   {
+    "type": "ref",
+    "bron": "oGet",
+    "doel": "oAanvraag",
+    "eigenschappen": {
+     "rolnaam": "200"
+    }
+   },
+   {
+    "type": "ref",
+    "bron": "oGet",
+    "doel": "oProbleem",
+    "eigenschappen": {
+     "rolnaam": "404"
+    }
+   },
+   {
+    "type": "ref",
+    "bron": "oKalender",
+    "doel": "oEvenement",
+    "eigenschappen": {
+     "rolnaam": "200 (array)"
+    }
+   },
+   {
+    "type": "ref",
+    "bron": "oAanvraag",
+    "doel": "oOrg",
+    "eigenschappen": {
+     "rolnaam": "organisator"
+    }
+   },
+   {
+    "type": "items",
+    "bron": "oAanvraag",
+    "doel": "oLocatie",
+    "eigenschappen": {
+     "rolnaam": "locaties"
+    }
+   },
+   {
+    "type": "ref",
+    "bron": "oAanvraag",
+    "doel": "oStatus",
+    "eigenschappen": {
+     "rolnaam": "status"
+    }
+   },
+   {
+    "type": "ref",
+    "bron": "oAanvraag",
+    "doel": "oRisico",
+    "eigenschappen": {
+     "rolnaam": "risicoklasse"
+    }
+   },
+   {
+    "type": "root",
+    "bron": "qSchema",
+    "doel": "qQuery",
+    "eigenschappen": {
+     "rol": "query"
+    }
+   },
+   {
+    "type": "root",
+    "bron": "qSchema",
+    "doel": "qMutation",
+    "eigenschappen": {
+     "rol": "mutation"
+    }
+   },
+   {
+    "type": "veldtype",
+    "bron": "qQuery",
+    "doel": "qAanvraag",
+    "eigenschappen": {
+     "rolnaam": "aanvraag",
+     "typeLabel": "Evenementaanvraag"
+    }
+   },
+   {
+    "type": "veldtype",
+    "bron": "qMutation",
+    "doel": "qAanvraag",
+    "eigenschappen": {
+     "rolnaam": "dienAanvraagIn",
+     "typeLabel": "Evenementaanvraag!"
+    }
+   },
+   {
+    "type": "argumenttype",
+    "bron": "qMutation",
+    "doel": "qInvoer",
+    "eigenschappen": {
+     "rolnaam": "invoer"
+    }
+   },
+   {
+    "type": "veldtype",
+    "bron": "qAanvraag",
+    "doel": "qOrg",
+    "eigenschappen": {
+     "rolnaam": "organisator",
+     "typeLabel": "Organisator!"
+    }
+   },
+   {
+    "type": "veldtype",
+    "bron": "qAanvraag",
+    "doel": "qLocatie",
+    "eigenschappen": {
+     "rolnaam": "locaties",
+     "typeLabel": "[Evenementlocatie!]!"
+    }
+   },
+   {
+    "type": "veldtype",
+    "bron": "qAanvraag",
+    "doel": "qVergunning",
+    "eigenschappen": {
+     "rolnaam": "vergunning",
+     "typeLabel": "Evenementenvergunning"
+    }
+   },
+   {
+    "type": "veldtype",
+    "bron": "qAanvraag",
+    "doel": "qStatus",
+    "eigenschappen": {
+     "rolnaam": "status",
+     "typeLabel": "AanvraagStatus!"
+    }
+   },
+   {
+    "type": "veldtype",
+    "bron": "qAanvraag",
+    "doel": "qRisico",
+    "eigenschappen": {
+     "rolnaam": "risicoklasse",
+     "typeLabel": "Risicoklasse"
+    }
+   },
+   {
+    "type": "synchroon",
+    "bron": "sOrg",
+    "doel": "sLoket",
+    "naam": "vul het formulier in en verstuur"
+   },
+   {
+    "type": "synchroon",
+    "bron": "sLoket",
+    "doel": "sApi",
+    "naam": "POST /aanvragen"
+   },
+   {
+    "type": "synchroon",
+    "bron": "sApi",
+    "doel": "sBeslis",
+    "naam": "bepaal risicoklasse"
+   },
+   {
+    "type": "retour",
+    "bron": "sBeslis",
+    "doel": "sApi",
+    "naam": "klasse B, reguliere vergunning"
+   },
+   {
+    "type": "synchroon",
+    "bron": "sApi",
+    "doel": "sRegister",
+    "naam": "registreer de aanvraag"
+   },
+   {
+    "type": "retour",
+    "bron": "sRegister",
+    "doel": "sApi",
+    "naam": "aanvraagnummer"
+   },
+   {
+    "type": "retour",
+    "bron": "sApi",
+    "doel": "sLoket",
+    "naam": "201 Created"
+   },
+   {
+    "type": "retour",
+    "bron": "sLoket",
+    "doel": "sOrg",
+    "naam": "ontvangstbevestiging"
+   }
+  ],
+  "opstelling": [
+   {
+    "diagram": "dOas",
+    "actie": "oas-lagen"
+   }
+  ],
+  "posities": [
+   {
+    "diagram": "dFrm",
+    "element": "fForm",
+    "x": 340,
+    "y": 40
+   },
+   {
+    "diagram": "dFrm",
+    "element": "fEvenement",
+    "x": 40,
+    "y": 260
+   },
+   {
+    "diagram": "dFrm",
+    "element": "fBijz",
+    "x": 340,
+    "y": 260
+   },
+   {
+    "diagram": "dFrm",
+    "element": "fLocaties",
+    "x": 640,
+    "y": 260
+   },
+   {
+    "diagram": "dFrm",
+    "element": "fDatum",
+    "x": 40,
+    "y": 480
+   },
+   {
+    "diagram": "dFrm",
+    "element": "fWeg",
+    "x": 340,
+    "y": 480
+   },
+   {
+    "diagram": "dGql",
+    "element": "qSchema",
+    "x": 40,
+    "y": 260
+   },
+   {
+    "diagram": "dGql",
+    "element": "qQuery",
+    "x": 300,
+    "y": 120
+   },
+   {
+    "diagram": "dGql",
+    "element": "qMutation",
+    "x": 300,
+    "y": 400
+   },
+   {
+    "diagram": "dGql",
+    "element": "qAanvraag",
+    "x": 620,
+    "y": 200
+   },
+   {
+    "diagram": "dGql",
+    "element": "qOrg",
+    "x": 960,
+    "y": 40
+   },
+   {
+    "diagram": "dGql",
+    "element": "qLocatie",
+    "x": 960,
+    "y": 200
+   },
+   {
+    "diagram": "dGql",
+    "element": "qVergunning",
+    "x": 960,
+    "y": 340
+   },
+   {
+    "diagram": "dGql",
+    "element": "qStatus",
+    "x": 960,
+    "y": 500
+   },
+   {
+    "diagram": "dGql",
+    "element": "qRisico",
+    "x": 960,
+    "y": 700
+   },
+   {
+    "diagram": "dGql",
+    "element": "qInvoer",
+    "x": 300,
+    "y": 560
+   },
+   {
+    "diagram": "dGql",
+    "element": "qDate",
+    "x": 40,
+    "y": 560
+   }
+  ]
+ },
+ "na": {
+  "velden": [
+   {
+    "profiel": "formulierdiagram",
+    "element": "Het evenement",
+    "compartiment": "velden",
+    "fieldType": "veld",
+    "velden": [
+     {
+      "naam": "naam",
+      "data": {
+       "veld": "Evenementaanvraag.Evenementgegevens.naam",
+       "label": "Naam van het evenement"
+      }
+     },
+     {
+      "naam": "soort",
+      "data": {
+       "veld": "Evenementaanvraag.Evenementgegevens.soort",
+       "label": "Soort evenement"
+      }
+     },
+     {
+      "naam": "verwachtAantalBezoekers",
+      "data": {
+       "veld": "Evenementaanvraag.Evenementgegevens.verwachtAantalBezoekers",
+       "label": "Hoeveel bezoekers verwacht u?",
+       "beschrijving": "Het hoogste aantal bezoekers dat tegelijk aanwezig is."
+      }
+     }
+    ]
+   },
+   {
+    "profiel": "formulierdiagram",
+    "element": "Wanneer",
+    "compartiment": "velden",
+    "fieldType": "veld",
+    "velden": [
+     {
+      "naam": "datumVan",
+      "data": {
+       "veld": "Evenementaanvraag.Evenementgegevens.datumVan",
+       "label": "Van",
+       "breedte": "50%"
+      }
+     },
+     {
+      "naam": "datumTot",
+      "data": {
+       "veld": "Evenementaanvraag.Evenementgegevens.datumTot",
+       "label": "Tot en met",
+       "breedte": "50%"
+      }
+     }
+    ]
+   },
+   {
+    "profiel": "formulierdiagram",
+    "element": "Bijzonderheden",
+    "compartiment": "velden",
+    "fieldType": "veld",
+    "velden": [
+     {
+      "naam": "alcohol",
+      "data": {
+       "veld": "Evenementaanvraag.Evenementgegevens.alcohol",
+       "label": "Wordt er alcohol geschonken?"
+      }
+     },
+     {
+      "naam": "versterktGeluid",
+      "data": {
+       "veld": "Evenementaanvraag.Evenementgegevens.versterktGeluid",
+       "label": "Is er versterkt geluid?"
+      }
+     },
+     {
+      "naam": "wegafsluiting",
+      "data": {
+       "veld": "Evenementaanvraag.Evenementgegevens.wegafsluiting",
+       "label": "Moet er een weg worden afgesloten?"
+      }
+     },
+     {
+      "naam": "commercieel",
+      "data": {
+       "veld": "Evenementaanvraag.Evenementgegevens.commercieel",
+       "label": "Is het evenement commercieel?"
+      }
+     }
+    ]
+   },
+   {
+    "profiel": "formulierdiagram",
+    "element": "Bij een wegafsluiting",
+    "compartiment": "velden",
+    "fieldType": "veld",
+    "velden": [
+     {
+      "naam": "verkeersplan",
+      "data": {
+       "veld": "verkeersplan",
+       "label": "Voeg een verkeersplan toe",
+       "beschrijving": "Welke straten, van wanneer tot wanneer, en de omleiding."
+      }
+     }
+    ]
+   },
+   {
+    "profiel": "formulierdiagram",
+    "element": "Locaties",
+    "compartiment": "velden",
+    "fieldType": "veld",
+    "velden": [
+     {
+      "naam": "omschrijving",
+      "data": {
+       "veld": "Evenementlocatie.Terrein.omschrijving",
+       "label": "Waar"
+      }
+     },
+     {
+      "naam": "plaats",
+      "data": {
+       "veld": "Evenementlocatie.Adres.plaats",
+       "label": "Plaats"
+      }
+     }
+    ]
+   },
+   {
+    "profiel": "oas05",
+    "element": "leesAanvraag",
+    "compartiment": "parameters",
+    "fieldType": "parameter",
+    "velden": [
+     {
+      "naam": "id",
+      "type": "string (uuid)",
+      "data": {
+       "in": "path",
+       "verplicht": true
+      }
+     }
+    ]
+   },
+   {
+    "profiel": "oas05",
+    "element": "leesKalender",
+    "compartiment": "parameters",
+    "fieldType": "parameter",
+    "velden": [
+     {
+      "naam": "van",
+      "type": "string (date)",
+      "data": {
+       "in": "query",
+       "verplicht": true
+      }
+     },
+     {
+      "naam": "tot",
+      "type": "string (date)",
+      "data": {
+       "in": "query"
+      }
+     }
+    ]
+   }
+  ]
+ }
+}

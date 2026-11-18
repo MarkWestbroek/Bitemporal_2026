@@ -1,0 +1,579 @@
+{
+ "map": "/",
+ "plan": {
+  "uitleg": "De behandeling van een evenementaanvraag als drie BPMN-processen: het hoofdproces, het inwinnen van veiligheidsadviezen (call activity bij risicoklasse C) en het publiceren op de kalender (start op het signaal 'vergunning verleend'). Condities in CEL; de simulatie loopt deze processen door.",
+  "diagrammen": [
+   {
+    "sleutel": "dHoofd",
+    "taal": "bpmnMotor05",
+    "naam": "Evenementaanvraag behandelen",
+    "map": "2 Proces"
+   },
+   {
+    "sleutel": "dAdvies",
+    "taal": "bpmnMotor05",
+    "naam": "Veiligheidsadviezen inwinnen",
+    "map": "2 Proces"
+   },
+   {
+    "sleutel": "dKalender",
+    "taal": "bpmnMotor05",
+    "naam": "Evenement op de kalender zetten",
+    "map": "2 Proces"
+   }
+  ],
+  "elementen": [
+   {
+    "sleutel": "hStart",
+    "type": "start-event",
+    "naam": "Aanvraag ontvangen",
+    "diagram": "dHoofd"
+   },
+   {
+    "sleutel": "hRisico",
+    "type": "taak",
+    "naam": "Bepaal risicoklasse",
+    "diagram": "dHoofd",
+    "eigenschappen": {
+     "taakSoort": "businessRule",
+     "bpmnId": "risicoklasse-bepalen",
+     "beslissing": "risicoklasse",
+     "resultaat": "risico"
+    }
+   },
+   {
+    "sleutel": "hKlasse",
+    "type": "exclusief",
+    "naam": "Risicoklasse?",
+    "diagram": "dHoofd"
+   },
+   {
+    "sleutel": "hMelding",
+    "type": "taak",
+    "naam": "Bevestig de melding",
+    "diagram": "dHoofd",
+    "eigenschappen": {
+     "taakSoort": "service",
+     "bpmnId": "melding-bevestigen",
+     "dossierstatus": "melding_bevestigd"
+    }
+   },
+   {
+    "sleutel": "hEindMelding",
+    "type": "eind-event",
+    "naam": "Melding bevestigd",
+    "diagram": "dHoofd"
+   },
+   {
+    "sleutel": "hAdvies",
+    "type": "taak",
+    "naam": "Win veiligheidsadviezen in",
+    "diagram": "dHoofd",
+    "eigenschappen": {
+     "bpmnId": "adviezen-inwinnen",
+     "aangeroepenProces": "veiligheidsadviezen-inwinnen"
+    }
+   },
+   {
+    "sleutel": "hSamen",
+    "type": "exclusief",
+    "naam": "Klaar voor beoordeling",
+    "diagram": "dHoofd"
+   },
+   {
+    "sleutel": "hLeges",
+    "type": "taak",
+    "naam": "Bereken leges",
+    "diagram": "dHoofd",
+    "eigenschappen": {
+     "taakSoort": "businessRule",
+     "bpmnId": "leges-berekenen",
+     "beslissing": "leges",
+     "resultaat": "tarief"
+    }
+   },
+   {
+    "sleutel": "hBeoordeel",
+    "type": "taak",
+    "naam": "Beoordeel de aanvraag",
+    "diagram": "dHoofd",
+    "eigenschappen": {
+     "taakSoort": "user",
+     "bpmnId": "aanvraag-beoordelen"
+    }
+   },
+   {
+    "sleutel": "hBesluit",
+    "type": "exclusief",
+    "naam": "Besluit?",
+    "diagram": "dHoofd"
+   },
+   {
+    "sleutel": "hVerleen",
+    "type": "taak",
+    "naam": "Leg de vergunning vast",
+    "diagram": "dHoofd",
+    "eigenschappen": {
+     "taakSoort": "service",
+     "bpmnId": "vergunning-vastleggen",
+     "dossierstatus": "verleend"
+    }
+   },
+   {
+    "sleutel": "hEindVerleend",
+    "type": "eind-event",
+    "naam": "Vergunning verleend",
+    "diagram": "dHoofd"
+   },
+   {
+    "sleutel": "hWeiger",
+    "type": "taak",
+    "naam": "Leg de weigering vast",
+    "diagram": "dHoofd",
+    "eigenschappen": {
+     "taakSoort": "service",
+     "bpmnId": "weigering-vastleggen",
+     "dossierstatus": "geweigerd"
+    }
+   },
+   {
+    "sleutel": "hEindGeweigerd",
+    "type": "eind-event",
+    "naam": "Vergunning geweigerd",
+    "diagram": "dHoofd"
+   },
+   {
+    "sleutel": "hDoAanvraag",
+    "type": "data-object",
+    "naam": "Aanvraag",
+    "diagram": "dHoofd"
+   },
+   {
+    "sleutel": "hPoolOrg",
+    "type": "pool",
+    "naam": "Organisator",
+    "diagram": "dHoofd"
+   },
+   {
+    "sleutel": "aStart",
+    "type": "start-event",
+    "naam": "Advies nodig",
+    "diagram": "dAdvies"
+   },
+   {
+    "sleutel": "aSplits",
+    "type": "parallel",
+    "naam": "Beide adviezen vragen",
+    "diagram": "dAdvies"
+   },
+   {
+    "sleutel": "aVraagBrw",
+    "type": "tussen-event",
+    "naam": "Adviesverzoek brandweer",
+    "diagram": "dAdvies",
+    "eigenschappen": {
+     "soort": "bericht",
+     "richting": "werpt",
+     "bericht": "adviesverzoek-brandweer"
+    }
+   },
+   {
+    "sleutel": "aOntvBrw",
+    "type": "taak",
+    "naam": "Ontvang advies brandweer",
+    "diagram": "dAdvies",
+    "eigenschappen": {
+     "taakSoort": "receive",
+     "bpmnId": "advies-brandweer"
+    }
+   },
+   {
+    "sleutel": "aVraagPol",
+    "type": "tussen-event",
+    "naam": "Adviesverzoek politie",
+    "diagram": "dAdvies",
+    "eigenschappen": {
+     "soort": "bericht",
+     "richting": "werpt",
+     "bericht": "adviesverzoek-politie"
+    }
+   },
+   {
+    "sleutel": "aOntvPol",
+    "type": "taak",
+    "naam": "Ontvang advies politie",
+    "diagram": "dAdvies",
+    "eigenschappen": {
+     "taakSoort": "receive",
+     "bpmnId": "advies-politie"
+    }
+   },
+   {
+    "sleutel": "aSamen",
+    "type": "parallel",
+    "naam": "Beide adviezen binnen",
+    "diagram": "dAdvies"
+   },
+   {
+    "sleutel": "aEind",
+    "type": "eind-event",
+    "naam": "Adviezen binnen",
+    "diagram": "dAdvies"
+   },
+   {
+    "sleutel": "aPoolBrw",
+    "type": "pool",
+    "naam": "Brandweer",
+    "diagram": "dAdvies"
+   },
+   {
+    "sleutel": "aPoolPol",
+    "type": "pool",
+    "naam": "Politie",
+    "diagram": "dAdvies"
+   },
+   {
+    "sleutel": "kStart",
+    "type": "start-event",
+    "naam": "Vergunning verleend",
+    "diagram": "dKalender"
+   },
+   {
+    "sleutel": "kPubliceer",
+    "type": "taak",
+    "naam": "Publiceer op de evenementenkalender",
+    "diagram": "dKalender",
+    "eigenschappen": {
+     "taakSoort": "service",
+     "bpmnId": "kalender-publiceren"
+    }
+   },
+   {
+    "sleutel": "kOmwonenden",
+    "type": "taak",
+    "naam": "Informeer omwonenden",
+    "diagram": "dKalender",
+    "eigenschappen": {
+     "taakSoort": "send",
+     "bpmnId": "omwonenden-informeren"
+    }
+   },
+   {
+    "sleutel": "kEind",
+    "type": "eind-event",
+    "naam": "Evenement gepubliceerd",
+    "diagram": "dKalender"
+   }
+  ],
+  "connectoren": [
+   {
+    "type": "sequence-flow",
+    "bron": "hStart",
+    "doel": "hRisico"
+   },
+   {
+    "type": "sequence-flow",
+    "bron": "hRisico",
+    "doel": "hKlasse"
+   },
+   {
+    "type": "sequence-flow",
+    "bron": "hKlasse",
+    "doel": "hMelding",
+    "naam": "A: melding",
+    "eigenschappen": {
+     "conditie": "risico.risicoklasse == \"A\""
+    }
+   },
+   {
+    "type": "sequence-flow",
+    "bron": "hMelding",
+    "doel": "hEindMelding"
+   },
+   {
+    "type": "sequence-flow",
+    "bron": "hKlasse",
+    "doel": "hAdvies",
+    "naam": "C: met advies",
+    "eigenschappen": {
+     "conditie": "risico.risicoklasse == \"C\""
+    }
+   },
+   {
+    "type": "sequence-flow",
+    "bron": "hKlasse",
+    "doel": "hSamen",
+    "naam": "B: regulier",
+    "eigenschappen": {
+     "standaard": true
+    }
+   },
+   {
+    "type": "sequence-flow",
+    "bron": "hAdvies",
+    "doel": "hSamen"
+   },
+   {
+    "type": "sequence-flow",
+    "bron": "hSamen",
+    "doel": "hLeges"
+   },
+   {
+    "type": "sequence-flow",
+    "bron": "hLeges",
+    "doel": "hBeoordeel"
+   },
+   {
+    "type": "sequence-flow",
+    "bron": "hBeoordeel",
+    "doel": "hBesluit"
+   },
+   {
+    "type": "sequence-flow",
+    "bron": "hBesluit",
+    "doel": "hVerleen",
+    "naam": "verlenen",
+    "eigenschappen": {
+     "conditie": "besluit == \"verlenen\""
+    }
+   },
+   {
+    "type": "sequence-flow",
+    "bron": "hBesluit",
+    "doel": "hWeiger",
+    "naam": "weigeren",
+    "eigenschappen": {
+     "standaard": true
+    }
+   },
+   {
+    "type": "sequence-flow",
+    "bron": "hVerleen",
+    "doel": "hEindVerleend"
+   },
+   {
+    "type": "sequence-flow",
+    "bron": "hWeiger",
+    "doel": "hEindGeweigerd"
+   },
+   {
+    "type": "data-associatie",
+    "bron": "hDoAanvraag",
+    "doel": "hRisico"
+   },
+   {
+    "type": "data-associatie",
+    "bron": "hBeoordeel",
+    "doel": "hDoAanvraag"
+   },
+   {
+    "type": "data-associatie",
+    "bron": "hMelding",
+    "doel": "hDoAanvraag"
+   },
+   {
+    "type": "data-associatie",
+    "bron": "hVerleen",
+    "doel": "hDoAanvraag"
+   },
+   {
+    "type": "data-associatie",
+    "bron": "hWeiger",
+    "doel": "hDoAanvraag"
+   },
+   {
+    "type": "message-flow",
+    "bron": "hPoolOrg",
+    "doel": "hStart",
+    "naam": "aanvraag"
+   },
+   {
+    "type": "message-flow",
+    "bron": "hEindVerleend",
+    "doel": "hPoolOrg",
+    "naam": "beschikking"
+   },
+   {
+    "type": "sequence-flow",
+    "bron": "aStart",
+    "doel": "aSplits"
+   },
+   {
+    "type": "sequence-flow",
+    "bron": "aSplits",
+    "doel": "aVraagBrw"
+   },
+   {
+    "type": "sequence-flow",
+    "bron": "aVraagBrw",
+    "doel": "aOntvBrw"
+   },
+   {
+    "type": "sequence-flow",
+    "bron": "aOntvBrw",
+    "doel": "aSamen"
+   },
+   {
+    "type": "sequence-flow",
+    "bron": "aSplits",
+    "doel": "aVraagPol"
+   },
+   {
+    "type": "sequence-flow",
+    "bron": "aVraagPol",
+    "doel": "aOntvPol"
+   },
+   {
+    "type": "sequence-flow",
+    "bron": "aOntvPol",
+    "doel": "aSamen"
+   },
+   {
+    "type": "sequence-flow",
+    "bron": "aSamen",
+    "doel": "aEind"
+   },
+   {
+    "type": "message-flow",
+    "bron": "aVraagBrw",
+    "doel": "aPoolBrw",
+    "naam": "adviesverzoek"
+   },
+   {
+    "type": "message-flow",
+    "bron": "aPoolBrw",
+    "doel": "aOntvBrw",
+    "naam": "advies"
+   },
+   {
+    "type": "message-flow",
+    "bron": "aVraagPol",
+    "doel": "aPoolPol",
+    "naam": "adviesverzoek"
+   },
+   {
+    "type": "message-flow",
+    "bron": "aPoolPol",
+    "doel": "aOntvPol",
+    "naam": "advies"
+   },
+   {
+    "type": "sequence-flow",
+    "bron": "kStart",
+    "doel": "kPubliceer"
+   },
+   {
+    "type": "sequence-flow",
+    "bron": "kPubliceer",
+    "doel": "kOmwonenden"
+   },
+   {
+    "type": "sequence-flow",
+    "bron": "kOmwonenden",
+    "doel": "kEind"
+   }
+  ],
+  "opstelling": [
+   {
+    "diagram": "dAdvies",
+    "actie": "leesvolgorde-lr"
+   },
+   {
+    "diagram": "dKalender",
+    "actie": "leesvolgorde-lr"
+   }
+  ],
+  "posities": [
+   {
+    "diagram": "dHoofd",
+    "element": "hStart",
+    "x": 40,
+    "y": 197
+   },
+   {
+    "diagram": "dHoofd",
+    "element": "hRisico",
+    "x": 130,
+    "y": 180
+   },
+   {
+    "diagram": "dHoofd",
+    "element": "hKlasse",
+    "x": 350,
+    "y": 190
+   },
+   {
+    "diagram": "dHoofd",
+    "element": "hAdvies",
+    "x": 470,
+    "y": 50
+   },
+   {
+    "diagram": "dHoofd",
+    "element": "hMelding",
+    "x": 470,
+    "y": 330
+   },
+   {
+    "diagram": "dHoofd",
+    "element": "hEindMelding",
+    "x": 710,
+    "y": 347
+   },
+   {
+    "diagram": "dHoofd",
+    "element": "hSamen",
+    "x": 710,
+    "y": 190
+   },
+   {
+    "diagram": "dHoofd",
+    "element": "hLeges",
+    "x": 820,
+    "y": 180
+   },
+   {
+    "diagram": "dHoofd",
+    "element": "hBeoordeel",
+    "x": 1040,
+    "y": 180
+   },
+   {
+    "diagram": "dHoofd",
+    "element": "hBesluit",
+    "x": 1260,
+    "y": 190
+   },
+   {
+    "diagram": "dHoofd",
+    "element": "hVerleen",
+    "x": 1370,
+    "y": 80
+   },
+   {
+    "diagram": "dHoofd",
+    "element": "hEindVerleend",
+    "x": 1610,
+    "y": 97
+   },
+   {
+    "diagram": "dHoofd",
+    "element": "hWeiger",
+    "x": 1370,
+    "y": 290
+   },
+   {
+    "diagram": "dHoofd",
+    "element": "hEindGeweigerd",
+    "x": 1610,
+    "y": 307
+   },
+   {
+    "diagram": "dHoofd",
+    "element": "hDoAanvraag",
+    "x": 1090,
+    "y": 400
+   }
+  ]
+ }
+}

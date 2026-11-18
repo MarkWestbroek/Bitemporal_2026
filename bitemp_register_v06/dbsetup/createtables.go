@@ -319,6 +319,10 @@ func CreateTables(db bun.IDB) error {
 	// mag de startup niet blokkeren.
 	createEnkelvoudigInvariantIndexes(ctx, db)
 
+	// Indexen die uit het model volgen: doelkant van relaties en unieke velden (indexen.go).
+	// Niet-fataal, om dezelfde reden.
+	createModelIndexes(ctx, db)
+
 	// Views voor formele tijdreisquery's
 	err = createFormeleTijdViews(ctx, db)
 	if err != nil {

@@ -8,6 +8,202 @@
 
 ---
 
+## api 0.28.0 / devloop 0.31.0 (2026-11-18)
+
+Akkoord Mark 18-11 ("okee, release maar"). Studio blijft 0.45.0 en render 0.4.9; devloop 0.31.0 is
+api 0.28.0 met studio 0.45.0 en render 0.4.9. Aanleiding: het zaakmodel voor de loadtest (derde
+stack naast OneGround en Open Zaak) en wat de bouwproef daarvan aan het licht bracht.
+
+- **Indexen uit het model** (`dbsetup/indexen.go`, `docs/INDEXEN.md`): elke relatie krijgt een
+  index op de doelkant `(doel_id, bron_id)`, elk veld met `uniek` een partiële index op de actuele
+  stand. Ze worden bij start en rebuild aangemaakt (`IF NOT EXISTS`, niet fataal). Gemeten op een
+  miljoen rijen: de omgekeerde relatie van 14 ms naar 0,07 ms, de uniekheidscontrole van 16 ms
+  naar 0,02 ms per opvoer.
+- **Fix codegen: een enum die meerdere domeinen gebruiken komt in één domein**
+  (`model/v3_enum_domein.go`, `docs/CODEGEN.md` §8). Voorheen compileerde `model` niet meer
+  ("redeclared in this block"). De rebuild zet de domeinen in de goede volgorde. Gevonden door
+  FACADE en AI-INRICHTEN.
+- **Codegen: validatiefout als type/format het gegevenstype tegenspreken** (`docs/CODEGEN.md`
+  §4). Een veld zonder goType met `"type": "string"` en datatype Geheel, JaNee, Datum of DatumTijd
+  werd zonder melding een tekstveld. Een Studio-export heeft goType en valt erbuiten.
+- **Melding bij een afwijkend kolomtype** (`dbsetup/kolomtypen.go`, `docs/KOLOMTYPEN.md`):
+  `dbsetup` zet het type van een bestaande kolom niet om; een kolom die niet bij het model past,
+  staat nu bij elke start in het logboek, met het statement dat hem zou omzetten.
+- BACKLOG §43: de kolomnaam van datumvelden wijkt af van andere velden (besluit: laten staan).
+
+Getest: `go test ./...` groen (in de basismap; de EA-importtest heeft `web/vite/node_modules`
+nodig), regressiesuite np-loc, afgeleide relaties en databaseproef groen met de indexen en de
+kolomtypecontrole, oude en nieuwe codegen vergeleken op tien bestaande domeinen (uitvoer gelijk),
+zaakmodel: codegen voor vier domeinen, build en zelftest in een proefkopie. Niet getest: een
+rebuild via de devloop met het zaakmodel, en gelijktijdige belasting.
+
+Uitrol:
+- **Schemawijziging: ja, alleen indexen.** Bij de eerste start komen er indexen bij; geen tabel of
+  kolom verandert. Op een grote tabel blokkeert het aanmaken schrijvers zolang het duurt.
+- **Rebuild uit het Studio-project: niet nodig.** De codegen-wijzigingen werken pas bij de
+  eerstvolgende rebuild.
+- **Andere stap: nee voor de release zelf.** Los ervan: het migratiescript
+  `docs/migraties/2026-11-18-cg-test-kolomtypen.sql` voor vijf tekstkolommen op cg-test (akkoord
+  Mark 18-11; FUNDAMENT voert het uit).
+- Na de eerste start: het logboek nalopen op regels `[dbsetup] LET OP: kolom …`.
+- App en pf: `bitemp-go-api:0.28.0` via `update.sh`. Fundament: `bitemp-devloop:0.31.0`.
+
+---
+
+## studio 0.45.0 / render 0.4.9 (2026-11-16)
+
+Akkoord Mark 16-11 ("daarna 1 en 2 en daarna een release als je wilt"). api blijft 0.27.0; devloop
+(api 0.27.0 met studio 0.45.0 en render 0.4.9) bouwt FUNDAMENT.
+
+- **DMN-beslistabel in het project:** op een beslissing in een DMN DRD bewerk je de tabel in een
+  dialoog (Eigenschappen → beslistabel). De invoerkolommen volgen uit de pijlen in het DRD; het veld
+  kies je op het invoergegeven (eigenschap *gegeven*, M3-datatype `veld-verwijzing`). Een getekende
+  «traceert naar» van een invoergegeven wordt dat gegeven. Een beslissing kan de uitkomst van een
+  andere lezen: export (DMN-XML met `requiredDecision`) en simulatie rekenen de keten uit.
+  Profiel DMN DRD 1.1.0.
+- **Projectboom:** een diagram zonder map staat in de root; "Niet ingedeeld" is weg. De klassieke
+  editors (dmn-js, bpmn.io, Canoniek model IDE v1, Berichtdefinities) zijn alleen nog zichtbaar
+  voor een beheerder.
+- **Gebruikers → Projecten…:** een gebruiker achteraf aan projecten toewijzen; in *Toegang…* een
+  namenlijst met waarschuwing bij een onbekende naam.
+- **Simulatie** (SIMULATIE): scenario's in het project (nieuw profiel *Simulatiemodel*, M3-aard
+  `instantie`), het object als objectdiagram en als kaart, alle scenario's toetsen, cm-vorm zonder
+  e-dienstmodel, lijnen en objecten getoetst, Waterstede-scenario's. Profiel Object 1.1.0.
+- **Fix:** lijnen naast het vak na vergroten en weer verkleinen.
+- Rondleiding: vier stappen erbij; BPMN-XML schrijft data-objecten; BPMN-import koppelt het type terug.
+- render 0.4.9: de code van studio 0.45.0 (27 profielen, met Simulatiemodel; DMN DRD 1.1.0,
+  Object 1.1.0).
+
+Getest: Studio-unit 1769/1769 op main, render-svc 33/33, e2e 177 geslaagd (02 en 17 falen al
+langer op main).
+
+Uitrol:
+- App: `viz-frontend:0.45.0` en `bitemp-render-svc:0.4.9` via `update.sh`. Geen schemawijziging,
+  geen rebuild.
+- Daarna zet DEMO-PROJECT de Waterstede-scenario's in het demo-project (script klaar).
+- Fundament: `bitemp-devloop` met frontend 0.45.0 en render 0.4.9, door FUNDAMENT.
+
+---
+
+## studio 0.44.0 / render 0.4.8 / devloop 0.30.2 (2026-11-15)
+
+Akkoord Mark 15-11 ("Wil je releasen? Ook naar fundament"). api blijft 0.27.0; devloop 0.30.2 is
+api 0.27.0 met studio 0.44.0.
+
+- **Samenvoegen naar MAIN per veld:** verschillende velden van hetzelfde element aan beide kanten
+  geven geen conflict meer; een regel per veld in de boom, ook voor velden in een compartiment
+  (gekoppeld op uuid, anders op naam; een hernoeming op dezelfde plek blijft één veld).
+- **Projectformaat 4:** elk modelelement en veld van het canonieke model heeft een uuid. De Studio
+  vult ontbrekende aan bij het openen en na elke eigen wijziging, afgeleid (uuid v5), zodat
+  gelijktijdige clients en een branch met zijn MAIN dezelfde uuid's krijgen.
+  `scripts/projecten-uuids-aanvullen.mjs` vult alle projecten op een server in één keer aan.
+- **Uuid's tonen (beheer):** een instelling voor de beheerder.
+- **BPMN-data-object met een type** (SIMULATIE): type uit een gegevenstaal (M3-aard `gegevens`),
+  rol invoer/uitvoer, toestand, lezen en schrijven; het type is de tracering «traceert naar»;
+  gerelateerde elementen over talen heen. Profielversies: BPMN 1.2.0; canoniek, puur-UML, MIM,
+  ERD 1.1.0. Donker thema: namen op het canvas leesbaar.
+- render 0.4.8: de code van studio 0.44.0 (samenvoegen per veld, profielversies). Een render 0.4.7
+  werkt met deze studio, maar voegt dan alleen per element samen.
+
+Getest: Studio-unit 1713/1713 (na de merge), render-svc `npm test` 30/30 (scenario's 11 en 12
+erbij), e2e 12, 23, 30, 58, 63 en 64 (22/22); SIMULATIE: e2e 33, 53, 54, 63, 64.
+
+Uitrol:
+- App: `viz-frontend:0.44.0` en `bitemp-render-svc:0.4.8` via `update.sh`. Geen schemawijziging,
+  geen rebuild. Daarna (optioneel, aanbevolen) per server één keer
+  `node scripts/projecten-uuids-aanvullen.mjs --omnium <url>` (kijken) en met `--toepassen`.
+- Fundament: `bitemp-devloop:0.30.2` (met frontend 0.44.0 en render 0.4.8), door FUNDAMENT.
+
+---
+
+## studio 0.43.0 / render 0.4.7 / devloop 0.30.1 (2026-11-14)
+
+Akkoord Mark 14-11 ("C&M&R en daarna verder"). api blijft 0.27.0; devloop 0.30.1 is api 0.27.0 met
+studio 0.43.0.
+
+- **Fix, belangrijk voor Fundament:** de automatische plaatsing van een element in de map van zijn
+  diagram (BOOM-1) ging niet naar de server. De projectboom toonde het element in de map, maar
+  alleen lokaal; anderen, de server en *Verschil met MAIN* zagen het "zonder map". Oorzaak: de
+  plaatsing liep binnen de actie die haar uitlokte, en de sync legt alleen de buitenste actie vast.
+  Nu is het een eigen operatie. Bestaande projecten herstellen bij het openen in een Studio 0.43.0.
+- **Samenvoegen naar MAIN:** schuifje met drie standen per regel (↶ MAIN overnemen, – niets doen,
+  → naar MAIN / MAIN overschrijven); diagrammen en elementen onder een package liggen nu in de map
+  van dat package (op Fundament stonden ze "buiten de map"), met het package als ouder in de boom;
+  diagrambundels staan in de boom en gaan niet meer zonder hun diagrammen; de boom toont het type
+  uit het profiel (Entiteit, Gegevenselement, …).
+- **Startnaam met lidwoord:** NieuweEntiteit, NieuwGegevenselement (M3 `ElementType.lidwoord`).
+- render 0.4.7: de code van studio 0.43.0 (vergelijken en samenvoegen met packages en bundels).
+  Een render 0.4.6 werkt nog met deze studio, maar mist dan packages en bundels in de vergelijking.
+
+Getest: Studio-unit 1685/1685, render-svc `npm test` 28/28 (scenario's 9 en 10 erbij), e2e 23, 46,
+54, 58, 62 en 63; lokaal door Mark met echte API en sidecar.
+
+Uitrol:
+- App: `bitemp-render-svc:0.4.7` en `viz-frontend:0.43.0` via `update.sh`. Geen schemawijziging.
+- Fundament: `bitemp-devloop:0.30.1` (met frontend 0.43.0 en render 0.4.7), door FUNDAMENT.
+
+---
+
+## studio 0.42.0 / render 0.4.6 / api 0.27.0 / devloop 0.30.0 (2026-11-14)
+
+Akkoord Mark 14-11 ("eerst C&M en misschien zelfs minor releasen, want een andere klus wacht op een
+duidelijke merge"). Branch terugmergen, stap 2a.
+
+- **Kiezen met vinkjes in een boom** in *Verschil met MAIN…*: map → submap → diagram of element →
+  relatie onder haar bron. Gekozen gaat naar MAIN; niet gekozen blijft in de branch en komt bij de
+  volgende vergelijking terug. Een conflict blokkeert niet meer (aan = de branch wint). Wat buiten
+  de map ligt staat standaard uit.
+- **Terugzetten naar MAIN** (↶ per regel, keuze `"terug"`): de branch neemt de versie van MAIN
+  letterlijk over, ook "geen kleur".
+- **Vangnet samenhang:** een keuze die een verwijzing stuk maakt (relatie zonder bron of doel,
+  node zonder element, koppeling zonder kant, plaatsing zonder map) weigert de API met
+  `409 reden "samenhang"`.
+- api 0.27.0: `keuze` (`true|false|"terug"`) op `POST …/samenvoegen`, doorgegeven aan de sidecar;
+  antwoord met `opgelost`. Zonder `keuze` werkt het als in 0.26.0.
+- render 0.4.6: `keuze` op `/samenvoegen` (`opgelost`, `samenhang` in het antwoord); `/vergelijk`
+  geeft per verschil `sleutel`, `mapId`, `ouderId` en de `mappen`. Een sidecar 0.4.5 weigert
+  `keuze` (400 → 502 in de API), dus api en render samen uitrollen.
+- devloop 0.30.0 = api 0.27.0 met studio 0.42.0.
+
+Getest: Studio-unit (incl. `keuzeBoom.test.js`), render-svc `npm test` met de nieuwe scenario's over
+meerdere rondes (`samenvoegScenario.test.mjs`, 8 scenario's), Go met integratietest tegen Postgres,
+e2e 63 en 58. Lokaal door Mark met echte API en sidecar ("lijkt wel goed te werken").
+
+Uitrol:
+- App: `bitemp-go-api:0.27.0`, `bitemp-render-svc:0.4.6` en `viz-frontend:0.42.0` via `update.sh`.
+  Geen schemawijziging.
+- Fundament: `bitemp-devloop:0.30.0` (met frontend 0.42.0 en render 0.4.6), door FUNDAMENT.
+
+---
+
+## studio 0.41.0 / render 0.4.5 / api 0.26.0 / devloop 0.29.0 (2026-11-14)
+
+Akkoord Mark 14-11. Neemt studio 0.40.0 / render 0.4.4 mee: die zijn getagd, maar er zijn geen
+images van gebouwd. Deze release is dus de eerste die de simulatie uitrolt.
+
+- **Branch samenvoegen naar MAIN, stap 1** (plan `docs/plans/2026-11-14 Branch terugmergen …`):
+  knop *Samenvoegen naar MAIN* in *Verschil met MAIN…*. Alles uit de branch gaat naar main, een
+  conflict blokkeert, daarna haalt de branch main op en wordt die stand de nieuwe basis.
+  Wijzigingen buiten de afgesplitste map gaan alleen na bevestiging mee.
+  - api 0.26.0: `POST /api/studio/projecten/:id/samenvoegen` schrijft de ops voor main en branch
+    in één transactie en vervangt de basis; 409 met reden `conflicten`, `buiten_map` of
+    `volgnummer_verschoven`. Ook de CORS-header `X-Omnium-Client` (al op main, alleen voor dev).
+  - render 0.4.5: `POST /samenvoegen` rekent het samengevoegde model en de ops uit en speelt ze
+    ter controle na. Een oudere sidecar geeft 502 met reden `sidecar`.
+- **Uit studio 0.40.0:** simulatie van BPMN en DMN met cm-objecten, BPMN-profiel 1.1.0, JUEL naar
+  CEL; Modelleren, Koppelingen en Profielontwerp geen preview meer; zie de 0.40.0-entry hieronder.
+- devloop 0.29.0 = api 0.26.0 met studio 0.41.0.
+
+Getest: Studio-unit 1667/1667, render-svc 17/17, `go test ./handlers/` (samenvoegen ook als
+integratietest tegen Postgres), e2e 63 en 58; lokaal door Mark met echte API en sidecar.
+
+Uitrol:
+- App: `bitemp-go-api:0.26.0`, `bitemp-render-svc:0.4.5` en `viz-frontend:0.41.0` via `update.sh`.
+  Geen schemawijziging.
+- Fundament: `bitemp-devloop:0.29.0` (met de frontend 0.41.0 en render 0.4.5), door FUNDAMENT.
+
+---
+
 ## studio 0.40.0 / render 0.4.4 (2026-11-14)
 
 Akkoord Mark 14-11. api blijft 0.25.0.

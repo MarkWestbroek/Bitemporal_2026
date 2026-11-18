@@ -1,0 +1,628 @@
+{
+ "map": "/",
+ "plan": {
+  "uitleg": "Het canonieke model van het domein Evenementen: de aanvraag, de organisator, de locatie, het advies en de vergunning. Uit dit model worden register, API en formulieren afgeleid.",
+  "diagrammen": [
+   {
+    "sleutel": "dCm",
+    "taal": "diagram05",
+    "naam": "Evenementen (canoniek)",
+    "map": "4 Gegevens"
+   }
+  ],
+  "elementen": [
+   {
+    "sleutel": "eAanvraag",
+    "type": "entiteit",
+    "naam": "Evenementaanvraag",
+    "diagram": "dCm",
+    "eigenschappen": {
+     "meervoud": "Evenementaanvragen"
+    }
+   },
+   {
+    "sleutel": "gAanvraag",
+    "type": "gegevenselement",
+    "naam": "Aanvraaggegevens",
+    "diagram": "dCm",
+    "velden": [
+     {
+      "naam": "aanvraagnummer",
+      "type": "string",
+      "verplicht": true
+     },
+     {
+      "naam": "ingediendOp",
+      "type": "datetime",
+      "verplicht": true
+     },
+     {
+      "naam": "status",
+      "type": "AanvraagStatus",
+      "verplicht": true
+     }
+    ]
+   },
+   {
+    "sleutel": "gEvenement",
+    "type": "gegevenselement",
+    "naam": "Evenementgegevens",
+    "diagram": "dCm",
+    "velden": [
+     {
+      "naam": "naam",
+      "type": "string",
+      "verplicht": true
+     },
+     {
+      "naam": "soort",
+      "type": "EvenementSoort",
+      "verplicht": true
+     },
+     {
+      "naam": "datumVan",
+      "type": "date",
+      "verplicht": true
+     },
+     {
+      "naam": "datumTot",
+      "type": "date"
+     },
+     {
+      "naam": "verwachtAantalBezoekers",
+      "type": "integer",
+      "verplicht": true
+     },
+     {
+      "naam": "alcohol",
+      "type": "boolean"
+     },
+     {
+      "naam": "wegafsluiting",
+      "type": "boolean"
+     },
+     {
+      "naam": "versterktGeluid",
+      "type": "boolean"
+     },
+     {
+      "naam": "commercieel",
+      "type": "boolean"
+     }
+    ]
+   },
+   {
+    "sleutel": "gBeoordeling",
+    "type": "gegevenselement",
+    "naam": "Beoordeling",
+    "diagram": "dCm",
+    "velden": [
+     {
+      "naam": "risicoklasse",
+      "type": "Risicoklasse"
+     },
+     {
+      "naam": "besluit",
+      "type": "string"
+     },
+     {
+      "naam": "motivering",
+      "type": "string"
+     },
+     {
+      "naam": "leges",
+      "type": "integer"
+     }
+    ]
+   },
+   {
+    "sleutel": "eOrg",
+    "type": "entiteit",
+    "naam": "Organisator",
+    "diagram": "dCm",
+    "eigenschappen": {
+     "meervoud": "Organisatoren"
+    }
+   },
+   {
+    "sleutel": "gOrg",
+    "type": "gegevenselement",
+    "naam": "Organisatiegegevens",
+    "diagram": "dCm",
+    "velden": [
+     {
+      "naam": "naam",
+      "type": "string",
+      "verplicht": true
+     },
+     {
+      "naam": "kvkNummer",
+      "type": "string"
+     }
+    ]
+   },
+   {
+    "sleutel": "gContact",
+    "type": "gegevenselement",
+    "naam": "Contactgegevens",
+    "diagram": "dCm",
+    "velden": [
+     {
+      "naam": "contactpersoon",
+      "type": "string"
+     },
+     {
+      "naam": "email",
+      "type": "string",
+      "verplicht": true
+     },
+     {
+      "naam": "telefoon",
+      "type": "string"
+     }
+    ]
+   },
+   {
+    "sleutel": "eLocatie",
+    "type": "entiteit",
+    "naam": "Evenementlocatie",
+    "diagram": "dCm",
+    "eigenschappen": {
+     "meervoud": "Evenementlocaties"
+    }
+   },
+   {
+    "sleutel": "gAdres",
+    "type": "gegevenselement",
+    "naam": "Adres",
+    "diagram": "dCm",
+    "velden": [
+     {
+      "naam": "straat",
+      "type": "string"
+     },
+     {
+      "naam": "huisnummer",
+      "type": "string"
+     },
+     {
+      "naam": "postcode",
+      "type": "string"
+     },
+     {
+      "naam": "plaats",
+      "type": "string",
+      "verplicht": true
+     }
+    ]
+   },
+   {
+    "sleutel": "gTerrein",
+    "type": "gegevenselement",
+    "naam": "Terrein",
+    "diagram": "dCm",
+    "velden": [
+     {
+      "naam": "omschrijving",
+      "type": "string",
+      "verplicht": true
+     },
+     {
+      "naam": "openbareRuimte",
+      "type": "boolean"
+     },
+     {
+      "naam": "oppervlakteM2",
+      "type": "integer"
+     }
+    ]
+   },
+   {
+    "sleutel": "eAdvies",
+    "type": "entiteit",
+    "naam": "Veiligheidsadvies",
+    "diagram": "dCm",
+    "eigenschappen": {
+     "meervoud": "Veiligheidsadviezen"
+    }
+   },
+   {
+    "sleutel": "gAdvies",
+    "type": "gegevenselement",
+    "naam": "Adviesgegevens",
+    "diagram": "dCm",
+    "velden": [
+     {
+      "naam": "adviseur",
+      "type": "string",
+      "verplicht": true
+     },
+     {
+      "naam": "oordeel",
+      "type": "AdviesOordeel",
+      "verplicht": true
+     },
+     {
+      "naam": "toelichting",
+      "type": "string"
+     },
+     {
+      "naam": "afgegevenOp",
+      "type": "date"
+     }
+    ]
+   },
+   {
+    "sleutel": "eVergunning",
+    "type": "entiteit",
+    "naam": "Evenementenvergunning",
+    "diagram": "dCm",
+    "eigenschappen": {
+     "meervoud": "Evenementenvergunningen"
+    }
+   },
+   {
+    "sleutel": "gBesluit",
+    "type": "gegevenselement",
+    "naam": "Besluit",
+    "diagram": "dCm",
+    "velden": [
+     {
+      "naam": "vergunningnummer",
+      "type": "string",
+      "verplicht": true
+     },
+     {
+      "naam": "verleendOp",
+      "type": "date",
+      "verplicht": true
+     },
+     {
+      "naam": "geldigVan",
+      "type": "date"
+     },
+     {
+      "naam": "geldigTot",
+      "type": "date"
+     }
+    ]
+   },
+   {
+    "sleutel": "gVoorschrift",
+    "type": "gegevenselement",
+    "naam": "Voorschrift",
+    "diagram": "dCm",
+    "velden": [
+     {
+      "naam": "omschrijving",
+      "type": "string",
+      "verplicht": true
+     },
+     {
+      "naam": "bron",
+      "type": "string"
+     }
+    ]
+   },
+   {
+    "sleutel": "enRisico",
+    "type": "enumeratie",
+    "naam": "Risicoklasse",
+    "diagram": "dCm",
+    "velden": [
+     {
+      "naam": "A"
+     },
+     {
+      "naam": "B"
+     },
+     {
+      "naam": "C"
+     }
+    ]
+   },
+   {
+    "sleutel": "enStatus",
+    "type": "enumeratie",
+    "naam": "AanvraagStatus",
+    "diagram": "dCm",
+    "velden": [
+     {
+      "naam": "ingediend"
+     },
+     {
+      "naam": "in_behandeling"
+     },
+     {
+      "naam": "melding_bevestigd"
+     },
+     {
+      "naam": "verleend"
+     },
+     {
+      "naam": "geweigerd"
+     }
+    ]
+   },
+   {
+    "sleutel": "enSoort",
+    "type": "enumeratie",
+    "naam": "EvenementSoort",
+    "diagram": "dCm",
+    "velden": [
+     {
+      "naam": "buurtfeest"
+     },
+     {
+      "naam": "markt"
+     },
+     {
+      "naam": "sportwedstrijd"
+     },
+     {
+      "naam": "optocht"
+     },
+     {
+      "naam": "festival"
+     }
+    ]
+   },
+   {
+    "sleutel": "enOordeel",
+    "type": "enumeratie",
+    "naam": "AdviesOordeel",
+    "diagram": "dCm",
+    "velden": [
+     {
+      "naam": "positief"
+     },
+     {
+      "naam": "positief_onder_voorwaarden"
+     },
+     {
+      "naam": "negatief"
+     }
+    ]
+   }
+  ],
+  "connectoren": [
+   {
+    "type": "compositie",
+    "bron": "eAanvraag",
+    "doel": "gAanvraag"
+   },
+   {
+    "type": "compositie",
+    "bron": "eAanvraag",
+    "doel": "gEvenement"
+   },
+   {
+    "type": "compositie",
+    "bron": "eAanvraag",
+    "doel": "gBeoordeling"
+   },
+   {
+    "type": "compositie",
+    "bron": "eOrg",
+    "doel": "gOrg"
+   },
+   {
+    "type": "compositie",
+    "bron": "eOrg",
+    "doel": "gContact"
+   },
+   {
+    "type": "compositie",
+    "bron": "eLocatie",
+    "doel": "gAdres"
+   },
+   {
+    "type": "compositie",
+    "bron": "eLocatie",
+    "doel": "gTerrein"
+   },
+   {
+    "type": "compositie",
+    "bron": "eAdvies",
+    "doel": "gAdvies"
+   },
+   {
+    "type": "compositie",
+    "bron": "eVergunning",
+    "doel": "gBesluit"
+   },
+   {
+    "type": "compositie",
+    "bron": "eVergunning",
+    "doel": "gVoorschrift",
+    "eigenschappen": {
+     "kardinaliteit": "0..*"
+    }
+   },
+   {
+    "type": "relatie",
+    "bron": "eAanvraag",
+    "doel": "eOrg",
+    "naam": "ingediend door",
+    "eigenschappen": {
+     "bronKardinaliteit": "0..*",
+     "doelKardinaliteit": "1",
+     "naamLabelHeen": "ingediend door",
+     "naamLabelTerug": "dient in"
+    }
+   },
+   {
+    "type": "relatie",
+    "bron": "eAanvraag",
+    "doel": "eLocatie",
+    "naam": "vindt plaats op",
+    "eigenschappen": {
+     "bronKardinaliteit": "0..*",
+     "doelKardinaliteit": "1..*",
+     "naamLabelHeen": "vindt plaats op",
+     "naamLabelTerug": "is locatie van"
+    }
+   },
+   {
+    "type": "relatie",
+    "bron": "eAdvies",
+    "doel": "eAanvraag",
+    "naam": "gaat over",
+    "eigenschappen": {
+     "bronKardinaliteit": "0..*",
+     "doelKardinaliteit": "1",
+     "naamLabelHeen": "gaat over",
+     "naamLabelTerug": "heeft advies"
+    }
+   },
+   {
+    "type": "relatie",
+    "bron": "eVergunning",
+    "doel": "eAanvraag",
+    "naam": "verleend op",
+    "eigenschappen": {
+     "bronKardinaliteit": "0..1",
+     "doelKardinaliteit": "1",
+     "naamLabelHeen": "verleend op",
+     "naamLabelTerug": "leidt tot"
+    }
+   },
+   {
+    "type": "gebruik",
+    "bron": "gAanvraag",
+    "doel": "enStatus"
+   },
+   {
+    "type": "gebruik",
+    "bron": "gEvenement",
+    "doel": "enSoort"
+   },
+   {
+    "type": "gebruik",
+    "bron": "gBeoordeling",
+    "doel": "enRisico"
+   },
+   {
+    "type": "gebruik",
+    "bron": "gAdvies",
+    "doel": "enOordeel"
+   }
+  ],
+  "posities": [
+   {
+    "diagram": "dCm",
+    "element": "gAdvies",
+    "x": 40,
+    "y": 40
+   },
+   {
+    "diagram": "dCm",
+    "element": "eAdvies",
+    "x": 300,
+    "y": 60
+   },
+   {
+    "diagram": "dCm",
+    "element": "eVergunning",
+    "x": 900,
+    "y": 60
+   },
+   {
+    "diagram": "dCm",
+    "element": "gBesluit",
+    "x": 1140,
+    "y": 40
+   },
+   {
+    "diagram": "dCm",
+    "element": "gVoorschrift",
+    "x": 1360,
+    "y": 40
+   },
+   {
+    "diagram": "dCm",
+    "element": "enOordeel",
+    "x": 40,
+    "y": 210
+   },
+   {
+    "diagram": "dCm",
+    "element": "eOrg",
+    "x": 100,
+    "y": 360
+   },
+   {
+    "diagram": "dCm",
+    "element": "eAanvraag",
+    "x": 620,
+    "y": 360
+   },
+   {
+    "diagram": "dCm",
+    "element": "eLocatie",
+    "x": 1210,
+    "y": 360
+   },
+   {
+    "diagram": "dCm",
+    "element": "gOrg",
+    "x": 0,
+    "y": 540
+   },
+   {
+    "diagram": "dCm",
+    "element": "gContact",
+    "x": 210,
+    "y": 540
+   },
+   {
+    "diagram": "dCm",
+    "element": "gAanvraag",
+    "x": 420,
+    "y": 540
+   },
+   {
+    "diagram": "dCm",
+    "element": "gEvenement",
+    "x": 640,
+    "y": 540
+   },
+   {
+    "diagram": "dCm",
+    "element": "gBeoordeling",
+    "x": 860,
+    "y": 540
+   },
+   {
+    "diagram": "dCm",
+    "element": "gAdres",
+    "x": 1100,
+    "y": 540
+   },
+   {
+    "diagram": "dCm",
+    "element": "gTerrein",
+    "x": 1320,
+    "y": 540
+   },
+   {
+    "diagram": "dCm",
+    "element": "enStatus",
+    "x": 420,
+    "y": 720
+   },
+   {
+    "diagram": "dCm",
+    "element": "enSoort",
+    "x": 640,
+    "y": 800
+   },
+   {
+    "diagram": "dCm",
+    "element": "enRisico",
+    "x": 860,
+    "y": 720
+   }
+  ]
+ }
+}

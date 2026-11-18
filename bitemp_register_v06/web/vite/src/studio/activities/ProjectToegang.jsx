@@ -6,9 +6,14 @@
  * De eigenaar en beheerders mogen altijd alles; hier staan de overige rijen: een
  * gebruikersnaam of "*" (iedereen die is ingelogd) met lezen of schrijven. Schrijven vraagt
  * daarnaast minstens de rol modelleur. Opslaan vervangt alle rijen.
+ *
+ * Gebruikersnaam (16-11): vrij te typen, met de bestaande gebruikers als keuzelijst (datalist uit
+ * GET /api/gebruikers). Die lijst is alleen voor beheerders; een eigenaar zonder beheerdersrol
+ * typt de naam zoals voorheen. Een naam die niet bestaat, krijgt een waarschuwing.
  */
 import React, { useEffect, useState } from "react";
 import { haalToegangOp, zetToegang, toegangVoorOpslaan } from "./projectSync.js";
+import { apiBase } from "../studioUtils";
 
 const invoer = { font: "inherit", fontSize: 12, padding: "2px 6px", border: "1px solid var(--s-border, #cbd5e1)", borderRadius: 6, background: "var(--s-bg, transparent)", color: "inherit" };
 
@@ -17,6 +22,22 @@ export default function ProjectToegang({ project, knop, onKlaar }) {
   const [eigenaar, setEigenaar] = useState("");
   const [fout, setFout] = useState("");
   const [bewaard, setBewaard] = useState(false);
+  const [gebruikers, setGebruikers] = useState(null); // gebruikersnamen (alleen voor beheerders), anders null
+
+  useEffect(() => {
+    let weg = false;
+    fetch(`${apiBase()}/api/gebruikers`, { credentials: "include" })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((d) => {
+        if (!weg && Array.isArray(d)) setGebruikers(d.map((g) => g.gebruikersnaam).filter(Boolean).sort((a, b) => a.localeCompare(b, "nl")));
+      })
+      .catch(() => {});
+    return () => {
+      weg = true;
+    };
+  }, []);
+  const lijstId = `project-toegang-gebruikers-${project.id}`;
+  const onbekend = (s) => !!gebruikers && s.trim() !== "" && s.trim() !== "*" && !gebruikers.includes(s.trim());
 
   useEffect(() => {
     haalToegangOp(project.id)
@@ -55,7 +76,9 @@ export default function ProjectToegang({ project, knop, onKlaar }) {
             <div key={i} style={{ display: "flex", gap: 6, alignItems: "center", marginBottom: 4 }}>
               {r.subject === "*"
                 ? <span style={{ flex: 1 }}>Iedereen die is ingelogd</span>
-                : <input style={{ ...invoer, flex: 1 }} value={r.subject} placeholder="gebruikersnaam" aria-label="Gebruikersnaam"
+                : <input style={{ ...invoer, flex: 1, ...(onbekend(r.subject) ? { borderColor: "#d97706" } : {}) }} value={r.subject}
+                    placeholder={gebruikers ? "kies of typ een gebruikersnaam" : "gebruikersnaam"} aria-label="Gebruikersnaam"
+                    list={gebruikers ? lijstId : undefined} title={onbekend(r.subject) ? "Geen bestaande gebruiker met deze naam" : undefined}
                     onChange={(e) => zet(i, { subject: e.target.value })} />}
               <select style={invoer} value={r.recht} aria-label="Recht" onChange={(e) => zet(i, { recht: e.target.value })}>
                 <option value="lezen">lezen</option>
@@ -64,6 +87,14 @@ export default function ProjectToegang({ project, knop, onKlaar }) {
               <button type="button" style={knop} aria-label="Rij verwijderen" onClick={() => { setBewaard(false); setRijen(rijen.filter((_, j) => j !== i)); }}>×</button>
             </div>
           ))}
+          {gebruikers && (
+            <datalist id={lijstId}>
+              {gebruikers.map((g) => <option key={g} value={g} />)}
+            </datalist>
+          )}
+          {rijen.some((r) => onbekend(r.subject)) && (
+            <div style={{ color: "#b45309", marginBottom: 4 }}>Een of meer namen horen niet bij een bestaande gebruiker.</div>
+          )}
           <div style={{ display: "flex", gap: 6, marginTop: 6, flexWrap: "wrap", alignItems: "center" }}>
             <button type="button" style={knop} onClick={() => { setBewaard(false); setRijen([...rijen, { subject: "", recht: "schrijven" }]); }}>+ gebruiker</button>
             {!iedereen && <button type="button" style={knop} onClick={() => { setBewaard(false); setRijen([...rijen, { subject: "*", recht: "lezen" }]); }}>+ iedereen</button>}

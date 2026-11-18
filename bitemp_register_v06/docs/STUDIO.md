@@ -464,6 +464,12 @@ te wijzigen.
 > diagrammen), (2) een diagram dat in een map komt (abonnement op `plaatsing`), (3) het laden
 > (hydratatie, en `pasProjectToe` → `ruimNietIngedeeldOp`). Niet tijdens andermans operaties of
 > een snapshot (`operaties.isStil`). De plaatsing gaat als `plaatsPerMap` de sync in.
+> **Fout tot 14-11 (gemeld door Mark):** die `plaatsPerMap` liep binnen de omwikkelde actie die
+> de trigger afvuurde (addElementToDiagram, plaatsDiagram). De sync legt alleen de buitenste actie
+> vast (`actieDiepte` in `sync/operaties.js`, over álle stores), dus de plaatsing bleef lokaal: de
+> boom toonde het element in de map, de server en *Verschil met MAIN* niet. Nu draait
+> `plaatsBijDiagrammen` haar als microtaak ná de actie, als eigen operatie. Bestaande projecten
+> herstellen bij het openen (trigger 3). Test: `operaties.test.js` ("actie in een andere store").
 >
 > **AI-assistent stap 1b (2026-10-14):** de dialoog is een gesprek over een map. De assistent
 > krijgt mee wat er al is (`bestaandInMap`: diagrammen, elementen, relaties met ids) en mag in
@@ -499,6 +505,10 @@ te wijzigen.
 > leeg diagram toont `LegeCanvas.jsx` (afgeleid uit het profiel, `startActies` per
 > activiteit). Tips en "rondleiding gezien" staan per browser in localStorage
 > (`studio05-hints-gezien`, `studio05-tour-v1`).
+> De stappen (`tourStappen.js`, 16-11 uitgebreid): welkom, activiteiten, Project → Van server
+> ophalen, de projectboom (met bundels), eerste diagram, elementen maken, eigenschappen, de
+> AI-assistent, de Labs-activiteiten Toegangverlening en Simulatie, het opdrachtenpalet, melden en
+> Help. `tourStappen.test.js` controleert dat elk anker in de code bestaat.
 >
 > **Consolidatie fase 2 (2026-07-11) — Modelleren als één ingang:** nieuwe
 > activiteit **Modelleren** (bovenaan de balk, preview) met een
@@ -512,11 +522,61 @@ te wijzigen.
 > store: de inhoud is identiek, hoe je hem ook opent. Zie
 > `activities/modellerenActivity.jsx`.
 >
+> **Beslistabel in het project (Mark, 16-11):** de beslistabel van een DMN-beslissing (profiel
+> `dmn-drd`) leeft op het element, in `data.beslistabel` (vorm van `dmn/dmnModel.js`). De descriptor
+> heeft daarvoor de eigenschap `beslistabel` met het profiel-eigen datatype `"beslistabel"`; de editor
+> (`studio/BeslistabelEditor.jsx`, geregistreerd in `dmnDrdActivity.jsx`) toont in Eigenschappen een
+> samenvatting en opent een dialoog met de ModelPicker op het canonieke projectmodel en de
+> `DmnTableEditor`. Bewerken gebeurt op een kopie; *Opslaan* schrijft één wijziging. De naam van de
+> beslissing is leidend voor de tabelnaam. Lezers van dezelfde tabel: `dmnArtefact` (DMN-XML) en de
+> simulatie; FieldRefs volgen hernoemingen via de uuid (`fieldRefBinding.js`). De klassieke
+> DMN-activiteit (dmn-js + losse tabel) is hiervoor niet meer nodig en is alleen nog voor beheerders
+> zichtbaar. Nog niet: een ad-hoc-uitvoer promoveren tot afgeleid veld vanuit deze dialoog.
+>
+> **Invoer uit het DRD (Mark, 16-11):** het diagram is leidend voor de invoer
+> (`diagramprofielen/dmn-drd/invoerUitDrd.js`, puur). Elke `infoReq`-pijl naar de beslissing is een
+> bron: een **invoergegeven** geeft één kolom, een **beslissing** (DMN: required decision) één kolom
+> per uitvoer van haar tabel. Zo'n kolom draagt `bron: {soort, elementId, uitvoerId?}`. Wáár de
+> waarde vandaan komt staat op het invoergegeven: eigenschap `gegeven`, M3-datatype
+> **`veld-verwijzing`** (`{profielId, elementId, veldNaam, uuid?}`, editor in
+> `studio/elementVerwijzing.jsx`; een veld heeft geen eigen id, dus de uuid is de binding en de naam
+> de terugval). Met `koppelsoort: "traceert naar"` volgt er een afgeleide koppeling naar het element
+> uit (`afgeleideKoppelingen.js`). De dialoog brengt de kolommen bij het openen in lijn met het
+> diagram (`metInvoerUitDrd`); wijkt dat af van wat er stond, dan is de tabel meteen op te slaan.
+> Overgang: een kolom zonder `bron` (koppeling op de kolom zelf) gaat over op het invoergegeven met
+> dezelfde naam of hetzelfde veld en houdt haar id en cellen; zolang het invoergegeven geen veld
+> heeft, blijft de `fieldRef` van de kolom gelden. Een kolom waarvan de pijl verdween blijft staan
+> met `bronWeg` en een melding. *Tabel wissen…* (met bevestiging) zet `data.beslistabel` op leeg; met
+> *Maken…* begin je opnieuw, met de invoer uit het diagram. De export (`dmnArtefact`) werkt bestaande bronkolommen bij
+> (`alleenBestaand`) en voegt niets toe. Een kolom uit een beslissing neemt die beslissing mee in
+> hetzelfde artefact (keten, zie TRANSFORMATIES.md §11.12); de simulatie leest haar uitvoer via
+> `bron.uitvoerId` (`simulatie/beslistabel.js`). Nog niet: een modelveld
+> op de tabel slepen dat zelf het invoergegeven met pijl maakt.
+>
+> **Getekende «traceert naar» → gegeven (Mark, 16-11):** een met de hand getekende koppeling
+> «traceert naar» van een invoergegeven naar een element wordt omgezet in het gegeven
+> (`studio/traceNaarGegeven.js`, plan puur; `traceNaarGegevenKoppeling.js` draait het na elke
+> wijziging van de koppelingen of een DMN-model, ook bij het laden). Eén veld op het element: dat
+> veld; meer: alleen het element, het veld blijft open. De getekende lijn gaat weg (het gegeven is de
+> bron, de lijn volgt eruit). Heeft het invoergegeven al een gegeven naar hetzelfde element, dan
+> verdwijnt alleen de lijn; naar een ander element blijft de lijn staan.
+>
+> **Root in plaats van "Niet ingedeeld" (Mark, 16-11):** een diagram zonder map staat in de
+> **root** van de projectboom, onder de mappen; de kop "Niet ingedeeld" is weg. Het projectformaat
+> verandert niet: geen plaatsing = root. Een nieuw diagram van de lege startpagina of via de ＋ bij
+> "Mappen" (*Nieuw diagram (in de root)*) komt daar; slepen naar de "Mappen"-kop of het vlak onder de
+> mappen haalt een diagram uit zijn map. De vaste documenten van de **klassieke editors** (Canoniek
+> model IDE (v1), DMN-model met dmn-js, BPMN-proces met bpmn.io, Berichtdefinities; `klassiek: true`)
+> lopen niet mee in het project: ze staan alleen nog voor een **beheerder** (of met de login uit) in de
+> boom, op de startpagina en in *Nieuw diagram* (`studio/beheerZicht.js`). Het elementenvak onderaan
+> heet nu "<taal> — niet op een diagram" (de wezen) en verdwijnt zolang er geen wezen zijn.
+>
 > **Consolidatie fase 3 v0 (2026-07-12) — vrije mappen + bewerkbare
 > profielstijl:** de Modelleren-browser heeft nu een **vrije mappenboom**
 > (Sparx-principe: de indeling is van de gebruiker) — mappen maken/nesten,
 > hernoemen via dubbelklik, verwijderen (inhoud valt terug naar de ouder),
-> en diagrammen **slepen** naar mappen of terug naar "Niet ingedeeld";
+> en diagrammen **slepen** naar mappen of terug naar de root (tot 16-11 de kop "Niet ingedeeld"; zie
+> hieronder);
 > geplaatste diagrammen dragen hun profiel-icoon. Structuur persist in
 > localStorage. Daarnaast is de **visuele identiteit per profieltype
 > bewerkbaar**: Studio-instellingen → **Profieltypen** (kleurkiezer +
@@ -671,6 +731,51 @@ te wijzigen.
 > Stap 1 = herkomstregel en de lijst *verschil met MAIN*; mergen gaat dan nog met de hand.
 > Terugmergen via de Studio (vinkjes per wijziging, samenhang, uitgangspunt na de merge): plan
 > `docs/plans/2026-11-14 Branch terugmergen — keuze per wijziging en samenhang (plan).md`.
+> **Samenvoegen naar MAIN (stap 1, 14-11):** knop in *Verschil met MAIN…*. Alles uit de branch
+> gaat mee; een conflict blokkeert (knop uit); eigen wijzigingen moeten eerst verzonden zijn;
+> wijzigingen buiten de map gaan alleen na bevestiging mee. Daarna haalt de branch MAIN op (optie
+> A, bijwerken): branch en MAIN zijn gelijk en de samengevoegde stand is de nieuwe basis. De API
+> (`POST …/samenvoegen`) laat de sidecar samenvoegen (`/samenvoegen`, `samenvoegProjecten` in
+> `render-svc/studioProfielen.js`): de zuivere kern is `studio/takken/samenvoegen.js`
+> (`voegSamen` = drieweg per eenheid, `opsVoorVerschil` = de patch-ops van stand naar stand). De
+> sidecar speelt beide lijsten ops na op de echte stores en weigert (422) als de uitkomst niet
+> klopt. De API schrijft ze in één transactie weg (ouder en branch op slot, controle op hun laatste
+> volgnummer) en vervangt de basis; via SSE krijgen open Studio's de ops. Tests:
+> `samenvoegen.test.js`, render-svc `server.test.mjs`, Go `studio_project_samenvoegen_test.go`, e2e
+> `63-studio-samenvoegen-naar-main`. **Grenzen:** volgorde-alleen-wijzigingen in de boom (omhoog/
+> omlaag) uit de branch gaan niet mee; de nieuwe volgorde is die van MAIN met nieuwe plaatsingen
+> achteraan.
+>
+> **Kiezen met vinkjes (stap 2a, 14-11):** het verschil staat in een boom (`studio/takken/keuzeBoom.js`):
+> map → submap → diagram of element → relatie onder haar bron. Een vinkje op een ouder zet alles
+> eronder; half gekozen toont een half vinkje. Gekozen gaat naar MAIN; niet gekozen blijft in de branch
+> en komt bij de volgende vergelijking terug. Een conflict staat standaard uit (MAIN houdt de zijne);
+> aangevinkt wint de branch. Wat buiten de map ligt staat standaard uit. De keuze gaat als
+> `keuze: {sleutel: bool}` naar `POST …/samenvoegen`; `voegSamen` maakt daarmee de nieuwe MAIN én de
+> nieuwe stand van de branch (`nieuwTak`). Zolang de samenhanggraaf (stap 3) er niet is, weigert de
+> server een keuze die een verwijzing stuk maakt (`409 samenhang`, `samenhangFouten`). Sinds 14-11
+> (voorstel Mark) is het vinkje een **schuifje met drie standen**: ↶ MAIN overnemen in de branch
+> (keuze `"terug"`, letterlijk: ook een veld dat MAIN niet heeft, bv. geen `kleur`, verdwijnt),
+> – niets doen, → naar MAIN (bij een conflict: MAIN overschrijven). De tekst per stand hangt af van
+> de status (`schuifTeksten` in `keuzeBoom.js`); op een map is de stand "gemengd" als de kinderen
+> verschillen.
+> **Per veld (stap 2b, 15-11):** een element in alle drie de standen wordt per veld samengevoegd
+> (`veldenVan`; verschillende velden aan beide kanten = geen conflict); met twee of meer gewijzigde
+> velden krijgt het in de boom een regel per veld (keuze `<elementsleutel>#<veld>`). Ook de velden
+> binnen een compartiment, gekoppeld op hun uuid (`data.uuid`, zie projectformaat 4 hieronder), anders op naam
+> (een hernoeming op dezelfde plek, zelfde type, blijft één veld: `lijnVeldenUit`). Een beheerder kan
+> de uuid's in de eigenschappen laten tonen (Studio-instellingen → Modelleren; `studio/uuidZichtbaar.js`).
+> **Projectformaat 4 (15-11):** elk modelelement en elk veld van canoniek-uml heeft een uuid. De
+> Studio vult een ontbrekende uuid zelf aan, na het openen van een project en na elke eigen wijziging
+> (`studio/uuidAanvulling.js`), als gewone operatie maar zonder undo-stap; met alleen leesrecht niet.
+> De uuid is **afgeleid** (uuid v5, `afgeleideUuidMaker` in `canoniek-uml/uuids.js`): uit de stam van
+> het project (bij een branch zijn MAIN) en het element-id, en voor een veld uit de uuid van het
+> element, het compartiment en de veldnaam van dat moment. Twee clients die tegelijk een oud project
+> openen, komen zo op dezelfde uuid's; eenmaal gezet blijft een uuid staan, ook bij hernoemen. Na de
+> wijziging van een ander vult een client niets aan (dat doet de maker), zodat een late aanvulling
+> geen gelijktijdige hernoeming terugdraait. Alle projecten op een server in één keer:
+> `scripts/projecten-uuids-aanvullen.mjs --omnium <url> [--toepassen]` (beheerderstoken; zonder
+> `--toepassen` alleen kijken), dat dezelfde uuid's als operaties stuurt.
 > De vergelijking is `studio/takken/verschilMetMain.js`: een zuivere drieweg op drie
 > gematerialiseerde werkbestanden (basis, tak, MAIN) met per element, diagram, map en
 > kruisverband `nieuw`/`gewijzigd`/`weg`/`conflict`/`main` (alleen op MAIN veranderd), de
@@ -1874,8 +1979,10 @@ fase 2 een **bewerkbare sandbox**:
   zijn haar uiteinden niveau 1. Keuzes: *diepte* (1 = direct verbonden, 2, 3 of alles wat
   bereikbaar is; wat al op het diagram staat telt mee voor de afstand) en *daarna auto-layout*
   (hele diagram, standaard uit). Wat via een package/map-verbinding hangt, staat standaard uit.
-  Nieuwe elementen komen in ringen rond de start (één ring per niveau), in één undo-stap. Code:
-  `diagramcore/model/gerelateerd.js` (`gerelateerdeElementen`, `ringPosities`; tests
+  Nieuwe elementen komen in de vrije ruimte rechts van de start: per niveau een kolom, van boven
+  naar beneden vanaf de hoogte van de start, zonder over een bestaand element te vallen en nooit
+  erboven (16-11; de eerdere ringen zetten elementen onder de werkbalken). In één undo-stap. Code:
+  `diagramcore/model/gerelateerd.js` (`gerelateerdeElementen`, `vrijePosities`; tests
   `gerelateerd.test.js`), `voegGerelateerdeToe` in `maakDiagramActiviteit.jsx`; de dialoog is
   `vraagReview` met `instellingen` + `herbereken` (`naamDialog.jsx`).
 - **Boomstijl naar alle kanten** (2026-11-07): "Kinderen in boomstijl" en de boomstijl van één
@@ -2018,6 +2125,20 @@ fase 2 een **bewerkbare sandbox**:
   optreedt. Na de fase 4-update een bestaande sandbox eerst verversen via
   "Herlaad uit UML-model" — anders missen de `bron`-bijlagen die de export
   verliesvrij maken.
+
+**Marks (2026-11-18).** Marks (MDA: aanwijzingen op een modelelement voor een transformatie) staan
+los van het model in het werkbestand, als `marks: {lagen, contexten, marks}` naast
+`kruisverbanden`; alleen aanwezig als er iets is. Kern: `web/vite/src/marks/` (puur: lagen met
+labels, contexten, `effectieveMarks`, `marksBijlage`, marksoorten per transformatie). Store:
+`studio/marksStore.js`, gekoppeld als store `marks`; de netto wijziging is één operatie
+`marks/patchMarks` (`{lagen?, contexten?, marks?}` elk `{zet, wis}` op id). De sidecar speelt hem
+na (`sidecarImport.speelOpsNa`); vergelijken en samenvoegen van een branch nemen de drie
+onderdelen mee (`marklaag`, `markcontext`, `mark`). `actieveContext` is van de gebruiker en zit
+niet in het werkbestand. Scherm: de sectie *Marks* in Eigenschappen (`studio/MarksPaneel.jsx`,
+regels `marks/marksPaneel.js`), het lagenbeheer daarin, en het teken ◆ op het canvas (afgeleid
+gegeven `data._marks` in het canvasmodel, zoals `vreemd`; `ElementNode` stuurt bij een klik
+`omnium:marks-toon`). Plan en stand:
+`docs/plans/2026-11-18 Marks — markeringen op het model (plan).md`.
 
 ### OpenAPI → canoniek model (transformatie)
 
@@ -2239,6 +2360,15 @@ Het "Tabel"-menu exporteert context-afhankelijk:
 - DMN-evaluatie integratie met process engine
 - Cross-referentie tussen DRD en tabel (decision → table mapping)
 
+## Demo-project: Omnium demo — gemeente Waterstede (2026-11-16)
+
+Voor nieuwe gebruikers staat op app het project **Omnium demo — gemeente Waterstede** (verzonnen
+gemeente, casus evenementenvergunning): 28 diagrammen in alle 26 talen, 42 kruisverbanden,
+doorklikken tussen talen en een simulatie die werkt op het BPMN- en DMN-model van het project zelf.
+Ophalen: *Project → Van server ophalen…*. De server is de bron; het werkbestand, de plannen waarmee
+het gebouwd is, de drie simulatiescenario's en de test staan in `docs/demo-project/` (zie de
+`README.md` daar).
+
 ## Activiteit Simulatie: BPMN en DMN doorlopen met cm-objecten (2026-11-13)
 
 De activiteit **Simulatie** (groep Modelleren) doorloopt een BPMN-proces met zijn beslistabellen, stap voor
@@ -2260,6 +2390,51 @@ dag vervangen).
   proces van de laatste stap in beeld.
 - **Scenario's** hebben een `naam` en een `beschrijving`; de keuzelijst toont de naam, onder de lijst staat de
   beschrijving van het scenario in de tekst.
+- **Ingebakken scenario's** (16-11): de keuzelijst heeft twee groepen. De **GPK**-scenario's brengen de
+  beslistabel en het e-dienstmodel van het GPK-voorbeeld mee. De **Waterstede**-scenario's (buurtfeest,
+  jaarmarkt, festival) horen bij het demo-project *Omnium demo — gemeente Waterstede* en draaien op het BPMN en
+  DMN van het project zelf, zonder e-dienstmodel; kiezen zet het GPK-voorbeeld dus uit. Tijdelijk: zodra
+  scenario's in het project kunnen staan, verhuizen ze daarheen (`VOORBEELDEN` in `simulatieRun.js`).
+- **Scenario's in het project: het profiel Simulatiemodel** (16-11, ontwerp §12). Een simulatie is een model
+  (M1) in de modeltaal `simulatie` (M2, `diagramprofielen/simulatie/`, in het project profiel
+  `simulatiemodel05`). Het staat in het project, gaat mee in bewaren en synchroniseren, en is te tekenen.
+  - **Elementtypen:** *Simulatie* heeft *Simulatiesubjecten* (elk wijst naar een dynamisch modelonderdeel: nu
+    een BPMN-diagram, later een activity- of sequencediagram of een use case-realisatie) en *Scenario's*. Een
+    scenario *start met* een *Instantie* (de startgegevens), en heeft *Stubs* (het antwoord bij een gat; het
+    volgnummer zegt bij welk bezoek van de taak) en een *Verwachting* (waar de run moet uitkomen).
+  - **Instantie:** de gegevens van één instantie van een type uit het model, als json (M0, beschreven in een
+    M1-model). Het elementtype heeft de M3-aard `instantie`; *instantie van* wijst naar een element met de
+    aard `gegevens`. Het object uit het object-profiel heeft dezelfde aard (profiel Object 1.1.0). De aard
+    staat op het elementtype, niet op het profiel, en is één waarde (`AARD_ELEMENT` in `layoutStijl.js`).
+  - **Bewaar in het project** (onder het scenario): zet het scenario uit het tekstvak in het model. Een
+    scenario met dezelfde naam wordt bijgewerkt; de instantie, de verwachting en de stubs blijven dezelfde
+    elementen, zodat hun plek op het diagram blijft. De eerste keer ontstaat de simulatie, met de processen
+    van het project als subjecten. Het overzicht (simulatie, subjecten, scenario's) en elk scenario krijgen een
+    eigen diagram. Nieuwe diagrammen komen in de projectboom in een map met de naam van de simulatie; wat je
+    daarna verplaatst blijft staan. Een scenario-diagram heet zoals het scenario zelf, dus in de boom zie je die
+    naam twee keer: het diagram, en het scenario-element onder het overzicht. Verwijzingen naar andere talen worden gelegd waar de naam gevonden wordt: het type van de
+    instantie, de taak van een stub, het startevent, het einde; anders blijft de tekst staan.
+  - **Voorbeeld:** *GPK-voorbeeld laden* zet ook de vijf GPK-scenario’s als model in het project: één
+    simulatie met vier subjecten, vijf scenario’s en een diagram per scenario.
+  - **Kiezen:** de keuzelijst toont de scenario's van het project in de groep *Uit het project*. De
+    interpreter krijgt hetzelfde json-scenario als altijd (`simulatie/scenarioModel.js`:
+    `scenarioUitModel`, `scenarioNaarModel`).
+  - **Het scenario als test:** staat de run stil, dan staat onder de stand of de afloop klopt met `verwacht`:
+    het `einde` of het `gat` waar hij stopt, `via` (een stap waar hij langs moet komen) en verwachte
+    waarden (in de procesvariabelen, op het startobject, of één niveau diep in een variabele). De `reden` is
+    uitleg en wordt niet getoetst (`toetsVerwachting`).
+  - **Subjecten:** een scenario uit het project draait op de subjecten van zijn simulatie: alleen die
+    BPMN-diagrammen doen mee als proces. In het paneel Objecten staat "Draait op N processen (de subjecten
+    van …)". Een simulatie zonder subjecten, of een scenario uit de ingebakken lijst, draait op alle processen
+    van het project. Een call activity naar een proces dat geen subject is, loopt vast met de reden erbij.
+  - **Alle scenario's toetsen** (onder de keuzelijst): draait elk scenario van het project door tot een gat of
+    een einde en toetst de afloop aan zijn verwachting. Per scenario ✓, ✗ met wat afwijkt, of – (geen
+    verwachting); een klik kiest het scenario. De run in beeld verandert niet (`draaiTestset`).
+  - **Nog niet:** een scenario laten starten met een getekend object uit het object-profiel; formele en
+    materiële tijd in de serialisatie; de Waterstede-scenario's naar het demo-project verhuizen (wacht op een
+    release met dit profiel).
+  - Tests: `simulatie/scenarioModel.test.js` (rondgang van alle acht ingebakken scenario's), e2e
+    `65-studio-simulatiemodel`.
 - **GPK-voorbeeld** (13-11): vier processen, Aanvraag oppakken → signaal *zaak in de werkbak* → Kies zaak om te
   behandelen (kandidaatgroep, claim via een onderbrekend boundary event) → signaal *medewerker aan zaak
   gekoppeld* → Zaak behandelen, met beoordelen als call activity. Een signaal staat in het log met wie het
@@ -2269,6 +2444,76 @@ dag vervangen).
   (`diagramprofielen/bpmn/conditiesNaarCel.js`, `juelNaarCel` in `transformatie/celOmzetting.js`); wat geen CEL
   wordt (bv. `empty x`) blijft JUEL, met een melding.
 - **Rechts, objecten**: de objecten met hun state, de procesvariabelen en wat buiten het cm gebeurde.
+  **Cm-vorm (POC 14-11):** een object waarvan het type een objecttype van het e-dienstmodel is (de GPK-aanvraag)
+  staat in de vorm van het canonieke model: de entiteit, *erft van* de ouder, de GE's met hun velden (`*` =
+  verplicht; *onbekend* = niet in het objecttype), relaties met hun velden en doel (een leeg alternatief, zoals
+  de andere GE's van een Partij, op één regel). Bovenaan de toets op de state: verplichte velden ingevuld,
+  relaties met een bekend doel. Onderaan *Buiten het cm*: velden op het object die nergens in het cm staan (de
+  behandelvelden). Knop *JSON* toont de platte vorm. De structuur komt uit het canonieke model van het project
+  als de bron-entiteit daarin staat, anders uit het cg-test-model. Code: `simulatie/cmVorm.js` (de omkering van
+  de traceregels van het objecttype-artefact, met `v3Graaf`), `studio/activities/simulatieCmVorm.jsx`.
+  **Versies (14-11):** elke stap die een object raakt (maak, zet, overgang, verbind) is een versie, zoals een
+  registratie met een wijziging in het bitemporele register; het nummer staat naast de naam (`v5`). Wat in de
+  laatste stap veranderde is geel gemarkeerd. Klik op een versie (`v1` … `v5`) om het object te zien zoals het na
+  die stap was, met de velden van die stap gemarkeerd; *nu* gaat terug. De run zelf blijft staan (dat is Terug of
+  een klik in het log). Geen kopieën per stap: de versie is het log tot en met die stap, opnieuw afgespeeld
+  (`store.js`, `versiesVan`). Correctie en ongedaanmaking (formele tijd) doet de simulatie niet.
+- **Data-objecten in de tekening (15-11, ontwerp §11.8 stap 3):** een data-object of data store met een type
+  (zie *BPMN: het data-object met een type*) toont het object van de run dat bij dat type hoort: zijn type
+  heeft de naam van het type of van een subtype (generalisatie, ook over meer stappen; de
+  GehandicaptenparkeerkaartAanvraag hoort bij het data-object *Aanvraag*). Rechtsboven een kenmerk met de
+  versie (`v5`, `×2` bij meer objecten); geel omrand als het object in de laatste stap veranderde; rood
+  gestippeld als de toestand van het object (`state`/`status`) niet klopt met de toestand op het model
+  (*[ingediend]*). Een klik toont het object (cm-vorm, versies) onder het diagram; de tooltip noemt id, type,
+  versie en toestand. Puur: `simulatie/dataObjecten.js` (`objectenBijDataObjecten`, `typeNamen`). E2E: spec 63.
+- **Lijnen en objecten (16-11, ontwerp §11.8 stap 4):** de run toetst de data-associaties: een taak die leest
+  wat er nog niet is, een schrijvende lijn zonder schrijven, en schrijven zonder schrijvende lijn (naar een
+  data-object van dat type op het diagram). Rode stippellijn over de lijn, rood uitroepteken op de taak (tooltip:
+  de reden), en de lijst *Lijnen en objecten* onder het diagram. Alleen data-objecten met een type. Puur:
+  `simulatie/dataLijnen.js` (`toetsLijnen`). E2E: spec 63.
+- **Startobject (16-11, §11.8 stap 4):** onder het scenario staat of het type van het startobject past bij het
+  invoer-data-object van het startproces (groen vinkje of rood uitroepteken; `toetsStartobject`).
+- **Kaart (16-11, §11.8 stap 4):** bij een object naast *cm-vorm* en *JSON* de weergave *kaart*: de entiteit als vak
+  met de GE's erin en de waarden, zoals de ENT in het cm-diagram (`CmKaart` in `simulatieCmVorm.jsx`).
+- **Log (16-11):** met de greep erboven groter of kleiner te slepen (dubbelklik: standaardhoogte; de hoogte
+  blijft bewaard in de browser), en hij schuift mee zodat de nieuwste regel in beeld is. De meldingen van
+  *Lijnen en objecten* staan boven de tekening; een proces met meldingen heeft een rood getal op zijn knop.
+- **Cm-vorm zonder e-dienstmodel (16-11):** is er geen e-dienstmodel, of kent het het type van een object niet,
+  dan komt de structuur rechtstreeks uit het canonieke model van het project (`maakCmBeeldDirect` in
+  `cmVorm.js`): elk veld staat in het object op zijn veldnaam (zoals de beslistabel het leest), een meervoudig
+  gegevenselement is een lijst onder zijn meervoud. De boom, de kaart en de toets op verplichte velden werken
+  dan ook; relaties staan er als onbekend bij. Onder het object staat waar de structuur vandaan komt.
+- **Objecten in de tekening (16-11):** een klik op een data-object met een object zet dat object als een klein
+  objectdiagram naast het data-object (rechts, en links als daar geen plaats is), zonder venster
+  (`simulatie/objectVorm.js`, `ZwevendObject`):
+  - **Het hoofdobject** heeft de vorm van "neem op in Entiteit" uit het cm, met waarden: de kop «entiteit» en
+    onderstreept `naam : Type` met de toestand en de versie, daaronder de enkelvoudige gegevenselementen genest
+    (de naam vet, de velden ingesprongen als `veld = waarde`). De gegevenselementen van de ouder en het subtype
+    staan samen in hetzelfde object. Zonder kardinaliteit, typen en "materieel". `:` wijst naar het type en
+    staat alleen in de kop; `=` geeft de waarde (UML).
+  - **Een meervoudig gegevenselement** is per voorkomen een los object «gegevenselement», met een compositielijn
+    naar het hoofdobject.
+  - **Een relatie** met eigen velden is per voorkomen een los object «relatie» (`partijrol = aanvrager`), met
+    een pijl naar haar doel; het doel is een eigen object «entiteit» eronder. Zonder eigen velden is het alleen
+    de pijl, met de naam van de relatie erbij.
+  - **Een referentielijst** binnen een gegevenselement is een waarde op het veld:
+    `type = GPK (Gehandicaptenparkeerkaart)`.
+  - **Lege velden** staan er nooit in; een verplicht veld zonder waarde blijft staan als fout. De kleur van een
+    entiteit komt uit het cm.
+  - **Bediening:** het hoofdobject slepen verplaatst het geheel, een los object alleen zichzelf; de lijnen
+    bewegen mee. Een tweede object komt erbij. Rechtsklik: *Toon in het objectenpaneel* (het object licht daar
+    op; daar staan de versies en de json), *Opnieuw opstellen*, *Sluiten*, *Alle objecten sluiten*. Het toont de
+    stand van nu; wat in de laatste stap veranderde is gemarkeerd. De objecten blijven hangen als het beeld naar
+    een ander proces gaat, en verdwijnen bij Stop.
+  - Zonder type in het cm: één object met de platte velden.
+- **Wat er niet is, staat er niet (16-11):** een gegevenselement of relatie zonder waarden die niet in het
+  objecttype zit, of een leeg alternatief binnen een doel (de GE's van een Partij), komt niet meer in de
+  cm-vorm en de kaart; het verschijnt zodra het er is. Met het vinkje **lege velden verbergen** boven in het
+  paneel Objecten verdwijnen in het paneel (cm-vorm en kaart) ook de lege optionele velden, en de
+  gegevenselementen waar dan niets van overblijft. In de kaart staat bij een veld nu `=` in plaats van `:`. Een verplicht veld zonder waarde blijft altijd staan. De
+  keuze wordt bewaard.
+- **Pijltjestoetsen (16-11):** → is een stap, ← een regel terug; niet in een invoerveld en niet tijdens het
+  afspelen. Alleen als het paneel Simulatie in beeld is.
 - **Token**: een rand en een bolletje op het element waar het token staat (indigo = kan verder, oranje = wacht
   op invoer, cyaan = wacht op een bericht of ander proces, rood = vastgelopen); waar het geweest is blijft een
   dunne cyaan rand staan. Op het BPMN-canvas in Modelleren staat het token alleen als je **ook op het
@@ -2285,3 +2530,65 @@ En: een event of gateway in de tekening is een `<g transform="scale(…)">`; `ge
 eigen transform niet mee, dus wie er iets omheen tekent moet de transform zelf toepassen.
 Ontwerp, keuzes en open vragen: `docs/plans/2026-11-12 Simulatie van BPMN en DMN met cm-objecten (ontwerp).md`
 (§10.5 en §11). E2E: `tests/e2e/63-studio-simulatie.spec.js`.
+
+## BPMN: het data-object met een type (2026-11-15)
+
+Een BPMN-data-object of data store kan een **type** krijgen: een verwijzing naar een element in een taal die
+gegevens draagt — een cm-entiteit, UML-klasse, MIM-objecttype of -gegevensgroeptype, ERD-entiteit. Welke
+elementen dat zijn bepaalt de **M3-aard `gegevens`** op het elementtype (`AARD_ELEMENT` in
+`diagramcore/types/layoutStijl.js`), niet een lijst per profiel; een activiteit valt er vanzelf buiten. De kiezer
+is de bestaande `element-verwijzing` (`studio/elementVerwijzing.jsx`, eerst de taal, dan het element) met
+`regel.aard`. Waarde `{profielId, elementId}`; in BPMN-XML wordt het `itemSubjectRef`.
+
+Verder op het data-object: **rol** (intern, invoer = Data Input met open pijltje, uitvoer = Data Output met dicht
+pijltje; de parameters van het proces) en **toestand** (BPMN `dataState`, onder de naam als *Aanvraag
+[ingediend]*, ook op de data store). Op de data-associatie: **richting** "lezen en schrijven" (één lijn met twee
+pijlen; BPMN kent alleen in- en uitvoerassociaties, de export maakt er twee van). Velden in
+`diagramprofielen/bpmn/dataVelden.js`. Profielversies: BPMN 1.2.0; canoniek, puur-UML, MIM en ERD 1.1.0 (de aard).
+Nog niet: de BPMN-XML-export en -import van type, rol, toestand en richting, en het gebruik in de simulatie
+(ontwerp Simulatie §11.8). E2E: `tests/e2e/64-studio-bpmn-dataobject.spec.js`.
+
+**Het type is ook de tracering (15-11).** Een eigenschap met datatype `element-verwijzing` en een `koppelsoort`
+(M3 PropertyType, `schema.js`) levert een **afgeleide koppeling** op: het type van het data-object
+«traceert naar» het cm-element (`diagramcore/model/afgeleideKoppelingen.js`). Niet los bewaard: de waarde van de
+eigenschap is de bron, dus lijn en type kunnen niet uit elkaar lopen; wijzigen of wissen gaat via de eigenschap
+(de inspector van de lijn zegt dat, `koppeling-afgeleid`). De koppeling tekent als paarse lijn zodra het
+cm-element als verwijzing op het diagram staat, en **Gerelateerde elementen toevoegen** volgt nu ook
+kruisverbanden (matrix én afgeleid) naar een andere taal: het andere uiteinde komt als verwijzing op het diagram
+(`gerelateerdeElementen({koppelingen, vreemdeKnopen})`). En **in die andere taal verder** (Mark 15-11):
+`kruisGraaf` (`diagramcore/model/gerelateerd.js`) neemt van elke taal die via een kruisverband meedoet alle
+elementen en verbindingen mee, dus vanaf de cm-Aanvraag op een BPMN-diagram komen Partij en verder erbij (ook
+als verwijzing). De titel noemt de naam, niet de canvas-id. Automatisch op het diagram zetten doen we bewust
+niet. De afgeleide koppelingen staan (nog) niet in de Koppelingen-matrix.
+
+**Doorklik via het type (15-11).** Zonder eigen *verwijst naar* opent een dubbelklik op het data-object het
+eerste cm-diagram (op naam) waarop zijn type staat; het contextmenu biedt *Open …* voor elk zo'n diagram
+(`diagrammenViaType` in `studio/doorklik.js`; geldt voor elke element-verwijzing met een koppelsoort).
+
+## Het M3 als gegevens (2026-11-16)
+
+Stap 1 van het plan *M3 en projectmetamodel als modellen in Omnium* (docs/plans/2026-11-15;
+besluiten Mark 15-11). Het M3 staat nu ook als gegevens naast de code, als bron voor een
+alleen-lezen puur-uml-model (generator: stap 3).
+
+- `diagramcore/types/m3.js`: per metaklasse het pakket (Definitie, Stijl, Implementatie), de
+  eigenschappen met type en kardinaliteit, operaties (code) apart. Een eigenschap met een
+  metaklasse als type is een associatie. Enumeraties komen uit de code (`AARD_*`,
+  `VORMBOOM_TAGS`, `LAYOUT_RENDERERS`, `SUPERPROFIEL_IDS`) of uit de letterlijke typen van
+  `schema.js`. Hooks zijn een associatie naar **Hook**; de soorten (**HookSoort**) komen uit
+  `handlerCatalogus.js` (`handlersVan("hook")`, met `plek`: DiagramType of ElementType).
+- `diagramcore/types/leesTypedefs.js`: leest de typedefs van `schema.js` als gegevens. De uitleg
+  blijft daardoor op één plek, in `schema.js`.
+- Controletests: `m3.test.js` (elke typedef = een metaklasse met precies dezelfde eigenschappen;
+  optioneel ↔ ondergrens 0; `"a"|"b"` ↔ enumeratie; HookSoort = catalogus) en
+  `render-svc/m3Dekking.test.mjs` (elke sleutel en hook van alle 26 profielen staat in het M3, op de
+  goede metaklasse).
+
+De tests vonden gaten die nu in `schema.js` beschreven staan: `DiagramType.hooks` en `shapeSets`,
+`ElementType.hoekStijl`, `icoon` en `verbindingsregels`, `PropertyType.aard`,
+`LayoutStrategie.stijl`, en de typedefs `Verbindingsregel`, `EdgePresentatie` (LineStyle),
+`ShapeSet`, `RandElement`, `Samentrekking` en `Opname`. In de catalogus kwamen de hooks
+`magVerbinden`, `ontvangtDrop`, `eigenschapUit` en `afgeleideEigenschappen` erbij.
+
+**Nieuwe M3-eigenschap?** Zet hem in de typedef in `schema.js` én in `m3.js`; de tests wijzen aan
+wat ontbreekt.

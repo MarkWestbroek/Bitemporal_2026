@@ -48,10 +48,28 @@ auto-layout op de M3-LayoutStijl en de `posities` van `model_wijzigen` (`plannen
 - **Activity**: layout `leesvolgorde-tb` van het profiel (verticaal, zoals de standaard voor AD's):
   360–560 breed, 1200–1900 hoog.
 - **Sequence**: het profiel heeft geen layoutstijl; de levenslijnen staan via `posities` op één rij
-  (260 px uit elkaar), de berichten tekent het diagram zelf in volgorde.
-- **ArchiMate**: de profiel-layout `lagen-tb` zet alles wat applicatielaag is op één rij (8360 breed)
-  en is hier dus onbruikbaar; de vier views staan in een raster per categorie via `posities`
-  (`raster_*.json`): 1160–1910 breed, 460–720 hoog.
+  (260 px uit elkaar). **Let op (08-11):** de hoogte van een bericht komt uit zijn zend- en
+  ontvangpunt (`punt`-elementen met `data.randVan = <levenslijn>`, kind-nodes van de levenslijn
+  met een relatieve y; de activaties worden daaruit afgeleid). Sinds 06-11 (2c0b2393,
+  `sequence/plaatsUitPlan.js` via de profiel-nazorg in `studio/assistent/wijziging.js`) zet
+  `model_wijzigen` die punten zelf, in planvolgorde; een MCP-proces dat oudere code draait doet dat
+  niet, en dan hangen alle berichten bovenaan zonder activaties (de drie GraphQL-diagrammen van
+  GQL-ODRL-EXEC, 07-11): MCP herstarten vanaf een checkout met die commit. Los daarvan laat
+  `controleerPlan` (assistentKern.js, stap 3) een tweede connector van hetzelfde type tussen
+  hetzelfde paar vallen, ook een zelf-bericht (BACKLOG AI-3). Herstel achteraf als rechtstreekse
+  ops: per bericht i in de bedoelde volgorde `<bericht>_zend`/`_ontvang` als punt, bericht
+  source/target naar die punten, diagram-nodes `{x: 1, y: 84 + 50·i}` (`patchElementen` +
+  `patchDiagrammen`); zo staan ook de diagrammen van 18-10 op app.
+- **ArchiMate**: de profiel-layout `lagen-tb` zette op 18-10 alles wat applicatielaag is op één
+  rij (8360 breed); de twee totaalkaarten staan daarom in een raster per categorie via `posities`
+  (`raster_*.json`): 1160–1910 breed, 460–720 hoog. Sinds de lagen-layout afhankelijkheden binnen
+  een laag volgt, rijen afbreekt op zes en een grouping om zijn leden legt (OMNIUM-UI, main
+  ec5ab7e0 en fd6f6db8), staan **acht van de negen views in "2 Componenten"** met `lagen-tb`
+  (23-10, plan `layout/lagen_acht_views.json`, akkoord Mark): kruisingen Hoofdcomponenten 13 → 1,
+  Functioneel toegang 15 → 2, registreren 6 → 1, samenwerken 4 → 2, Uitrol app 4 → 1, Uitrol pf en
+  VPS 1 → 0, Gebruik (runtime) 1 → 0; maten 360–1258 breed, 350–1030 hoog. *Functioneel:
+  modelleren* is bewust niet opnieuw opgesteld (0 → 1 kruising). Open bij OMNIUM-UI: lange lijnen
+  over meer lagen lopen soms door een element.
 - **Use case**: de automatische opstelling van de bouw was al goed (600–900 × 600–770).
 
 Maten zijn de omhullende van de nodes; lijnen en berichten komen daar nog bij. Verder fijnslijpen

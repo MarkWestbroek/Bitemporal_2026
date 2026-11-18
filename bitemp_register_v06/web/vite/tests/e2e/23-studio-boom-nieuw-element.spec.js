@@ -40,10 +40,12 @@ test("diagram in een map plaatsen: zijn niet-ingedeelde elementen volgen (import
 
 test("boom opgeruimd (stap 4): lege profielen zwijgen, elementenlijst toont alleen wezen", async ({ page }) => {
   await openStudio(page);
-  // Geen zwervende diagrammen: geen twaalf regels "geen diagrammen" meer; alleen de profielen
-  // met een vast document (Canoniek model IDE, DMN, BPMN, berichten) blijven staan.
+  // Geen kop "Niet ingedeeld" meer (16-11): diagrammen zonder map staan in de root. De vaste
+  // documenten van de klassieke editors staan daar alleen voor een beheerder; hier staat de login
+  // uit, dus zie je ze (Canoniek model IDE (v1) e.a.).
   await expect(page.getByText("geen diagrammen")).toHaveCount(0);
-  await expect(page.locator(".studio-project__sectie")).toHaveCount(4);
+  await expect(page.locator(".studio-project__sectie")).toHaveCount(0);
+  await expect(page.getByTestId("boom-root")).toContainText("Canoniek model IDE (v1)");
   await expect(page.getByTestId("nieuw-diagram-los")).toBeVisible();
   // Een diagram in een map met twee elementen erop: beide volgen de boomregel → geen wezen.
   await zetModel(page, { profielId: "usecase05", diagramId: "d_uc", diagramNaam: "Use case model", elementen: [
@@ -58,7 +60,23 @@ test("boom opgeruimd (stap 4): lege profielen zwijgen, elementenlijst toont alle
   await expect(page.locator(".studio-project__elementen")).not.toContainText("Leen boek");
   // Zwerver ook in een map: lijst klapt in tot één regel.
   await inModelleren(page, 'const m = Object.values(ms.getState().mappen)[0].id; ms.getState().plaatsMeerdere(["el::usecase05::zwerver"], m);');
-  await expect(page.getByTestId("elementen-geen-wezen")).toBeVisible();
-  // Het use case-diagram staat in een map, dus Use case verschijnt niet onder "Niet ingedeeld".
-  await expect(page.locator(".studio-project__sectie")).toHaveCount(4);
+  // Geen wezen: dan is er geen elementenvak (16-11).
+  await expect(page.getByTestId("elementen-wezen")).toHaveCount(0);
+  // Het use case-diagram staat in een map, dus niet in de root.
+  await expect(page.getByTestId("boom-root")).not.toContainText("Use case model");
+});
+
+test("startpagina: een nieuw diagram komt in de root van de projectboom; uit een map slepen kan terug", async ({ page }) => {
+  await openStudio(page);
+  await page.locator(".studio-modelleren__leeg-knop", { hasText: "Use case" }).first().click();
+  const dlg = page.locator(".studio-dialoog");
+  await dlg.locator("input").fill("Mijn use cases");
+  await dlg.getByRole("button", { name: "Aanmaken" }).click();
+  const root = page.getByTestId("boom-root");
+  await expect(root).toContainText("Mijn use cases");
+  // In een map en weer terug naar de root (Verplaats naar → root gebeurt met plaatsDiagram(…, null)).
+  const sleutel = await inModelleren(page, 'const t = ms.getState().actieveTab; const m = ms.getState().nieuweMap("Map"); ms.getState().plaatsDiagram(t, m); return t;');
+  await expect(root).not.toContainText("Mijn use cases");
+  await inModelleren(page, "ms.getState().plaatsDiagram(arg, null);", sleutel);
+  await expect(root).toContainText("Mijn use cases");
 });

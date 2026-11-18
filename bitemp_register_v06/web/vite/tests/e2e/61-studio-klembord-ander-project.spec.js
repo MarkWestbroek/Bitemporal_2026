@@ -63,13 +63,15 @@ test("plakken als hetzelfde element: id en uuid blijven; wat er al staat wordt n
   await expect(page.getByText(/1 element stond al in dit project en is niet overschreven/)).toBeVisible();
 });
 
-test("plakken als kopie (Ctrl+Shift+V): nieuwe id's, geen uuid", async ({ page }) => {
+test("plakken als kopie (Ctrl+Shift+V): nieuwe id's, een eigen uuid", async ({ page }) => {
   await zetModel(page, { profielId: "diagram05", diagramId: "doel", diagramNaam: "Doel", elementen: [] });
   await page.keyboard.press("Control+Shift+v");
   await expect.poll(async () => (await entiteiten(page)).length).toBe(2);
   const uit = await entiteiten(page);
   expect(uit.map((e) => e[1]).sort()).toEqual(["Aanvraag", "Partij"]);
-  expect(uit.every((e) => e[2] === null)).toBe(true);
+  // Projectformaat 4: de kopie krijgt een eigen (afgeleide) uuid, nooit die van het origineel.
+  for (const e of uit) expect(e[2]).toEqual(expect.stringMatching(/^[0-9a-f]{8}-[0-9a-f]{4}-5[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/));
+  expect(uit.some((e) => e[2] === "uuid-aanvraag" || e[2] === "uuid-partij")).toBe(false);
   expect(uit.some((e) => e[0] === "Aanvraag" || e[0] === "Partij")).toBe(false);
   await expect(page.locator(".react-flow__node")).toHaveCount(2);
 });
@@ -107,7 +109,8 @@ test("diagram kopiëren in de boom en in een ander project plakken, met dezelfde
   expect(uit.elementen).toEqual([
     ["adres_hier", "Adres hier", "u-ao", null, null],
     ["cg", "", null, "po", "ge"],
-    ["ge", "Naam", null, null, null],
+    // Projectformaat 4: het gegevenselement had geen uuid en krijgt er hier een (afgeleid).
+    ["ge", "Naam", expect.stringMatching(/^[0-9a-f]{8}-[0-9a-f]{4}-5[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/), null, null],
     ["po", "Persoon", "u-po", null, null],
   ]);
   await expect(page.getByText(/1 element stond al in dit project en is niet overschreven/)).toBeVisible();

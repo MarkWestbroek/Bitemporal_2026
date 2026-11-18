@@ -20,6 +20,7 @@
  *   - Packages (informatiemodel/domein/extern/view) = één package-type met
  *     een soort-property; bevat-connector = boom + drop-doel.
  */
+import { startNaam } from "../../diagramcore/types/startNaam.js";
 import { registreerDiagramType, getDiagramType } from "../../diagramcore/types/typeRegistry.js";
 import { registreerHandlerInfo } from "../../diagramcore/types/handlerCatalogus.js";
 import { MIM_AFLEIDBAAR } from "../umlEigenschappen.js";
@@ -111,6 +112,9 @@ const elementTypes = [
   {
     id: "objecttype",
     label: "Objecttype",
+    // M3 aard (15-11): draagt gegevens; het type van een BPMN-data-object kan hiernaar wijzen.
+    aard: "gegevens",
+    lidwoord: "het",
     kort: "OT",
     // Vormgrammatica (besluit 2026-07-07): identiteit = scherpe rechthoek
     // met dikke rand. Stereotypen staan er voor de "tekst"-stand van de
@@ -135,6 +139,9 @@ const elementTypes = [
   {
     id: "gegevensgroeptype",
     label: "Gegevensgroeptype",
+    // M3 aard (15-11): draagt gegevens; het type van een BPMN-data-object kan hiernaar wijzen.
+    aard: "gegevens",
+    lidwoord: "het",
     kort: "GGT",
     // Structuur zonder identiteit = afgeronde rechthoek.
     stereotype: "«gegevensgroeptype»",
@@ -148,6 +155,7 @@ const elementTypes = [
   {
     id: "enumeratie",
     label: "Enumeratie",
+    lidwoord: "de",
     kort: "ENUM",
     // Waarde-familie = chip (dunne rand, sterk afgeronde uiteinden).
     stereotype: "«enumeratie»",
@@ -161,6 +169,7 @@ const elementTypes = [
     // Waarden extern beheerd; de lijst zelf leeft op een URI.
     id: "codelijst",
     label: "Codelijst",
+    lidwoord: "de",
     kort: "CODE",
     // Gestippelde chip: de waarden leven búiten het model (URI).
     stereotype: "«codelijst»",
@@ -177,6 +186,7 @@ const elementTypes = [
   {
     id: "referentielijst",
     label: "Referentielijst",
+    lidwoord: "de",
     kort: "REF",
     stereotype: "«referentielijst»",
     shape: "chip",
@@ -192,6 +202,7 @@ const elementTypes = [
   {
     id: "primitiefDatatype",
     label: "Primitief datatype",
+    lidwoord: "het",
     kort: "PDT",
     stereotype: "«primitief datatype»",
     shape: "chip",
@@ -208,6 +219,7 @@ const elementTypes = [
   {
     id: "gestructureerdDatatype",
     label: "Gestructureerd datatype",
+    lidwoord: "het",
     kort: "GDT",
     stereotype: "«gestructureerd datatype»",
     shape: "chip",
@@ -221,6 +233,7 @@ const elementTypes = [
     // alternatief-connector. Varianten 2–5: fase 2 (zie verkenning §4).
     id: "keuze",
     label: "Keuze",
+    lidwoord: "de",
     kort: "KEUZE",
     // Afgeknipte hoeken = "meerdere gedaanten".
     stereotype: "«keuze»",
@@ -232,6 +245,7 @@ const elementTypes = [
   {
     id: "constraint",
     label: "Constraint",
+    lidwoord: "de",
     kort: "CON",
     stereotype: "«constraint»",
     shape: "rounded",
@@ -248,6 +262,7 @@ const elementTypes = [
     // soort bepaalt de MIM-rol. Bevat-lidmaatschap = boom + drop-doel.
     id: "package",
     label: "Package",
+    lidwoord: "het",
     kort: "PKG",
     stereotype: "«package»",
     shape: "package",
@@ -266,6 +281,7 @@ const elementTypes = [
   {
     id: "notitie",
     label: "Notitie",
+    lidwoord: "de",
     kort: "NOT",
     shape: "note",
     icoon: "notitie",
@@ -275,6 +291,7 @@ const elementTypes = [
   {
     id: "boundary",
     label: "Kader",
+    lidwoord: "het",
     kort: "KADER",
     shape: "boundary",
     icoon: "kader",
@@ -471,6 +488,9 @@ const referenceTypes = [
 
 export const mim12DiagramType = {
   id: MIM12_ID,
+  // Profielversie (STUDIO.md "Profielversie in het project"). 1.1.0 (15-11): aard "gegevens" op
+  // de typen die data dragen (het type van een BPMN-data-object wijst ernaar); minor.
+  versie: "1.1.0",
   label: "MIM 1.2",
   style: "uml-klassiek",
   // Connectoren hechten aan de omtrek i.p.v. aan vier handles: dozen
@@ -519,7 +539,7 @@ export function maakElement(elementTypeId) {
   _teller += 1;
   const element = {
     id: `mim_${Date.now()}_${_teller}`,
-    naam: `Nieuw${et.label.replace(/[^A-Za-z]/g, "")}`,
+    naam: startNaam(et),
     elementType: et.id,
     compartimenten: [],
     data: {},

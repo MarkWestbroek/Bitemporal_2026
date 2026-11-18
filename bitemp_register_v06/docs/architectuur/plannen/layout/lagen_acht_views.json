@@ -1,0 +1,23 @@
+{
+ "uitleg": "Opstelling lagen-tb (ArchiMate-lagen, grouping om zijn leden) voor de acht views in 2 Componenten die er beter van worden; 'Functioneel: modelleren' blijft staan (0 -> 1 kruising).",
+ "diagrammen": [
+  {"sleutel": "gebruik", "bestaand": "mcp_diagram_gebruik_runtime_van_een_instantie"},
+  {"sleutel": "hoofd", "bestaand": "mcp_diagram_hoofdcomponenten_en_interfaces"},
+  {"sleutel": "toegang", "bestaand": "mcp_diagram_functioneel_toegang_notificeren_renderen"},
+  {"sleutel": "registreren", "bestaand": "mcp_diagram_functioneel_registreren_lezen_en_generer"},
+  {"sleutel": "samenwerken", "bestaand": "mcp_diagram_functioneel_samenwerken_en_ai_hulp"},
+  {"sleutel": "uitrol_app", "bestaand": "mcp_diagram_uitrol_app_omnium_ide_nl_images_van_dock"},
+  {"sleutel": "uitrol_pf", "bestaand": "mcp_diagram_uitrol_pf_common_ground_lab_nl_bouwt_uit"},
+  {"sleutel": "vps", "bestaand": "mcp_diagram_instanties_op_de_vps"}
+ ],
+ "opstelling": [
+  {"diagram": "gebruik", "actie": "lagen-tb"},
+  {"diagram": "hoofd", "actie": "lagen-tb"},
+  {"diagram": "toegang", "actie": "lagen-tb"},
+  {"diagram": "registreren", "actie": "lagen-tb"},
+  {"diagram": "samenwerken", "actie": "lagen-tb"},
+  {"diagram": "uitrol_app", "actie": "lagen-tb"},
+  {"diagram": "uitrol_pf", "actie": "lagen-tb"},
+  {"diagram": "vps", "actie": "lagen-tb"}
+ ]
+}

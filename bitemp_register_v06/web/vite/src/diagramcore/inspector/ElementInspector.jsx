@@ -81,6 +81,29 @@ function focusNaarRij(plek, rijIndex) {
   });
 }
 
+/**
+ * Uuid, alleen-lezen (beheer, `editorContext.toonUuids`; Mark 15-11): ingekort, voluit in de
+ * tooltip, met kopiëren. Zonder uuid: wanneer hij ontstaat.
+ */
+function UuidRegel({ uuid, klein = false }) {
+  const stijl = { fontSize: klein ? 10 : 11, color: "var(--s-fg-muted, #64748b)", fontFamily: "ui-monospace, monospace" };
+  if (!uuid) return <div style={stijl} data-testid="uuid-regel" title="Een uuid komt zodra het element of veld een naam heeft en het project bewerkt mag worden">uuid: nog geen</div>;
+  const kort = String(uuid).length > 13 ? `${String(uuid).slice(0, 8)}…${String(uuid).slice(-4)}` : String(uuid);
+  return (
+    <div style={{ ...stijl, display: "flex", alignItems: "center", gap: 6 }} data-testid="uuid-regel">
+      <span title={String(uuid)}>uuid: {kort}</span>
+      <button
+        type="button"
+        title="Kopieer de uuid"
+        onClick={() => globalThis.navigator?.clipboard?.writeText?.(String(uuid))}
+        style={{ font: "inherit", fontSize: 10, padding: "0 4px", border: "1px solid var(--s-border, #cbd5e1)", borderRadius: 4, background: "transparent", color: "inherit", cursor: "pointer" }}
+      >
+        kopieer
+      </button>
+    </div>
+  );
+}
+
 function VeldRij({ veld, fieldType, bewerkbaar, element, kandidatenVoor, editorContext, onChange, onVerwijder, onSchuif, eerste, laatste }) {
   // Vaste M3-beschrijving (2026-10-12): elk veld heeft er een, in het detail.
   const regels = metBeschrijving(fieldType?.properties || [{ key: "naam", datatype: "string" }], fieldType);
@@ -154,6 +177,7 @@ function VeldRij({ veld, fieldType, bewerkbaar, element, kandidatenVoor, editorC
           </button>
         )}
       </div>
+      {editorContext?.toonUuids && <div style={{ margin: "-2px 0 4px 10px" }}><UuidRegel uuid={veld.data?.uuid} klein /></div>}
       {detailOpen && (
         <div
           style={{
@@ -248,6 +272,7 @@ export default function ElementInspector({
         {elementType?.label || element.elementType}
         {ondertitel ? ` · ${ondertitel}` : ""}
       </p>
+      {editorContext?.toonUuids && <UuidRegel uuid={element.data?.uuid} />}
       {/* Tussen welke elementen loopt deze verbinding? (Mark, 06-11: "ik kan op een REL niet
           zien wie A en B zijn"). Voor elke connector, in elke taal: bron → doel. */}
       {element.source && element.target && (

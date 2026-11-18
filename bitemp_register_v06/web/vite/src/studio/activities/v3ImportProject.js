@@ -100,7 +100,7 @@ export async function importeerV3InProject() {
     if (uit.verwijderd) delen.push(`${uit.verwijderd} verwijderd`);
     await toonMelding({
       titel: "V3-model geïmporteerd",
-      tekst: `${gehaald.bron}: ${delen.join(", ") || "niets"}. Ongedaan maken kan met Ctrl+Z (per stap).\nNieuwe diagrammen staan onder "Niet ingedeeld".`,
+      tekst: `${gehaald.bron}: ${delen.join(", ") || "niets"}. Ongedaan maken kan met Ctrl+Z (per stap).\nNieuwe diagrammen staan in de root van de projectboom.`,
     });
   } catch (e) {
     await toonMelding({ titel: "Import mislukt", tekst: String(e?.message || e) });

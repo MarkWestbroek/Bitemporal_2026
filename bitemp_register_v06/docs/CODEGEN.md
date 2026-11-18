@@ -239,6 +239,31 @@ veld (`velden[].afgeleid`) krijgt de struct tag `afleiding:"<regel>"` die de exp
 
 Ontwerp, navigatiesyntaxis en de leeskant: `docs/plans/2026-10-11 Afgeleide relaties backend — ontwerp.md`.
 
+### Type en gegevenstype moeten kloppen (velden zonder goType)
+
+Een extern aangeleverd V3-model heeft per veld `type`, `format` en `datatype`, maar geen
+`goType`. De codegen leidt het Go-type dan af uit `type` en `format` (`goTypeUitOAS`); het
+gegevenstype telt daarbij niet mee. Spreken ze elkaar tegen, dan stopt de codegen met een
+validatiefout die het veld noemt (`typeGegevenstypeFouten`, sinds 18-11-2026):
+
+| In het model | Fout | Goed |
+|---|---|---|
+| `"type": "string", "datatype": "Geheel"` | type past niet bij basistype `integer` | `"type": "integer"` |
+| `"datatype": "JaNee"` zonder type (leeg telt als `string`) | type past niet bij basistype `boolean` | `"type": "boolean"` |
+| `"type": "string", "datatype": "Datum"` | Datum vraagt `"format": "date"` | `"type": "string", "format": "date"` |
+| `"type": "string", "datatype": "DatumTijd"` | DatumTijd vraagt `"format": "date-time"` | `"type": "string", "format": "date-time"` |
+
+- Vóór deze controle werd zo'n veld zonder melding een tekstveld, en dus een tekstkolom. De API
+  gaf een getal of ja/nee dan als tekst terug (`"12"`, `"true"`).
+- De controle geldt alleen voor velden zonder `goType` en zonder `enum`. Een export uit de Studio
+  heeft `goType` en bepaalt het type daarmee zelf.
+- Met `--domein` gaat het alleen om de velden van dat domein.
+- **Een bestaand register.** Een model dat deze fout bevat, bouwde tot nu toe wel. Het model
+  herstellen verandert het Go-type van het veld, maar `dbsetup` wijzigt het type van een
+  bestaande kolom niet. Zo'n veld vraagt dus een migratie van de kolom
+  (`ALTER TABLE … ALTER COLUMN … TYPE … USING …`) of een leeg register, vóór de rebuild met het
+  herstelde model.
+
 ---
 
 ## 5. Roundtrip-verificatie
@@ -671,6 +696,38 @@ dus met de rijen van het verkeerde item.
 **Nog niet gebouwd** (plan §8): de seed en binding van instanties (een Referentielijst-record moet je
 nu zelf registreren), de controle dat `referentielijst_id` het gebonden record is (33.4), en de
 opties-route voor een `$ref` naar zo'n relatie.
+
+### Een enum die meerdere domeinen gebruiken
+
+Een enum mag door velden in meer dan één domein gebruikt worden (het zaakmodel:
+`Vertrouwelijkheidaanduiding` in catalogus, zaken en documenten). Alle domeinen komen in
+package `model`, dus de enum mag maar één keer gegenereerd worden. Tot 18-11-2026 kwam hij in
+elk domein dat hem gebruikte en compileerde het pakket niet meer ("… redeclared in this block").
+
+De regel (`model/v3_enum_domein.go`):
+
+- Gebruikt één domein de enum, dan komt hij in dat domein. Dat is ongewijzigd.
+- Gebruiken meerdere domeinen hem, dan komt hij in het domein van de enum zelf, mits dat domein
+  hem ook gebruikt. Anders in het alfabetisch eerste domein dat hem gebruikt.
+- De andere domeinen verwijzen naar hetzelfde Go-type. De codegen meldt dat per enum:
+  `Enum X: gedeeld, wordt gegenereerd in domein "catalogus"`.
+
+Gevolgen:
+
+- **Het genererende domein moet meegebouwd zijn.** Een register met zaken maar zonder catalogus
+  compileert niet. Dat is dezelfde afhankelijkheid als een relatie naar een entiteit in een
+  ander domein, maar nu al bij het bouwen zichtbaar.
+- **De volgorde doet ertoe bij `go run ./cmd/codegen`**, omdat die het pakket bij elke run
+  compileert: eerst het genererende domein. De rebuild zet de runs zelf in die volgorde
+  (`sorteerRunsOpEnumEigenaar` in `handlers/rebuild_core.go`). Wie de codegen met de hand
+  draait, moet er zelf op letten. Met een vooraf gebouwde codegen (devloop-image) maakt de
+  volgorde niet uit.
+- Twee domeinen die elk een enum voor de ander genereren (een kring) kunnen met `go run` in geen
+  enkele volgorde; met de vooraf gebouwde codegen wel.
+
+Voor modellen zonder gedeelde enum is de uitvoer byte-voor-byte gelijk aan die van vóór de
+wijziging (vergeleken op np-loc, org-geo, CG, kennis2, configuratie, ide-bestanden, register,
+gegevenstypen, meldingen en beheer).
 
 ---
 

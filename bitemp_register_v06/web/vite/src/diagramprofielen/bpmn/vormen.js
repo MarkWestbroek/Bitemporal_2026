@@ -166,6 +166,11 @@ const dataObject = figuurMetNaam(30, (ctx) => {
     vorm("path", { d: "M20 2 V10 H28", fill: "none", stroke: k, "stroke-width": 1.5, "stroke-linejoin": "round" }),
   ];
   if (ctx.element?.data?.verzameling) uit.push(vorm("path", { d: "M11 27 V33 M15 27 V33 M19 27 V33", fill: "none", stroke: k, "stroke-width": 1.6, "stroke-linecap": "round" }));
+  // Data Input (open pijltje) en Data Output (dicht pijltje) linksboven (BPMN; Mark 15-11).
+  const rol = ctx.element?.data?.rol;
+  if (rol === "invoer" || rol === "uitvoer") {
+    uit.push(vorm("path", { d: "M5 8 H10 V5 L15 10 L10 15 V12 H5 Z", fill: rol === "uitvoer" ? k : ctx.thema.vulling, stroke: k, "stroke-width": 1.2, "stroke-linejoin": "round", "data-dc-rol": rol }));
+  }
   return uit;
 });
 
@@ -215,10 +220,10 @@ export const BPMN_SHAPETYPES = [
   { id: "bpmn-gateway", renderer: "bpmn-gateway", parameters: { inhoud: "geen" }, minMaat: { w: 34, h: 34 } },
   { id: "bpmn-taak", renderer: "bpmn-taak", parameters: { inhoud: "naam", naamGrootte: 12, rand: "#7dd3fc" }, minMaat: { w: 90, h: 48 } },
   { id: "bpmn-subproces", renderer: "bpmn-subproces", parameters: { inhoud: "naam", naamGrootte: 12, rand: "#7dd3fc" }, minMaat: { w: 180, h: 52 } },
-  { id: "bpmn-data", renderer: "bpmn-data", parameters: { inhoud: "naam", naamGrootte: 11, maxBreedte: 120, extraHoogte: FIGUUR_H - 2 }, minMaat: { w: 46, h: 40 } },
-  { id: "bpmn-datastore", renderer: "bpmn-datastore", parameters: { inhoud: "naam", naamGrootte: 11, maxBreedte: 120, extraHoogte: FIGUUR_H - 2 }, minMaat: { w: 46, h: 40 } },
-  { id: "bpmn-lane", renderer: "kader", parameters: { inhoud: "naam", naamGrootte: 12, tekstAnker: "midden", lijn: "solid", hoekRadius: 4, kopHoogte: 26, kopLijn: true, tint: true, kleurAls: "rand" }, minMaat: { w: 240, h: 100 } },
-  { id: "bpmn-pool", renderer: "bpmn-pool", parameters: { inhoud: "naam", naamGrootte: 12, tekstAnker: "midden", kleurAls: "rand", rand: "#64748b" }, minMaat: { w: 320, h: 160 } },
+  { id: "bpmn-data", renderer: "bpmn-data", parameters: { inhoud: "naam", inktOpCanvas: true, naamGrootte: 11, maxBreedte: 120, extraHoogte: FIGUUR_H - 2 }, minMaat: { w: 46, h: 40 } },
+  { id: "bpmn-datastore", renderer: "bpmn-datastore", parameters: { inhoud: "naam", inktOpCanvas: true, naamGrootte: 11, maxBreedte: 120, extraHoogte: FIGUUR_H - 2 }, minMaat: { w: 46, h: 40 } },
+  { id: "bpmn-lane", renderer: "kader", parameters: { inhoud: "naam", naamGrootte: 12, tekstAnker: "midden", lijn: "solid", hoekRadius: 4, kopHoogte: 26, kopLijn: true, tint: true, kleurAls: "rand", inktOpCanvas: true }, minMaat: { w: 240, h: 100 } },
+  { id: "bpmn-pool", renderer: "bpmn-pool", parameters: { inhoud: "naam", naamGrootte: 12, tekstAnker: "midden", kleurAls: "rand", rand: "#64748b", inktOpCanvas: true }, minMaat: { w: 320, h: 160 } },
 ];
 
 for (const st of BPMN_SHAPETYPES) registreerShapeType(st);

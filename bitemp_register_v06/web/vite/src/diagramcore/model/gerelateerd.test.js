@@ -2,7 +2,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { gerelateerdeElementen, ringPosities } from "./gerelateerd.js";
+import { gerelateerdeElementen } from "./gerelateerd.js";
 
 const types = {
   entiteit: { label: "Entiteit" },
@@ -43,10 +43,16 @@ test("een relatie als startpunt (associatieklasse-box) expandeert naar haar uite
   assert.deepEqual(ids(r), ["NP@1"]);
 });
 
-test("ringPosities: één ring per niveau, niets op dezelfde plek", () => {
-  const pos = ringPosities({ x: 0, y: 0 }, [{ id: "a", niveau: 1 }, { id: "b", niveau: 1 }, { id: "c", niveau: 2 }]);
-  const plekken = new Set(Object.values(pos).map((p) => `${p.x},${p.y}`));
-  assert.equal(plekken.size, 3);
-  const afstand = (p) => Math.hypot(p.x, p.y);
-  assert.ok(afstand(pos.c) > afstand(pos.a) + 300);
+test("vrijePosities: rechts van het anker, per niveau een kolom, naar beneden, nooit boven het anker en niet over een bestaand element", async () => {
+  const { vrijePosities } = await import("./gerelateerd.js");
+  const anker = { x: 100, y: 200, width: 120 };
+  const bezet = [{ x: 100, y: 200, width: 120, height: 80 }, { x: 330, y: 340, width: 160, height: 80 }]; // het anker en een buur rechtsonder
+  const pos = vrijePosities(anker, [{ id: "a", niveau: 1 }, { id: "b", niveau: 1 }, { id: "c", niveau: 2 }], bezet);
+  assert.ok(Object.values(pos).every((p) => p.y >= anker.y), "niets boven het anker");
+  assert.ok(Object.values(pos).every((p) => p.x > anker.x + anker.width), "rechts van het anker");
+  assert.equal(pos.a.x, pos.b.x, "één kolom per niveau");
+  assert.ok(pos.c.x > pos.a.x);
+  const raakt = (p, b) => p.x < b.x + b.width && b.x < p.x + 180 && p.y < b.y + b.height && b.y < p.y + 90;
+  assert.ok(!Object.values(pos).some((p) => bezet.some((b) => raakt(p, b))), "niet over een bestaand element");
+  assert.ok(pos.b.y > pos.a.y);
 });

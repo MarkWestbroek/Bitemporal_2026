@@ -208,7 +208,12 @@ export function maakSimulatie({ m1, scenario }) {
   // Een signaal is een omroep (ontwerp §11.6, besluit Mark 13-11): wie werpt kent de ontvangers
   // niet. Elk vangend event met dezelfde signaalnaam reageert als zijn filter (CEL over de lading)
   // waar is. De lading is de zaak: in de simulatie het object van de afhandeling, met de
-  // procesvariabelen; het filter ziet alleen de zaak (`lading`). Drie soorten ontvangers:
+  // procesvariabelen; het filter ziet de zaak (`lading`, velden bovenaan: `zaaktype`, `url`).
+  // Een ontvanger die al loopt (1 en 2) ziet ook zichzelf als `ontvanger`: `ontvanger.zaakUrl` (de
+  // zaak van die instantie) en `ontvanger.variabelen`. Zo zegt een boundary event "alleen voor
+  // deze zaak": `url == ontvanger.zaakUrl` (Mark 16-11). Een run is één afhandeling met één zaak,
+  // dus in de simulatie past dat altijd; het filter is er voor het model en de engine. Een
+  // signal-start heeft nog geen ontvanger: `ontvanger` in zijn filter is een leesfout. Drie soorten ontvangers:
   //   1. een token dat wacht op een vangend tussen-event met dit signaal;
   //   2. een token op een taak met een boundary event met dit signaal (onderbrekend: de taak stopt
   //      en het token gaat langs het boundary event verder; anders komt er een token bij). Zo
@@ -223,12 +228,19 @@ export function maakSimulatie({ m1, scenario }) {
    */
   const lading = () => t.objecten[ZAAK]?.data || object()?.data || {};
 
-  /** Past het filter van een vangend signaal-event op de lading? Onleesbaar = nee, met de reden. */
-  function filterPast(el) {
+  /** De lopende ontvanger zoals het filter hem ziet: zijn zaak en de procesvariabelen. */
+  const ontvanger = () => ({ zaakUrl: lading().url ?? null, variabelen: { ...t.variabelen } });
+
+  /**
+   * Past het filter van een vangend signaal-event op de lading? Onleesbaar = nee, met de reden.
+   * @param {any} el
+   * @param {boolean} [loopt] - de ontvanger loopt al (tussen- of boundary event): `ontvanger` erbij
+   */
+  function filterPast(el, loopt = false) {
     const filter = el.data?.filter;
     if (!filter || !String(filter).trim()) return { past: true };
     try {
-      return { past: !!rekenCel(leesAlsCel(filter), lading()) };
+      return { past: !!rekenCel(leesAlsCel(filter), loopt ? { ...lading(), ontvanger: ontvanger() } : lading()) };
     } catch (e) {
       if (!(e instanceof Onleesbaar)) throw e;
       return { past: false, reden: `filter niet te lezen: ${e.message}` };
@@ -259,7 +271,7 @@ export function maakSimulatie({ m1, scenario }) {
     // 1. Wachtende vangende tussen-events.
     for (const k of Object.values(t.tokens)) {
       if (k.status !== "wacht" || k.wachtOp?.soort !== "signaal" || k.wachtOp.naam !== naam) continue;
-      const { past, reden } = filterPast(elementen[k.plek]);
+      const { past, reden } = filterPast(elementen[k.plek], true);
       if (!past) {
         if (reden) geweigerd.push({ waar: elementen[k.plek]?.naam || k.plek, reden });
         continue;
@@ -273,7 +285,7 @@ export function maakSimulatie({ m1, scenario }) {
       const taak = b.data?.randVan;
       const token = Object.values(t.tokens).find((k) => k.plek === taak && k.status === "wacht");
       if (!token) continue;
-      const { past, reden } = filterPast(b);
+      const { past, reden } = filterPast(b, true);
       if (!past) {
         if (reden) geweigerd.push({ waar: b.naam || b.id, reden });
         continue;

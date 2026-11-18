@@ -5,12 +5,14 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import {
+  metRechtVoor,
   normaliseerProjectData,
   projectNaamUitBestandsnaam,
   bestandsstamVoor,
   nieuwProjectId,
   slaProjectOp,
   stuurOps,
+  PROJECT_FORMAAT_VERSIE,
 } from "./projectSync.js";
 
 test("v1-bestand krijgt een id en een naam uit de bestandsnaam", () => {
@@ -19,7 +21,7 @@ test("v1-bestand krijgt een id en een naam uit de bestandsnaam", () => {
     { bestandsnaam: "np-loc 2026.json" }
   );
   assert.equal(uit.ok, true);
-  assert.equal(uit.data.versie, 3);
+  assert.equal(uit.data.versie, PROJECT_FORMAAT_VERSIE);
   assert.equal(uit.data.project.naam, "np-loc 2026");
   assert.match(uit.data.project.id, /^[A-Za-z0-9_-]{8,64}$/);
   assert.deepEqual(uit.data.profielen, {});
@@ -102,4 +104,12 @@ test("slaProjectOp stuurt de clientId mee (body + X-Omnium-Client); 409 'project
   } finally {
     globalThis.fetch = oudeFetch;
   }
+});
+
+test("metRechtVoor: zet, wijzigt en haalt het recht van één gebruiker; de rest blijft", () => {
+  const rijen = [{ subject: "*", recht: "lezen" }, { subject: "hugo", recht: "lezen" }];
+  assert.deepEqual(metRechtVoor(rijen, "hugo", "schrijven"), [{ subject: "*", recht: "lezen" }, { subject: "hugo", recht: "schrijven" }]);
+  assert.deepEqual(metRechtVoor(rijen, "anna", "lezen"), [...rijen, { subject: "anna", recht: "lezen" }]);
+  assert.deepEqual(metRechtVoor(rijen, "hugo", ""), [{ subject: "*", recht: "lezen" }]);
+  assert.deepEqual(metRechtVoor([], "hugo", ""), []);
 });

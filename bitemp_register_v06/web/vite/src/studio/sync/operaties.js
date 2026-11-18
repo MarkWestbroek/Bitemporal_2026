@@ -16,12 +16,13 @@
  *  3. `pasOperatieToe(op)` voert een operatie van een ander uit via dezelfde
  *     acties, met de undo gepauzeerd en zonder opnieuw te melden.
  *
- * Operatie: `{ store: "model:<profielId>" | "structuur" | "kruis", op, args }`.
+ * Operatie: `{ store: "model:<profielId>" | "structuur" | "kruis" | "marks", op, args }`.
  * Het vocabulaire (MODEL_OPS, STRUCTUUR_OPS, de patch-ops) is tegelijk de
  * lijst handelingen die in het modelregister elk één registratie worden.
  *
  * Geen DOM-afhankelijkheden: testbaar met `node --test`.
  */
+import { diffMarks } from "../../marks/marks.js";
 
 /** @typedef {{store: string, op: string, args: any[]}} Operatie */
 
@@ -420,4 +421,15 @@ export function kruisNet(voor, na) {
   const d = diffLijst(voor.links, na.links);
   if (!d.leeg) ops.push({ store: "kruis", op: "patchLinks", args: [{ zet: d.zet, wis: d.wis }] });
   return ops;
+}
+
+// ── Marks ─────────────────────────────────────────────────────────────
+// Zelfde aanpak als de kruisverbanden: de netto wijziging van lagen, contexten en marks is één
+// operatie `patchMarks` (plan 2026-11-18 Marks, stap 3). `actieveContext` is van de gebruiker en
+// hoort hier niet bij.
+export const MARKS_VELDEN = ["lagen", "contexten", "marks"];
+
+export function marksNet(voor, na) {
+  const patch = diffMarks(voor, na);
+  return patch ? [{ store: "marks", op: "patchMarks", args: [patch] }] : [];
 }

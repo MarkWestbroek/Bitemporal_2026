@@ -134,3 +134,57 @@ test("kolom gebonden via de uuid volgt een hernoeming; export op het naampad van
   const weg = await maakDmnArtefact({ modelBestand: dmn, edienst, identifier: "aanvraag-ontvankelijk", objecttype: objecttypeNu, v3Model: v3, sha256Hex });
   assert.ok(weg.diagnostics.some((d) => d.code === "DMN-UUID"));
 });
+
+// Keten (16-11): Top leest het resultaat van Onderliggend; die gaat mee in hetzelfde bestand.
+const ketenModel = () => ({
+  elements: {
+    top: { id: "top", naam: "Top", elementType: "decision", data: { beslistabel: {
+      hitPolicy: "FIRST",
+      inputs: [
+        { id: "in_onder", bron: { soort: "beslissing", elementId: "onder", uitvoerId: "o1" }, naam: "Onderliggend", label: "Onderliggend" },
+        { id: "in_inkomen", bron: { soort: "invoer", elementId: "c" }, naam: "inkomen", fieldRef: { veldpad: "envelop:inkomen", veldnaam: "inkomen" } },
+      ],
+      outputs: [{ id: "t1", naam: "tarief", type: "string" }],
+      rules: [{ id: "r1", inputEntries: { in_onder: "\"hoog\"", in_inkomen: "" }, outputEntries: { t1: "\"vol\"" } }],
+    } } },
+    onder: { id: "onder", naam: "Onderliggend", elementType: "decision", data: { beslistabel: {
+      hitPolicy: "UNIQUE",
+      inputs: [{ id: "in_a", bron: { soort: "invoer", elementId: "a" }, naam: "naam", fieldRef: { veldpad: "envelop:naam", veldnaam: "naam" } }],
+      outputs: [{ id: "o1", naam: "categorie", type: "string" }],
+      rules: [{ id: "r2", inputEntries: { in_a: "" }, outputEntries: { o1: "\"hoog\"" } }],
+    } } },
+    a: { id: "a", naam: "naam", elementType: "inputData", data: {} },
+    c: { id: "c", naam: "inkomen", elementType: "inputData", data: {} },
+    p1: { id: "p1", elementType: "infoReq", source: "a", target: "onder" },
+    p3: { id: "p3", elementType: "infoReq", source: "onder", target: "top" },
+    p4: { id: "p4", elementType: "infoReq", source: "c", target: "top" },
+  },
+});
+
+test("keten: een vereiste beslissing gaat mee als requiredDecision; de kolom leest haar uitvoer", async () => {
+  const edienst = { edienst: { naam: "proef", versienummer: "1.0.0" }, artefacten: [{ soort: "dmn", identifier: "bepaal-tarief", formaat: "dmn-xml", bron: { beslissing: "Top" } }] };
+  const ot = { traceregels: [{ bronGE: "envelop:naam", doelPad: "x" }, { bronGE: "envelop:inkomen", doelPad: "x" }] };
+  const { artefact, diagnostics, invoer } = await maakDmnArtefact({ modelBestand: ketenModel(), edienst, identifier: "bepaal-tarief", objecttype: ot, sha256Hex });
+  assert.deepEqual(diagnostics.filter((d) => d.severity === "error"), []);
+  const doc = new DOMParser().parseFromString(artefact.artefactInhoud.payload, "text/xml");
+  const besl = [...doc.getElementsByTagName("dmn:decision")];
+  assert.deepEqual(besl.map((b) => b.getAttribute("id")), ["bepaal-tarief", "onderliggend"]);
+  const req = besl[0].getElementsByTagName("dmn:requiredDecision")[0];
+  assert.equal(req.getAttribute("href"), "#onderliggend");
+  assert.equal(besl[1].getElementsByTagName("dmn:requiredDecision").length, 0);
+  // De invoerkolom van Top leest "categorie" (de uitvoer van Onderliggend); het label blijft.
+  const input = besl[0].getElementsByTagName("dmn:input")[0];
+  assert.equal(input.getAttribute("label"), "Onderliggend");
+  assert.equal(input.getElementsByTagName("dmn:text")[0].textContent, "categorie");
+  // De procesinvoer: de dossierwaarden van de hele keten, niet het tussenresultaat.
+  assert.deepEqual(invoer.map((x) => x.naam).sort(), ["inkomen", "naam"]);
+  assert.ok(artefact.traceregels.some((t) => t.bronGE === "onder" && t.doelPad === "#onderliggend"));
+});
+
+test("keten: een vereiste beslissing zonder tabel is een fout", async () => {
+  const m = ketenModel();
+  delete m.elements.onder.data.beslistabel;
+  const edienst = { artefacten: [{ soort: "dmn", identifier: "bepaal-tarief", bron: { beslissing: "Top" } }] };
+  const { diagnostics } = await maakDmnArtefact({ modelBestand: m, edienst, identifier: "bepaal-tarief", objecttype: { traceregels: [] }, sha256Hex });
+  assert.ok(diagnostics.some((d) => d.code === "DMN-KETEN" && d.severity === "error"));
+});

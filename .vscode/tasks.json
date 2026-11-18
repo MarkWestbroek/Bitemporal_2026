@@ -206,6 +206,44 @@
 				"reveal": "always",
 				"panel": "shared"
 			}
+		},
+		{
+			// Haalt de stand van het demo-project (de server is de bron) op als werkbestand in
+			// docs/demo-project/. Token uit de omgevingsvariabele OMNIUM_TOKEN_CLAUDE. Daarna committen.
+			"label": "demo-project: JSON ophalen van app (v06)",
+			"type": "shell",
+			"command": "node",
+			"args": [
+				"docs/demo-project/naar-server.mjs",
+				"https://app.omnium-ide.nl",
+				"OMNIUM_TOKEN_CLAUDE",
+				"van-server"
+			],
+			"options": {
+				"cwd": "${workspaceFolder}/bitemp_register_v06"
+			},
+			"isBackground": false,
+			"presentation": {
+				"reveal": "always",
+				"panel": "shared"
+			}
+		},
+		{
+			// Loopt de drie Waterstede-scenario's door op het opgehaalde werkbestand.
+			"label": "demo-project: simulatie testen (v06)",
+			"type": "shell",
+			"command": "node",
+			"args": [
+				"docs/demo-project/simulatie-test.mjs"
+			],
+			"options": {
+				"cwd": "${workspaceFolder}/bitemp_register_v06"
+			},
+			"isBackground": false,
+			"presentation": {
+				"reveal": "always",
+				"panel": "shared"
+			}
 		}
 	]
 }

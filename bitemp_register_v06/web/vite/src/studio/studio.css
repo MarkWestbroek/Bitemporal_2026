@@ -183,7 +183,8 @@
   color: var(--s-fg);
 }
 .studio-project__mapkop.is-dropdoel,
-.studio-project__kop.is-dropdoel { outline: 1.5px dashed var(--s-accent, #4f46e5); outline-offset: -1px; background: var(--s-hover); }
+.studio-project__kop.is-dropdoel,
+.studio-project__root.is-dropdoel { outline: 1.5px dashed var(--s-accent, #4f46e5); outline-offset: -1px; background: var(--s-hover); }
 .studio-project__mapkop { cursor: grab; }
 .studio-project__mapkop:active { cursor: grabbing; }
 .studio-project__mapkop.is-selectie { background: var(--s-hover); }
@@ -252,16 +253,8 @@
 .studio-project__map .studio-project__diagram { padding-left: 22px; }
 .studio-project__map .studio-project__leeg { padding-left: 22px; }
 .studio-project__kop--los { margin-top: 12px; border-top: 1px solid var(--s-border); padding-top: 8px; border-radius: 0; }
-.studio-project__grote-knop {
-  display: block; width: calc(100% - 12px); box-sizing: border-box;
-  margin: 2px 6px 8px;
-  padding: 5px 10px;
-  font: inherit; font-size: 12px;
-  color: var(--s-fg);
-  background: var(--s-panel); border: 1px dashed var(--s-border); border-radius: 6px;
-  cursor: pointer; text-align: center;
-}
-.studio-project__grote-knop:hover { background: var(--s-hover); border-style: solid; }
+/* Root van de projectboom (16-11): diagrammen zonder map, onder de mappen; ook sleepdoel. */
+.studio-project__root { min-height: 28px; padding-bottom: 8px; border-radius: 6px; }
 
 /* Elementen-boom van het actieve tab-profiel, onder de mappenboom. */
 .studio-project__splitter {
@@ -762,3 +755,61 @@
 
 /* Element op geen enkel diagram (melding #5): cursief en iets lichter. */
 .studio-project__ongebruikt { font-style: italic; opacity: 0.75; }
+
+/* ── Beslistabel van een DMN-beslissing (BeslistabelEditor, 16-11) ─────────── */
+.studio-beslistabel__achtergrond {
+  position: fixed; inset: 0; z-index: 10000;
+  background: rgba(15, 23, 42, 0.45);
+  display: flex; align-items: center; justify-content: center;
+}
+.studio-beslistabel {
+  width: min(1280px, calc(100vw - 32px)); height: min(820px, calc(100vh - 32px));
+  display: flex; flex-direction: column;
+  background: var(--s-panel, #fff); color: var(--s-fg, #1e293b);
+  border: 1px solid var(--s-border, #cbd5e1); border-radius: 10px;
+  box-shadow: 0 12px 40px rgba(15, 23, 42, 0.25);
+  overflow: hidden; font-size: 13px;
+}
+.studio-beslistabel__kop {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 14px; border-bottom: 1px solid var(--s-border, #e2e8f0);
+}
+.studio-beslistabel__inhoud { flex: 1; min-height: 0; display: flex; }
+.studio-beslistabel__model {
+  flex: 0 0 300px; min-width: 0; display: flex; flex-direction: column;
+  border-right: 1px solid var(--s-border, #e2e8f0);
+}
+.studio-beslistabel__hint { margin: 0; padding: 8px 10px; font-size: 12px; color: var(--s-fg-muted); }
+.studio-beslistabel__tabel { flex: 1; min-width: 0; overflow: auto; padding: 16px; font-family: system-ui, sans-serif; }
+
+/* ── Marks (MarksPaneel, 18-11) ────────────────────────────────────────────── */
+.studio-marks__kop { display: flex; align-items: center; gap: 6px; }
+.studio-marks__leeg, .studio-marks__uitleg { font-size: 12px; color: var(--s-fg-muted); margin: 4px 0 8px; }
+.studio-marks__werklaag { display: block; font-size: 11px; color: var(--s-fg-muted); margin: 2px 0 6px; }
+.studio-marks__werklaag select { font: inherit; font-size: 11px; }
+.studio-marks__rij { display: flex; align-items: center; gap: 6px; font-size: 12px; padding: 2px 0; }
+.studio-marks__label { flex: 0 0 40%; }
+.studio-marks__herkomst { font-size: 10px; color: var(--s-fg-muted); }
+.studio-marks__tabel { border-collapse: collapse; font-size: 11px; width: 100%; }
+.studio-marks__tabel th { font-weight: 500; color: var(--s-fg-muted); text-align: center; padding: 2px 4px; }
+.studio-marks__tabel td { text-align: center; padding: 1px 4px; border-top: 1px solid var(--s-border, #e2e8f0); }
+.studio-marks__tabel td.studio-marks__veld { text-align: left; }
+.studio-marks__tabel td.is-geerfd { background: color-mix(in srgb, #fde68a 35%, transparent); }
+.studio-marks__dialoog {
+  width: min(760px, calc(100vw - 32px)); max-height: calc(100vh - 32px);
+  display: flex; flex-direction: column;
+  background: var(--s-panel, #fff); color: var(--s-fg, #1e293b);
+  border: 1px solid var(--s-border, #cbd5e1); border-radius: 10px;
+  box-shadow: 0 12px 40px rgba(15, 23, 42, 0.25); overflow: hidden; font-size: 13px;
+}
+.studio-marks__dialoog-inhoud { padding: 10px 14px 14px; overflow: auto; }
+.studio-marks__lagen { width: 100%; border-collapse: collapse; font-size: 12px; }
+.studio-marks__lagen th { text-align: left; font-weight: 500; color: var(--s-fg-muted); padding: 2px 6px; }
+.studio-marks__lagen td { padding: 3px 6px; border-top: 1px solid var(--s-border, #e2e8f0); white-space: nowrap; }
+.studio-marks__lagen input[type="text"], .studio-marks__acties select, .studio-marks__werklaag select, .studio-marks__rij input, .studio-marks__rij select {
+  font: inherit; font-size: 12px; box-sizing: border-box;
+  color: var(--s-fg, #1e293b); background: var(--s-panel, #fff);
+  border: 1px solid var(--s-border, #cbd5e1); border-radius: 5px; padding: 2px 5px;
+}
+.studio-marks__lagen input[type="text"] { width: 100%; }
+.studio-marks__acties { display: flex; gap: 8px; align-items: center; margin-top: 10px; }

@@ -759,8 +759,8 @@ geval één `event: snapshot` met `{totVolgnummer}` en sluit.
 Een branch is een eigen project dat van een ouder is afgesplitst (`handlers/studio_project_afsplitsen.go`).
 Operatielog, SSE, compactie, toegang, export/v3 en render werken er ongewijzigd op. De server kent
 geen mappen: de branch bevat het hele project, `mapId` is alleen herkomst (de Studio beperkt er
-weergave en merge mee). Mergen (`/vergelijk`, `/samenvoegen`) volgt in stap 3; tot dan zet de
-Studio het resultaat als gewone ops op de ouder, met `verwachtLaatsteVolgnummer`.
+weergave en merge mee). Vergelijken (`/vergelijk`) en samenvoegen (`/samenvoegen`, stap 1 van het
+plan "Branch terugmergen": alles mee, daarna bijwerken) staan hieronder.
 
 De meta (lijst en `GET /:id`) heeft bij een branch `herkomst: {ouderProject, basisVolgnummer, mapId?,
 afgesplitstOp, afgesplitstDoor, gearchiveerd}` (afwezig in de lijst, `null` bij `GET` voor een gewoon
@@ -796,6 +796,31 @@ scope, meldingen, renderVersie}`) gaat door, aangevuld met `main: {projectId, la
 en `tak: {projectId, laatsteVolgnummer}`. `404` met `reden: "geen_branch"` of `"ouder_weg"`, `413`
 boven 32 MB, `422` van de sidecar ongewijzigd, `502` met `reden: "sidecar"` als de sidecar
 onbereikbaar is of `/vergelijk` niet kent (`handlers/studio_project_vergelijk.go`).
+
+#### `POST /api/studio/projecten/:id/samenvoegen`
+Rol `modelleur`, schrijven op de branch én de ouder (`403` zonder schrijfrecht op de ouder). Body
+`{ookBuitenMap?: bool, keuze?: {<sleutel>: true|false|"terug"}}` (mag leeg; een andere waarde → `400`). Zonder `keuze` gaat alles mee en
+blokkeert een conflict (stap 1). Met `keuze` (stap 2, sleutel `<soort>:<profielId>:<id>` zoals
+`verschillen[].sleutel` van `/vergelijk`) gaat alleen het gekozene mee; bij een conflict wint de
+branch als hij gekozen is, anders MAIN; wat niet gekozen is blijft in de branch. Per veld van een
+element: sleutel `<sleutel>#<veld>` (bv. `element:diagram05:C#data.kleur`, `…#naam`, `…#map`), gaat voor
+de keuze op het element; een element wordt per veld samengevoegd, dus verschillende velden aan beide
+kanten zijn geen conflict (`conflicten[].velden` noemt de conflicterende velden). `"terug"` zet de
+eenheid in de branch terug naar de versie van MAIN (MAIN verandert niet). Een sleutel die
+ontbreekt: mee, behalve bij een conflict. Dezelfde drie kanten als `/vergelijk` gaan naar de sidecar
+(`POST /samenvoegen`), die alles uit de branch met MAIN samenvoegt en twee lijsten operaties
+teruggeeft: `opsMain` (MAIN → samengevoegd) en `opsTak` (branch → samengevoegd, "bijwerken"), plus de
+samengevoegde stand. In één transactie: ouder en branch `FOR UPDATE`, controle dat hun laatste
+volgnummer nog dat van de berekening is, `opsMain` achter het log van de ouder en `opsTak` achter
+dat van de branch (`clientId: "samenvoegen"`, actor = wie samenvoegt), en de basis van de branch
+vervangen door de samengevoegde stand op het nieuwe laatste volgnummer van de ouder
+(`basisVolgnummer` in de herkomst idem). Na de commit gaan de ops via SSE uit. → `200 {main:
+{projectId, ops: {aantal, van?, tot?, laatsteVolgnummer}}, tak: {…}, basisVolgnummer, telling,
+opgelost}` (`opgelost` = aantal met de keuze beslist conflicten). `409` met `reden`: `"conflicten"`
+(+ `conflicten`, alleen zonder keuze), `"samenhang"` (+ `samenhang: [{kant, fout}]`: de keuze laat een
+verwijzing naar iets wat er niet is achter), `"buiten_map"` (+ `buitenMap`, alleen gekozen
+wijzigingen; opnieuw met `ookBuitenMap: true`) of `"volgnummer_verschoven"` (opnieuw vergelijken). `404`, `413`, `422` en `502`
+als bij `/vergelijk` (`handlers/studio_project_samenvoegen.go`).
 
 #### `GET /api/studio/projecten/:id/model/:profiel`
 Lezen op het project (ook een branch). De actuele stand van één profiel zonder dat de afnemer de
