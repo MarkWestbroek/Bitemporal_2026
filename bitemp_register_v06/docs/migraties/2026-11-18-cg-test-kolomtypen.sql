@@ -1,8 +1,15 @@
--- 2026-11-18 — cg-test (database omnium): vijf tekstkolommen naar het type van het model.
+-- 2026-11-18 — cg-test (database omnium): zes tekstkolommen naar het type van het model.
 --
 -- Aanleiding: docs/KOLOMTYPEN.md. Deze velden waren ooit tekst en zijn in het model
 -- (Studio-project Inrichten, schema-versie 7) een tijdstip, ja/nee of geheel getal. dbsetup zet
 -- het type van een bestaande kolom niet om, dus de varchar bleef staan.
+--
+-- Versie 2 (18-11, na de eerste poging van FUNDAMENT, die op de controle vooraf afbrak):
+--   - tijdstippen mogen ook de vorm "2026-11-08 14:40:33+00:00" hebben (spatie in plaats van T).
+--     Zo schrijft de API een time.Time naar een tekstkolom; beide vormen zijn geldig voor
+--     ::timestamptz en betekenen hetzelfde moment;
+--   - medischadvies_medischadviesgegevens_data.adviesdatum (varchar → date) erbij: gemeld door de
+--     kolomtypecontrole van api 0.28.0. De tabel is leeg.
 --
 -- Uitvoeren: door de beheerder van het cluster, met psql, als eigenaar van de tabellen.
 --   psql -v ON_ERROR_STOP=1 -f 2026-11-18-cg-test-kolomtypen.sql
@@ -27,15 +34,17 @@ DECLARE
 	-- tabel, kolom, verwacht type nu, doeltype, patroon waaraan elke gevulde waarde moet voldoen
 	kolommen CONSTANT TEXT[][] := ARRAY[
 		['uitrol_uitrolverloop_data', 'gestart_op', 'timestamptz',
-			'^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})$'],
+			'^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}(:?\d{2})?)$'],
 		['uitrol_uitrolverloop_data', 'afgerond_op', 'timestamptz',
-			'^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})$'],
+			'^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}(:?\d{2})?)$'],
 		['uitrolresultaat_data', 'tijdstip', 'timestamptz',
-			'^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})$'],
+			'^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}(:?\d{2})?)$'],
 		['gehandicaptenparkeerkaartaanvraag_gpkaanvraagkaart_data', 'eerdere_kaart', 'boolean',
 			'^(true|false)$'],
 		['gehandicaptenparkeerkaartaanvraag_gpkaanvraagbeperking_data', 'loopafstand_meter', 'bigint',
-			'^-?\d+$']
+			'^-?\d+$'],
+		['medischadvies_medischadviesgegevens_data', 'adviesdatum', 'date',
+			'^\d{4}-\d{2}-\d{2}$']
 	];
 	i INT;
 	huidig TEXT;
@@ -93,6 +102,9 @@ ALTER TABLE gehandicaptenparkeerkaartaanvraag_gpkaanvraagkaart_data
 ALTER TABLE gehandicaptenparkeerkaartaanvraag_gpkaanvraagbeperking_data
 	ALTER COLUMN loopafstand_meter TYPE bigint USING loopafstand_meter::bigint;
 
+ALTER TABLE medischadvies_medischadviesgegevens_data
+	ALTER COLUMN adviesdatum TYPE date USING adviesdatum::date;
+
 -- ---------------------------------------------------------------- controles achteraf
 DO $$
 DECLARE
@@ -132,11 +144,12 @@ BEGIN
 		('uitrol_uitrolverloop_data', 'afgerond_op', 'timestamptz'),
 		('uitrolresultaat_data', 'tijdstip', 'timestamptz'),
 		('gehandicaptenparkeerkaartaanvraag_gpkaanvraagkaart_data', 'eerdere_kaart', 'bool'),
-		('gehandicaptenparkeerkaartaanvraag_gpkaanvraagbeperking_data', 'loopafstand_meter', 'int8'));
-	IF na <> 5 THEN
-		RAISE EXCEPTION 'achteraf: % van de 5 kolommen hebben het verwachte type', na;
+		('gehandicaptenparkeerkaartaanvraag_gpkaanvraagbeperking_data', 'loopafstand_meter', 'int8'),
+		('medischadvies_medischadviesgegevens_data', 'adviesdatum', 'date'));
+	IF na <> 6 THEN
+		RAISE EXCEPTION 'achteraf: % van de 6 kolommen hebben het verwachte type', na;
 	END IF;
-	RAISE NOTICE 'achteraf: 5 kolommen omgezet, % tijdstippen gelijk gebleven', voor;
+	RAISE NOTICE 'achteraf: 6 kolommen omgezet, % tijdstippen gelijk gebleven', voor;
 END $$;
 
 COMMIT;
