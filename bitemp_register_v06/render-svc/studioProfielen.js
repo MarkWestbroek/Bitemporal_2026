@@ -106,15 +106,17 @@ import { maakStand, speelOpsNa } from "../web/vite/src/diagramprofielen/ea/sidec
 import { naarCanoniekModel } from "../web/vite/src/diagramprofielen/canoniek-uml/adapter.js";
 import { exporteerV3 as studioExporteerV3, importeerV3 } from "../web/vite/src/diagramprofielen/canoniek-uml/serialisatie.js";
 import { valideerVoorV3 } from "../web/vite/src/store/adapters.js";
+import { metMarksBijlage } from "../web/vite/src/marks/v3Bijlage.js";
 
 /**
- * @param {{profiel: any, ops?: Array<{store: string, op: string, args: any[], volgnummer?: number}>, profielId?: string}} p
+ * @param {{profiel: any, ops?: Array<{store: string, op: string, args: any[], volgnummer?: number}>, profielId?: string,
+ *   marks?: any, markContext?: string | string[] | null}} p - `marks`: het onderdeel `marks` van het werkbestand
  * @returns {{model: any, meldingen: Array<{regel?: string, bericht: string, elementId?: string}>, nagespeeld: number}}
  */
-export function exporteerV3({ profiel, ops = [], profielId = "diagram05" }) {
-  const stand = maakStand({ profielen: { [profielId]: profiel || {} } });
-  // Alleen de ops van dit profiel; structuur en kruisverbanden doen voor V3 niet mee.
-  const r = speelOpsNa(stand, (ops || []).filter((o) => o?.store === `model:${profielId}`));
+export function exporteerV3({ profiel, ops = [], profielId = "diagram05", marks = undefined, markContext = null }) {
+  const stand = maakStand({ profielen: { [profielId]: profiel || {} }, ...(marks !== undefined ? { marks } : {}) });
+  // De ops van dit profiel, en die op de marks (18-11); structuur en kruisverbanden doen voor V3 niet mee.
+  const r = speelOpsNa(stand, (ops || []).filter((o) => o?.store === `model:${profielId}` || o?.store === "marks"));
   const st = stand.profielVoor(profielId).getState();
   const basis = { elements: st.elements || {}, diagrams: st.diagrams || {}, meta: st.meta || {} };
   const desc = descriptorVan(profielId);
@@ -122,7 +124,10 @@ export function exporteerV3({ profiel, ops = [], profielId = "diagram05" }) {
   const staat = mig ? { ...basis, ...mig } : basis;
   // Precies wat de Studio bij "Exporteer V3" doet (serialisatie.exporteerV3, met het overzicht en
   // de canonieke diagram-ids); de Studio geeft hem zijn al gemigreerde storestaat.
-  const { v3, overgeslagen } = studioExporteerV3({ ...st, ...staat });
+  const { v3: kaal, overgeslagen } = studioExporteerV3({ ...st, ...staat });
+  // Marks als bijlage naast het model: wat geldt in `markContext` (een lijst laag-ids of het id
+  // van een bewaarde context); zonder: alle lagen van het project in hun volgorde.
+  const v3 = metMarksBijlage(kaal, stand.marks.stand, markContext);
   const meldingen = [
     ...r.problemen.map((bericht) => ({ regel: "OPS", bericht })),
     ...(valideerVoorV3(naarCanoniekModel(staat)) || []).map((o) => ({ regel: o.regel, bericht: o.bericht || o.melding || o.tekst || JSON.stringify(o), ...(o.elementId ? { elementId: o.elementId } : {}) })),

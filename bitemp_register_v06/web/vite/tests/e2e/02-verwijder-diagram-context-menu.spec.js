@@ -20,27 +20,21 @@ test("rechtsklik op diagram toont 'Verwijder diagram' en annuleren laat diagram 
   // Screenshot om te zien wat er is
   await page.screenshot({ path: "playwright-report/02-after-inject.png" });
 
-  // Probeer "Diagrammen" folder open te maken (het fold-icoontje ▶)
-  // react-arborist rendert nodes met data-driven className's. We proberen via text te vinden.
-  const allTextContent = await page.locator("body").innerText();
-  
-  // Als "Smoke Diagram XYZ" zichtbaar is: direct rechtsklikken
-  // Anders: volg stappen om hem zichtbaar te maken
-  let diagramVisible = allTextContent.includes("Smoke Diagram XYZ");
-  
-  if (!diagramVisible) {
-    // Probeer "Diagrammen" folder-knop te vinden en uit te klappen
-    const diagrammenFolder = page.locator("text=/Diagrammen|diagram/i").first();
-    if (await diagrammenFolder.isVisible().catch(() => false)) {
-      // Vind de expand-knop (▶ of ▼) vlak voor de tekst
-      const folderRow = diagrammenFolder.locator("xpath=/ancestor::div[1]");
-      const expandBtn = folderRow.locator(">> nth=0").first();
-      await expandBtn.click().catch(() => {});
+  // Het diagram staat in de boom onder het domein "test_dom" (map Diagrammen). Klap open wat
+  // dicht staat: eerst het domein, dan zo nodig de map.
+  const zichtbaar = () => page.getByText("Smoke Diagram XYZ", { exact: true }).isVisible().catch(() => false);
+  for (const naam of ["test_dom", "Diagrammen"]) {
+    if (await zichtbaar()) break;
+    const rij = page.getByRole("treeitem").filter({ hasText: naam }).first();
+    const doel = (await rij.count()) ? rij : page.getByText(naam, { exact: true }).first();
+    if (await doel.isVisible().catch(() => false)) {
+      // Klikken selecteert alleen; pijl-rechts klapt de geselecteerde rij open.
+      await doel.click();
+      await page.keyboard.press("ArrowRight");
       await page.waitForTimeout(300);
-      
-      await page.screenshot({ path: "playwright-report/02-expanded.png" });
     }
   }
+  await page.screenshot({ path: "playwright-report/02-expanded.png" });
 
   // Nu proberen we "Smoke Diagram XYZ" te vinden en rechtsklikken
   const diagramNode = page.locator("text=/Smoke Diagram XYZ|smoke/i").first();

@@ -70,6 +70,9 @@ function veldBlok(veld, fieldType, sleutel, typePrefix = "") {
   return {
     soort: "veld",
     naam: `${voor}${veld.naam || ""}`,
+    // `_mark` (afgeleid, niet bewaard): het teken van de marks op dit veld. Een eigen tekst
+    // achter de naam, zodat een klik erop niet het hernoemen van het veld start.
+    mark: d._mark || "",
     type: type ? `${typePrefix}${type}` : "",
     vet: !!d.verplicht,
     cursief: !!d.cursief,
@@ -189,7 +192,7 @@ export function planInhoud({ element, elementType, breedte, parameters = {}, fie
       }
       const comps = compartimentBlokken(element, elementType, fieldTypesById, compartmentTypesById, true, 0, parameters.typePrefix || "");
       for (const b of comps) {
-        if (b.soort === "veld") minW = Math.max(minW, tekstBreedte(b.naam, VELD, { vet: b.vet }) + (b.type ? 12 + tekstBreedte(b.type, TYPE) : 0) + (b.inspring || 0));
+        if (b.soort === "veld") minW = Math.max(minW, tekstBreedte(b.naam, VELD, { vet: b.vet }) + (b.mark ? 4 + tekstBreedte(b.mark, TYPE) : 0) + (b.type ? 12 + tekstBreedte(b.type, TYPE) : 0) + (b.inspring || 0));
         if (b.soort === "label") meet(b.tekst, LABEL);
       }
       blokken.push(...comps);
@@ -286,6 +289,10 @@ export function tekenInhoud(vak, plan, kleuren, opties = {}) {
       if (b.cursief) attrs["font-style"] = "italic";
       if (b.sleutel) attrs["data-dc-veld"] = b.sleutel;
       kinderen.push(tekst(links + (b.inspring || 0), y + 12, b.naam, attrs));
+      if (b.mark) {
+        const mx = links + (b.inspring || 0) + tekstBreedte(b.naam, VELD, { vet: b.vet }) + 4;
+        kinderen.push(tekst(mx, y + 12, b.mark, { "font-size": TYPE, fill: "#b45309", class: "dc-mark-teken", "data-dc-mark": b.sleutel || "veld" }));
+      }
       if (b.type) kinderen.push(tekst(rechts, y + 12, b.type, { "text-anchor": "end", "font-size": TYPE, fill: kleuren.gedempt }));
     } else if (b.soort === "tekst") {
       const attrs = { "font-size": b.grootte, fill: b.leeg ? kleuren.gedempt : kleuren.inkt };

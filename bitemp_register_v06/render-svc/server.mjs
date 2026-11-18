@@ -140,14 +140,14 @@ export function maakServer() {
       // Een fout in de terugreis wordt 422 met de melding (BACKEND, rebuild uit een project-id).
       if (req.method === "POST" && (pad === "/export/v3" || pad === "/api/export/v3")) {
         const invoer = await leesInvoer(req);
-        const onbekend = Object.keys(invoer).filter((k) => !["profiel", "ops", "profielId"].includes(k));
+        const onbekend = Object.keys(invoer).filter((k) => !["profiel", "ops", "profielId", "marks", "markContext"].includes(k));
         if (onbekend.length) throw probleem(400, "ongeldige-parameter", "Ongeldige parameter", `Onbekende veld(en): ${onbekend.join(", ")}.`);
         if (!invoer.profiel || typeof invoer.profiel !== "object") throw probleem(400, "ongeldige-body", "Ongeldige body", "`profiel` ontbreekt (de inhoud van profielen.<id> uit de snapshot).");
         if (invoer.ops !== undefined && !Array.isArray(invoer.ops)) throw probleem(400, "ongeldige-body", "Ongeldige body", "`ops` moet een lijst zijn.");
         const bundelExport = await laadBundel();
         let uit;
         try {
-          uit = bundelExport.exporteerV3({ profiel: invoer.profiel, ops: invoer.ops || [], profielId: invoer.profielId || "diagram05" });
+          uit = bundelExport.exporteerV3({ profiel: invoer.profiel, ops: invoer.ops || [], profielId: invoer.profielId || "diagram05", marks: invoer.marks, markContext: invoer.markContext ?? null });
         } catch (e) {
           console.error("render-svc: export mislukt", e);
           res.writeHead(422, { "Content-Type": "application/json; charset=utf-8", "X-Render-Versie": RENDER_VERSIE });

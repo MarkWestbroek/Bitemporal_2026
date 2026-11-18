@@ -19,6 +19,13 @@ export async function injectMinimaalModel(page, opts = {}) {
 
   await page.waitForFunction(() => !!window.__useModelStore, null, { timeout: 10_000 });
 
+  // Eerst de IDE haar eigen begin laten laden (het model van de API, of zonder API het
+  // demo-model): dat komt asynchroon binnen en overschreef anders wat hier wordt gezet (de test
+  // faalde daardoor sinds de e2e zonder API draait). Geen model binnen de tijd: toch doorgaan.
+  await page
+    .waitForFunction(() => Object.keys(window.__useModelStore.getState().elements || {}).length > 0, null, { timeout: 8_000 })
+    .catch(() => {});
+
   await page.evaluate(
     ({ diagramId, diagramNaam, domein }) => {
       const store = window.__useModelStore.getState();

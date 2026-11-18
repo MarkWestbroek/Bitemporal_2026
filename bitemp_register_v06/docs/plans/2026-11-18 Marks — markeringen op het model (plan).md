@@ -229,12 +229,36 @@ marksoort; voor zijn velden een tabel velden × soorten. Je schrijft in een **we
 vinkje uit een andere laag is gekleurd en noemt die laag; uitvinken in een latere laag zet de mark
 daar uit (`zetEffect`). *Lagen…* opent het beheer: lagen maken, hernoemen, labels, weghalen, en
 kiezen welke meedoen en in welke volgorde (jouw keuze, `actieveContext`); *Bewaar als context*
-maakt er een gedeelde, benoemde context van. Op het canvas staat een teken (◆ met het aantal) op
-elk element waar marks op gelden; de tekst erbij noemt ze en een klik brengt de sectie in beeld.
-Het teken staat niet in de SVG die de server tekent.
+maakt er een gedeelde, benoemde context van.
+
+**Tekens op het canvas (Mark 18-11).** Een mark op het element zelf: een ruitje **rechtsboven**
+(naast een eventuele ⚠). Een mark op een veld: het ruitje **achter de veldnaam**. Eén mark is
+alleen het ruitje; vanaf twee staat het aantal erbij (◆2). Het getal is dus het aantal marks, niet
+de laag. Zijn de velden van een element verborgen, dan tellen hun marks mee in het teken
+rechtsboven. De tekst bij het teken noemt de marks; een klik brengt de sectie in beeld. De tekens
+zijn afgeleid (`data._marks` op het element, `data._mark` op het veld; de tekenaar zet het achter
+de naam) en staan niet in de SVG die de server tekent.
+
+**Tagged values.** In UML horen tagged values bij een stereotype uit een profiel: ze zijn deel van
+het model. Bij ons vervullen de eigenschappen van een elementtype in het profiel (M3
+`PropertyType`) die rol; losse tagged values zijn daarom niet nodig. Een mark is iets anders: hij
+hoort bij een transformatie en staat buiten het model.
+
+**V3-bijlage (stap 5, 18-11).** `marks/v3Bijlage.js` `metMarksBijlage(v3, marks, context)`: het
+blok `marks` naast `model`, met alleen wat geldt en alleen doelen waarvan de uuid in dit V3-model
+staat. De Studio doet dit bij *Exporteer V3* voor de lagen die de gebruiker toepast. De sidecar
+(`POST /export/v3`) neemt optioneel `marks` (het onderdeel uit het werkbestand) en `markContext`
+(laag-ids of het id van een bewaarde context) aan, speelt de ops op de store `marks` na, en zet de
+bijlage in `model.marks`; zonder `markContext` gelden alle lagen in de volgorde van het project.
+De Go-API moet `marks` en de marks-ops nog doorgeven (BACKEND).
+
+**Verweesde marks (18-11).** Het lagenbeheer toont marks waarvan het element of veld niet meer
+bestaat (`marksPaneel.bestaatIn`) en haalt ze op verzoek weg; vanzelf verdwijnen ze niet.
 
 **Nog niet:** eigen lagen in de werkruimte die je daarna deelt (nu is elke laag meteen van het
-project), filteren op labels in het beheer, wezen tonen, en de V3-bijlage (stap 5).
+project), filteren op labels in het beheer, en marksoorten die het project zelf maakt (nu alleen
+soorten die een transformatie declareert; daardoor is er nog geen soort voor een entiteit,
+gegevenselement of relatie als geheel).
 
 Wat nu al in het model staat en eigenlijk een mark is, verhuizen we **niet** vooraf. Kandidaten om
 later te bekijken: de vorm van invoer in een formulier (inhoud en vorm scheiden we al), een

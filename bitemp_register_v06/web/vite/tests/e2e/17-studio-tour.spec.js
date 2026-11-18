@@ -15,6 +15,9 @@ test("rondleiding: eerste bezoek, diagram en element maken, klaar en onthouden",
   await ballon.getByRole("button", { name: /Volgende/ }).click();
   await expect(ballon).toContainText("Het project");
   await page.keyboard.press("Enter");
+  // Sinds 16-11 (rondleiding uitgebreid): eerst de projecten op de server.
+  await expect(ballon).toContainText("Projecten op de server");
+  await page.keyboard.press("Enter");
   await expect(ballon).toContainText("Begin met een diagram");
   // De opdracht doen: een diagram maken. De naamdialoog krijgt de toetsen, niet de tour.
   await page.locator('[data-tour="nieuw-diagram"] button', { hasText: "Use case" }).first().click();
@@ -23,12 +26,14 @@ test("rondleiding: eerste bezoek, diagram en element maken, klaar en onthouden",
   await page.locator('[data-balk-id="maken"] button').first().click();
   await expect(ballon).toContainText("Eigenschappen");
   await page.keyboard.press("ArrowRight");
-  await expect(ballon).toContainText("Zoek elke opdracht");
+  await expect(ballon).toContainText("De AI-assistent");
   await page.keyboard.press("ArrowLeft");
   await expect(ballon).toContainText("Eigenschappen");
-  await page.keyboard.press("ArrowRight");
-  await page.keyboard.press("ArrowRight");
-  await expect(ballon).toContainText("Help");
+  // Door de rest: AI-assistent, Experimenteel, Zoek elke opdracht, Iets melden, Help.
+  for (const titel of ["De AI-assistent", "Experimenteel", "Zoek elke opdracht", "Iets melden", "Help"]) {
+    await page.keyboard.press("ArrowRight");
+    await expect(ballon).toContainText(titel);
+  }
   await ballon.getByRole("button", { name: "Klaar" }).click();
   await expect(page.getByTestId("tour")).toHaveCount(0);
   expect(await page.evaluate(() => localStorage.getItem("studio05-tour-v1"))).toBe("gezien");

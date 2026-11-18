@@ -14,7 +14,10 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useMarksStore } from "./marksStore.js";
-import { paneelVoorElement, schermContext, zetEffect } from "../marks/marksPaneel.js";
+import { paneelVoorElement, schermContext, zetEffect, bestaatIn } from "../marks/marksPaneel.js";
+import { wezen, doelSleutel } from "../marks/marks.js";
+import { getMarksoort } from "../marks/marksoorten.js";
+import { getProfieltypen } from "./profieltypeRegistry.js";
 import { vraagNaam, vraagBevestiging } from "./naamDialog.jsx";
 
 const stand = (s) => ({ lagen: s.lagen, contexten: s.contexten, marks: s.marks });
@@ -216,6 +219,17 @@ export function MarksLagenDialoog({ onSluit }) {
     const ok = !n || (await vraagBevestiging({ titel: "Laag weghalen", tekst: `Laag "${laag.naam}" weghalen, met ${n} mark${n === 1 ? "" : "s"}? Ongedaan maken kan niet.`, bevestig: "Weghalen", gevaar: true }));
     if (ok) store().wisLaag(laag.id);
   };
+  // Marks waarvan het doel niet meer bestaat (element of veld verwijderd). Ze blijven staan tot
+  // je ze weghaalt: zo raakt een mark niet stil kwijt.
+  const verweesd = useMemo(
+    () => wezen(st, bestaatIn(getProfieltypen().filter((p) => p.useStore).map((p) => ({ id: p.id, elements: p.useStore.getState().elements || {} })))),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [marks]
+  );
+  const ruimOp = async () => {
+    const ok = await vraagBevestiging({ titel: "Marks zonder doel weghalen", tekst: `${verweesd.length} mark${verweesd.length === 1 ? "" : "s"} weghalen waarvan het element of veld niet meer bestaat?`, bevestig: "Weghalen", gevaar: true });
+    if (ok) store().patchMarks({ marks: { zet: [], wis: verweesd.map((m) => m.id) } });
+  };
   const bewaarContext = async () => {
     const naam = await vraagNaam({ titel: "Bewaar als context", label: "Naam van de context", waarde: "", bevestig: "Bewaren" });
     if (!naam) return;
@@ -260,6 +274,18 @@ export function MarksLagenDialoog({ onSluit }) {
               })}
             </tbody>
           </table>
+          {verweesd.length > 0 && (
+            <div className="studio-marks__wezen" data-testid="marks-wezen">
+              <strong>{verweesd.length} mark{verweesd.length === 1 ? "" : "s"} zonder doel</strong> (het element of veld bestaat niet meer):
+              <ul>
+                {verweesd.slice(0, 8).map((m) => (
+                  <li key={m.id}>{getMarksoort(m.soort)?.label || m.soort} — laag {lagen.find((l) => l.id === m.laag)?.naam || m.laag} — {doelSleutel(m.doel)}</li>
+                ))}
+                {verweesd.length > 8 && <li>en nog {verweesd.length - 8}</li>}
+              </ul>
+              <button type="button" className="dc-mini-knop is-gevaar" data-testid="marks-wezen-weg" onClick={ruimOp}>Weghalen…</button>
+            </div>
+          )}
           <div className="studio-marks__acties">
             <button type="button" className="dc-mini-knop" data-testid="marks-nieuwe-laag" onClick={nieuweLaag}>＋ laag</button>
             <span style={{ flex: 1 }} />

@@ -772,6 +772,12 @@ function CanvasBinnenkant({
       if (e.ctrlKey || e.metaKey || e.shiftKey) return;
       const start = klikStartRef.current;
       if (start && Math.hypot(e.clientX - start.x, e.clientY - start.y) > 4) return;
+      // Het teken van een mark achter een veldnaam: de sectie Marks in beeld, niet hernoemen.
+      if (e.target?.closest?.("[data-dc-mark]")) {
+        // Even later: de klik selecteert het element eerst, en dan pas staat het paneel er.
+        setTimeout(() => window.dispatchEvent(new CustomEvent("omnium:marks-toon", { detail: { elementId: id } })), 80);
+        return;
+      }
       const doel = e.target?.closest?.("[data-dc-veld], [data-dc-naam], .dc-naam");
       if (!doel) return;
       const veld = doel.getAttribute("data-dc-veld") || null;

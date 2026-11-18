@@ -37,10 +37,37 @@ test("een veld markeren als zoeksleutel: paneel, teken op het canvas en het werk
   await expect.poll(async () => (await marks(page)).marks).toEqual([
     { laag: "algemeen", soort: "register.zoeksleutel", waarde: true, doel: { soort: "veld", uuid: "11111111-1111-4111-8111-111111111111" } },
   ]);
-  // Het teken op het canvas, met de inhoud in de tekst erbij.
-  const teken = node(page, "ge1").getByTestId("node-marks");
-  await expect(teken).toHaveText("◆1");
-  await expect(teken).toHaveAttribute("title", /kaartnummer: zoeksleutel/);
+  // Het teken op het canvas: achter de veldnaam (één mark: alleen het ruitje). Het element zelf
+  // heeft geen mark, dus geen teken rechtsboven.
+  const veldTeken = node(page, "ge1").locator("[data-dc-mark]");
+  await expect(veldTeken).toHaveCount(1);
+  await expect(veldTeken).toHaveText("◆");
+  await expect(veldTeken).toHaveAttribute("data-dc-mark", "velden:0"); // bij kaartnummer, niet bij soort
+  await expect(node(page, "ge1").getByTestId("node-marks")).toHaveCount(0);
+  // Erboven hangen toont het kaartje met de inhoud en de laag.
+  await veldTeken.hover();
+  const popup = page.getByTestId("marks-popup");
+  await expect(popup).toContainText("Kaartgegevens.kaartnummer");
+  await expect(popup).toContainText("zoeksleutel");
+  await expect(popup).toContainText("Algemeen");
+  await page.mouse.move(5, 5);
+  await expect(popup).toHaveCount(0);
+  // Een klik op het teken hernoemt het veld niet, maar brengt de sectie Marks in beeld.
+  await page.getByTestId("marks-paneel").evaluate((el) => el.closest(".studio-inspector-pad")?.parentElement?.scrollTo?.(0, 0));
+  await veldTeken.click();
+  await page.waitForTimeout(400);
+  await expect(node(page, "ge1").locator("input, textarea")).toHaveCount(0);
+  await expect(paneel).toBeInViewport();
+  // Na de klik blijft het kaartje staan, tot je ergens anders klikt.
+  await page.mouse.move(5, 5);
+  await expect(popup).toBeVisible();
+  await paneel.getByText("schrijft in").click();
+  await expect(popup).toHaveCount(0);
+  // Een tweede mark op hetzelfde veld: het aantal erbij.
+  await rij.getByTestId("mark-register.sorteerbaar").check();
+  await expect(veldTeken).toHaveText("◆2");
+  await rij.getByTestId("mark-register.sorteerbaar").uncheck();
+  await expect(veldTeken).toHaveText("◆");
   // In het werkbestand staan de marks los van het model.
   const wb = await page.evaluate(async () => {
     const { marksVanProject } = await import(location.origin + "/viz/react/src/studio/marksStore.js");
@@ -49,11 +76,12 @@ test("een veld markeren als zoeksleutel: paneel, teken op het canvas en het werk
     return { marks: marksVanProject().marks.length, veldSleutels: Object.keys(veld.data) };
   });
   expect(wb.marks).toBe(1);
+  expect(wb.veldSleutels).not.toContain("_mark");
   expect(wb.veldSleutels).not.toContain("marks");
   // Uitvinken haalt de mark weer weg.
   await rij.getByTestId("mark-register.zoeksleutel").uncheck();
   await expect.poll(async () => (await marks(page)).marks.length).toBe(0);
-  await expect(node(page, "ge1").getByTestId("node-marks")).toHaveCount(0);
+  await expect(node(page, "ge1").locator("[data-dc-mark]")).toHaveCount(0);
 });
 
 test("een tweede laag zet de mark uit; zonder die laag geldt hij weer", async ({ page }) => {
@@ -75,11 +103,52 @@ test("een tweede laag zet de mark uit; zonder die laag geldt hij weer", async ({
   await expect(vak).toBeChecked();
   await vak.uncheck();
   await expect.poll(async () => (await marks(page)).marks.map((m) => [m.laag, m.waarde])).toEqual([["algemeen", true], ["waterstede", null]]);
-  await expect(node(page, "ge1").getByTestId("node-marks")).toHaveCount(0);
+  await expect(node(page, "ge1").locator("[data-dc-mark]")).toHaveCount(0);
   // Waterstede doet niet meer mee: de mark geldt weer.
   await paneel.getByTestId("marks-lagen").click();
   await dlg.locator('tr[data-laag="waterstede"] input[type="checkbox"]').uncheck();
   await dlg.getByRole("button", { name: "Sluiten" }).click();
   await expect(vak).toBeChecked();
-  await expect(node(page, "ge1").getByTestId("node-marks")).toHaveText("◆1");
+  await expect(node(page, "ge1").locator("[data-dc-mark]")).toHaveText("◆");
+});
+
+test("een mark op het element zelf: teken rechtsboven, klikbaar", async ({ page }) => {
+  await opzet(page);
+  // Een soort voor het element als geheel (zo'n soort declareert een transformatie).
+  await page.evaluate(async () => {
+    const { registreerMarksoorten } = await import(location.origin + "/viz/react/src/marks/marksoorten.js");
+    registreerMarksoorten([{ id: "proef.archief", label: "archiveren", datatype: "boolean", doelen: ["element"], profielen: ["canoniek-uml"] }]);
+    const { useMarksStore } = await import(location.origin + "/viz/react/src/studio/marksStore.js");
+    useMarksStore.getState().zetLaag({ id: "algemeen", naam: "Algemeen", labels: [] });
+  });
+  const paneel = page.getByTestId("marks-paneel");
+  await paneel.getByTestId("mark-proef.archief").check();
+  const teken = node(page, "ge1").getByTestId("node-marks");
+  await expect(teken).toHaveText("◆");
+  await expect(teken).toHaveAttribute("title", "Marks: archiveren");
+  await teken.click();
+  await expect(paneel).toBeInViewport();
+  await expect(page.getByTestId("marks-popup")).toContainText("archiveren");
+});
+
+test("een mark waarvan het veld verdwijnt blijft staan en is op te ruimen", async ({ page }) => {
+  await opzet(page);
+  const paneel = page.getByTestId("marks-paneel");
+  await paneel.getByTestId("marks-eerste-laag").click();
+  await paneel.locator('tr[data-veld="kaartnummer"]').getByTestId("mark-register.zoeksleutel").check();
+  // Het veld weg uit het model.
+  await page.evaluate(async () => {
+    const reg = await import(location.origin + "/viz/react/src/studio/profieltypeRegistry.js");
+    const s = reg.getProfieltype("diagram05").useStore.getState();
+    const el = s.elements.ge1;
+    s.updateElementen({ ge1: { compartimenten: el.compartimenten.map((c) => ({ ...c, velden: c.velden.filter((v) => v.naam !== "kaartnummer") })) } });
+  });
+  expect((await marks(page)).marks.length).toBe(1); // niet stil weggegooid
+  await paneel.getByTestId("marks-lagen").click();
+  const dlg = page.getByTestId("marks-lagen-dialoog");
+  await expect(dlg.getByTestId("marks-wezen")).toContainText("1 mark zonder doel");
+  await dlg.getByTestId("marks-wezen-weg").click();
+  await page.locator(".studio-dialoog").getByRole("button", { name: "Weghalen" }).click();
+  await expect(dlg.getByTestId("marks-wezen")).toHaveCount(0);
+  expect((await marks(page)).marks.length).toBe(0);
 });

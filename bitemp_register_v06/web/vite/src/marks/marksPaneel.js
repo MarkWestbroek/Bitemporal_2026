@@ -71,21 +71,25 @@ export function paneelVoorElement({ st, context, profielId, descriptorId, elemen
 }
 
 /**
- * De marks die op een element en zijn velden gelden, als korte regels (voor het teken op het
- * canvas en de tekst erbij).
- * @returns {string[]}
+ * De marks die op een element en zijn velden gelden, als korte teksten (voor de tekens op het
+ * canvas): die op het element zelf, en per veldnaam die op het veld. `null` als er geen zijn.
+ * @returns {{element: string[], velden: Record<string, string[]>} | null}
  */
 export function markRegels({ st, context, profielId, descriptorId, element }) {
   const p = paneelVoorElement({ st, context, profielId, descriptorId, element });
   const toon = (soort, e) => `${soort.label || soort.id}${e.waarde === true ? "" : `: ${e.waarde}`}`;
-  const uit = [];
-  for (const r of p.element) if (r.eff && !r.eff.uit) uit.push(toon(r.soort, r.eff));
+  const opElement = p.element.filter((r) => r.eff && !r.eff.uit).map((r) => toon(r.soort, r.eff));
+  /** @type {Record<string, string[]>} */
+  const velden = {};
   for (const v of p.velden) {
     const delen = v.cellen.filter((c) => c.eff && !c.eff.uit).map((c) => toon(c.soort, c.eff));
-    if (delen.length) uit.push(`${v.naam}: ${delen.join(", ")}`);
+    if (delen.length) velden[v.naam] = delen;
   }
-  return uit;
+  return opElement.length || Object.keys(velden).length ? { element: opElement, velden } : null;
 }
+
+/** Het teken voor `n` marks: alleen het ruitje bij één, met het aantal erbij vanaf twee. */
+export const markTeken = (n) => (n > 1 ? `◆${n}` : n === 1 ? "◆" : "");
 
 /**
  * Zet een mark op een waarde in de werklaag, zó dat het effect in de context de gevraagde waarde
@@ -105,4 +109,32 @@ export function zetEffect(st, { laag, soort, doel, waarde, context }) {
   // Eerst proberen zonder eigen mark in deze laag: dan geldt wat eronder ligt.
   if (effect(zonder) === waarde) return zonder;
   return zetMark(st, { laag, soort, doel, waarde: waarde === undefined ? null : waarde });
+}
+
+/**
+ * Bestaat het doel van een mark nog? Geeft een functie voor `wezen` (marks/marks.js), gebouwd uit
+ * de elementen van alle talen: een uuid moet op een element of veld staan, een verwijzing zonder
+ * uuid moet naar een bestaand element (en veld) wijzen. Een map telt altijd als bestaand (de
+ * mappen zitten niet in de modelstores).
+ * @param {{id: string, elements: Record<string, any>}[]} profielen
+ * @returns {(doel: any) => boolean}
+ */
+export function bestaatIn(profielen) {
+  const uuids = new Set();
+  const refs = new Set();
+  for (const p of profielen || []) {
+    for (const el of Object.values(p.elements || {})) {
+      refs.add(`${p.id}::${el.id}`);
+      if (el.data?.uuid) uuids.add(el.data.uuid);
+      for (const v of veldenVan(el)) {
+        refs.add(`${p.id}::${el.id}#${v.naam}`);
+        if (v.data?.uuid) uuids.add(v.data.uuid);
+      }
+    }
+  }
+  return (doel) => {
+    if (doel?.uuid) return uuids.has(doel.uuid);
+    if (doel?.soort === "map") return true;
+    return refs.has(`${doel?.profielId}::${doel?.elementId}${doel?.veldNaam ? `#${doel.veldNaam}` : ""}`);
+  };
 }

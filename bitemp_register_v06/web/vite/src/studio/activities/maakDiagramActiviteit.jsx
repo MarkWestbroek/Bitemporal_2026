@@ -80,8 +80,10 @@ import { gebruikInHetProject } from "../gebruikInProject.js";
 import { metKoppelingen, isKoppelingId, isKoppelType, linkIdVan, refVanCanvasId } from "../../diagramcore/model/koppellijnen.js";
 import { afgeleideKoppelingen, isAfgeleideLink } from "../../diagramcore/model/afgeleideKoppelingen.js";
 import MarksPaneel from "../MarksPaneel.jsx";
+import MarksPopup from "../MarksPopup.jsx";
 import { useMarksStore } from "../marksStore.js";
-import { markRegels, schermContext } from "../../marks/marksPaneel.js";
+import { markRegels, markTeken, schermContext } from "../../marks/marksPaneel.js";
+import { metMarksBijlage } from "../../marks/v3Bijlage.js";
 import { useKruisStore, useKoppelsoorten } from "./koppelingenActivity.jsx";
 import { openVerwijzing, alleDiagrammen, naamVanVerwijzing, diagrammenViaType } from "../doorklik.js";
 import VerwezenDoorPaneel from "../VerwezenDoorPaneel.jsx";
@@ -562,7 +564,10 @@ export function maakDiagramActiviteit(opties) {
         af.push(
           menuBus.on(ev("exporteer-v3"), () => {
             koppeling.vulUuids?.(useStore);
-            const { v3, overgeslagen } = koppeling.exporteerV3(useStore.getState());
+            const { v3: kaal, overgeslagen } = koppeling.exporteerV3(useStore.getState());
+            // Marks als bijlage naast het model (18-11), voor de lagen die jij nu toepast.
+            const ms = useMarksStore.getState();
+            const v3 = metMarksBijlage(kaal, { lagen: ms.lagen, contexten: ms.contexten, marks: ms.marks }, ms.actieveContext);
             const naam = (v3.model?.naam || "model").toLowerCase().replace(/[^a-z0-9]+/g, "-");
             const blob = new Blob([JSON.stringify(v3, null, 2)], { type: "application/json" });
             const url = URL.createObjectURL(blob);
@@ -2194,8 +2199,9 @@ export function maakDiagramActiviteit(opties) {
       // een BPMN-data-object «traceert naar» het cm-element) tekent als koppellijn.
       const links = [...kruisLinks, ...afgeleideKoppelingen({ profielId: id, elements, elementTypes: descriptor.elementTypes })];
       const model = metKoppelingen({ elements: v.elements, descriptor: v.descriptor, diagram, eigenProfielId: id, links, soorten: koppelsoorten });
-      // Marks (18-11): een teken op elk eigen element waar marks op gelden (op het element of
-      // op een veld ervan). Afgeleid gegeven `data._marks`, zoals `vreemd`; het wordt niet bewaard.
+      // Marks (18-11): een teken rechtsboven op een element met marks op het element zelf, en
+      // achter de veldnaam bij een veld met marks. Afgeleide gegevens (`data._marks`, veld
+      // `data._mark`), zoals `vreemd`; ze worden niet bewaard.
       if (!markStand.marks.length) return model;
       const context = schermContext(markStand, markContext);
       let metMarks = null;
@@ -2203,9 +2209,17 @@ export function maakDiagramActiviteit(opties) {
         const el = elements[n.elementId];
         if (!el || !model.elements[el.id]) continue;
         const regels = markRegels({ st: markStand, context, profielId: id, descriptorId: descriptor.id, element: el });
-        if (!regels.length) continue;
+        if (!regels) continue;
         metMarks = metMarks || { ...model.elements };
-        metMarks[el.id] = { ...model.elements[el.id], data: { ...model.elements[el.id].data, _marks: regels } };
+        const bron = model.elements[el.id];
+        // Op het veld zelf: het teken achter de veldnaam (de tekenaar leest `data._mark`).
+        const compartimenten = Object.keys(regels.velden).length
+          ? (bron.compartimenten || []).map((c) => ({
+              ...c,
+              velden: (c.velden || []).map((v) => (regels.velden[v.naam] ? { ...v, data: { ...v.data, _mark: markTeken(regels.velden[v.naam].length) } } : v)),
+            }))
+          : bron.compartimenten;
+        metMarks[el.id] = { ...bron, compartimenten, data: { ...bron.data, _marks: regels } };
       }
       return metMarks ? { ...model, elements: metMarks } : model;
       // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -3719,6 +3733,8 @@ export function maakDiagramActiviteit(opties) {
                   onViewport={(vp) => useStore.getState().updateDiagramViewport(diagram.id, vp)}
                 />
               </Suspense>
+              {/* De inhoud van een mark-teken: bij erboven hangen, vast na een klik (18-11). */}
+              <MarksPopup profielId={id} descriptorId={descriptor.id} elements={elements} diagram={diagram} />
               {aantalNodes === 0 && (
                 <LegeCanvas
                   descriptor={descriptor}
