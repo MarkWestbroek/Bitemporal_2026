@@ -248,7 +248,8 @@ export function odrlNaarToegangsspraak(turtle, opties = {}) {
  */
 export function odrlBrongraaf(gelezen) {
   const ns = namespaces(gelezen.triples, gelezen.prefixen);
-  const prefixen = { ...odrlContext({ beleidSlug: "x" }).prefixes, b: ns.b, reg: ns.reg };
+  // nlgov: de termen van het NLGov-profiel (de JSON-LD-export, odrl.js); de vergelijkingen heten er als in de taal.
+  const prefixen = { ...odrlContext({ beleidSlug: "x" }).prefixes, nlgov: "https://standaarden.overheid.nl/odrl/terms/", b: ns.b, reg: ns.reg };
   return { graaf: rdfNaarBrongraaf(gelezen.triples, { prefixen }), ns };
 }
 
@@ -295,7 +296,7 @@ export function importMeldingen(r) {
   // Eerst wat het beleid verandert, dan hoe er gelezen is.
   const eigenCodes = (d) => d.code !== "TRF-GEEN-REGEL" && d.code !== "TRF-UITEINDE" && d.code !== "TRF-INTERPRETATIE";
   for (const d of r.diagnostics) if (d.severity === "warning" && eigenCodes(d)) uit.push(d.message);
-  for (const d of r.diagnostics) if (d.severity === "info" && ["ODRL-STRENGER", "ODRL-INTERPRETATIE", "ODRL-MEER-BELEID"].includes(d.code)) uit.push(d.message);
+  for (const d of r.diagnostics) if (d.severity === "info" && ["ODRL-STRENGER", "ODRL-WAARDE-NAAM", "ODRL-INTERPRETATIE", "ODRL-MEER-BELEID"].includes(d.code)) uit.push(d.message);
 
   const verlies = verliesrapport(r);
   const aantal = verlies.knopen.length + verlies.verbindingen.length;

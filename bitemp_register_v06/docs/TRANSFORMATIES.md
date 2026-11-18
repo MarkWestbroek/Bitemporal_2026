@@ -499,7 +499,7 @@ bewerkte ODRL, model erbij, andere prefixen, ODRL van elders: §8.2) en e2e 68 e
 ### 8.2 ODRL van anderen lezen (2026-11-18)
 
 De import leest ook ODRL die een ander volgens ODRL-AP-NL schreef (regelset v2 van
-`odrl-ap-nl-naar-toegangsspraak`). Het resultaat is een **concept**: iemand loopt het na.
+`odrl-ap-nl-naar-toegangsspraak`; v3 na een toets door de sessie die ODRL uitvoert, zie onderaan). Het resultaat is een **concept**: iemand loopt het na.
 Proefmateriaal waren de twee voorbeelden van de werkgroep FTV (Vlierdam en Breda); die
 staan niet in de repo. De fixture `toegangsspraak/fixtures/odrl-van-elders.ttl` is een
 eigen, verzonnen beleid in dezelfde stijl.
@@ -512,7 +512,10 @@ ODRL.** Wat de taal niet kan zeggen leidt tot een van deze uitkomsten:
 | toestemming met een voorwaarde, plicht of kenmerk dat niet te vertalen is | de toestemming valt weg (het beleid wordt strenger) | `ODRL-REGEL-WEG`, met de reden |
 | hetzelfde, met `bijOnvertaalbaar: "ruimer"` | de toestemming blijft, zonder dat onderdeel | `ODRL-RUIMER` |
 | verbod met een onvertaalbare voorwaarde | het verbod blijft zonder die voorwaarde (het geldt vaker) | `ODRL-STRENGER` |
-| verbod op een handeling die meer omvat dan het woord van de taal (`odrl:use`) | het verbod blijft voor dat woord | `ODRL-RUIMER` |
+| verbod op elk gebruik (`odrl:use`) | uitgeschreven: één verbod per handeling die de taal kent | `ODRL-INTERPRETATIE` |
+| een begrip (IRI) als waarde in een verbod | het verbod blijft, met de naam van het begrip als waarde; vergelijkt de uitvoering op een code, dan slaat het niet aan | `ODRL-WAARDE-NAAM` (waarschuwing) |
+| `odrl:Offer` of `odrl:Request` | gelezen, maar het is geen geldend beleid | `ODRL-GEEN-OVEREENKOMST` |
+| `odrl:conflict odrl:invalid` | bij een conflict gaat hier het verbod voor | `ODRL-CONFLICT` |
 | regel waarvan de handeling of de gegevens niet te lezen zijn | de regel valt weg | `ODRL-REGEL-WEG`, of `ODRL-VERBOD-WEG` (ruimer) |
 | plicht op het beleid (`odrl:obligation`), overerving (`odrl:inheritFrom`) | niet overgenomen | `ODRL-PLICHT-BELEID`, `ODRL-ERFT` |
 
@@ -529,15 +532,16 @@ zo blijft de richting (strenger of ruimer) eenduidig.
 | een handeling of voorwaarde als lege knoop zonder `rdf:type` | gewoon gelezen | |
 | `odrl:action odrl:read` zonder eigen knoop; meer handelingen op één regel | per woord van de taal een regel | |
 | `odrl:display`, `odrl:present` → bekijken; `odrl:distribute`, `odrl:extract`, `odrl:reproduce` → exporteren | het naaste woord | `ODRL-INTERPRETATIE` |
-| `odrl:use` → bekijken | het woord omvat minder: strenger bij een toestemming, ruimer bij een verbod | `ODRL-STRENGER` / `ODRL-RUIMER` |
+| `odrl:use` → bekijken (toestemming) | het woord omvat minder: de toestemming is strenger. Een verbod wordt uitgeschreven, zie boven | `ODRL-STRENGER` |
 | een eigen handeling met `odrl:includedIn` naar een bekende | een bijzondere vorm van dat woord: het woord is breder | weg, of `ODRL-RUIMER` |
-| een operand uit een ander vocabulaire (`vlierdam:zoektype`) | kenmerk van de **aanvrager** als hij een groep bepaalt, anders van de **aanvraag** | `ODRL-INTERPRETATIE` |
-| een vergelijking uit een ander vocabulaire | niet te vertalen (alleen die van ODRL en van `ts:` zijn dezelfde als die van de taal) | zie boven |
-| een begrip of partij als rechterterm (ook een lijst) | de naam als tekst | |
+| een operand uit een ander vocabulaire (`vlierdam:zoektype`) | de plek zegt waar hij over gaat: verfijning op de groep = de **aanvrager**, verfijning op de gegevens = de **gegevens** (de populatie: "als de wijk van de gegevens …"), verfijning op de handeling of voorwaarde op de regel = de **aanvraag** | `ODRL-INTERPRETATIE` |
+| een vergelijking uit een ander vocabulaire | niet te vertalen (alleen die van ODRL, van `ts:` en van het NLGov-profiel `nlgov:` zijn dezelfde als die van de taal) | zie boven |
+| een begrip of partij als rechterterm (ook een lijst) | de naam als tekst; de IRI of code gaat verloren | `ODRL-WAARDE-NAAM` |
 | `odrl:Party` als assignee | een begrip: iemand met organisatie "…" | `ODRL-INTERPRETATIE` |
-| `odrl:assignee` op het beleid | geldt voor elke regel zonder eigen assignee | |
+| `odrl:assignee`, `odrl:target` en `odrl:action` op het beleid | gelden voor elke regel zonder eigen (ODRL 2.2 §2.7.1) | |
+| `odrl:conflict odrl:perm` | `Bij conflict: toestemming gaat voor` (de eigen export schrijft altijd `odrl:prohibit`; daar wordt het niet gelezen) | |
 | een asset zonder pad in een register | gelezen naar zijn naam en zijn `odrl:partOf`-keten ("het kenteken van een voertuiggegevens") | `ODRL-INTERPRETATIE` |
-| het anker naar de uitvoering (`apnl:verwerkingsverzoek`) | bewust genegeerd: realisatie, geen norm | |
+| het anker naar de uitvoering (`apnl:verwerkingsverzoek` met `apnl:conformsToPolicy`) | bewust genegeerd: realisatie, geen norm. Elke andere voorwaarde op het verwerkingsverzoek is een gewone voorwaarde | |
 | tekst in meer talen | de Nederlandse (graaflaag, optie `taal`) | |
 
 Namen van elders worden woorden die de parser als naam leest: leestekens vallen weg, en in
@@ -566,6 +570,28 @@ weggelaten regels of je ze toch (ruimer) wilt overnemen.
 **Niet gedaan:** JSON-LD als bron; een toets op de ODRL zelf (SHACL van ODRL-AP-NL); het
 terugschrijven van de oorspronkelijke IRI's bij een nieuwe export (een operand van elders
 wordt dan `ts:aanvraag.zoektype`).
+
+**Getoetst door de uitvoering (QGL-ODRL-EXEC, 18-11).** De eerste versie had vier plekken waar
+het concept toch stil ruimer werd; die zijn dicht (regelset v3): een verfijning op de gegevens
+ging verloren, het anker werd op de linkerterm alleen herkend, een aanbod of verzoek telde als
+geldend beleid, en gegevens of handeling op het beleid werden niet naar de regels gebracht.
+
+**Wat de uitvoering vandaag kan** (de PDP en PEP in de Go-API; dit zit niet in de import, maar
+bepaalt wat een geïmporteerd beleid doet als je het uitvoert):
+
+- De PEP vraagt alleen om *bekijken*. Een verbod of toestemming voor exporteren, veranderen of
+  afvoeren komt in de bundel, maar wordt nog niet afgedwongen.
+- De PEP vult de kenmerken van de aanvraag niet (geen doel, geen zoektype) en kent van de
+  aanvrager alleen rol en gebruikersnaam. Een voorwaarde daarover is in de uitvoering onbekend:
+  zo'n toestemming telt nooit en zo'n verbod geldt altijd. Dat is veilig, maar een beleid met
+  doelbinding (bijna elk FTV-beleid) doet dan in de praktijk niets.
+- `is onderdeel van` (`odrl:isPartOf`) kent de taal, maar de PDP geeft er *onbepaald* op. Dat werkt als een
+  onbekend gegeven: zo'n toestemming telt nooit, zo'n verbod geldt altijd.
+- Een voorwaarde over de gegevens (de afbakening van een populatie) leest de PDP als veldwaarde van het
+  record. Het pad wordt alleen opgelost als de gegevens een pad in het register hebben. Bij gegevens van
+  elders die alleen een naam hebben weigert de controle op het metamodel het beleid, of de PDP vindt de
+  waarde nooit. Het wordt dus niet ruimer, maar zo'n voorwaarde doet pas iets als de gegevens op een
+  registerpad zijn gelegd.
 
 **Waar het heengaat (werkgroep ODRL NL, Mark 18-11).** Het profiel is in beweging; de
 import leest nu wat er vandaag in de voorbeelden staat. Vier punten waar hij op moet
