@@ -60,6 +60,10 @@ import { gelijk } from "../sync/operaties.js";
  *     "gegevenselement", "domein" … kan tonen in plaats van "element" (Mark 14-11).
  */
 
+/** De verschilsoort per onderdeel van de marks (zelfde tabel als in samenvoegen.js; hier herhaald
+ * omdat samenvoegen.js dit bestand importeert). */
+const MARK_SOORT = { lagen: "marklaag", contexten: "markcontext", marks: "mark" };
+
 const leeg = Object.freeze({});
 const isObject = (v) => !!v && typeof v === "object" && !Array.isArray(v);
 
@@ -408,6 +412,24 @@ export function verschilMetMain({ basis, tak, main, mapId = null, ouderVan = nul
     }
   }
 
+  // Marks (18-11): lagen, contexten en marks, elk op id. Lagen en contexten horen bij geen map en
+  // gaan dus altijd mee met een samenvoeging van een deel; een mark hoort bij de map van zijn doel
+  // (als dat een element met profiel en id is; anders gaat hij ook mee).
+  for (const [deel, soort] of Object.entries(MARK_SOORT)) {
+    const perId = (st) => new Map((Array.isArray(st.marks?.[deel]) ? st.marks[deel] : []).map((x) => [x.id, x]));
+    const b = perId(standen.basis), t = perId(standen.tak), m = perId(standen.main);
+    for (const id of new Set([...b.keys(), ...t.keys(), ...m.keys()])) {
+      const r = drieweg(b.get(id), t.get(id), m.get(id));
+      if (!r) continue;
+      const x = t.get(id) || m.get(id) || b.get(id);
+      const doel = deel === "marks" ? x?.doel : null;
+      const inScope = doel?.profielId && doel?.elementId
+        ? inScopeVia((st) => { const k = mapVanElement(st, doel.profielId, doel.elementId); return k && scope.has(k) ? k : null; })
+        : !!mapId;
+      verschillen.push({ soort, profielId: null, id, naam: deel === "marks" ? String(x?.soort || "") : naamVan(x), ...r, inScope });
+    }
+  }
+
   // Sleutel, map en ouder per verschil (voor de keuzeboom). Ouder van een element: de bron
   // (relatie), anders het element waaronder het geplaatst is, anders de boomouder. Ouder van een
   // diagram: het element waaronder het geplaatst is (zelfde profiel).
@@ -473,7 +495,7 @@ export function verschilMetMain({ basis, tak, main, mapId = null, ouderVan = nul
   }
 
   const volgorde = { conflict: 0, nieuw: 1, gewijzigd: 2, weg: 3, main: 4 };
-  const soortVolgorde = { map: 0, element: 1, diagram: 2, bundel: 3, kruisverband: 4 };
+  const soortVolgorde = { map: 0, element: 1, diagram: 2, bundel: 3, kruisverband: 4, marklaag: 5, markcontext: 6, mark: 7 };
   verschillen.sort((a, b) => volgorde[a.status] - volgorde[b.status]
     || soortVolgorde[a.soort] - soortVolgorde[b.soort]
     || String(a.profielId).localeCompare(String(b.profielId))

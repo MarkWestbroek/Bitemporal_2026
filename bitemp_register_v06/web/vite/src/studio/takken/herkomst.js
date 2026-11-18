@@ -62,4 +62,4 @@ export const STATUS_UITLEG = {
   weg: "In deze branch verwijderd.",
   main: "Op MAIN veranderd sinds het afsplitsen; hier pas zichtbaar na bijwerken of mergen.",
 };
-export const SOORT_LABEL = { element: "element", diagram: "diagram", map: "map", kruisverband: "koppeling", bundel: "bundel" };
+export const SOORT_LABEL = { element: "element", diagram: "diagram", map: "map", kruisverband: "koppeling", bundel: "bundel", marklaag: "marklaag", markcontext: "markcontext", mark: "mark" };

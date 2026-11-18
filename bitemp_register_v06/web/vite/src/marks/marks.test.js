@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
   leegMarks, doelSleutel, markId, normaliseerMarks, metLaag, zonderLaag, metContext, zetMark, wisMark,
-  lagenVoorFilter, contextLagen, effectieveMarks, marksVoor, wezen, marksBijlage,
+  lagenVoorFilter, contextLagen, effectieveMarks, marksVoor, wezen, marksBijlage, diffMarks, patchMarks, heeftMarks,
 } from "./marks.js";
 import { registreerMarksoorten, getMarksoort, marksoortenVoor, valideerMark, naamruimteVan, REGISTER_MARKSOORTEN } from "./marksoorten.js";
 
@@ -129,4 +129,23 @@ test("marksoorten: naamruimte verplicht, doelen en datatype getoetst", () => {
   assert.equal(valideerMark({ soort: "register.zoeksleutel", doel: TAAK, waarde: true }, { profiel: "bpmn" }).length, 1);
   assert.equal(valideerMark({ soort: "proef.vorm", doel: VELD, waarde: "breed" }, bij).length, 1);
   assert.match(valideerMark({ soort: "onbekend.iets", doel: VELD, waarde: true })[0], /Onbekende marksoort/);
+});
+
+test("diffMarks en patchMarks: het verschil toepassen geeft de nieuwe stand", () => {
+  const voor = basis();
+  let na = zetMark(voor, { laag: "algemeen", soort: "register.zoeksleutel", doel: VELD, waarde: false });
+  na = wisMark(na, markId("ws", "register.sorteerbaar", VELD));
+  na = metLaag(na, { id: "nieuw", naam: "Nieuw" });
+  na = zonderLaag(na, "test");
+  na = metContext(na, { id: "c", lagen: ["algemeen", "nieuw"] });
+  const patch = diffMarks(voor, na);
+  assert.deepEqual(patch.lagen, { zet: [{ id: "nieuw", naam: "Nieuw", labels: [] }], wis: ["test"] });
+  assert.equal(patch.marks.zet.length, 1);
+  assert.equal(patch.marks.wis.length, 2); // de uitgezette mark en de mark van de verdwenen laag
+  assert.deepEqual(patchMarks(voor, patch), na);
+  assert.equal(diffMarks(na, JSON.parse(JSON.stringify(na))), null);
+  // Een mark voor een laag die er niet is valt weg.
+  assert.equal(patchMarks(leegMarks(), { marks: { zet: [{ id: "x", laag: "weg", soort: "a.b", doel: VELD, waarde: 1 }], wis: [] } }).marks.length, 0);
+  assert.equal(heeftMarks(leegMarks()), false);
+  assert.equal(heeftMarks(voor), true);
 });

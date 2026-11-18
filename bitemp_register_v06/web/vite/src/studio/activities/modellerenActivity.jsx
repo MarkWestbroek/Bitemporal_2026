@@ -21,6 +21,8 @@ import { menuBus } from "../menuBus";
 import { registreerMeldContext } from "../meldContext.js";
 import { zetUuidContext, planUuidAanvulling } from "../uuidAanvulling.js";
 import { useBeheerZicht, zetBeheerZicht, zichtbareProfielen } from "../beheerZicht.js";
+import { useMarksStore, marksVanProject } from "../marksStore.js";
+import { heeftMarks } from "../../marks/marks.js";
 import { veldCompartimenten } from "../assistent/assistentKern.js";
 import { vraagNaam, vraagBevestiging, vraagKeuze, toonMelding } from "../naamDialog.jsx";
 import { ELEMENT_REF_MIME } from "../../diagramcore/canvas/externDrop.js";
@@ -3739,6 +3741,8 @@ function bouwProjectData() {
     kruisverbanden: useKruisStore.getState().links,
     // De soortenlijst van het project (07-11); ontbreekt = de standaardlijst.
     ...(useKruisStore.getState().soorten ? { koppelsoorten: useKruisStore.getState().soorten } : {}),
+    // Marks (18-11): lagen, contexten en marks, los van het model; alleen als er iets is.
+    ...(heeftMarks(marksVanProject()) ? { marks: marksVanProject() } : {}),
     // Per profiel de versie waarmee dit is bewaard (M1 leunt op M2; types/profielVersie.js).
     profielVersies: noteerProfielVersies(Object.keys(profielen), beschikbareProfielVersies(), _geladenProfielVersies),
     profielen,
@@ -3818,6 +3822,7 @@ function pasProjectToe(data, { serverVersie = null, laatsteVolgnummer = 0, herko
       actieveTab: tabs.some((t) => t.id === gewenstActief) ? gewenstActief : tabs[0]?.id || null,
     });
     useKruisStore.getState().laadLinks(Array.isArray(data.kruisverbanden) ? data.kruisverbanden : [], data.koppelsoorten ?? null);
+    useMarksStore.getState().laadMarks(data.marks);
   });
   useOutboxStore.getState().wis();
   // Boomregel (BOOM-1): wat op een geplaatst diagram staat, in die map (migratie van

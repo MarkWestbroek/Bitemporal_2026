@@ -213,7 +213,16 @@ codegen het doel niet vindt geeft een waarschuwing en de bouw gaat door.
 **Stand (18-11).** Stap 2 is gebouwd: `web/vite/src/marks/marks.js` (lagen, contexten,
 `effectieveMarks`, `marksVoor`, `wezen`, `marksBijlage`) en `marksoorten.js` (soorten per
 transformatie, toets op doel en datatype, de eerste set `register.*`), met tests. Nog nergens
-aangesloten: geen opslag, geen scherm, geen export.
+aangesloten: geen scherm, geen export.
+
+Stap 3 is gebouwd (18-11): de marks staan in het werkbestand (`marks`, alleen als er iets is) en
+in de store `studio/marksStore.js`; een wijziging gaat als één operatie `marks/patchMarks` de
+projectsync in, en de server speelt hem na (`sidecarImport.speelOpsNa`). Vergelijken en
+samenvoegen van een branch nemen lagen, contexten en marks mee, elk op id (verschilsoorten
+`marklaag`, `markcontext`, `mark`; groep *Marks* in de keuzeboom). De gekozen context
+(`actieveContext`) is van de gebruiker en van het apparaat en reist niet mee. Een oudere Studio
+slaat de onbekende store over. **Nog niet:** eigen lagen in de werkruimte die je daarna deelt
+(nu is elke laag meteen van het project), en het scherm.
 
 Wat nu al in het model staat en eigenlijk een mark is, verhuizen we **niet** vooraf. Kandidaten om
 later te bekijken: de vorm van invoer in een formulier (inhoud en vorm scheiden we al), een

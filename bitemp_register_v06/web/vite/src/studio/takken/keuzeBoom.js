@@ -65,7 +65,7 @@ export function standaardKeuze(verschillen, { heeftMap = true } = {}) {
   return uit;
 }
 
-const SOORT_VOLGORDE = { veld: -1, map: 0, groep: 1, diagram: 2, element: 3, bundel: 4, kruisverband: 5 };
+const SOORT_VOLGORDE = { veld: -1, map: 0, groep: 1, diagram: 2, element: 3, bundel: 4, kruisverband: 5, marklaag: 6, markcontext: 7, mark: 8 };
 const volgordeVan = (k) => SOORT_VOLGORDE[k.soort === "eenheid" ? k.verschil?.soort : k.soort] ?? 9;
 
 /**
@@ -163,6 +163,7 @@ export function bouwKeuzeBoom(verschillen, mappen = {}, context = {}) {
     else if (ctx && context[ctx]) contextKnoop(ctx).kinderen.push(k);
     else if (v.soort === "kruisverband") groep("kruis", "Koppelingen tussen talen").kinderen.push(k);
     else if (v.soort === "bundel") groep("bundels", "Diagrambundels").kinderen.push(k);
+    else if (v.soort === "marklaag" || v.soort === "markcontext" || v.soort === "mark") groep("marks", "Marks").kinderen.push(k);
     else if (v.mapId && mappen[v.mapId]) mapKnoop(v.mapId).kinderen.push(k);
     else groep("zonder", "Zonder map").kinderen.push(k);
   }
@@ -176,7 +177,7 @@ export function bouwKeuzeBoom(verschillen, mappen = {}, context = {}) {
   for (const g of groepen.values()) sorteer(g.kinderen);
   // Mappen die alleen voor de keten nodig waren maar niets bevatten, bestaan niet: elke map-knoop
   // ontstaat uit een verschil of uit een kind. De groepen komen achteraan.
-  return [...wortels, ...["zonder", "bundels", "kruis"].filter((id) => groepen.has(id)).map((id) => groepen.get(id))];
+  return [...wortels, ...["zonder", "bundels", "kruis", "marks"].filter((id) => groepen.has(id)).map((id) => groepen.get(id))];
 }
 
 /**

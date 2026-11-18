@@ -46,6 +46,7 @@
  * naar iets wat er niet is. Alleen wat de keuze nieuw stuk maakt telt (`nieuweSamenhangFouten`).
  */
 import { gelijk, diffMap, structuurNet, modelStoreNaam } from "../sync/operaties.js";
+import { normaliseerMarks, heeftMarks, diffMarks } from "../../marks/marks.js";
 import { verschilSleutel, elementVanPlaatsing, veldenVan, uuidPerVeldnaam, compartimentVeld, lijnVeldenUit } from "./verschilMetMain.js";
 
 export { veldenVan };
@@ -183,8 +184,11 @@ export function plaatsingSleutel(p) {
   return verschilSleutel({ soort: isEl ? "element" : "diagram", profielId: rest.slice(0, i), id: rest.slice(i + 2) });
 }
 
+/** De verschilsoort per onderdeel van de marks (verschilMetMain en de keuzeboom gebruiken dezelfde). */
+export const MARK_SOORT = { lagen: "marklaag", contexten: "markcontext", marks: "mark" };
+
 /**
- * @typedef {{soort: "element"|"diagram"|"map"|"plaatsing"|"bundel"|"kruisverband"|"koppelsoorten",
+ * @typedef {{soort: "element"|"diagram"|"map"|"plaatsing"|"bundel"|"kruisverband"|"koppelsoorten"|"marklaag"|"markcontext"|"mark",
  *            profielId: string|null, id: string, gekozen?: "tak"|"main", velden?: string[]}} Conflict
  * `velden`: bij een element dat per veld is samengevoegd, de velden die aan beide kanten anders
  * veranderden.
@@ -261,6 +265,12 @@ export function voegSamen({ basis, tak, main, keuze = null }) {
     conflicten.push({ soort: "koppelsoorten", profielId: null, id: "koppelsoorten", ...(keuze ? { gekozen: soorten.gekozen.s ? "tak" : "main" } : {}) });
   }
 
+  // Marks (18-11): lagen, contexten en marks elk op id. Een mark is één eenheid (laag, soort, doel).
+  const mk = (deel) => voegMapSamen(opId(st.basis.marks?.[deel]), opId(st.tak.marks?.[deel]), opId(st.main.marks?.[deel]), neemVoor((id) => verschilSleutel({ soort: MARK_SOORT[deel], id })));
+  const markDelen = { lagen: mk("lagen"), contexten: mk("contexten"), marks: mk("marks") };
+  for (const deel of Object.keys(markDelen)) meld(markDelen[deel], MARK_SOORT[deel], null);
+  const marksVoor = (kant) => normaliseerMarks({ lagen: Object.values(markDelen.lagen[kant]), contexten: Object.values(markDelen.contexten[kant]), marks: Object.values(markDelen.marks[kant]) });
+
   const bouw = (basisStand, kant) => {
     const uit = {
       ...basisStand,
@@ -275,6 +285,9 @@ export function voegSamen({ basis, tak, main, keuze = null }) {
     };
     if (soorten[kant].s !== undefined) uit.koppelsoorten = soorten[kant].s;
     else delete uit.koppelsoorten;
+    const marks = marksVoor(kant);
+    if (heeftMarks(marks) || basisStand.marks !== undefined) uit.marks = marks;
+    else delete uit.marks;
     return uit;
   };
   return { samengevoegd: bouw(st.main, "uit"), nieuwTak: bouw(st.tak, "takUit"), conflicten };
@@ -377,5 +390,8 @@ export function opsVoorVerschil(van, naar, { splits = heel } = {}) {
   // Kruisverbanden: inhoudelijk vergelijken (twee gematerialiseerde standen delen geen objecten).
   const kv = diffMap(opId(van.kruisverbanden), opId(naar.kruisverbanden));
   if (!kv.leeg) ops.push({ store: "kruis", op: "patchLinks", args: [{ zet: Object.values(kv.zet), wis: kv.wis }] });
+  // Marks: één patch (lagen vóór hun marks; patchMarks regelt de volgorde).
+  const mp = diffMarks(normaliseerMarks(van.marks), normaliseerMarks(naar.marks));
+  if (mp) ops.push({ store: "marks", op: "patchMarks", args: [mp] });
   return ops;
 }

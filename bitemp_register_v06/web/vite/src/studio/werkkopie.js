@@ -23,6 +23,7 @@ const UUR = 3600_000;
 export const LS_PROJECT = "studio-project";
 export const LS_KRUIS = "studio-kruisverbanden";
 export const LS_OUTBOX = "studio-outbox";
+export const LS_MARKS = "studio-marks";
 
 /** @returns {Record<string, {naam: string, laatst: string}>} */
 export function leesIndex(ls = globalThis.localStorage) {
@@ -88,7 +89,7 @@ export async function verwijderWerkkopieen(projectIds, { ls = globalThis.localSt
   try {
     const index = leesIndex(ls);
     for (const id of weg) {
-      for (const basis of [LS_PROJECT, LS_KRUIS, LS_OUTBOX]) ls?.removeItem(`${basis}::${id}`);
+      for (const basis of [LS_PROJECT, LS_KRUIS, LS_OUTBOX, LS_MARKS]) ls?.removeItem(`${basis}::${id}`);
       delete index[id];
     }
     ls?.setItem(LS_INDEX, JSON.stringify(index));
