@@ -8,6 +8,14 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
 
+### Toegevoegd
+- **Transformaties bekijken en proefdraaien** (Mark 18-11, TRANS-1 stap 1): een nieuwe activiteit *Transformaties*
+  toont de regelsets die tot nu toe alleen in de code stonden. Per regelset zie je de regels in volgorde, in
+  woorden (bij, als, dan), en of hij geldig is. *Proefdraaien* past hem toe op geplakte tekst (Mermaid, BPMN-XML,
+  DMN-XML) of op een map uit je project (use case-model) en laat per regel zien welke bron-items hij pakte, welke
+  regels niets raakten en welke items bij geen regel landden. Er wordt niets in je model geschreven. Bewerken
+  kan nog niet.
+
 ## [studio/v0.47.0] — 2026-11-18
 
 Samen met render 0.5.1, in dezelfde ronde als api 0.30.0 (devloop 0.33.0, van BACKEND).

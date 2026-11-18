@@ -104,8 +104,8 @@ experimenteren met regelsets als JS-data, dan pas vastleggen (§9).
 
 **Wat ontbreekt:** de oudere transformaties (map-JSON, ArchiMate Exchange,
 OpenAPI → canoniek, de IDE-importen) zijn nog specifieke code zonder regelset;
-het bereik is alleen "een map"; de trace wordt niet bewaard; er is geen viewer of
-editor voor regelsets (§9) en geen runner buiten de browser. Proefdraaien met een
+het bereik is alleen "een map"; de trace wordt niet bewaard; er is een viewer voor
+regelsets met proefdraaien (§9.6, 18-11) maar nog geen editor (§9) en geen runner buiten de browser. Proefdraaien met een
 verschil-overzicht bestaat voor de EA-import (*plans/2026-10-07 Sparx EA-sync*),
 nog niet generiek.
 
@@ -539,7 +539,7 @@ configuratie, niet in code of bestanden. Op de backlog als **TRANS-1**.
 
 1. **Live view als lezer** over de ingebouwde regelsets, met de proefbron als
    geplakte tekst of gekozen map. Dwingt de laadroute (9.1) en het bereik (§4)
-   uit.
+   uit. **Gebouwd 18-11, zie §9.6.**
 2. **Regelsets als overdraagbaar JSON-bestand** naast de ingebouwde: inlezen,
    valideren, exporteren.
 3. **Bewerken in de live view**, met bewaren naar dat bestand — of als
@@ -548,6 +548,50 @@ configuratie, niet in code of bestanden. Op de backlog als **TRANS-1**.
    formulier-widget, 9.1–9.2).
 4. **Stapelen** als relatie tussen regelsets (§7.7), zodra het bereik `map` met
    meerdere profielen er is.
+
+### 9.6 Stap 1 gebouwd: de view Transformaties (2026-11-18)
+
+De Studio heeft een activiteit **Transformaties** (groep beheer, preview). Links de regelsets,
+rechts één regelset: de kop (id, versie, van, naar, vindplaats), de uitkomst van de validator, de
+regels in volgorde als tabel (*bij*, *als*, *dan*, in woorden) en **Proefdraaien**.
+
+| Deel | Bestand |
+|---|---|
+| Catalogus: de laadroute van §9.1, puur | `transformatie/regelsetCatalogus.js` |
+| Aanmelden van de ingebouwde regelsets, met hun proef | `studio/activities/regelsetsIngebouwd.js` |
+| De view | `studio/activities/transformatiesActivity.jsx` |
+| Tests | `regelsetCatalogus.test.js`, e2e `68-studio-transformaties.spec.js` |
+
+**De catalogus** is de ene plek waar de Studio regelsets vindt. Een vermelding heeft de regelset,
+de **vindplaats** (nu alleen `ingebouwd`), het bestand in de code en eventueel een **proef**.
+Dezelfde id opnieuw aanmelden vervangt de vorige: zo overschrijft een bestand of het register
+later een ingebouwde regelset (stap 2). De transformaties zelf importeren hun regelset nog
+rechtstreeks; ze via de catalogus laten lopen hoort bij stap 2, want pas dan kan er een andere
+regelset zijn dan de ingebouwde.
+
+**Twee vormen.** Van de tien regelsets hebben er zeven **regels** voor de generieke toepasser
+(Mermaid ↔ use case, BPMN-XML, DMN-XML, objecttype, formulier, ODRL). Drie bestaan uit
+**instellingen** die een schrijver leest: BPMN voor GZAC, de dossierbundel en het zaaktype. Die
+toont de view zoals ze zijn (JSON); ze hebben geen validator en geen proefdraai. Of die drie naar
+de regelvorm moeten, of een eigen vorm met een eigen validator krijgen, is een open vraag voor
+stap 3 (bewerken).
+
+**Proefdraaien** (`proefdraai`) past de regelset toe op een proefbron en legt het spoor per regel
+neer: welke bron-items elke regel pakte, welke regels niets raakten, en welke items bij geen regel
+landden. Er wordt niets in het model geschreven. De proefbron is:
+
+| Regelset | Proefbron | Uitkomst |
+|---|---|---|
+| Mermaid flowchart → use case | geplakte tekst | lijst van wat er gemaakt zou worden |
+| BPMN 2.0 XML → BPMN | geplakte tekst | lijst |
+| DMN XML → DRD | geplakte tekst | lijst |
+| Use case → Mermaid flowchart | een map met een use case-model, of het hele model van het profiel | de Mermaid-tekst |
+| objecttype, formulier, ODRL | nog geen | — |
+
+**Nog niet in stap 1:** een proefbron voor de regelsets met een samengestelde bron (canoniek model
++ e-dienst + referentielijst) en voor ODRL (de bron is een beleid uit Toegangverlening); een
+bestand als proefbron; een voorvertoning als diagram (nu een lijst); en alles van stap 2 en 3
+(regelset als JSON-bestand, bewerken, bewaren).
 
 ## 10. BPMN 2.0 XML en DMN XML → eigen model (2026-10-10)
 

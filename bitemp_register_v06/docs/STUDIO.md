@@ -2593,3 +2593,23 @@ De tests vonden gaten die nu in `schema.js` beschreven staan: `DiagramType.hooks
 
 **Nieuwe M3-eigenschap?** Zet hem in de typedef in `schema.js` én in `m3.js`; de tests wijzen aan
 wat ontbreekt.
+
+## Activiteit Transformaties: regelsets bekijken en proefdraaien (2026-11-18)
+
+Onderaan de activiteitenbalk (groep beheer, preview). Een regelset is M2: hoe elk model in taal A
+in taal B of in een extern formaat uitkomt. De activiteit is een **lezer** over de regelsets uit de
+catalogus (`transformatie/regelsetCatalogus.js`); bewerken en bewaren komen later (backlog TRANS-1,
+`TRANSFORMATIES.md` §9.5 en §9.6).
+
+- **Links** de regelsets, met het aantal regels (of "instellingen"), de versie en de vindplaats.
+- **Rechts** de gekozen regelset: de kop, de uitkomst van de validator, *Proefdraaien* en de regels
+  in volgorde. De volgorde is de voorrang: per bron-item wint de eerste regel die past.
+- **Proefdraaien**: plak een bron (Mermaid, BPMN-XML, DMN-XML) of kies een map of het hele model
+  (use case). De uitkomst toont de telling, de bron-items zonder regel, per regel de treffers, de
+  meldingen, en wat er gemaakt zou worden. Er wordt niets in het model geschreven.
+- Een regelset met **instellingen** (BPMN voor GZAC, dossierbundel, zaaktype) is te lezen als JSON;
+  proefdraaien kan daar niet. Voor objecttype, formulier en ODRL zijn de regels te lezen; hun
+  proefbron volgt.
+
+Een regelset toevoegen aan de view: meld hem aan in `studio/activities/regelsetsIngebouwd.js`
+(`registreerRegelset`), met een `proef` als hij één bron heeft.

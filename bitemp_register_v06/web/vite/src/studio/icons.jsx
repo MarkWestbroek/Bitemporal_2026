@@ -313,6 +313,16 @@ export const IconProfielOntwerp05 = (p) => (
   </svg>
 );
 
+/** Transformaties: twee modellen met een pijl ertussen (regelsets bekijken en proefdraaien). */
+export const IconTransformatie = (p) => (
+  <svg {...base} {...p}>
+    <rect x="3" y="4" width="7" height="6" rx="1" />
+    <rect x="14" y="14" width="7" height="6" rx="1" />
+    <path d="M10 7h4.5a2 2 0 0 1 2 2v5" />
+    <path d="M14 11.5l2.5 2.5 2.5-2.5" />
+  </svg>
+);
+
 /**
  * OmniumMark — het productmerk-logo (de "O" als orbit met facet-knooppunten rond
  * een centrale hub). Eigen kleurstijl (gradient-spectrum), los van de currentColor-
