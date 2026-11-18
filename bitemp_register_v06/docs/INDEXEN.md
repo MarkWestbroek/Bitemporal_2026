@@ -259,6 +259,12 @@ klein (zes personen): de test bewijst de volgorde, niet de snelheid.
 
 ## Vervolg
 
+- **Zoektabellen (ontwerp, 18-11-2026).** Een filter op een relatie met een sortering op een
+  veld van een gegevenselement ("zaken van een zaaktype op startdatum") kan geen index
+  gebruiken: de twee staan in verschillende tabellen. Ontwerp voor een zoektabel buiten de
+  formele historie, ingesteld met een `ZoekDefinitie` als registerdata:
+  `docs/plans/2026-11-18 Zoekdefinities — zoektabellen als inrichting (ontwerp).md`. Niet
+  gebouwd.
 - **Stap 3.**
   - *GraphQL, gebouwd:* het argument `sorteer` op de lijst-queries (`dynql/sortering.go`,
     uitleg in `docs/dynamische-graphql-laag.md` §Sorteren). Exact filteren kon GraphQL al
