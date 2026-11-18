@@ -17,6 +17,9 @@ async function open(page) {
 test("de lijst toont de ingebouwde regelsets en een regelset toont zijn regels", async ({ page }) => {
   await open(page);
   await expect(page.getByTestId("regelset-lijst").locator("button")).toHaveCount(10);
+  await expect(page.locator('[data-richting="import"] button')).toHaveCount(3);
+  await expect(page.locator('[data-richting="export"] button')).toHaveCount(2);
+  await expect(page.locator('[data-richting="inrichting"] button')).toHaveCount(5);
   await page.locator('[data-regelset="mermaid-flowchart-naar-usecase"]').first().click();
   const main = page.getByTestId("regelset");
   await expect(main).toContainText("Mermaid flowchart → use case-model");

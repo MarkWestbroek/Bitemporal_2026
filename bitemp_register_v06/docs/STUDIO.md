@@ -2601,7 +2601,9 @@ in taal B of in een extern formaat uitkomt. De activiteit is een **lezer** over 
 catalogus (`transformatie/regelsetCatalogus.js`); bewerken en bewaren komen later (backlog TRANS-1,
 `TRANSFORMATIES.md` §9.5 en §9.6).
 
-- **Links** de regelsets, met het aantal regels (of "instellingen"), de versie en de vindplaats.
+- **Links** de regelsets, ingedeeld op richting: *Import* (extern formaat → model), *Export*
+  (model → extern formaat) en *Inrichting* (model → artefact voor een component). Per regelset het
+  aantal regels (of "instellingen"), de versie en de vindplaats.
 - **Rechts** de gekozen regelset: de kop, de uitkomst van de validator, *Proefdraaien* en de regels
   in volgorde. De volgorde is de voorrang: per bron-item wint de eerste regel die past.
 - **Proefdraaien**: plak een bron (Mermaid, BPMN-XML, DMN-XML) of kies een map of het hele model

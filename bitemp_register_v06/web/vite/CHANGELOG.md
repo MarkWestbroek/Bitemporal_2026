@@ -14,7 +14,7 @@ De single source of truth voor het nummer is `package.json` `"version"`.
   woorden (bij, als, dan), en of hij geldig is. *Proefdraaien* past hem toe op geplakte tekst (Mermaid, BPMN-XML,
   DMN-XML) of op een map uit je project (use case-model) en laat per regel zien welke bron-items hij pakte, welke
   regels niets raakten en welke items bij geen regel landden. Er wordt niets in je model geschreven. Bewerken
-  kan nog niet.
+  kan nog niet. De lijst is ingedeeld in *Import*, *Export* en *Inrichting*.
 
 ## [studio/v0.47.0] — 2026-11-18
 
