@@ -243,6 +243,14 @@ func contentField(v model.V3Veld) StructField {
 	if v.Uniek != "" {
 		schemaParts = append(schemaParts, fmt.Sprintf("uniek=%s", v.Uniek))
 	}
+	// Marks uit de bijlage (register.zoeksleutel, register.sorteerbaar): alleen op de _Data-
+	// struct, want dbsetup leest ze daar voor de index (dbsetup/indexen.go).
+	if v.Zoeksleutel {
+		schemaParts = append(schemaParts, "zoeksleutel")
+	}
+	if v.Sorteerbaar {
+		schemaParts = append(schemaParts, "sorteerbaar")
+	}
 	if v.Ref != "" {
 		schemaParts = append(schemaParts, fmt.Sprintf("ref:%s", v.Ref))
 	}

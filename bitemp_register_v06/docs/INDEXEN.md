@@ -14,7 +14,7 @@ verandert nooit wat een vraag teruggeeft, alleen hoe snel.
 | 1 | Structurele indexen en de index bij unieke velden | gebouwd (18-11) |
 | 2 | Meten op een opgeschaald np-loc | gedaan (18-11), zie [Meting](#meting-18-11-2026) |
 | 3 | Sorteren op een veld en exact filteren, als functie | GraphQL: sorteren gebouwd (18-11); REST: alleen vaste volgorde op id, zie [Vervolg](#vervolg) |
-| 4 | Aanwijzing in het model: MARKs `register.zoeksleutel`, `register.sorteerbaar` | wacht op de V3-bijlage `marks` |
+| 4 | Aanwijzing in het model: MARKs `register.zoeksleutel`, `register.sorteerbaar` | gebouwd (18-11), zie [Marks](#marks-zoeksleutel-en-sorteerbaar) |
 | 5 | Script voor bestaande registers (`CREATE INDEX CONCURRENTLY`) | nog niet gebouwd |
 
 ## Welke indexen er zijn
@@ -45,6 +45,48 @@ index die mislukt geeft een waarschuwing en blokkeert de start niet. Een tabel d
 (domein niet gebouwd) wordt stil overgeslagen. Een bestaand register krijgt de indexen dus vanzelf
 bij de eerstvolgende start; op een grote tabel blokkeert dat aanmaken schrijvers, en daarvoor is
 het script van stap 5 bedoeld (`IndexDefinitie.SQL(true)` geeft het statement met `CONCURRENTLY`).
+
+### Marks: zoeksleutel en sorteerbaar
+
+Een index op een gewone waardekolom volgt niet uit het model zelf: of er op een veld gezocht of
+gesorteerd wordt, hangt van het gebruik af en kan per omgeving verschillen. Die aanwijzing is
+daarom een **MARK** (MDA-markering, plan `docs/plans/2026-11-18 MARKs — markeringen op het model
+(plan).md`) en geen eigenschap van het veld. De Studio levert de geldende marks als bijlage
+naast het V3-model:
+
+```json
+"marks": {
+  "context": ["loadtest"],
+  "marks": [
+    { "doel": { "soort": "veld", "uuid": "1111…" }, "soort": "register.zoeksleutel", "waarde": true },
+    { "doel": { "soort": "veld", "uuid": "2222…" }, "soort": "register.sorteerbaar", "waarde": true }
+  ]
+}
+```
+
+De weg van mark naar index:
+
+| Stap | Waar | Wat |
+|---|---|---|
+| 1 | Studio, sidecar `/export/v3` | de geldende marks voor de gekozen context, als `marks` naast `model` |
+| 2 | `handlers/rebuild_uit_project.go` | stuurt de marks van het project mee en zet de bijlage als sleutel `marks` in het kale model |
+| 3 | `cmd/codegen` (`model.PasRegisterMarksToe`) | zoekt per mark het veld op zijn uuid en zet `zoeksleutel` / `sorteerbaar` in de schema-tag van de `_Data`-struct |
+| 4 | `dbsetup/indexen.go` | maakt per gemarkeerd veld de index `ix_<tabel>_<kolom>_zoek` op `(kolom)` |
+
+- Beide marksoorten geven dezelfde index. Hij is niet partieel, zodat ook een vraag op een
+  peiltijdstip hem gebruikt.
+- De index dient het **filter** (`eq`, `in`, bereik). Het sorteren van lijsten gebruikt hem in
+  de huidige vorm niet (zie Vervolg).
+- Een mark waarvan de uuid niet in het model staat, op iets anders dan een veld, of zonder
+  ja/nee-waarde: een waarschuwing in de uitvoer van de codegen, en de bouw gaat door.
+- `register.tekstzoeken` is gereserveerd en wordt nog niet gelezen. Andere naamruimten gaan
+  ongelezen mee.
+- Een extern V3-bestand (niet uit de Studio) kan dezelfde bijlage dragen, als sleutel `marks` in
+  het model of naast `model` in de envelop. De velden met een mark hebben dan een `uuid` nodig.
+- Een mark weghalen haalt de index niet weg: `dbsetup` maakt aan en ruimt niet op.
+- Getest met het zaakmodel in een proefkopie: `zoeksleutel` op `Rol.RolNatuurlijkPersoon.bsn` en
+  `sorteerbaar` op `Zaak.ZaakLooptijd.startdatum` geven de schema-tags en de twee indexen. Niet
+  getest: de hele keten vanaf een Studio-project op een draaiend register.
 
 ### Al langer aanwezig
 
@@ -122,10 +164,9 @@ met de indexen erin.
     `dynql` gebruikt `handlers`; andersom kan dus niet zonder het filter en de sortering naar een
     gedeeld pakket te verhuizen. Ook de vorm in de URL is een keuze. Tot dan is "alle zaken van
     zaaktype X, gesorteerd op startdatum" alleen via GraphQL te vragen.
-- **Stap 4.** De aanwijzing komt als MARK in een bijlage `marks` naast het V3-model, per veld op
-  uuid (`docs/plans/2026-11-18 MARKs — markeringen op het model (plan).md`). De codegen zet hem in
-  de MetaRegistry; `ModelIndexDefinities` krijgt er dan de soorten `zoeksleutel` en `sorteerbaar`
-  bij. `register.tekstzoeken` is gereserveerd voor zoeken op een deel van een tekst (ander
-  indextype).
+- **Sorteren met een index.** De sortering van een lijst rekent de waarde per entiteit uit en
+  sorteert dan; de index op de kolom helpt daar niet bij. Een vorm die bij de `_Data`-tabel
+  begint en de index in volgorde afloopt, is voor het eenvoudige geval (één sleutel op een
+  enkelvoudig GE) mogelijk, maar nog niet ontworpen. Eerst meten of het nodig is.
 - **Stap 5.** Een script dat `ModelIndexDefinities` afloopt met `CONCURRENTLY`, voor registers
   met veel data waar de start niet mag blokkeren.

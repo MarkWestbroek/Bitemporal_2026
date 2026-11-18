@@ -74,6 +74,12 @@ func main() {
 		os.Exit(1)
 	}
 
+	// Marks uit de bijlage op de velden zetten (zoeksleutel, sorteerbaar). Wat niet te plaatsen
+	// is, wordt gemeld; de bouw gaat door.
+	for _, m := range model.PasRegisterMarksToe(&v3) {
+		fmt.Printf("  WAARSCHUWING marks: %s\n", m)
+	}
+
 	// Vóór het afleiden: spreekt type/format het gegevenstype tegen, dan is het model fout.
 	typeFouten := typeGegevenstypeFouten(v3, *domein)
 
@@ -499,10 +505,13 @@ func parseV3ModelInput(data []byte) (model.V3Model, error) {
 
 	// Ondersteun wrapper payloads, zoals API-response of editor-export met flowState.
 	var wrapper struct {
-		Model json.RawMessage `json:"model"`
+		Model json.RawMessage       `json:"model"`
+		Marks *model.V3MarksBijlage `json:"marks"`
 	}
+	inEnvelop := false
 	if err := json.Unmarshal(data, &wrapper); err == nil && len(wrapper.Model) > 0 {
 		payload = wrapper.Model
+		inEnvelop = true
 	}
 
 	// Detecteer expliciet het oude/platte editor-formaat.
@@ -516,6 +525,11 @@ func parseV3ModelInput(data []byte) (model.V3Model, error) {
 	var v3 model.V3Model
 	if err := json.Unmarshal(payload, &v3); err != nil {
 		return model.V3Model{}, err
+	}
+	// De marks-bijlage staat naast het model: in een envelop als `marks` naast `model`
+	// (de V3-export van de Studio), in een kaal V3 als sleutel `marks` in het model zelf.
+	if inEnvelop && v3.Marks == nil && wrapper.Marks != nil {
+		v3.Marks = wrapper.Marks
 	}
 
 	return v3, nil

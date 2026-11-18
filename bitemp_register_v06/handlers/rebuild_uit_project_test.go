@@ -50,7 +50,59 @@ func zetProefProject(t *testing.T, profiel json.RawMessage, achterstand int64, g
 		return &projectStand{Naam: "Inrichten", Versie: 7, TotVolgnummer: 40}, profiel, nil
 	}
 	projectAchterstand = func(context.Context, string, int64) int64 { return achterstand }
-	t.Cleanup(func() { laadProjectDeel, projectAchterstand = oudDeel, oudAchter })
+	oudMarks := laadProjectMarks
+	laadProjectMarks = func(context.Context, string) (json.RawMessage, error) { return proefProjectMarks, nil }
+	t.Cleanup(func() {
+		laadProjectDeel, projectAchterstand, laadProjectMarks = oudDeel, oudAchter, oudMarks
+		proefProjectMarks = nil
+	})
+}
+
+// proefProjectMarks: het onderdeel `marks` van het proefproject; nil = het project heeft geen marks.
+var proefProjectMarks json.RawMessage
+
+// Marks van het project gaan mee naar de sidecar; de bijlage uit het antwoord komt als sleutel
+// `marks` in het kale model, zodat de codegen haar leest.
+func TestModelUitProject_MetMarks(t *testing.T) {
+	var gezien map[string]any
+	zetProefProject(t, json.RawMessage(`{"elements":[]}`), 0, nil)
+	proefProjectMarks = json.RawMessage(`{"lagen":[{"id":"algemeen"}],"contexten":[],"marks":[]}`)
+	bijlage := `{"context":["algemeen"],"marks":[{"doel":{"soort":"veld","uuid":"u-1"},"soort":"register.zoeksleutel","waarde":true}]}`
+	t.Setenv("RENDER_SVC_URL", nepExportSvc(t, 200, `{"model":{"versie":"3.1","model":`+proefV3+`,"marks":`+bijlage+`},"renderVersie":"0.5.0"}`, &gezien).URL)
+
+	model, _, _, stappen, fout := modelUitProject(context.Background(), proefProjectID, "", nil, true)
+	if fout != nil {
+		t.Fatalf("fout: %+v", fout)
+	}
+	if gezien["marks"] == nil {
+		t.Fatalf("marks van het project horen mee te gaan naar de sidecar: %v", gezien)
+	}
+	var kaal struct {
+		Entiteiten []any `json:"entiteiten"`
+		Marks      struct {
+			Marks []struct {
+				Soort string `json:"soort"`
+			} `json:"marks"`
+		} `json:"marks"`
+	}
+	if err := json.Unmarshal(model, &kaal); err != nil {
+		t.Fatal(err)
+	}
+	if len(kaal.Entiteiten) != 1 || len(kaal.Marks.Marks) != 1 || kaal.Marks.Marks[0].Soort != "register.zoeksleutel" {
+		t.Fatalf("kaal model met bijlage verwacht, kreeg %s", model)
+	}
+	if len(stappen) != 3 || !strings.Contains(stappen[2], "1 geldende mark") {
+		t.Fatalf("stappen: %v", stappen)
+	}
+}
+
+func TestKaalV3MetMarks_ZonderBijlageOngewijzigd(t *testing.T) {
+	for _, in := range []string{proefV3, `{"versie":"3.1","model":` + proefV3 + `}`, `{"model":` + proefV3 + `,"marks":{"context":["a"],"marks":[]}}`} {
+		uit, n := kaalV3MetMarks(json.RawMessage(in))
+		if n != 0 || string(uit) != string(kaalV3(json.RawMessage(in))) {
+			t.Errorf("zonder marks hoort het model gelijk te blijven aan kaalV3: %s → %s (%d)", in, uit, n)
+		}
+	}
 }
 
 const proefV3 = `{"versie":"v3","naam":"Inrichten","entiteiten":[{"typenaam":"Dienst","meervoud":"diensten","domein":"inrichting"}]}`

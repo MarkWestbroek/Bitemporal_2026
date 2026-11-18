@@ -7,6 +7,7 @@ package model
 //	schema:"enum=CGLaag,datatype:EnumLijst"
 //	schema:"datatype:NLPostcode"
 //	schema:"ref:LandenlijstLand"
+//	schema:"datatype:BSN,zoeksleutel"
 //
 // Het schema-endpoint, de validatie-walker en de V3-exporter lazen de tag alleen op het
 // BEGIN (strings.HasPrefix), waardoor een veld met zowel een enum als een datatype zijn
@@ -22,6 +23,9 @@ type SchemaTag struct {
 	Datatype string
 	Ref      string
 	Uniek    string // "entiteit" | "domein" | "register" (V3Veld.Uniek)
+	// Zoeksleutel en Sorteerbaar: uit de marks register.zoeksleutel en register.sorteerbaar.
+	Zoeksleutel bool
+	Sorteerbaar bool
 }
 
 // ParseSchemaTag leest een schema-tag per komma-deel; de volgorde van de delen doet er niet toe.
@@ -40,6 +44,10 @@ func ParseSchemaTag(tag string) SchemaTag {
 			uit.Ref = strings.TrimSpace(strings.TrimPrefix(d, "ref:"))
 		case strings.HasPrefix(d, "uniek="):
 			uit.Uniek = strings.TrimSpace(strings.TrimPrefix(d, "uniek="))
+		case d == "zoeksleutel":
+			uit.Zoeksleutel = true
+		case d == "sorteerbaar":
+			uit.Sorteerbaar = true
 		}
 	}
 	return uit
