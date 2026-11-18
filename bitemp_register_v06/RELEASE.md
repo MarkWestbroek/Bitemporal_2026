@@ -8,6 +8,67 @@
 
 ---
 
+## api 0.31.0 / devloop 0.34.0 (2026-11-19)
+
+Akkoord Mark 19-11 ("ja, graag C&M&release. zoals gewoonlijk app wel, pf niet, fundament
+inlichten"). Devloop 0.34.0 is api 0.31.0 met studio 0.47.0 en render 0.5.1 (ongewijzigd).
+Aanleiding: na api 0.30.1 kost "zaken van één zaaktype op startdatum" op het register met zaken
+nog 801 ms onder belasting (Open Zaak: 234 ms), omdat het zaaktype en de startdatum in twee
+tabellen staan. Ontwerp en besluiten: `docs/plans/2026-11-18 Zoekdefinities — zoektabellen als
+inrichting (ontwerp).md`; uitleg en inrichten in stappen: `docs/INDEXEN.md` §Zoektabellen.
+
+- **Nieuw type `ZoekDefinitie`** in het configuratiedomein (naam, pad, materiële status), met
+  de gewone registratie-API, REST-routes en GraphQL. Het is inrichting: registreren is genoeg,
+  zonder rebuild en zonder herstart.
+- **Zoektabellen** (`dynql/zoektabel.go`). Bij een actieve zoekdefinitie maakt de API een
+  tabel `zk_<id>_<hash>` met doel, waarde, entiteit en `opvoer`/`afvoer`, vult hem op de
+  achtergrond en houdt hem bij in de transactie van elke registratie. Een lijst met precies
+  één filtervoorwaarde op de relatie en het sorteerveld als enige sleutel leest de id's van de
+  pagina dan uit de zoektabel. De stand staat in `zoektabel_stand`.
+- **De zoektabel staat het register niet in de weg.** De registratiecode kent hem niet; ze
+  biedt een haak vlak voor de commit (`handlers.VoorCommit`), in een savepoint. Mislukt het
+  bijhouden, dan slaagt de registratie, gaat de zoektabel naar `fout` en volgt het lezen de
+  gewone weg tot hij opnieuw is gevuld.
+- De zoektabel staat buiten de formele historie (geen `wijziging`-rijen) en is altijd
+  herbouwbaar. Een ingetrokken definitie laat haar tabel uitfaseren en daarna opruimen.
+
+Het GraphQL-schema en de REST-routes zijn uitgebreid met het nieuwe type; bestaande typen en
+routes zijn niet gewijzigd. Zonder zoekdefinitie verandert het gedrag niet, op één kleine
+leesvraag op `zoektabel_stand` per registratie na.
+
+Getest: `go test ./...` (alleen de bekende node-test van de EA-import faalt in de worktree); de
+regressiesuite met tag `integration` groen; nieuw `TestZoektabel`: 42 lijstvragen via de gewone
+weg en via de zoektabel in zeven fasen (na het vullen, een nieuwe waarde, een eerste waarde, een
+nieuwe relatie, een ongedaanmaking, het afvoeren van een entiteit, een peiltijdstip van vóór de
+wijzigingen), 0 verschillen; opnieuw vullen geeft dezelfde rijen; uitfaseren en opruimen. Proef
+op nagebouwde tabellen (373.000 zaken, één gebruiker): de eerste 50 van een zaaktype op
+startdatum 0,05 ms en 34 pagina's, tegen 23 ms en 34.000 pagina's. Niet getest: het register
+onder gelijktijdige belasting, de kosten per registratie, vullen op een groot register terwijl
+er geschreven wordt, de wachtgrens van 200 ms op een slot, twee API-processen naast elkaar, en
+een vooruit geregistreerde status (gebouwd, zonder test).
+
+Bekende grenzen:
+- Eén relatie en één sorteerveld per definitie; alleen `eq` op één doel, zonder extra
+  filtervoorwaarden; alleen een enkelvoudig, niet-materieel gegevenselement; alleen GraphQL.
+- Een ongeldige zoekdefinitie wordt niet geweigerd bij het registreren; ze wordt overgeslagen
+  met een regel in het log.
+- Met een actief toegangsbeleid wordt de zoektabel niet gebruikt.
+- Een rebuild of `DeleteTables` kent de zoektabellen niet; het afstemmen ruimt ze op of vult
+  ze opnieuw.
+
+Uitrol:
+- **Schemawijziging: ja, automatisch.** De tabellen van `ZoekDefinitie` en `zoektabel_stand`
+  worden bij de start aangemaakt.
+- **Rebuild uit het Studio-project: nee.**
+- **Andere stap: nee.** Een zoektabel ontstaat pas als iemand een zoekdefinitie registreert.
+- De images zijn gebouwd van de releasecommit op de branch, niet van `main`: op `main` staat
+  Studio-werk dat nog niet is uitgebracht, en dat hoort niet onder studio 0.47.0 in het
+  devloop-image. De backend van die commit is gelijk aan die van de merge.
+- App: `bitemp-go-api:0.31.0` via `update.sh`. pf: niet uitgerold. Fundament:
+  `bitemp-devloop:0.34.0`, door FUNDAMENT.
+
+---
+
 ## api 0.30.1 / devloop 0.33.1 (2026-11-18)
 
 Akkoord Mark 18-11 ("Ja, graag", op de vraag om te committen, te mergen en uit te brengen met

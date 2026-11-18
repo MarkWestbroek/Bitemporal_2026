@@ -291,6 +291,8 @@ func RegistreerCore(ctx context.Context, db *bun.DB, req model.RegistreerRequest
 		return RegistreerResult{}, newRegistreerErr(http.StatusInternalServerError, "failed to update registratie audit fields: %v", err)
 	}
 
+	voorCommit(ctx, tx, registratieID, req.Registratie)
+
 	if err := tx.Commit(); err != nil {
 		return RegistreerResult{}, newRegistreerErr(http.StatusInternalServerError, "failed to commit transaction: %v", err)
 	}
@@ -466,4 +468,35 @@ func verwerkOngedaanmaking(ctx context.Context, tx bun.Tx, req *model.Registreer
 	}
 
 	return nil
+}
+
+// VoorCommit is een haak vlak voor de commit van een registratie, binnen de transactie. Hij
+// is bedoeld voor add-ons die een afgeleide stand in dezelfde transactie willen bijwerken
+// (de zoektabellen, dynql/zoektabel.go); main.go zet hem, nil = uit. De registratiecode weet
+// niet wat de haak doet, en de haak kan een registratie niet laten mislukken: hij draait in
+// een savepoint, en een fout of een panic wordt gelogd en teruggedraaid tot dat savepoint.
+var VoorCommit func(ctx context.Context, tx bun.Tx, registratieID int64, reg model.Registratie) error
+
+func voorCommit(ctx context.Context, tx bun.Tx, registratieID int64, reg model.Registratie) {
+	if VoorCommit == nil {
+		return
+	}
+	if _, err := tx.ExecContext(ctx, "SAVEPOINT voor_commit"); err != nil {
+		fmt.Println("WARN: haak voor de commit overgeslagen:", err)
+		return
+	}
+	err := func() (err error) {
+		defer func() {
+			if r := recover(); r != nil {
+				err = fmt.Errorf("panic: %v", r)
+			}
+		}()
+		return VoorCommit(ctx, tx, registratieID, reg)
+	}()
+	if err != nil {
+		fmt.Printf("WARN: haak voor de commit mislukt (registratie %d): %v\n", registratieID, err)
+		_, _ = tx.ExecContext(ctx, "ROLLBACK TO SAVEPOINT voor_commit")
+		return
+	}
+	_, _ = tx.ExecContext(ctx, "RELEASE SAVEPOINT voor_commit")
 }

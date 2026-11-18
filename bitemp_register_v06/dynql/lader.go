@@ -221,7 +221,7 @@ func (dbLader) LaadLijst(ctx context.Context, meta model.TypeMeta, v LijstVraag)
 	var paginaIDs []int64
 	opWaarde := false
 	if w := waardeSorteringVoor(meta, v.Sortering); w != nil && !klassiekLaden {
-		ids, err := laadIDsOpWaarde(ctx, meta, v, w, mag)
+		ids, err := laadIDsOpWaarde(ctx, meta, v, w, mag, zoektabelVoor(meta, v, w, mag))
 		if err != nil {
 			return nil, fmt.Errorf("lijst query fout voor %s: %v", meta.Typenaam, err)
 		}

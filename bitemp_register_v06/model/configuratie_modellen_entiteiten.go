@@ -240,3 +240,36 @@ type Uitleg_Einde struct {
 	Opvoer        *time.Time `json:"opvoer,omitempty"`
 	Afvoer        *time.Time `json:"afvoer,omitempty"`
 }
+
+// ZoekDefinitie — Zoekdefinitie: stelt een zoektabel in waarmee de API een lijst binnen één relatie, gesorteerd op één veld, rechtstreeks uit een index leest (bv. zaken van een zaaktype op startdatum). Inrichting, geen model: de API maakt de zoektabel aan, houdt hem bij en ruimt hem op; het register zelf kent de zoektabel niet. Gereserveerd type: de backend zoekt het bij naam op. Ontwerp: docs/plans/2026-11-18 Zoekdefinities — zoektabellen als inrichting (ontwerp).md.
+type ZoekDefinitie struct {
+	bun.BaseModel          `bun:"table:zoekdefinitie,alias:zoekdefinitie"`
+	ID                     int                                 `json:"id" bun:"id,pk"`
+	Opvoer                 *time.Time                          `json:"opvoer,omitempty"`
+	Afvoer                 *time.Time                          `json:"afvoer,omitempty"`
+	ZoekDefinitieNamen     []ZoekDefinitie_ZoekdefinitieNaam   `bun:"rel:has-many,join:id=zoekdefinitie_id" json:"zoek_definitie_namen,omitempty"`
+	ZoekDefinitiePaden     []ZoekDefinitie_ZoekdefinitiePad    `bun:"rel:has-many,join:id=zoekdefinitie_id" json:"zoek_definitie_paden,omitempty"`
+	ZoekDefinitieStatussen []ZoekDefinitie_ZoekdefinitieStatus `bun:"rel:has-many,join:id=zoekdefinitie_id" json:"zoek_definitie_statussen,omitempty"`
+	Aanvang                []ZoekDefinitie_Aanvang             `bun:"rel:has-many,join:id=zoekdefinitie_id" json:"aanvang,omitempty"`
+	Einde                  []ZoekDefinitie_Einde               `bun:"rel:has-many,join:id=zoekdefinitie_id" json:"einde,omitempty"`
+}
+
+// ZoekDefinitie_Aanvang — aanvangdatum van entiteit ZoekDefinitie.
+type ZoekDefinitie_Aanvang struct {
+	bun.BaseModel    `bun:"table:zoekdefinitie_aanvang,alias:zoekdefinitie_aanvang"`
+	ZoekDefinitie_ID int        `json:"zoekdefinitie_id" bun:"zoekdefinitie_id,pk"`
+	Versie           int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
+	Datum            *Date      `json:"datum,omitempty" bun:"datum,type:date"`
+	Opvoer           *time.Time `json:"opvoer,omitempty"`
+	Afvoer           *time.Time `json:"afvoer,omitempty"`
+}
+
+// ZoekDefinitie_Einde — eindedatum van entiteit ZoekDefinitie.
+type ZoekDefinitie_Einde struct {
+	bun.BaseModel    `bun:"table:zoekdefinitie_einde,alias:zoekdefinitie_einde"`
+	ZoekDefinitie_ID int        `json:"zoekdefinitie_id" bun:"zoekdefinitie_id,pk"`
+	Versie           int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
+	Datum            *Date      `json:"datum,omitempty" bun:"datum,type:date"`
+	Opvoer           *time.Time `json:"opvoer,omitempty"`
+	Afvoer           *time.Time `json:"afvoer,omitempty"`
+}

@@ -196,3 +196,26 @@ type Uitleg_Tekst_Input struct {
 	Titel     *string    `json:"titel,omitempty"`
 	Tekst     string     `json:"tekst"`
 }
+
+type ZoekDefinitie_ZoekdefinitieNaam_Input struct {
+	ZOEKDEFINITIE_ID int     `json:"zoekdefinitie_id"`
+	Rel_ID           int     `json:"rel_id"`
+	Naam             string  `json:"naam"`
+	Beschrijving     *string `json:"beschrijving,omitempty"`
+}
+
+type ZoekDefinitie_ZoekdefinitiePad_Input struct {
+	ZOEKDEFINITIE_ID int    `json:"zoekdefinitie_id"`
+	Rel_ID           int    `json:"rel_id"`
+	Binnen           string `json:"binnen"`
+	Sorteerveld      string `json:"sorteerveld"`
+}
+
+type ZoekDefinitie_ZoekdefinitieStatus_Input struct {
+	ZOEKDEFINITIE_ID int                 `json:"zoekdefinitie_id"`
+	Rel_ID           int                 `json:"rel_id"`
+	Status           ZoekDefinitieStatus `json:"status" schema:"enum=ZoekDefinitieStatus"`
+	Reden            *string             `json:"reden,omitempty"`
+	Aanvang          *Date               `json:"aanvang,omitempty"`
+	Einde            *Date               `json:"einde,omitempty"`
+}

@@ -79,6 +79,16 @@ func (u Uitleg) GetAfvoer() *time.Time   { return u.Afvoer }
 func (u *Uitleg) SetAfvoer(t *time.Time) { u.Afvoer = t }
 func (u Uitleg) String() string          { return RepresentatieToString(u) }
 
+// ZoekDefinitie
+func (z ZoekDefinitie) GetID() any              { return z.ID }
+func (z ZoekDefinitie) Metatype() Metatype      { return MetatypeEntiteit }
+func (z *ZoekDefinitie) ClearID()               { z.ID = 0 }
+func (z ZoekDefinitie) GetOpvoer() *time.Time   { return z.Opvoer }
+func (z *ZoekDefinitie) SetOpvoer(t *time.Time) { z.Opvoer = t }
+func (z ZoekDefinitie) GetAfvoer() *time.Time   { return z.Afvoer }
+func (z *ZoekDefinitie) SetAfvoer(t *time.Time) { z.Afvoer = t }
+func (z ZoekDefinitie) String() string          { return RepresentatieToString(z) }
+
 /* ================================================================
    2. HUBS (GE + REL) — interface-methoden
    ================================================================ */
@@ -346,6 +356,36 @@ func (ut *Uitleg_Tekst) SetOpvoer(t *time.Time) { ut.Opvoer = t }
 func (ut Uitleg_Tekst) GetAfvoer() *time.Time   { return ut.Afvoer }
 func (ut *Uitleg_Tekst) SetAfvoer(t *time.Time) { ut.Afvoer = t }
 func (ut Uitleg_Tekst) String() string          { return RepresentatieToString(ut) }
+
+// ZoekDefinitie_ZoekdefinitieNaam
+func (zz ZoekDefinitie_ZoekdefinitieNaam) GetID() any              { return zz.Rel_ID }
+func (zz ZoekDefinitie_ZoekdefinitieNaam) Metatype() Metatype      { return MetatypeGegevenselement }
+func (zz *ZoekDefinitie_ZoekdefinitieNaam) ClearID()               { zz.Rel_ID = 0 }
+func (zz ZoekDefinitie_ZoekdefinitieNaam) GetOpvoer() *time.Time   { return zz.Opvoer }
+func (zz *ZoekDefinitie_ZoekdefinitieNaam) SetOpvoer(t *time.Time) { zz.Opvoer = t }
+func (zz ZoekDefinitie_ZoekdefinitieNaam) GetAfvoer() *time.Time   { return zz.Afvoer }
+func (zz *ZoekDefinitie_ZoekdefinitieNaam) SetAfvoer(t *time.Time) { zz.Afvoer = t }
+func (zz ZoekDefinitie_ZoekdefinitieNaam) String() string          { return RepresentatieToString(zz) }
+
+// ZoekDefinitie_ZoekdefinitiePad
+func (zz ZoekDefinitie_ZoekdefinitiePad) GetID() any              { return zz.Rel_ID }
+func (zz ZoekDefinitie_ZoekdefinitiePad) Metatype() Metatype      { return MetatypeGegevenselement }
+func (zz *ZoekDefinitie_ZoekdefinitiePad) ClearID()               { zz.Rel_ID = 0 }
+func (zz ZoekDefinitie_ZoekdefinitiePad) GetOpvoer() *time.Time   { return zz.Opvoer }
+func (zz *ZoekDefinitie_ZoekdefinitiePad) SetOpvoer(t *time.Time) { zz.Opvoer = t }
+func (zz ZoekDefinitie_ZoekdefinitiePad) GetAfvoer() *time.Time   { return zz.Afvoer }
+func (zz *ZoekDefinitie_ZoekdefinitiePad) SetAfvoer(t *time.Time) { zz.Afvoer = t }
+func (zz ZoekDefinitie_ZoekdefinitiePad) String() string          { return RepresentatieToString(zz) }
+
+// ZoekDefinitie_ZoekdefinitieStatus
+func (zz ZoekDefinitie_ZoekdefinitieStatus) GetID() any              { return zz.Rel_ID }
+func (zz ZoekDefinitie_ZoekdefinitieStatus) Metatype() Metatype      { return MetatypeGegevenselement }
+func (zz *ZoekDefinitie_ZoekdefinitieStatus) ClearID()               { zz.Rel_ID = 0 }
+func (zz ZoekDefinitie_ZoekdefinitieStatus) GetOpvoer() *time.Time   { return zz.Opvoer }
+func (zz *ZoekDefinitie_ZoekdefinitieStatus) SetOpvoer(t *time.Time) { zz.Opvoer = t }
+func (zz ZoekDefinitie_ZoekdefinitieStatus) GetAfvoer() *time.Time   { return zz.Afvoer }
+func (zz *ZoekDefinitie_ZoekdefinitieStatus) SetAfvoer(t *time.Time) { zz.Afvoer = t }
+func (zz ZoekDefinitie_ZoekdefinitieStatus) String() string          { return RepresentatieToString(zz) }
 
 /* ================================================================
    3. _DATA — interface-methoden
@@ -625,6 +665,36 @@ func (d Uitleg_Tekst_Data) GetAfvoer() *time.Time   { return d.Afvoer }
 func (d *Uitleg_Tekst_Data) SetAfvoer(t *time.Time) { d.Afvoer = t }
 func (d Uitleg_Tekst_Data) String() string          { return RepresentatieToString(d) }
 
+// ZoekDefinitie_ZoekdefinitieNaam_Data
+func (d ZoekDefinitie_ZoekdefinitieNaam_Data) GetID() any              { return d.Versie }
+func (d ZoekDefinitie_ZoekdefinitieNaam_Data) Metatype() Metatype      { return MetatypeGegevenselement }
+func (d *ZoekDefinitie_ZoekdefinitieNaam_Data) ClearID()               { d.Versie = 0 }
+func (d ZoekDefinitie_ZoekdefinitieNaam_Data) GetOpvoer() *time.Time   { return d.Opvoer }
+func (d *ZoekDefinitie_ZoekdefinitieNaam_Data) SetOpvoer(t *time.Time) { d.Opvoer = t }
+func (d ZoekDefinitie_ZoekdefinitieNaam_Data) GetAfvoer() *time.Time   { return d.Afvoer }
+func (d *ZoekDefinitie_ZoekdefinitieNaam_Data) SetAfvoer(t *time.Time) { d.Afvoer = t }
+func (d ZoekDefinitie_ZoekdefinitieNaam_Data) String() string          { return RepresentatieToString(d) }
+
+// ZoekDefinitie_ZoekdefinitiePad_Data
+func (d ZoekDefinitie_ZoekdefinitiePad_Data) GetID() any              { return d.Versie }
+func (d ZoekDefinitie_ZoekdefinitiePad_Data) Metatype() Metatype      { return MetatypeGegevenselement }
+func (d *ZoekDefinitie_ZoekdefinitiePad_Data) ClearID()               { d.Versie = 0 }
+func (d ZoekDefinitie_ZoekdefinitiePad_Data) GetOpvoer() *time.Time   { return d.Opvoer }
+func (d *ZoekDefinitie_ZoekdefinitiePad_Data) SetOpvoer(t *time.Time) { d.Opvoer = t }
+func (d ZoekDefinitie_ZoekdefinitiePad_Data) GetAfvoer() *time.Time   { return d.Afvoer }
+func (d *ZoekDefinitie_ZoekdefinitiePad_Data) SetAfvoer(t *time.Time) { d.Afvoer = t }
+func (d ZoekDefinitie_ZoekdefinitiePad_Data) String() string          { return RepresentatieToString(d) }
+
+// ZoekDefinitie_ZoekdefinitieStatus_Data
+func (d ZoekDefinitie_ZoekdefinitieStatus_Data) GetID() any              { return d.Versie }
+func (d ZoekDefinitie_ZoekdefinitieStatus_Data) Metatype() Metatype      { return MetatypeGegevenselement }
+func (d *ZoekDefinitie_ZoekdefinitieStatus_Data) ClearID()               { d.Versie = 0 }
+func (d ZoekDefinitie_ZoekdefinitieStatus_Data) GetOpvoer() *time.Time   { return d.Opvoer }
+func (d *ZoekDefinitie_ZoekdefinitieStatus_Data) SetOpvoer(t *time.Time) { d.Opvoer = t }
+func (d ZoekDefinitie_ZoekdefinitieStatus_Data) GetAfvoer() *time.Time   { return d.Afvoer }
+func (d *ZoekDefinitie_ZoekdefinitieStatus_Data) SetAfvoer(t *time.Time) { d.Afvoer = t }
+func (d ZoekDefinitie_ZoekdefinitieStatus_Data) String() string          { return RepresentatieToString(d) }
+
 /* ================================================================
    4. _AANVANG/_EINDE (entiteits-plumbing) — interface-methoden
    ================================================================ */
@@ -768,6 +838,26 @@ func (u *Uitleg_Einde) SetOpvoer(t *time.Time) { u.Opvoer = t }
 func (u Uitleg_Einde) GetAfvoer() *time.Time   { return u.Afvoer }
 func (u *Uitleg_Einde) SetAfvoer(t *time.Time) { u.Afvoer = t }
 func (u Uitleg_Einde) String() string          { return RepresentatieToString(u) }
+
+// ZoekDefinitie_Aanvang
+func (z ZoekDefinitie_Aanvang) GetID() any              { return z.Versie }
+func (z ZoekDefinitie_Aanvang) Metatype() Metatype      { return MetatypeGegevenselement }
+func (z *ZoekDefinitie_Aanvang) ClearID()               { z.Versie = 0 }
+func (z ZoekDefinitie_Aanvang) GetOpvoer() *time.Time   { return z.Opvoer }
+func (z *ZoekDefinitie_Aanvang) SetOpvoer(t *time.Time) { z.Opvoer = t }
+func (z ZoekDefinitie_Aanvang) GetAfvoer() *time.Time   { return z.Afvoer }
+func (z *ZoekDefinitie_Aanvang) SetAfvoer(t *time.Time) { z.Afvoer = t }
+func (z ZoekDefinitie_Aanvang) String() string          { return RepresentatieToString(z) }
+
+// ZoekDefinitie_Einde
+func (z ZoekDefinitie_Einde) GetID() any              { return z.Versie }
+func (z ZoekDefinitie_Einde) Metatype() Metatype      { return MetatypeGegevenselement }
+func (z *ZoekDefinitie_Einde) ClearID()               { z.Versie = 0 }
+func (z ZoekDefinitie_Einde) GetOpvoer() *time.Time   { return z.Opvoer }
+func (z *ZoekDefinitie_Einde) SetOpvoer(t *time.Time) { z.Opvoer = t }
+func (z ZoekDefinitie_Einde) GetAfvoer() *time.Time   { return z.Afvoer }
+func (z *ZoekDefinitie_Einde) SetAfvoer(t *time.Time) { z.Afvoer = t }
+func (z ZoekDefinitie_Einde) String() string          { return RepresentatieToString(z) }
 
 /* ================================================================
    5. _AANVANG/_EINDE (hub-level plumbing) — interface-methoden
@@ -1038,6 +1128,28 @@ func (d *DashboardDefinitie_DashboarddefinitieStatus_Einde) SetAfvoer(t *time.Ti
 func (d DashboardDefinitie_DashboarddefinitieStatus_Einde) String() string {
 	return RepresentatieToString(d)
 }
+
+// ZoekDefinitie_ZoekdefinitieStatus_Aanvang
+func (z ZoekDefinitie_ZoekdefinitieStatus_Aanvang) GetID() any { return z.Versie }
+func (z ZoekDefinitie_ZoekdefinitieStatus_Aanvang) Metatype() Metatype {
+	return MetatypeGegevenselement
+}
+func (z *ZoekDefinitie_ZoekdefinitieStatus_Aanvang) ClearID()               { z.Versie = 0 }
+func (z ZoekDefinitie_ZoekdefinitieStatus_Aanvang) GetOpvoer() *time.Time   { return z.Opvoer }
+func (z *ZoekDefinitie_ZoekdefinitieStatus_Aanvang) SetOpvoer(t *time.Time) { z.Opvoer = t }
+func (z ZoekDefinitie_ZoekdefinitieStatus_Aanvang) GetAfvoer() *time.Time   { return z.Afvoer }
+func (z *ZoekDefinitie_ZoekdefinitieStatus_Aanvang) SetAfvoer(t *time.Time) { z.Afvoer = t }
+func (z ZoekDefinitie_ZoekdefinitieStatus_Aanvang) String() string          { return RepresentatieToString(z) }
+
+// ZoekDefinitie_ZoekdefinitieStatus_Einde
+func (z ZoekDefinitie_ZoekdefinitieStatus_Einde) GetID() any              { return z.Versie }
+func (z ZoekDefinitie_ZoekdefinitieStatus_Einde) Metatype() Metatype      { return MetatypeGegevenselement }
+func (z *ZoekDefinitie_ZoekdefinitieStatus_Einde) ClearID()               { z.Versie = 0 }
+func (z ZoekDefinitie_ZoekdefinitieStatus_Einde) GetOpvoer() *time.Time   { return z.Opvoer }
+func (z *ZoekDefinitie_ZoekdefinitieStatus_Einde) SetOpvoer(t *time.Time) { z.Opvoer = t }
+func (z ZoekDefinitie_ZoekdefinitieStatus_Einde) GetAfvoer() *time.Time   { return z.Afvoer }
+func (z *ZoekDefinitie_ZoekdefinitieStatus_Einde) SetAfvoer(t *time.Time) { z.Afvoer = t }
+func (z ZoekDefinitie_ZoekdefinitieStatus_Einde) String() string          { return RepresentatieToString(z) }
 
 /* ================================================================
    6. _INPUT — interface-methoden (no-op opvoer/afvoer)
@@ -1311,6 +1423,36 @@ func (i Uitleg_Tekst_Input) GetAfvoer() *time.Time   { return nil }
 func (i *Uitleg_Tekst_Input) SetAfvoer(t *time.Time) {}
 func (i Uitleg_Tekst_Input) String() string          { return RepresentatieToString(i) }
 
+// ZoekDefinitie_ZoekdefinitieNaam_Input
+func (i ZoekDefinitie_ZoekdefinitieNaam_Input) GetID() any              { return i.Rel_ID }
+func (i ZoekDefinitie_ZoekdefinitieNaam_Input) Metatype() Metatype      { return MetatypeGegevenselement }
+func (i *ZoekDefinitie_ZoekdefinitieNaam_Input) ClearID()               { i.Rel_ID = 0 }
+func (i ZoekDefinitie_ZoekdefinitieNaam_Input) GetOpvoer() *time.Time   { return nil }
+func (i *ZoekDefinitie_ZoekdefinitieNaam_Input) SetOpvoer(t *time.Time) {}
+func (i ZoekDefinitie_ZoekdefinitieNaam_Input) GetAfvoer() *time.Time   { return nil }
+func (i *ZoekDefinitie_ZoekdefinitieNaam_Input) SetAfvoer(t *time.Time) {}
+func (i ZoekDefinitie_ZoekdefinitieNaam_Input) String() string          { return RepresentatieToString(i) }
+
+// ZoekDefinitie_ZoekdefinitiePad_Input
+func (i ZoekDefinitie_ZoekdefinitiePad_Input) GetID() any              { return i.Rel_ID }
+func (i ZoekDefinitie_ZoekdefinitiePad_Input) Metatype() Metatype      { return MetatypeGegevenselement }
+func (i *ZoekDefinitie_ZoekdefinitiePad_Input) ClearID()               { i.Rel_ID = 0 }
+func (i ZoekDefinitie_ZoekdefinitiePad_Input) GetOpvoer() *time.Time   { return nil }
+func (i *ZoekDefinitie_ZoekdefinitiePad_Input) SetOpvoer(t *time.Time) {}
+func (i ZoekDefinitie_ZoekdefinitiePad_Input) GetAfvoer() *time.Time   { return nil }
+func (i *ZoekDefinitie_ZoekdefinitiePad_Input) SetAfvoer(t *time.Time) {}
+func (i ZoekDefinitie_ZoekdefinitiePad_Input) String() string          { return RepresentatieToString(i) }
+
+// ZoekDefinitie_ZoekdefinitieStatus_Input
+func (i ZoekDefinitie_ZoekdefinitieStatus_Input) GetID() any              { return i.Rel_ID }
+func (i ZoekDefinitie_ZoekdefinitieStatus_Input) Metatype() Metatype      { return MetatypeGegevenselement }
+func (i *ZoekDefinitie_ZoekdefinitieStatus_Input) ClearID()               { i.Rel_ID = 0 }
+func (i ZoekDefinitie_ZoekdefinitieStatus_Input) GetOpvoer() *time.Time   { return nil }
+func (i *ZoekDefinitie_ZoekdefinitieStatus_Input) SetOpvoer(t *time.Time) {}
+func (i ZoekDefinitie_ZoekdefinitieStatus_Input) GetAfvoer() *time.Time   { return nil }
+func (i *ZoekDefinitie_ZoekdefinitieStatus_Input) SetAfvoer(t *time.Time) {}
+func (i ZoekDefinitie_ZoekdefinitieStatus_Input) String() string          { return RepresentatieToString(i) }
+
 /* ================================================================
    7. GeefOnderliggendeGegevenselementen — ENTITEITEN
    ================================================================ */
@@ -1562,6 +1704,41 @@ func (u *Uitleg) GeefOnderliggendeGegevenselementen() []OnderliggendeRepresentat
 			u.Einde[idx].Uitleg_ID = u.ID
 		}
 		result = append(result, OnderliggendeRepresentatie{Typenaam: "Uitleg_Einde", Representatie: &u.Einde[idx]})
+	}
+	return result
+}
+
+func (z *ZoekDefinitie) GeefOnderliggendeGegevenselementen() []OnderliggendeRepresentatie {
+	result := make([]OnderliggendeRepresentatie, 0)
+	for idx := range z.ZoekDefinitieNamen {
+		if z.ZoekDefinitieNamen[idx].ZoekDefinitie_ID == 0 {
+			z.ZoekDefinitieNamen[idx].ZoekDefinitie_ID = z.ID
+		}
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "ZoekDefinitie_ZoekdefinitieNaam", Representatie: &z.ZoekDefinitieNamen[idx]})
+	}
+	for idx := range z.ZoekDefinitiePaden {
+		if z.ZoekDefinitiePaden[idx].ZoekDefinitie_ID == 0 {
+			z.ZoekDefinitiePaden[idx].ZoekDefinitie_ID = z.ID
+		}
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "ZoekDefinitie_ZoekdefinitiePad", Representatie: &z.ZoekDefinitiePaden[idx]})
+	}
+	for idx := range z.ZoekDefinitieStatussen {
+		if z.ZoekDefinitieStatussen[idx].ZoekDefinitie_ID == 0 {
+			z.ZoekDefinitieStatussen[idx].ZoekDefinitie_ID = z.ID
+		}
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "ZoekDefinitie_ZoekdefinitieStatus", Representatie: &z.ZoekDefinitieStatussen[idx]})
+	}
+	for idx := range z.Aanvang {
+		if z.Aanvang[idx].ZoekDefinitie_ID == 0 {
+			z.Aanvang[idx].ZoekDefinitie_ID = z.ID
+		}
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "ZoekDefinitie_Aanvang", Representatie: &z.Aanvang[idx]})
+	}
+	for idx := range z.Einde {
+		if z.Einde[idx].ZoekDefinitie_ID == 0 {
+			z.Einde[idx].ZoekDefinitie_ID = z.ID
+		}
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "ZoekDefinitie_Einde", Representatie: &z.Einde[idx]})
 	}
 	return result
 }
@@ -2018,6 +2195,66 @@ func (h *Uitleg_Tekst) GeefOnderliggendeGegevenselementen() []OnderliggendeRepre
 			h.Data[i].Rel_ID = h.Rel_ID
 		}
 		result = append(result, OnderliggendeRepresentatie{Typenaam: "Uitleg_Tekst_Data", Representatie: &h.Data[i]})
+	}
+	return result
+}
+
+func (h *ZoekDefinitie_ZoekdefinitieNaam) GeefOnderliggendeGegevenselementen() []OnderliggendeRepresentatie {
+	result := make([]OnderliggendeRepresentatie, 0, len(h.Data))
+	for i := range h.Data {
+		if h.Data[i].ZoekDefinitie_ID == 0 {
+			h.Data[i].ZoekDefinitie_ID = h.ZoekDefinitie_ID
+		}
+		if h.Data[i].Rel_ID == 0 {
+			h.Data[i].Rel_ID = h.Rel_ID
+		}
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "ZoekDefinitie_ZoekdefinitieNaam_Data", Representatie: &h.Data[i]})
+	}
+	return result
+}
+
+func (h *ZoekDefinitie_ZoekdefinitiePad) GeefOnderliggendeGegevenselementen() []OnderliggendeRepresentatie {
+	result := make([]OnderliggendeRepresentatie, 0, len(h.Data))
+	for i := range h.Data {
+		if h.Data[i].ZoekDefinitie_ID == 0 {
+			h.Data[i].ZoekDefinitie_ID = h.ZoekDefinitie_ID
+		}
+		if h.Data[i].Rel_ID == 0 {
+			h.Data[i].Rel_ID = h.Rel_ID
+		}
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "ZoekDefinitie_ZoekdefinitiePad_Data", Representatie: &h.Data[i]})
+	}
+	return result
+}
+
+func (h *ZoekDefinitie_ZoekdefinitieStatus) GeefOnderliggendeGegevenselementen() []OnderliggendeRepresentatie {
+	result := make([]OnderliggendeRepresentatie, 0, len(h.Data)+len(h.Aanvang)+len(h.Einde))
+	for i := range h.Data {
+		if h.Data[i].ZoekDefinitie_ID == 0 {
+			h.Data[i].ZoekDefinitie_ID = h.ZoekDefinitie_ID
+		}
+		if h.Data[i].Rel_ID == 0 {
+			h.Data[i].Rel_ID = h.Rel_ID
+		}
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "ZoekDefinitie_ZoekdefinitieStatus_Data", Representatie: &h.Data[i]})
+	}
+	for i := range h.Aanvang {
+		if h.Aanvang[i].ZoekDefinitie_ID == 0 {
+			h.Aanvang[i].ZoekDefinitie_ID = h.ZoekDefinitie_ID
+		}
+		if h.Aanvang[i].Rel_ID == 0 {
+			h.Aanvang[i].Rel_ID = h.Rel_ID
+		}
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "ZoekDefinitie_ZoekdefinitieStatus_Aanvang", Representatie: &h.Aanvang[i]})
+	}
+	for i := range h.Einde {
+		if h.Einde[i].ZoekDefinitie_ID == 0 {
+			h.Einde[i].ZoekDefinitie_ID = h.ZoekDefinitie_ID
+		}
+		if h.Einde[i].Rel_ID == 0 {
+			h.Einde[i].Rel_ID = h.Rel_ID
+		}
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "ZoekDefinitie_ZoekdefinitieStatus_Einde", Representatie: &h.Einde[i]})
 	}
 	return result
 }

@@ -113,6 +113,14 @@ const (
 	UitlegSoortvorm   UitlegSoort = "vorm"
 )
 
+type ZoekDefinitieStatus string
+
+const (
+	ZoekDefinitieStatusconcept  ZoekDefinitieStatus = "concept"
+	ZoekDefinitieStatusactief   ZoekDefinitieStatus = "actief"
+	ZoekDefinitieStatusinactief ZoekDefinitieStatus = "inactief"
+)
+
 // FormulierDefinitie_Meta — Metadata van de formulierdefinitie: naam, beschrijving, doeltype en status.
 type FormulierDefinitie_Meta struct {
 	bun.BaseModel            `bun:"table:formulierdefinitie_meta,alias:formulierdefinitie_meta"`
@@ -833,4 +841,97 @@ type Uitleg_Tekst_Data struct {
 	Tekst         string     `json:"tekst"`
 	Opvoer        *time.Time `json:"opvoer,omitempty"`
 	Afvoer        *time.Time `json:"afvoer,omitempty"`
+}
+
+// ZoekDefinitie_ZoekdefinitieNaam — De naam van de zoekdefinitie, voor beheer en het log. `beschrijving` zegt voor welke vraag ze dient.
+type ZoekDefinitie_ZoekdefinitieNaam struct {
+	bun.BaseModel       `bun:"table:zoekdefinitie_zoekdefinitienaam,alias:zoekdefinitie_zoekdefinitienaam"`
+	ZoekDefinitie_ID    int                                    `json:"zoekdefinitie_id" bun:"zoekdefinitie_id,pk" schema_desc:"ID van de ZoekDefinitie-entiteit"`
+	Rel_ID              int                                    `json:"rel_id" bun:"rel_id,pk,autoincrement"`
+	ParentZoekDefinitie *ZoekDefinitie                         `json:"-" bun:"rel:belongs-to,join:zoekdefinitie_id=id,on_delete:cascade"`
+	Opvoer              *time.Time                             `json:"opvoer,omitempty"`
+	Afvoer              *time.Time                             `json:"afvoer,omitempty"`
+	Data                []ZoekDefinitie_ZoekdefinitieNaam_Data `bun:"rel:has-many,join:zoekdefinitie_id=zoekdefinitie_id,join:rel_id=rel_id" json:"data,omitempty"`
+}
+
+// ZoekDefinitie_ZoekdefinitieNaam_Data — geversioned inhoud van ZoekDefinitie_ZoekdefinitieNaam.
+type ZoekDefinitie_ZoekdefinitieNaam_Data struct {
+	bun.BaseModel    `bun:"table:zoekdefinitie_zoekdefinitienaam_data,alias:zoekdefinitie_zoekdefinitienaam_data"`
+	ZoekDefinitie_ID int        `json:"zoekdefinitie_id" bun:"zoekdefinitie_id,pk"`
+	Rel_ID           int        `json:"rel_id" bun:"rel_id,pk"`
+	Versie           int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
+	Naam             string     `json:"naam"`
+	Beschrijving     *string    `json:"beschrijving,omitempty"`
+	Opvoer           *time.Time `json:"opvoer,omitempty"`
+	Afvoer           *time.Time `json:"afvoer,omitempty"`
+}
+
+// ZoekDefinitie_ZoekdefinitiePad — Wat de zoektabel bevat. `binnen` is het pad van een relatie (<Entiteit>.<rolnaam>, bv. Zaak.zaak_zaaktypen); `sorteerveld` het pad van een veld van een enkelvoudig, niet-materieel gegevenselement van dezelfde entiteit (<Entiteit>.<rolnaam>.<veld>, bv. Zaak.zaaklooptijd.startdatum). In de namen van het GraphQL-schema. Niet materieel: een ander pad is een andere zoektabel.
+type ZoekDefinitie_ZoekdefinitiePad struct {
+	bun.BaseModel       `bun:"table:zoekdefinitie_zoekdefinitiepad,alias:zoekdefinitie_zoekdefinitiepad"`
+	ZoekDefinitie_ID    int                                   `json:"zoekdefinitie_id" bun:"zoekdefinitie_id,pk" schema_desc:"ID van de ZoekDefinitie-entiteit"`
+	Rel_ID              int                                   `json:"rel_id" bun:"rel_id,pk,autoincrement"`
+	ParentZoekDefinitie *ZoekDefinitie                        `json:"-" bun:"rel:belongs-to,join:zoekdefinitie_id=id,on_delete:cascade"`
+	Opvoer              *time.Time                            `json:"opvoer,omitempty"`
+	Afvoer              *time.Time                            `json:"afvoer,omitempty"`
+	Data                []ZoekDefinitie_ZoekdefinitiePad_Data `bun:"rel:has-many,join:zoekdefinitie_id=zoekdefinitie_id,join:rel_id=rel_id" json:"data,omitempty"`
+}
+
+// ZoekDefinitie_ZoekdefinitiePad_Data — geversioned inhoud van ZoekDefinitie_ZoekdefinitiePad.
+type ZoekDefinitie_ZoekdefinitiePad_Data struct {
+	bun.BaseModel    `bun:"table:zoekdefinitie_zoekdefinitiepad_data,alias:zoekdefinitie_zoekdefinitiepad_data"`
+	ZoekDefinitie_ID int        `json:"zoekdefinitie_id" bun:"zoekdefinitie_id,pk"`
+	Rel_ID           int        `json:"rel_id" bun:"rel_id,pk"`
+	Versie           int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
+	Binnen           string     `json:"binnen"`
+	Sorteerveld      string     `json:"sorteerveld"`
+	Opvoer           *time.Time `json:"opvoer,omitempty"`
+	Afvoer           *time.Time `json:"afvoer,omitempty"`
+}
+
+// ZoekDefinitie_ZoekdefinitieStatus — Levenscyclus: concept = klad, er is geen zoektabel; actief = de API maakt de zoektabel en gebruikt hem; inactief = niet meer gebruiken en opruimen. Materieel: 'actief vanaf …' is vooruit te registreren; de API vult de zoektabel dan alvast.
+type ZoekDefinitie_ZoekdefinitieStatus struct {
+	bun.BaseModel       `bun:"table:zoekdefinitie_zoekdefinitiestatus,alias:zoekdefinitie_zoekdefinitiestatus"`
+	ZoekDefinitie_ID    int                                         `json:"zoekdefinitie_id" bun:"zoekdefinitie_id,pk" schema_desc:"ID van de ZoekDefinitie-entiteit"`
+	Rel_ID              int                                         `json:"rel_id" bun:"rel_id,pk,autoincrement"`
+	ParentZoekDefinitie *ZoekDefinitie                              `json:"-" bun:"rel:belongs-to,join:zoekdefinitie_id=id,on_delete:cascade"`
+	Opvoer              *time.Time                                  `json:"opvoer,omitempty"`
+	Afvoer              *time.Time                                  `json:"afvoer,omitempty"`
+	Data                []ZoekDefinitie_ZoekdefinitieStatus_Data    `bun:"rel:has-many,join:zoekdefinitie_id=zoekdefinitie_id,join:rel_id=rel_id" json:"data,omitempty"`
+	Aanvang             []ZoekDefinitie_ZoekdefinitieStatus_Aanvang `bun:"rel:has-many,join:zoekdefinitie_id=zoekdefinitie_id,join:rel_id=rel_id" json:"aanvang,omitempty"`
+	Einde               []ZoekDefinitie_ZoekdefinitieStatus_Einde   `bun:"rel:has-many,join:zoekdefinitie_id=zoekdefinitie_id,join:rel_id=rel_id" json:"einde,omitempty"`
+}
+
+// ZoekDefinitie_ZoekdefinitieStatus_Data — geversioned inhoud van ZoekDefinitie_ZoekdefinitieStatus.
+type ZoekDefinitie_ZoekdefinitieStatus_Data struct {
+	bun.BaseModel    `bun:"table:zoekdefinitie_zoekdefinitiestatus_data,alias:zoekdefinitie_zoekdefinitiestatus_data"`
+	ZoekDefinitie_ID int                 `json:"zoekdefinitie_id" bun:"zoekdefinitie_id,pk"`
+	Rel_ID           int                 `json:"rel_id" bun:"rel_id,pk"`
+	Versie           int64               `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
+	Status           ZoekDefinitieStatus `json:"status" schema:"enum=ZoekDefinitieStatus"`
+	Reden            *string             `json:"reden,omitempty"`
+	Opvoer           *time.Time          `json:"opvoer,omitempty"`
+	Afvoer           *time.Time          `json:"afvoer,omitempty"`
+}
+
+// ZoekDefinitie_ZoekdefinitieStatus_Aanvang — aanvangdatum van ZoekDefinitie_ZoekdefinitieStatus.
+type ZoekDefinitie_ZoekdefinitieStatus_Aanvang struct {
+	bun.BaseModel    `bun:"table:zoekdefinitie_zoekdefinitiestatus_aanvang,alias:zoekdefinitie_zoekdefinitiestatus_aanvang"`
+	ZoekDefinitie_ID int        `json:"zoekdefinitie_id" bun:"zoekdefinitie_id,pk"`
+	Rel_ID           int        `json:"rel_id" bun:"rel_id,pk"`
+	Versie           int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
+	Datum            *Date      `json:"datum,omitempty" bun:"datum,type:date"`
+	Opvoer           *time.Time `json:"opvoer,omitempty"`
+	Afvoer           *time.Time `json:"afvoer,omitempty"`
+}
+
+// ZoekDefinitie_ZoekdefinitieStatus_Einde — eindedatum van ZoekDefinitie_ZoekdefinitieStatus.
+type ZoekDefinitie_ZoekdefinitieStatus_Einde struct {
+	bun.BaseModel    `bun:"table:zoekdefinitie_zoekdefinitiestatus_einde,alias:zoekdefinitie_zoekdefinitiestatus_einde"`
+	ZoekDefinitie_ID int        `json:"zoekdefinitie_id" bun:"zoekdefinitie_id,pk"`
+	Rel_ID           int        `json:"rel_id" bun:"rel_id,pk"`
+	Versie           int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
+	Datum            *Date      `json:"datum,omitempty" bun:"datum,type:date"`
+	Opvoer           *time.Time `json:"opvoer,omitempty"`
+	Afvoer           *time.Time `json:"afvoer,omitempty"`
 }

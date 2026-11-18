@@ -43,6 +43,9 @@ func initConfiguratieEnumRegistry() {
 	EnumWaarden["UitlegSoort"] = []string{"inhoud", "vorm"}
 	EnumDomeinen["UitlegSoort"] = "configuratie"
 	EnumConstNamen["UitlegSoort"] = map[string]string{"inhoud": "UitlegSoortinhoud", "vorm": "UitlegSoortvorm"}
+	EnumWaarden["ZoekDefinitieStatus"] = []string{"concept", "actief", "inactief"}
+	EnumDomeinen["ZoekDefinitieStatus"] = "configuratie"
+	EnumConstNamen["ZoekDefinitieStatus"] = map[string]string{"concept": "ZoekDefinitieStatusconcept", "actief": "ZoekDefinitieStatusactief", "inactief": "ZoekDefinitieStatusinactief"}
 
 	// Enum editor-layout (positie + lock)
 	EnumEditorLayouts["FormulierDefinitieStatus"] = &EditorLayout{Positie: &V3Positie{X: 2895, Y: -330}}
@@ -58,4 +61,5 @@ func initConfiguratieEnumRegistry() {
 	EnumEditorLayouts["UitlegStatus"] = &EditorLayout{Positie: &V3Positie{X: 5130, Y: -315}}
 	EnumEditorLayouts["UitlegTaal"] = &EditorLayout{Positie: &V3Positie{X: 5380, Y: -315}}
 	EnumEditorLayouts["UitlegSoort"] = &EditorLayout{Positie: &V3Positie{X: 5630, Y: -315}}
+	EnumEditorLayouts["ZoekDefinitieStatus"] = &EditorLayout{Positie: &V3Positie{X: 4930, Y: 85}}
 }

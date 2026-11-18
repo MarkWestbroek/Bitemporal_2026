@@ -158,7 +158,9 @@ dat, en forceert `git branch -D` het (met opzet).
   **`studio/v0.14.0`** (2026-10-07: project op de server, operatielaag, projectboom-fixes) en
   **`studio/v0.13.0`** (2026-10-07: canvas-bediening — inline hernoemen, verbind-modus, kaders,
   taakbalken op een rij); zie `web/vite/CHANGELOG.md`.
-- Backend: **`api/v0.30.1`** (2026-11-18: herstel sorteren bij veel gelijke waarden — index op (waarde,
+- Backend: **`api/v0.31.0`** (2026-11-19: zoektabellen — een `ZoekDefinitie` als inrichting laat de API een
+  zoektabel bijhouden voor een lijst binnen één relatie, gesorteerd op één veld; devloop-image 0.34.0).
+  Daarvoor **`api/v0.30.1`** (2026-11-18: herstel sorteren bij veel gelijke waarden — index op (waarde,
   entiteit-id), de id volgt de sorteerrichting, met een filter eerst filteren; devloop-image 0.33.1).
   Daarvoor **`api/v0.30.0`** (2026-11-18: zoekprestaties — unieke index niet partieel, GraphQL laadt alleen de
   geselecteerde groepen, omgekeerde relaties per lijst gebundeld, sorteren via een join op de waarde;

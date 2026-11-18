@@ -24,6 +24,7 @@ import (
 	"github.com/MarkWestbroek/Bitemporal_2026/bitemp_register_v06/handlers"
 	"github.com/MarkWestbroek/Bitemporal_2026/bitemp_register_v06/meldingen"
 	"github.com/MarkWestbroek/Bitemporal_2026/bitemp_register_v06/middleware"
+	"github.com/MarkWestbroek/Bitemporal_2026/bitemp_register_v06/model"
 	"github.com/MarkWestbroek/Bitemporal_2026/bitemp_register_v06/notificaties"
 	"github.com/MarkWestbroek/Bitemporal_2026/bitemp_register_v06/pep"
 	"github.com/MarkWestbroek/Bitemporal_2026/bitemp_register_v06/routes"
@@ -534,6 +535,19 @@ func NewRouter() *gin.Engine {
 				fmt.Println("  ", r)
 			}
 		}
+
+		// Zoektabellen (dynql/zoektabel.go): een add-on op het register. De registratiecode
+		// kent ze niet; ze hangen aan de haak vóór de commit (bijhouden) en na de commit
+		// (een nieuwe of gewijzigde ZoekDefinitie direct oppakken).
+		handlers.VoorCommit = dynql.ZoektabellenBijhouden
+		naRegistratie := handlers.NaRegistratie
+		handlers.NaRegistratie = func(ctx context.Context, registratieID int64, reg model.Registratie) {
+			if naRegistratie != nil {
+				naRegistratie(ctx, registratieID, reg)
+			}
+			dynql.NaRegistratieZoekdefinities(reg)
+		}
+		dynql.StartZoektabellen(context.Background())
 	}
 
 	// admin/devloop routes — drie beveiligingsringen (BE-review 2026-07-07, §3.3):
