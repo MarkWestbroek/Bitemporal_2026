@@ -1,7 +1,18 @@
 # Sorteren via de index — ontwerp
 
-Datum: 18-11-2026. Status: **ontwerp, niet gebouwd.** Mark vroeg (18-11) om eerst een ontwerp.
-Hoort bij het indexwerk (`docs/INDEXEN.md`) en bij `dynql/sortering.go`.
+Datum: 18-11-2026. Status: **gebouwd (18-11-2026)**, na akkoord van Mark op dit ontwerp. De
+uitleg van wat er staat: `docs/INDEXEN.md` §Sorteren op de waarde zelf. Hoort bij
+`dynql/sortering.go`.
+
+Afwijkingen van dit ontwerp in de bouw:
+
+- **Voorwaarde 3 (het veld heeft een index) is vervallen.** Zonder index is de nieuwe vorm
+  ook sneller (proef: 40 ms tegen 351 ms), en de uitkomst is gelijk.
+- **Twee stappen.** De nieuwe vorm haalt alleen de id's van de pagina op; daarna laadt de
+  lader die entiteiten op id. Zo blijft het laden van de groepen één code.
+- **De query begint in de tekst bij de entiteit** en joint het actieve record. PostgreSQL
+  kiest zelf de volgorde; het plan is hetzelfde als in de proef (index achterstevoren).
+- **Ja/nee-velden** zijn in de nieuwe vorm sorteerbaar; in de oude vorm gaven ze een fout.
 
 ## Waarom
 
@@ -106,8 +117,7 @@ Op een wegwerpdatabase (PostgreSQL 17.5, één gebruiker, nagebouwde tabellen me
 
 Geschat: een halve dag bouwen en testen. Geen schemawijziging, geen rebuild.
 
-## Open vragen voor Mark
+## Open vraag voor Mark
 
-- Bouwen na de hermeting van de punten 2 tot en met 4, of meteen?
 - Sorteren op een eigen kolom van de entiteit of op een meervoudig GE blijft de oude vorm. Is
-  dat voor de loadtest genoeg?
+  dat voor de loadtest genoeg? (Bouwen: Mark koos 18-11 voor meteen, in dezelfde release.)

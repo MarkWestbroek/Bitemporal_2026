@@ -310,10 +310,15 @@ De lijst-queries (`<padnaam>` en `full_<padnaam>_list`) hebben sinds 18-11-2026 
 - Niet mogelijk: sorteren op een veld van het doel van een relatie (de naam van het zaaktype),
   en op een afgeleid veld.
 
-**Prestatie.** De sorteerwaarde is een subquery per entiteit. PostgreSQL rekent die uit voor
-alle entiteiten die aan het filter voldoen, en sorteert dan. Dat is evenredig met het aantal
-overgebleven entiteiten, niet met de paginagrootte; een index op de waardekolom helpt daar niet
-bij. Niet gemeten op een grote tabel. Zie `docs/INDEXEN.md`.
+**Prestatie.** Er zijn twee vormen (`docs/INDEXEN.md` §Sorteren op de waarde zelf):
+
+- *Eén sleutel op een enkelvoudig, niet-materieel GE:* een join op de waarde zelf. Met een
+  index op de kolom (`uniek`, of een mark zoeksleutel of sorteerbaar) leest PostgreSQL alleen
+  de pagina. Sinds 18-11-2026.
+- *Alle andere gevallen* (meer sleutels, een meervoudig of materieel GE, een eigen kolom): de
+  sorteerwaarde is een subquery per entiteit. PostgreSQL rekent die uit voor alle entiteiten
+  die aan het filter voldoen. Dat is evenredig met het aantal overgebleven entiteiten, niet
+  met de paginagrootte; een index helpt daar niet bij.
 
 ### Uitvoeren op naam (opgeslagen documenten, persisted queries)
 
