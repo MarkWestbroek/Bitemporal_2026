@@ -75,8 +75,19 @@ test("een regelset met instellingen is te bekijken, niet proef te draaien", asyn
   await open(page);
   await page.locator('[data-regelset="bpmn-naar-gzac"]').first().click();
   const main = page.getByTestId("regelset");
-  await expect(main.getByTestId("regelset-instellingen")).toContainText("camunda:candidateGroups");
+  // BPMN voor GZAC is een stand van de BPMN-schrijver: een paneel uit het schema, in groepen.
+  const paneel = main.getByTestId("schema-paneel");
+  await expect(main.getByTestId("regelset-geldig")).toContainText("schema van de schrijver");
+  await expect(paneel.locator("section[data-groep]")).toHaveCount(5);
+  await expect(paneel.locator('[data-pad="taken.userTask.attributen"]')).toContainText("camunda:candidateGroups");
+  await expect(paneel.locator('[data-pad="taken.serviceTask.asyncAfter"] [role="switch"]')).toHaveAttribute("aria-checked", "true");
+  await expect(paneel.locator('[data-placeholder="dossierstatus"]')).toHaveCount(1);
+  await expect(paneel.getByTestId("onbeschreven")).toHaveCount(0);
   await expect(main.getByTestId("proef")).toHaveCount(0);
+  // Een stand zonder schema blijft JSON.
+  await page.locator('[data-regelset="canoniek-naar-zaaktype"]').first().click();
+  await expect(main.getByTestId("schema-paneel")).toHaveCount(0);
+  await expect(main.getByTestId("regelset-instellingen")).toContainText("zaaktype.identificatie");
   // Een regelset met regels maar een samengestelde bron: regels wel, proef nog niet.
   await page.locator('[data-regelset="canoniek-naar-objecttype"]').first().click();
   await expect(main.getByTestId("regels-tabel").locator("tbody tr")).toHaveCount(14);

@@ -20,6 +20,7 @@ import { MERMAID_NAAR_USECASE } from "../../diagramprofielen/usecase/mermaidRege
 import { USECASE_NAAR_MERMAID } from "../../diagramprofielen/usecase/mermaidExportRegels.js";
 import { BPMN_XML_NAAR_BPMN } from "../../diagramprofielen/bpmn/bpmnXmlRegels.js";
 import { BPMN_NAAR_GZAC } from "../../diagramprofielen/bpmn/bpmnGzacRegels.js";
+import { BPMN_SCHRIJVER_SCHEMA } from "../../diagramprofielen/bpmn/bpmnSchrijverSchema.js";
 import { DMN_XML_NAAR_DRD } from "../../diagramprofielen/dmn-drd/dmnXmlRegels.js";
 import { CANONIEK_NAAR_OBJECTTYPE } from "../../diagramprofielen/canoniek-uml/objecttypeRegels.js";
 import { CANONIEK_NAAR_FORMULIER } from "../../diagramprofielen/canoniek-uml/formulierRegels.js";
@@ -87,11 +88,16 @@ registreerRegelset(CANONIEK_NAAR_OBJECTTYPE, { richting: "inrichting", bestand: 
 registreerRegelset(CANONIEK_NAAR_FORMULIER, { richting: "inrichting", bestand: "diagramprofielen/canoniek-uml/formulierRegels.js" });
 registreerRegelset(CANONIEK_NAAR_ZAAKTYPE, { richting: "inrichting", bestand: "diagramprofielen/canoniek-uml/zaaktypeRegels.js" });
 registreerRegelset(CANONIEK_NAAR_DOSSIER, { richting: "inrichting", bestand: "diagramprofielen/canoniek-uml/dossierRegels.js" });
-registreerRegelset(BPMN_NAAR_GZAC, { richting: "inrichting", bestand: "diagramprofielen/bpmn/bpmnGzacRegels.js" });
+// Een stand van de BPMN-schrijver: het schema hoort bij de schrijver (de motor), niet bij GZAC.
+registreerRegelset(BPMN_NAAR_GZAC, { richting: "inrichting", bestand: "diagramprofielen/bpmn/bpmnGzacRegels.js", schema: BPMN_SCHRIJVER_SCHEMA, schrijver: "BPMN-schrijver (transformatie/bpmnXmlSchrijver.js)" });
 
 /** Waarom een regelset (nog) geen proefbron heeft, voor het scherm. */
 export function geenProefUitleg(vermelding) {
-  if (vermelding?.vorm === "instellingen") return "Deze regelset bestaat uit instellingen die een schrijver leest; er zijn geen regels om proef te draaien.";
+  if (vermelding?.vorm === "instellingen") {
+    return vermelding.schema
+      ? "Dit is een stand van een schrijver: de instellingen waarmee hij het model in de map omzet. Er zijn geen regels om proef te draaien."
+      : "Deze regelset bestaat uit instellingen die een schrijver leest; er zijn geen regels om proef te draaien. De instellingen hebben nog geen beschrijving, dus je ziet ze als JSON.";
+  }
   if (vermelding?.regelset?.id === TOEGANGSSPRAAK_NAAR_ODRL_AP_NL.id) return "De bron is een toegangsbeleid uit Toegangverlening; proefdraaien hier volgt.";
   return SAMENGESTELD;
 }

@@ -18,6 +18,7 @@ import { IconTransformatie } from "../icons";
 import { alleRegelsets, regelsetsPerRichting, getRegelsetVermelding, regelRijen, controleer, proefdraai } from "../../transformatie/regelsetCatalogus.js";
 import { modelNaarGraaf } from "../../transformatie/modelNaarGraaf.js";
 import { geenProefUitleg } from "./regelsetsIngebouwd.js";
+import SchemaPaneel from "../../vormen/SchemaPaneel.jsx";
 import { getProfieltype } from "../profieltypeRegistry.js";
 import { useModellerenStore } from "./modellerenActivity.jsx";
 import { collectMapModel, mapProfielen } from "./transformaties.js";
@@ -205,8 +206,8 @@ function Main() {
   const alle = alleRegelsets();
   const vermelding = getRegelsetVermelding(gekozen || alle[0]?.regelset.id);
   if (!vermelding) return <div style={{ padding: 16 }}>Geen regelsets gevonden.</div>;
-  const { regelset, vorm, vindplaats, bestand } = vermelding;
-  const fouten = controleer(regelset);
+  const { regelset, vorm, vindplaats, bestand, schema, schrijver } = vermelding;
+  const fouten = controleer(regelset, schema);
   const rijen = regelRijen(regelset);
   // Bij instellingen: alles behalve de kop, zoals het in de regelset staat.
   const { id, versie, titel, bron, doel, regels, ...rest } = regelset;
@@ -225,6 +226,8 @@ function Main() {
         </div>
       ) : vorm === "regels" ? (
         <p data-testid="regelset-geldig" style={{ margin: "0 0 10px", fontSize: 13 }}>✓ Geldig: {rijen.length} regels. Per bron-item wint de eerste regel die past.</p>
+      ) : schema ? (
+        <p data-testid="regelset-geldig" style={{ margin: "0 0 10px", fontSize: 13 }}>✓ Geldig voor het schema van de schrijver.</p>
       ) : null}
 
       {vorm === "regels" ? (
@@ -259,7 +262,22 @@ function Main() {
       ) : (
         <>
           <p style={{ fontSize: 13 }}>{geenProefUitleg(vermelding)}</p>
-          <pre data-testid="regelset-instellingen" style={{ ...kader, padding: 8, overflow: "auto", fontSize: 12 }}>{JSON.stringify(rest, null, 2)}</pre>
+          {schema ? (
+            <>
+              <h3 style={{ margin: "12px 0 2px" }}>Instellingen van de schrijver</h3>
+              <p style={{ margin: "0 0 10px", fontSize: 13, ...gedempt }}>
+                Schrijver: {schrijver}. De bron is het model in de map waarop je de transformatie draait; deze stand zegt hoe de
+                schrijver het omzet. Alleen-lezen.
+              </p>
+              <SchemaPaneel schema={schema} waarde={rest} />
+              <details style={{ marginTop: 10, fontSize: 13 }}>
+                <summary>Als JSON</summary>
+                <pre data-testid="regelset-instellingen" style={{ ...kader, padding: 8, overflow: "auto", fontSize: 12 }}>{JSON.stringify(rest, null, 2)}</pre>
+              </details>
+            </>
+          ) : (
+            <pre data-testid="regelset-instellingen" style={{ ...kader, padding: 8, overflow: "auto", fontSize: 12 }}>{JSON.stringify(rest, null, 2)}</pre>
+          )}
         </>
       )}
     </div>
