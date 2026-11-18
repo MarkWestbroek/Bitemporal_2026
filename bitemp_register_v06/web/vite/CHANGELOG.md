@@ -221,6 +221,9 @@ Samen met render 0.4.9 (api blijft 0.27.0; devloop door FUNDAMENT).
 - **Projectmetamodel** (plan 2026-11-15, stap 2): `studio/projectMetamodel.js` beschrijft het werkbestand
   (formaat 4, met de uuid-eis) en apart de werkruimte; model in `docs/metamodel/omnium-projectmetamodel.studio-project.json`;
   controletest tegen de code en echte werkbestanden.
+- **Indeling van metamodel-eigenschappen** (`studio/metamodellen/indeling.js`): `indelingVan` en `typeSoortVan`,
+  één regel (attribuut / associatie / samenstelling / operatie) voor het puur-uml-model en straks de ontwerptaal
+  van het Profiel-ontwerp; `metamodelWerkbestand.js` gebruikt hem, de gegenereerde modellen veranderen niet.
 
 ## [studio/v0.44.0] — 2026-11-15
 

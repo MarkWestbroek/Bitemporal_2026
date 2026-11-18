@@ -2618,6 +2618,16 @@ echte werkbestanden (het voorbeeld van formaat 4 van OMNIUM-UI in
 beschreven sleutel staat in de code; het voorbeeld houdt zich aan de uuid-eis. Het model:
 `docs/metamodel/omnium-projectmetamodel.studio-project.json` (e2e 65 opent beide modellen).
 
+**Eén indeling voor elke projectie (19-11).** Wat een eigenschap van een metaklasse ís, bepaalt
+`studio/metamodellen/indeling.js`: `indelingVan(model, klasse, eigenschap)` geeft "operatie",
+"samenstelling", "associatie" of "attribuut" (tussen twee klassen een associatie, met
+`samenstelling` een compositie; een datatype als type is een waarde en dus een attribuut, ook met
+`samenstelling`), en `typeSoortVan(model, type)` zegt of een type een klasse, datatype, enumeratie
+of primitief is. Het puur-uml-model hierboven en de ontwerptaal van het Profiel-ontwerp (het M3 als
+taal waarin een profiel een model is; volgorde akkoord Mark 19-11) gebruiken dezelfde regel, zodat
+ze niet uit elkaar lopen. Een transformatie hoort niet in het M3: de transformatietaal is een M2
+(een profiel), een regelset een M1 daarin (Mark 19-11).
+
 ## Activiteit Transformaties: regelsets bekijken en proefdraaien (2026-11-18)
 
 Onderaan de activiteitenbalk (groep beheer, preview). Een regelset is M2: hoe elk model in taal A

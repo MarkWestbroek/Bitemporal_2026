@@ -30,44 +30,9 @@
 export const PROFIEL_ID = "puurUml05";
 export const DIAGRAM_TYPE_ID = "puur-uml";
 
-/**
- * @typedef {Object} MetaEigenschap
- * @property {string} naam
- * @property {string} type
- * @property {string} kard
- * @property {boolean} [operatie]
- * @property {boolean} [optioneel]
- * @property {string} [params]
- * @property {string} [sleutel]
- * @property {boolean} [samenstelling]
- * @property {string} [uitleg]
- * @property {string} [standaard] - vaste of standaardwaarde (UML `= waarde`)
- */
-/**
- * @typedef {Object} MetaKlasse
- * @property {string} naam
- * @property {string} pakket
- * @property {"klasse"|"datatype"} soort
- * @property {string} [uitleg]
- * @property {MetaEigenschap[]} eigenschappen
- */
-/**
- * @typedef {Object} MetaEnumeratie
- * @property {string} naam
- * @property {string} pakket
- * @property {string[]} waarden
- * @property {Record<string, string>} [uitlegPerWaarde]
- * @property {string} [uitleg]
- */
-/**
- * @typedef {Object} Metamodel
- * @property {string} id           - project-id
- * @property {string} naam         - projectnaam, ook de naam van de hoofdmap
- * @property {string} [uitleg]
- * @property {{naam: string, uitleg?: string}[]} pakketten
- * @property {MetaKlasse[]} klassen
- * @property {MetaEnumeratie[]} enumeraties
- */
+import { indelingVan } from "./indeling.js";
+
+/** @typedef {import("./indeling.js").Metamodel} Metamodel */
 
 const RUIMTE_X = 48;
 const RUIMTE_Y = 40;
@@ -97,7 +62,6 @@ const kardTekst = (kard) => (kard === "1" ? "" : kard);
 export function metamodelWerkbestand(model, { maatVan = schatMaat, vorige = null, profielVersie = "1.0.0" } = {}) {
   const klassen = new Map(model.klassen.map((k) => [k.naam, k]));
   const enums = new Map(model.enumeraties.map((e) => [e.naam, e]));
-  const isKlasse = (naam) => klassen.get(naam)?.soort === "klasse";
   /** @type {Record<string, any>} */
   const elements = {};
   const leden = new Map(model.pakketten.map((p) => [p.naam, []]));
@@ -114,14 +78,15 @@ export function metamodelWerkbestand(model, { maatVan = schatMaat, vorige = null
     const operaties = [];
     for (const e of k.eigenschappen) {
       const beschrijving = [e.optioneel ? "(optioneel)" : "", e.uitleg || ""].filter(Boolean).join(" ");
-      if (e.operatie) {
+      const indeling = indelingVan(model, k, e);
+      if (indeling === "operatie") {
         operaties.push({
           naam: `${e.naam}(${e.params || ""})`,
           fieldType: "operatie",
           data: { typeLabel: e.type + (kardTekst(e.kard) ? ` [${e.kard}]` : ""), ...(beschrijving ? { beschrijving } : {}) },
         });
-      } else if (k.soort === "klasse" && isKlasse(e.type)) {
-        associaties.push({ van: k.naam, eigenschap: e, beschrijving });
+      } else if (indeling === "associatie" || indeling === "samenstelling") {
+        associaties.push({ van: k.naam, eigenschap: e, beschrijving, indeling });
       } else {
         attributen.push({
           naam: e.naam,
@@ -161,12 +126,12 @@ export function metamodelWerkbestand(model, { maatVan = schatMaat, vorige = null
     };
     leden.get(en.pakket)?.push(en.naam);
   }
-  for (const { van, eigenschap: e, beschrijving } of associaties) {
+  for (const { van, eigenschap: e, beschrijving, indeling } of associaties) {
     const id = idVan("as", van, e.naam);
     elements[id] = {
       id,
       naam: "",
-      elementType: e.samenstelling ? "compositie" : "associatie",
+      elementType: indeling === "samenstelling" ? "compositie" : "associatie",
       source: elementId(van),
       target: elementId(e.type),
       compartimenten: [],

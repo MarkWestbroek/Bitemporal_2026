@@ -18,7 +18,7 @@ function kort(tekst) {
 
 /**
  * @param {string} schemaBron - de tekst van diagramcore/types/schema.js
- * @returns {import("./metamodelWerkbestand.js").Metamodel}
+ * @returns {import("./indeling.js").Metamodel}
  */
 export function m3Metamodel(schemaBron) {
   const typedefs = new Map(leesTypedefs(schemaBron).map((t) => [t.naam, t]));
