@@ -1350,6 +1350,11 @@ func MakeGetFullEntitiesByMetaHandler(meta model.TypeMeta) gin.HandlerFunc {
 
 		query = addOnderliggendeRelations(query, meta, peiltijdstip)
 
+		// Vaste volgorde op id (18-11-2026): zonder ORDER BY is paginering niet stabiel.
+		if meta.IDKolom != "" {
+			query = query.OrderExpr("?TableAlias.? ASC", bun.Ident(meta.IDKolom))
+		}
+
 		err = query.
 			Limit(size).
 			Offset(offset).

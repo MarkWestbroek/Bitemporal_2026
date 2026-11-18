@@ -13,7 +13,7 @@ verandert nooit wat een vraag teruggeeft, alleen hoe snel.
 |---|---|---|
 | 1 | Structurele indexen en de index bij unieke velden | gebouwd (18-11) |
 | 2 | Meten op een opgeschaald np-loc | gedaan (18-11), zie [Meting](#meting-18-11-2026) |
-| 3 | Sorteren op een veld en exact filteren, als functie | nog niet gebouwd |
+| 3 | Sorteren op een veld en exact filteren, als functie | GraphQL: sorteren gebouwd (18-11); REST: alleen vaste volgorde op id, zie [Vervolg](#vervolg) |
 | 4 | Aanwijzing in het model: MARKs `register.zoeksleutel`, `register.sorteerbaar` | wacht op de V3-bijlage `marks` |
 | 5 | Script voor bestaande registers (`CREATE INDEX CONCURRENTLY`) | nog niet gebouwd |
 
@@ -109,10 +109,19 @@ met de indexen erin.
 
 ## Vervolg
 
-- **Stap 3.** GraphQL-lijsten sorteren nu alleen op id; REST filtert met `ILIKE '%x%'` en alleen
-  op kolommen van de eigen tabel. Sorteren op een GE-veld en een exact filter zijn nodig voordat
-  een index op een waardekolom iets oplevert. De sortering komt in `LijstVraag.Sortering` en
-  `dbLader.LaadLijst` (`dynql/lader.go`, de Lader-naad van de façade).
+- **Stap 3.**
+  - *GraphQL, gebouwd:* het argument `sorteer` op de lijst-queries (`dynql/sortering.go`,
+    uitleg in `docs/dynamische-graphql-laag.md` §Sorteren). Exact filteren kon GraphQL al
+    (`eq`, `in`, ook op de doel-id van een eigen relatie). De sorteerwaarde is een subquery per
+    entiteit; een index op de waardekolom versnelt het sorteren in deze vorm niet. Sorteren dat
+    wél een index gebruikt, vraagt een query die bij de `_Data`-tabel begint; dat hoort bij de
+    MARK `register.sorteerbaar` (stap 4) en is nog niet ontworpen.
+  - *REST, gedeeltelijk:* de lijst en de `/full`-lijst van een entiteit hadden geen `ORDER BY`,
+    zodat paginering niet stabiel was. Ze sorteren nu altijd op id (na een eventuele `?sort=`).
+  - *REST, open:* filteren en sorteren op een GE-veld. De code daarvoor zit in `dynql`, en
+    `dynql` gebruikt `handlers`; andersom kan dus niet zonder het filter en de sortering naar een
+    gedeeld pakket te verhuizen. Ook de vorm in de URL is een keuze. Tot dan is "alle zaken van
+    zaaktype X, gesorteerd op startdatum" alleen via GraphQL te vragen.
 - **Stap 4.** De aanwijzing komt als MARK in een bijlage `marks` naast het V3-model, per veld op
   uuid (`docs/plans/2026-11-18 MARKs — markeringen op het model (plan).md`). De codegen zet hem in
   de MetaRegistry; `ModelIndexDefinities` krijgt er dan de soorten `zoeksleutel` en `sorteerbaar`

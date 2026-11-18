@@ -10,6 +10,7 @@ import (
 	"github.com/MarkWestbroek/Bitemporal_2026/bitemp_register_v06/model"
 	"github.com/MarkWestbroek/Bitemporal_2026/bitemp_register_v06/pep"
 	"github.com/gin-gonic/gin"
+	"github.com/uptrace/bun"
 )
 
 func responseCollectionKey(meta model.TypeMeta) string {
@@ -332,6 +333,11 @@ func MakeGetEntitiesByMetaHandler(meta model.TypeMeta) gin.HandlerFunc {
 				order = "DESC"
 			}
 			query = query.OrderExpr(fmt.Sprintf("%s %s", sortCol, order))
+		}
+		// Altijd de id als laatste sleutel (18-11-2026): zonder ORDER BY is de volgorde van
+		// LIMIT/OFFSET niet bepaald en kan een record op twee pagina's staan of ontbreken.
+		if meta.Metatype == model.MetatypeEntiteit && meta.IDKolom != "" {
+			query = query.OrderExpr("?TableAlias.? ASC", bun.Ident(meta.IDKolom))
 		}
 
 		err := query.Scan(c.Request.Context())
