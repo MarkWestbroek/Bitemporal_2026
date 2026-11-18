@@ -84,10 +84,17 @@ test("een regelset met instellingen is te bekijken, niet proef te draaien", asyn
   await expect(paneel.locator('[data-placeholder="dossierstatus"]')).toHaveCount(1);
   await expect(paneel.getByTestId("onbeschreven")).toHaveCount(0);
   await expect(main.getByTestId("proef")).toHaveCount(0);
-  // Een stand zonder schema blijft JSON.
+  // Het zaaktype: twee tabellen (afleidingen, volgnummers).
   await page.locator('[data-regelset="canoniek-naar-zaaktype"]').first().click();
-  await expect(main.getByTestId("schema-paneel")).toHaveCount(0);
-  await expect(main.getByTestId("regelset-instellingen")).toContainText("zaaktype.identificatie");
+  await expect(paneel.locator('[data-pad="afleidingen"][data-vorm="tabel"] tbody tr')).toHaveCount(3);
+  await expect(paneel.locator('[data-pad="afleidingen"]')).toContainText("zaaktype.identificatie");
+  // De dossierbundel: ingedeeld per onderdeel van de bundel.
+  await page.locator('[data-regelset="canoniek-naar-gzac-dossier"]').first().click();
+  await expect(paneel.locator("section[data-groep]")).toHaveCount(9);
+  await expect(paneel.locator('[data-pad="componenten"][data-vorm="tabel"] tbody tr')).toHaveCount(5);
+  await expect(paneel.locator('[data-pad="schema.formats"][data-vorm="waarden"]')).toContainText("date-time");
+  await expect(paneel.locator('[data-placeholder="zaaktype"]')).toHaveCount(1);
+  await expect(paneel.getByTestId("onbeschreven")).toHaveCount(0);
   // Een regelset met regels maar een samengestelde bron: regels wel, proef nog niet.
   await page.locator('[data-regelset="canoniek-naar-objecttype"]').first().click();
   await expect(main.getByTestId("regels-tabel").locator("tbody tr")).toHaveCount(14);

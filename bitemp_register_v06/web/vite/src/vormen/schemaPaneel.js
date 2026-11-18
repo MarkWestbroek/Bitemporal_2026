@@ -12,7 +12,8 @@
  *   x-titel        label (anders de sleutel)
  *   x-omschrijving uitleg
  *   x-groep        naam van de groep op het paneel (alleen op het hoogste niveau gebruikt)
- *   x-vorm         bediening: "switch", "button-group", "rotary", "code"
+ *   x-vorm         bediening: "switch", "button-group", "rotary", "code"; op een lijst van
+ *                  objecten "tabel": één regel per object, een kolom per eigenschap
  *   x-placeholders namen die in een sjabloonwaarde mogen staan (`{naam}` of `{naam|filter}`)
  *
  * Wat het schema niet noemt, wordt uit de waarde afgeleid en gemerkt (`onbeschreven`): zo is een
@@ -114,14 +115,16 @@ export function knoopVoor(schema, waarde, pad = "", sleutel = "", onbeschreven =
   }
   if (soort === "groep") {
     const props = s.properties || {};
-    const vrij = isObject(s.additionalProperties) ? s.additionalProperties : null;
+    const vrij = isObject(s.additionalProperties) ? s.additionalProperties : schema && Object.keys(schema).length === 0 ? {} : null;
     const sleutels = [...Object.keys(props), ...Object.keys(waarde || {}).filter((k) => !(k in props))];
     knoop.kinderen = sleutels
       .filter((k) => waarde?.[k] !== undefined)
       .map((k) => knoopVoor(props[k] || vrij, waarde[k], pad ? `${pad}.${k}` : k, k, !props[k] && !vrij));
   }
   if (soort === "lijst") {
-    knoop.kinderen = (Array.isArray(waarde) ? waarde : []).map((w, i) => knoopVoor(s.items, w, `${pad}[${i}]`, String(i + 1), !s.items));
+    // Een vrij schema ({}: alles mag) beschrijft ook wat eronder hangt; dat is niet "onbeschreven".
+    const vrijeLijst = !!schema && Object.keys(schema).length === 0;
+    knoop.kinderen = (Array.isArray(waarde) ? waarde : []).map((w, i) => knoopVoor(s.items || (vrijeLijst ? {} : undefined), w, `${pad}[${i}]`, String(i + 1), !s.items && !vrijeLijst));
   }
   return knoop;
 }
@@ -156,4 +159,52 @@ export function onbekendePlaceholders(schema, waarde) {
   };
   paneelBoom(schema, waarde).groepen.forEach((g) => g.knopen.forEach(loop));
   return uit;
+}
+
+const enkelvoudig = (k) => !["groep", "lijst", "tabel"].includes(k.soort);
+
+/** Een lijst van alleen enkelvoudige waarden (formats, toegestane weergaven): te tonen als rij blokjes. */
+export function isWaardenlijst(knoop) {
+  return knoop?.soort === "lijst" && (knoop.kinderen || []).length > 0 && knoop.kinderen.every(enkelvoudig);
+}
+
+/** Korte tekst van een waarde voor een cel: ja/nee, tekst, of compacte JSON. */
+export function celTekst(waarde) {
+  if (waarde === undefined) return "";
+  if (waarde === true) return "ja";
+  if (waarde === false) return "nee";
+  if (typeof waarde === "string") return waarde;
+  if (waarde && typeof waarde === "object" && !Array.isArray(waarde)) {
+    const paren = Object.entries(waarde);
+    if (!paren.length) return "altijd";
+    return paren.map(([k, w]) => `${k}: ${Array.isArray(w) ? w.join(" of ") : celTekst(w)}`).join("; ");
+  }
+  return JSON.stringify(waarde);
+}
+
+/**
+ * Een lijst van objecten als tabel (`x-vorm: "tabel"`): de kolommen zijn de eigenschappen in de
+ * volgorde van het schema, daarna wat alleen in de waarden voorkomt.
+ *
+ * @returns {{kolommen: {sleutel: string, titel: string, omschrijving: string}[], rijen: {tekst: string, placeholders: any[]}[][]}|null}
+ */
+export function lijstAlsTabel(knoop) {
+  if (knoop?.soort !== "lijst" || knoop.vorm !== "tabel") return null;
+  const rijen = knoop.kinderen || [];
+  if (!rijen.length || !rijen.every((r) => r.soort === "groep")) return null;
+  const kolommen = [];
+  for (const rij of rijen) {
+    for (const cel of rij.kinderen || []) {
+      if (!kolommen.some((k) => k.sleutel === cel.sleutel)) kolommen.push({ sleutel: cel.sleutel, titel: cel.titel, omschrijving: cel.omschrijving });
+    }
+  }
+  return {
+    kolommen,
+    rijen: rijen.map((rij) =>
+      kolommen.map((kolom) => {
+        const cel = (rij.kinderen || []).find((k) => k.sleutel === kolom.sleutel);
+        return { tekst: cel ? celTekst(cel.waarde) : "", placeholders: cel?.placeholders || [] };
+      })
+    ),
+  };
 }

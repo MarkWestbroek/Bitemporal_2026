@@ -15,7 +15,7 @@
 import React from "react";
 import SwitchKeuze from "./SwitchKeuze";
 import ButtonGroupKeuze from "./ButtonGroupKeuze";
-import { paneelBoom, sjabloonDelen } from "./schemaPaneel.js";
+import { paneelBoom, sjabloonDelen, lijstAlsTabel, isWaardenlijst, celTekst } from "./schemaPaneel.js";
 
 const gedempt = { color: "var(--s-fg-muted, #64748b)" };
 const rand = "1px solid var(--s-border, #e2e8f0)";
@@ -90,7 +90,45 @@ function Kop({ knoop }) {
   );
 }
 
+/** Een lijst van objecten als tabel: één regel per object. */
+function LijstTabel({ knoop, tabel }) {
+  const cel = { padding: "3px 10px 3px 0", verticalAlign: "top", borderTop: rand };
+  return (
+    <div data-pad={knoop.pad} data-soort="lijst" data-vorm="tabel" style={{ margin: "8px 0" }}>
+      <Kop knoop={knoop} />
+      <table style={{ borderCollapse: "collapse", marginTop: 4 }}>
+        <thead>
+          <tr style={{ textAlign: "left" }}>
+            <th style={{ ...cel, borderTop: 0, ...gedempt, fontWeight: 400 }}>#</th>
+            {tabel.kolommen.map((k) => <th key={k.sleutel} title={k.omschrijving} style={{ ...cel, borderTop: 0 }}>{k.titel}</th>)}
+          </tr>
+        </thead>
+        <tbody>
+          {tabel.rijen.map((rij, i) => (
+            <tr key={i}>
+              <td style={{ ...cel, ...gedempt }}>{i + 1}</td>
+              {rij.map((c, j) => <td key={j} style={cel}>{c.placeholders.length ? <Sjabloon tekst={c.tekst} placeholders={c.placeholders} /> : c.tekst}</td>)}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 function Knoop({ knoop, diepte = 0 }) {
+  const tabel = lijstAlsTabel(knoop);
+  if (tabel) return <LijstTabel knoop={knoop} tabel={tabel} />;
+  if (isWaardenlijst(knoop)) {
+    return (
+      <div data-pad={knoop.pad} data-soort="lijst" data-vorm="waarden" style={{ display: "grid", gridTemplateColumns: "minmax(180px, 30%) 1fr", gap: 12, padding: "6px 0", borderTop: diepte ? rand : 0, alignItems: "start" }}>
+        <Kop knoop={knoop} />
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
+          {knoop.kinderen.map((kind) => <span key={kind.pad} style={{ ...mono, padding: "1px 6px", borderRadius: 4, border: rand }}>{celTekst(kind.waarde)}</span>)}
+        </div>
+      </div>
+    );
+  }
   if (knoop.soort === "groep" || knoop.soort === "lijst") {
     const kaart = knoop.soort === "lijst";
     return (

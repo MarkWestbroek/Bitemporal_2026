@@ -714,10 +714,24 @@ meldt een onbekende placeholder. Een instelling die niet in het schema staat, to
 als *onbeschreven*; de test `schemaPaneel.test.js` eist dat de GZAC-stand geldig en volledig
 beschreven is, zodat een nieuwe instelling in de code niet ongemerkt buiten de beschrijving valt.
 
-**Stand 18-11:** het paneel is **alleen-lezen** en alleen de BPMN-schrijver heeft een schema. De
-dossierbundel en het zaaktype tonen nog JSON. Nog te doen: bewerken (één schrijfpad, een stand als
+**Stand 18-11:** het paneel is **alleen-lezen**. Alle drie de standen hebben een schema:
+
+| Stand | Schema | Groepen in het paneel |
+|---|---|---|
+| BPMN voor GZAC | `bpmn/bpmnSchrijverSchema.js` | engine, wachtpunten en lussen, taken, variabelen en berichten, proceskoppeling |
+| GZAC-dossierbundel | `canoniek-uml/inrichtingSchemas.js` (`DOSSIER_SCHRIJVER_SCHEMA`) | per onderdeel van de bundel: dossierdefinitie, documentdefinitie, dossierformulier, tabbladen, dossierlijst, statussen, processen, documentkolommen, zaaktypekoppeling |
+| Zaaktype | `canoniek-uml/inrichtingSchemas.js` (`ZAAKTYPE_SCHRIJVER_SCHEMA`) | afleidingen, volgnummers |
+
+De dossierbundel is één schrijver die de bestanden van één GZAC-bundel maakt; de groepen laten
+per bestand zien wat de schrijver zelf invult (de rest komt uit de e-dienst en het objecttype).
+Een lijst van objecten met `x-vorm: "tabel"` wordt een tabel met een regel per object (component
+per veld, weergave per veld, tabbladen, afleidingen); een lijst van enkelvoudige waarden een rij
+blokjes. In de dossierbundel zitten ook kleine regellijsten ("de eerste regel die past"): die
+blijven instellingen van de schrijver, geen regelset voor de toepasser.
+
+Nog te doen: bewerken (één schrijfpad, een stand als
 gedeeltelijke set waarden bovenop de standaard van de schrijver), de vorm "sjabloon" als invoer,
-een schema voor de andere twee, en het paneel in de formuliereditor (`VormEditor.jsx`, met JSON
+en het paneel in de formuliereditor (`VormEditor.jsx`, met JSON
 als terugval; afspraak met FORMULIER-WIDGET).
 
 **Brongedreven en doelgedreven.** Het zaaktype en grotendeels de dossierbundel zijn geen regels

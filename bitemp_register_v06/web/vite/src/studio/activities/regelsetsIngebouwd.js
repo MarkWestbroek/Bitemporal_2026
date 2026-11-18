@@ -26,6 +26,7 @@ import { CANONIEK_NAAR_OBJECTTYPE } from "../../diagramprofielen/canoniek-uml/ob
 import { CANONIEK_NAAR_FORMULIER } from "../../diagramprofielen/canoniek-uml/formulierRegels.js";
 import { CANONIEK_NAAR_ZAAKTYPE } from "../../diagramprofielen/canoniek-uml/zaaktypeRegels.js";
 import { CANONIEK_NAAR_DOSSIER } from "../../diagramprofielen/canoniek-uml/dossierRegels.js";
+import { DOSSIER_SCHRIJVER_SCHEMA, ZAAKTYPE_SCHRIJVER_SCHEMA } from "../../diagramprofielen/canoniek-uml/inrichtingSchemas.js";
 import { TOEGANGSSPRAAK_NAAR_ODRL_AP_NL } from "../../toegangsspraak/odrlApNlRegels.js";
 import { ODRL_AP_NL_NAAR_TOEGANGSSPRAAK } from "../../toegangsspraak/odrlNaarToegangsspraakRegels.js";
 import { toegangsspraakNaarOdrl } from "../../toegangsspraak/odrlExport.js";
@@ -111,8 +112,8 @@ registreerRegelset(ODRL_AP_NL_NAAR_TOEGANGSSPRAAK, {
 });
 registreerRegelset(CANONIEK_NAAR_OBJECTTYPE, { richting: "inrichting", bestand: "diagramprofielen/canoniek-uml/objecttypeRegels.js" });
 registreerRegelset(CANONIEK_NAAR_FORMULIER, { richting: "inrichting", bestand: "diagramprofielen/canoniek-uml/formulierRegels.js" });
-registreerRegelset(CANONIEK_NAAR_ZAAKTYPE, { richting: "inrichting", bestand: "diagramprofielen/canoniek-uml/zaaktypeRegels.js" });
-registreerRegelset(CANONIEK_NAAR_DOSSIER, { richting: "inrichting", bestand: "diagramprofielen/canoniek-uml/dossierRegels.js" });
+registreerRegelset(CANONIEK_NAAR_ZAAKTYPE, { richting: "inrichting", bestand: "diagramprofielen/canoniek-uml/zaaktypeRegels.js", schema: ZAAKTYPE_SCHRIJVER_SCHEMA, schrijver: "zaaktype-schrijver (diagramprofielen/canoniek-uml/zaaktypeArtefact.js)" });
+registreerRegelset(CANONIEK_NAAR_DOSSIER, { richting: "inrichting", bestand: "diagramprofielen/canoniek-uml/dossierRegels.js", schema: DOSSIER_SCHRIJVER_SCHEMA, schrijver: "dossierbundel-schrijver (diagramprofielen/canoniek-uml/dossierArtefact.js)" });
 // Een stand van de BPMN-schrijver: het schema hoort bij de schrijver (de motor), niet bij GZAC.
 registreerRegelset(BPMN_NAAR_GZAC, { richting: "inrichting", bestand: "diagramprofielen/bpmn/bpmnGzacRegels.js", schema: BPMN_SCHRIJVER_SCHEMA, schrijver: "BPMN-schrijver (transformatie/bpmnXmlSchrijver.js)" });
 
