@@ -9,6 +9,7 @@
  * dus profielen en tekenaar moeten dezelfde kopie delen.
  */
 export { tekenDiagram, naarSvg } from "../web/vite/src/diagramcore/tekenaar/index.js";
+import { rondreisStand } from "../web/vite/src/studio/activities/profielRondreis.js";
 import { getDiagramType } from "../web/vite/src/diagramcore/types/typeRegistry.js";
 import { versieVan, profielVingerafdruk } from "../web/vite/src/diagramcore/types/profielVersie.js";
 import { registreerActivity, ACTIVITY_ID } from "../web/vite/src/diagramprofielen/activity/index.js";
@@ -91,6 +92,15 @@ export function profielVersieOverzicht() {
       return [pid, { versie: versieVan(d), vingerafdruk: profielVingerafdruk(d) }];
     }),
   );
+}
+
+/**
+ * Wat de profielen verliezen op de rondreis descriptor → ontwerp-model → descriptor
+ * (studio/activities/profielRondreis.js); bewaakt door profielRondreis.test.mjs.
+ * @returns {Record<string, number>}
+ */
+export function profielRondreisStand() {
+  return rondreisStand([...typeIds.values()].map((id) => getDiagramType(id)));
 }
 
 /** De descriptor van een profiel-id uit een project, of undefined. */
