@@ -53,14 +53,16 @@ export function maakCompact(prefixen) {
 
 /**
  * @param {import("./turtleLezer.js").Triple[]} triples
- * @param {{prefixen?: Record<string, string>}} [opties] - de prefixen waarin de regelset denkt
- *        (niet die van het bestand: een ander bestand mag `o:` schrijven voor odrl)
+ * @param {{prefixen?: Record<string, string>, taal?: string}} [opties] - de prefixen waarin de regelset denkt
+ *        (niet die van het bestand: een ander bestand mag `o:` schrijven voor odrl), en de voorkeurstaal
+ *        voor tekst die in meer talen staat (standaard "nl")
  * @returns {{knopen: any[], groepen: any[], verbindingen: any[], waarschuwingen: any[]}}
  */
 export function rdfNaarBrongraaf(triples, opties = {}) {
   const g = new RdfGraaf(triples);
   const compact = maakCompact(opties.prefixen || {});
   const id = (term) => (term.type === "blank" ? term.waarde : compact(term.waarde));
+  const taal = opties.taal || "nl";
 
   /** Literal → getypeerde waarde. */
   const getypeerd = (term) => {
@@ -99,24 +101,31 @@ export function rdfNaarBrongraaf(triples, opties = {}) {
       // Een RDF-lijst als object: de leden, in volgorde.
       const leden = t.o.type === "blank" ? g.lijst(t.o) : null;
       const objecten = leden || [t.o];
-      if (!perPredicaat.has(p)) perPredicaat.set(p, { plat: [], getypeerd: [] });
+      if (!perPredicaat.has(p)) perPredicaat.set(p, { plat: [], getypeerd: [], talen: [] });
       const waarden = perPredicaat.get(p);
       objecten.forEach((o, positie) => {
         waarden.plat.push(alsTekst(o));
         waarden.getypeerd.push(getypeerd(o));
+        waarden.talen.push(o.type === "literal" ? o.taal || "" : null);
         if (o.type !== "literal" && isKnoop.has(id(o))) {
           verbindingen.push({ id: `${p}:${knoop.id}>${id(o)}`, aard: p, bron: knoop.id, doel: id(o), label: p, positie });
         }
       });
     }
     for (const naam of NAAM_PREDICATEN) {
-      const o = g.object(s, naam);
-      if (o?.type === "literal") {
+      const namen = g.objecten(s, naam).filter((o) => o.type === "literal");
+      const o = namen.find((x) => x.taal === taal) || namen.find((x) => !x.taal) || namen[0];
+      if (o) {
         knoop.tekst = o.waarde;
         break;
       }
     }
-    for (const [p, waarden] of perPredicaat) {
+    for (const [p, alle] of perPredicaat) {
+      // Dezelfde tekst in meer talen ("afdeling"@nl, "department"@en): alleen de voorkeurstaal, anders de eerste.
+      const getagd = [...new Set(alle.talen.filter((t) => t))];
+      const kies = getagd.length > 1 ? (getagd.includes(taal) ? taal : getagd[0]) : null;
+      const houd = (lijst) => (kies ? lijst.filter((_, i) => !alle.talen[i] || alle.talen[i] === kies) : lijst);
+      const waarden = { plat: houd(alle.plat), getypeerd: houd(alle.getypeerd) };
       knoop[p] = waarden.plat.length === 1 ? waarden.plat[0] : waarden.plat;
       const i = p.indexOf(":");
       if (i <= 0 || p.startsWith("<")) continue;

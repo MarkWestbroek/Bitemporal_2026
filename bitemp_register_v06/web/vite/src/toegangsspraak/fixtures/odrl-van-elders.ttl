@@ -1,0 +1,133 @@
+# ODRL van elders — fixture voor odrlImport.test.js.
+# Een verzonnen beleid (gemeente Waterstede, fictief) in de stijl van ODRL-AP-NL zoals anderen
+# het schrijven: een eigen vocabulaire voor operanden, vergelijkingen en handelingen, labels in
+# twee talen, handelingen als lege knoop, een anker naar de uitvoering, meerdere beleiden in één
+# bestand, een plicht op het beleid en overerving. Niet door de export van Toegangsspraak gemaakt.
+
+@prefix odrl: <http://www.w3.org/ns/odrl/2/> .
+@prefix apnl: <https://standaarden.overheid.nl/odrl-ap-nl/> .
+@prefix dct:  <http://purl.org/dc/terms/> .
+@prefix dpv:  <https://w3id.org/dpv#> .
+@prefix rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+@prefix ws:   <https://waterstede.example/odrl/> .
+
+# ---- Vocabulaire ------------------------------------------------------------
+
+ws:afdeling a odrl:LeftOperand , skos:Concept ;
+    rdfs:label "afdeling"@nl , "department"@en .
+
+ws:zoektype a odrl:LeftOperand , skos:Concept ;
+    rdfs:label "zoektype"@nl , "query type"@en .
+
+ws:opleiding a odrl:LeftOperand , skos:Concept ;
+    rdfs:label "laatste opleiding"@nl , "last training"@en .
+
+ws:nietOuderDan a odrl:Operator , skos:Concept ;
+    rdfs:label "niet ouder dan"@nl , "not older than"@en .
+
+ws:verstrekkenOpVerzoek a odrl:Action , skos:Concept ;
+    rdfs:label "verstrekken op verzoek"@nl , "disclose on request"@en ;
+    odrl:includedIn odrl:distribute .
+
+ws:Vergunningen a skos:Concept ;
+    rdfs:label "Vergunningen"@nl , "Permits"@en .
+
+ws:doel-parkeren a skos:Concept ;
+    rdfs:label "Parkeervergunning verlenen"@nl , "Granting parking permits"@en .
+
+ws:ZoekOpKenteken a skos:Concept ;
+    rdfs:label "zoeken op kenteken"@nl , "search by licence plate"@en .
+
+ws:GemeenteWaterstede a odrl:Party ;
+    rdfs:label "Gemeente Waterstede"@nl , "Municipality of Waterstede"@en .
+
+ws:medewerkers-vergunningen a odrl:PartyCollection ;
+    rdfs:label "medewerkers Vergunningen"@nl , "Permits employees"@en ;
+    odrl:refinement [ a odrl:Constraint ;
+        odrl:leftOperand ws:afdeling ; odrl:operator odrl:eq ;
+        odrl:rightOperand ws:Vergunningen ] .
+
+ws:voertuiggegevens a odrl:AssetCollection ;
+    rdfs:label "voertuiggegevens"@nl , "vehicle data"@en .
+
+ws:veld-kenteken a odrl:Asset ;
+    odrl:partOf ws:voertuiggegevens ;
+    rdfs:label "kenteken"@nl , "licence plate"@en .
+
+# ---- Stelselniveau: alleen een plicht ---------------------------------------
+
+ws:set-stelsel a odrl:Set ;
+    dct:title "Stelselafspraken"@nl , "Framework agreements"@en ;
+    odrl:obligation ws:plicht-loggen .
+
+ws:plicht-loggen a odrl:Duty ;
+    dct:title "Bevraging vastleggen"@nl , "Log the request"@en ;
+    odrl:action odrl:inform .
+
+# ---- Het beleid met regels --------------------------------------------------
+
+ws:set-parkeren a odrl:Set ;
+    dct:title "Parkeervergunningen: bevragen van voertuigen"@nl ,
+              "Parking permits: querying vehicles"@en ;
+    odrl:inheritFrom ws:set-stelsel ;
+    odrl:assigner ws:GemeenteWaterstede ;
+    dct:issued "2026-11-18"^^xsd:date ;
+    odrl:permission ws:regel-kenteken , ws:regel-opleiding , ws:regel-verstrekken ;
+    odrl:prohibition ws:verbod-gebruik , ws:verbod-wissen .
+
+# Leesbaar: bekende handeling, operanden van elders met "is", begrippen als waarde, en het anker.
+ws:regel-kenteken a odrl:Permission ;
+    dct:title "Kenteken opzoeken"@nl , "Look up a licence plate"@en ;
+    odrl:assignee ws:medewerkers-vergunningen ;
+    odrl:target ws:veld-kenteken ;
+    odrl:action [ rdf:value odrl:read ;
+        odrl:refinement ws:vw-doel , ws:vw-zoektype , ws:anker ] .
+
+ws:vw-doel a odrl:Constraint ;
+    rdfs:label "Doel is parkeervergunning verlenen"@nl , "Purpose is granting parking permits"@en ;
+    odrl:leftOperand odrl:purpose ; odrl:operator odrl:eq ;
+    odrl:rightOperand ws:doel-parkeren .
+
+ws:vw-zoektype a odrl:Constraint ;
+    rdfs:label "Zoeken op kenteken"@nl , "Search by licence plate"@en ;
+    odrl:leftOperand ws:zoektype ; odrl:operator odrl:eq ;
+    odrl:rightOperand ws:ZoekOpKenteken .
+
+ws:anker a odrl:Constraint , dpv:TechnicalMeasure ;
+    odrl:leftOperand apnl:verwerkingsverzoek ; odrl:operator apnl:conformsToPolicy ;
+    odrl:rightOperand ws:bundel .
+
+# Een vergelijking die Toegangsspraak niet kent: zonder die voorwaarde zou de toestemming ruimer zijn.
+ws:regel-opleiding a odrl:Permission ;
+    dct:title "Voertuiggegevens inzien na opleiding"@nl , "View vehicle data after training"@en ;
+    odrl:assignee ws:medewerkers-vergunningen ;
+    odrl:target ws:voertuiggegevens ;
+    odrl:action odrl:read ;
+    odrl:constraint [ a odrl:Constraint ;
+        odrl:leftOperand ws:opleiding ; odrl:operator ws:nietOuderDan ;
+        odrl:rightOperand "P1Y"^^xsd:duration ] .
+
+# Een eigen handeling die onder odrl:distribute valt, voor één benoemde partij.
+ws:regel-verstrekken a odrl:Permission ;
+    dct:title "Verstrekken aan de gemeente"@nl , "Disclose to the municipality"@en ;
+    odrl:assignee ws:GemeenteWaterstede ;
+    odrl:target ws:voertuiggegevens ;
+    odrl:action ws:verstrekkenOpVerzoek .
+
+# Een verbod op elk gebruik: de taal kan alleen een deel ervan zeggen.
+ws:verbod-gebruik a odrl:Prohibition ;
+    dct:title "Geen ander gebruik"@nl , "No other use"@en ;
+    odrl:target ws:voertuiggegevens ;
+    odrl:action odrl:use .
+
+# Een verbod met een voorwaarde die niet te vertalen is: het verbod blijft, zonder die voorwaarde.
+ws:verbod-wissen a odrl:Prohibition ;
+    dct:title "Niet wissen"@nl , "Do not delete"@en ;
+    odrl:target ws:voertuiggegevens ;
+    odrl:action odrl:delete ;
+    odrl:constraint [ a odrl:Constraint ;
+        odrl:leftOperand ws:opleiding ; odrl:operator ws:nietOuderDan ;
+        odrl:rightOperand "P1Y"^^xsd:duration ] .

@@ -38,6 +38,7 @@ const HET_WOORDEN = new Set([
   "doel", "inkomen", "werkgebied", "tijdstip", "kanaal", "logboek",
   "nummer", "adres", "kenmerk", "besluit", "dossier", "overlijden",
   "huwelijk", "gezag", "verblijf", "document", "bedrag", "land", "geslacht",
+  "type", "moment", "kenteken", "jaar", "kind", "register", "bestand", "bericht", "verzoek",
 ]);
 
 // Achtervoegsels die (vrijwel) altijd onzijdig zijn: verkleinwoorden en
@@ -53,6 +54,8 @@ export function lidwoordVoor(woord) {
   if (DE_WOORDEN.has(w)) return "de";
   if (HET_WOORDEN.has(w)) return "het";
   if (HET_SUFFIX.test(w)) return "het";
+  // Een samenstelling volgt haar laatste deel: het zoektype, het burgerservicenummer.
+  for (const het of HET_WOORDEN) if (het.length >= 4 && w.length > het.length + 2 && w.endsWith(het)) return "het";
   return "de";
 }
 

@@ -26,6 +26,12 @@ De single source of truth voor het nummer is `package.json` `"version"`.
   het beleid uit de ODRL zelf en meldt dat onder de editor; woordkeus en volgorde kunnen dan afwijken. Wat
   Toegangsspraak niet kent (een andere handeling, een plicht met gevolgen) wordt gemeld en weggelaten. De regelset
   staat in *Transformaties* onder Import en is proef te draaien op geplakte Turtle.
+- **ODRL van anderen importeren** (Mark 18-11): *Importeer ODRL (Turtle)…* leest nu ook beleid dat een ander
+  volgens ODRL-AP-NL schreef, zoals de voorbeelden van de werkgroep FTV. Staan er meer beleiden in het bestand, dan
+  kies je er één. Je krijgt een concept in klare taal met onder de editor wat er is overgenomen, hoe een eigen
+  operand, handeling of partij is gelezen, en wat is weggelaten. Het concept wordt nooit ongemerkt ruimer dan de
+  ODRL: een toestemming met iets dat Toegangsspraak niet kan zeggen valt weg, tenzij je kiest haar toch over te
+  nemen; dan staat erbij dat ze ruimer is. Een verbod blijft staan.
 - **Instellingen van een schrijver als paneel** (Mark 18-11): *BPMN voor GZAC* is geen lijst regels maar de stand
   van de BPMN-schrijver. Die toont de activiteit nu als paneel in groepen (engine, wachtpunten, taken, berichten,
   proceskoppeling), met uitleg per instelling, schakelaars voor ja/nee en gekleurde placeholders. Alleen-lezen.
@@ -196,6 +202,12 @@ Samen met render 0.4.9 (api blijft 0.27.0; devloop door FUNDAMENT).
   en eindigden de lijnen in het niets. Buiten een lopende resize beslist nu de bewaarde maat
   (`DiagramCanvas.jsx`; e2e `65-studio-resize-terug`). E2e-verwachtingen bijgewerkt voor projectformaat 4
   (een kopie krijgt een eigen afgeleide uuid) en canoniek-uml 1.1.0.
+- **M3 als model** (plan 2026-11-15, stap 3): `npm run metamodellen` maakt
+  `docs/metamodel/omnium-m3.studio-project.json` (puur-uml, drie pakketten met elk een diagram) uit `m3.js`;
+  de layout in het bestand blijft bij opnieuw genereren staan. Test "actueel" en e2e 65.
+- **Projectmetamodel** (plan 2026-11-15, stap 2): `studio/projectMetamodel.js` beschrijft het werkbestand
+  (formaat 4, met de uuid-eis) en apart de werkruimte; model in `docs/metamodel/omnium-projectmetamodel.studio-project.json`;
+  controletest tegen de code en echte werkbestanden.
 
 ## [studio/v0.44.0] — 2026-11-15
 

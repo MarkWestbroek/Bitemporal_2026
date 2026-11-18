@@ -1,0 +1,89 @@
+{
+  "formaat": "studio-project",
+  "versie": 4,
+  "project": {
+    "id": "fixture-formaat-4",
+    "naam": "Fixture formaat 4"
+  },
+  "structuur": {
+    "mappen": {
+      "m1": {
+        "id": "m1",
+        "naam": "Model",
+        "ouderId": null,
+        "volgorde": 1
+      }
+    },
+    "plaatsing": {
+      "el::diagram05::e1": "m1",
+      "el::diagram05::g1": "m1"
+    },
+    "plaatsingVolgorde": [
+      "el::diagram05::e1",
+      "el::diagram05::g1"
+    ]
+  },
+  "kruisverbanden": [],
+  "profielVersies": {
+    "diagram05": "1.1.0"
+  },
+  "profielen": {
+    "diagram05": {
+      "diagramTypeId": "canoniek-uml",
+      "elements": {
+        "e1": {
+          "id": "e1",
+          "naam": "Persoon",
+          "elementType": "entiteit",
+          "compartimenten": [],
+          "data": {
+            "uuid": "45848527-b438-5721-908e-472c3c441807"
+          }
+        },
+        "g1": {
+          "id": "g1",
+          "naam": "Naam",
+          "elementType": "gegevenselement",
+          "data": {
+            "uuid": "2c746505-2a3c-5d36-9b1f-267f1dbecd60"
+          },
+          "compartimenten": [
+            {
+              "compartmentType": "velden",
+              "velden": [
+                {
+                  "naam": "voornaam",
+                  "fieldType": "attribuut",
+                  "data": {
+                    "datatype": "string",
+                    "uuid": "008e1771-408e-5688-bdb3-67fc0bd4ab95"
+                  }
+                },
+                {
+                  "naam": "achternaam",
+                  "fieldType": "attribuut",
+                  "data": {
+                    "datatype": "string",
+                    "uuid": "29f62160-7d42-5485-ace5-e33a642570c6"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "r1": {
+          "id": "r1",
+          "naam": "",
+          "elementType": "compositie",
+          "source": "e1",
+          "target": "g1",
+          "compartimenten": [],
+          "data": {}
+        }
+      },
+      "diagrams": {},
+      "actiefDiagramId": null,
+      "meta": {}
+    }
+  }
+}

@@ -1,0 +1,2563 @@
+{
+  "formaat": "studio-project",
+  "versie": 4,
+  "project": {
+    "id": "omnium-projectmetamodel",
+    "naam": "Omnium projectmetamodel"
+  },
+  "structuur": {
+    "mappen": {
+      "map__Omnium_projectmetamodel": {
+        "id": "map__Omnium_projectmetamodel",
+        "naam": "Omnium projectmetamodel",
+        "ouderId": null,
+        "volgorde": 1
+      }
+    },
+    "plaatsing": {
+      "el::puurUml05::pkg__Werkbestand": "map__Omnium_projectmetamodel",
+      "puurUml05::dg__Werkbestand": "el::puurUml05::pkg__Werkbestand",
+      "el::puurUml05::m__Werkbestand": "map__Omnium_projectmetamodel",
+      "el::puurUml05::m__Structuur": "map__Omnium_projectmetamodel",
+      "el::puurUml05::m__Map": "map__Omnium_projectmetamodel",
+      "el::puurUml05::m__Bundel": "map__Omnium_projectmetamodel",
+      "el::puurUml05::m__Kruisverband": "map__Omnium_projectmetamodel",
+      "el::puurUml05::m__Koppelsoort": "map__Omnium_projectmetamodel",
+      "el::puurUml05::m__Project": "map__Omnium_projectmetamodel",
+      "el::puurUml05::m__DiagramRef": "map__Omnium_projectmetamodel",
+      "el::puurUml05::m__ElementRef": "map__Omnium_projectmetamodel",
+      "el::puurUml05::m__KoppelStijl": "map__Omnium_projectmetamodel",
+      "el::puurUml05::pkg__Model": "map__Omnium_projectmetamodel",
+      "puurUml05::dg__Model": "el::puurUml05::pkg__Model",
+      "el::puurUml05::m__ProfielInhoud": "map__Omnium_projectmetamodel",
+      "el::puurUml05::m__Element": "map__Omnium_projectmetamodel",
+      "el::puurUml05::m__Compartiment": "map__Omnium_projectmetamodel",
+      "el::puurUml05::m__Veld": "map__Omnium_projectmetamodel",
+      "el::puurUml05::m__Diagram": "map__Omnium_projectmetamodel",
+      "el::puurUml05::m__DiagramNode": "map__Omnium_projectmetamodel",
+      "el::puurUml05::m__DiagramEdge": "map__Omnium_projectmetamodel",
+      "el::puurUml05::m__ElementData": "map__Omnium_projectmetamodel",
+      "el::puurUml05::m__VeldData": "map__Omnium_projectmetamodel",
+      "el::puurUml05::m__Lijn": "map__Omnium_projectmetamodel",
+      "el::puurUml05::m__VoorkomenPaar": "map__Omnium_projectmetamodel",
+      "el::puurUml05::m__Punt": "map__Omnium_projectmetamodel",
+      "el::puurUml05::m__Maat": "map__Omnium_projectmetamodel",
+      "el::puurUml05::m__Gedaante": "map__Omnium_projectmetamodel",
+      "el::puurUml05::m__LijnVorm": "map__Omnium_projectmetamodel",
+      "el::puurUml05::m__ConnectorGedaante": "map__Omnium_projectmetamodel",
+      "el::puurUml05::m__UuidSoort": "map__Omnium_projectmetamodel",
+      "el::puurUml05::pkg__Werkruimte": "map__Omnium_projectmetamodel",
+      "puurUml05::dg__Werkruimte": "el::puurUml05::pkg__Werkruimte",
+      "el::puurUml05::m__Werkruimte": "map__Omnium_projectmetamodel",
+      "el::puurUml05::m__Tab": "map__Omnium_projectmetamodel",
+      "el::puurUml05::m__EigenBundel": "map__Omnium_projectmetamodel",
+      "el::puurUml05::m__Viewport": "map__Omnium_projectmetamodel"
+    },
+    "plaatsingVolgorde": [
+      "el::puurUml05::pkg__Werkbestand",
+      "puurUml05::dg__Werkbestand",
+      "el::puurUml05::m__Werkbestand",
+      "el::puurUml05::m__Structuur",
+      "el::puurUml05::m__Map",
+      "el::puurUml05::m__Bundel",
+      "el::puurUml05::m__Kruisverband",
+      "el::puurUml05::m__Koppelsoort",
+      "el::puurUml05::m__Project",
+      "el::puurUml05::m__DiagramRef",
+      "el::puurUml05::m__ElementRef",
+      "el::puurUml05::m__KoppelStijl",
+      "el::puurUml05::pkg__Model",
+      "puurUml05::dg__Model",
+      "el::puurUml05::m__ProfielInhoud",
+      "el::puurUml05::m__Element",
+      "el::puurUml05::m__Compartiment",
+      "el::puurUml05::m__Veld",
+      "el::puurUml05::m__Diagram",
+      "el::puurUml05::m__DiagramNode",
+      "el::puurUml05::m__DiagramEdge",
+      "el::puurUml05::m__ElementData",
+      "el::puurUml05::m__VeldData",
+      "el::puurUml05::m__Lijn",
+      "el::puurUml05::m__VoorkomenPaar",
+      "el::puurUml05::m__Punt",
+      "el::puurUml05::m__Maat",
+      "el::puurUml05::m__Gedaante",
+      "el::puurUml05::m__LijnVorm",
+      "el::puurUml05::m__ConnectorGedaante",
+      "el::puurUml05::m__UuidSoort",
+      "el::puurUml05::pkg__Werkruimte",
+      "puurUml05::dg__Werkruimte",
+      "el::puurUml05::m__Werkruimte",
+      "el::puurUml05::m__Tab",
+      "el::puurUml05::m__EigenBundel",
+      "el::puurUml05::m__Viewport"
+    ]
+  },
+  "kruisverbanden": [],
+  "profielVersies": {
+    "puurUml05": "1.1.0"
+  },
+  "profielen": {
+    "puurUml05": {
+      "diagramTypeId": "puur-uml",
+      "elements": {
+        "pkg__Werkbestand": {
+          "id": "pkg__Werkbestand",
+          "naam": "Werkbestand",
+          "elementType": "package",
+          "compartimenten": [],
+          "data": {
+            "beschrijving": "Het project als geheel: identiteit, de boom (mappen en plaatsing), bundels, kruisverbanden en de profielversies. Eén JSONB-blob op de server, en het bestand van Exporteer project."
+          }
+        },
+        "pkg__Model": {
+          "id": "pkg__Model",
+          "naam": "Model",
+          "elementType": "package",
+          "compartimenten": [],
+          "data": {
+            "beschrijving": "De inhoud per profiel (M1): elementen met compartimenten en velden, en diagrammen met hun voorkomens en lijnen."
+          }
+        },
+        "pkg__Werkruimte": {
+          "id": "pkg__Werkruimte",
+          "naam": "Werkruimte",
+          "elementType": "package",
+          "compartimenten": [],
+          "data": {
+            "beschrijving": "Per gebruiker, NIET in het werkbestand (formaat 3, 07-10): open tabs, de actieve tab, open mappen, eigen bundels, pan/zoom. Lokaal en op de server per project en gebruiker."
+          }
+        },
+        "m__Werkbestand": {
+          "id": "m__Werkbestand",
+          "naam": "Werkbestand",
+          "elementType": "klasse",
+          "compartimenten": [
+            {
+              "compartmentType": "attributen",
+              "velden": [
+                {
+                  "naam": "formaat",
+                  "fieldType": "attribuut",
+                  "data": {
+                    "typeLabel": "string",
+                    "standaardwaarde": "studio-project"
+                  }
+                },
+                {
+                  "naam": "versie",
+                  "fieldType": "attribuut",
+                  "data": {
+                    "typeLabel": "number",
+                    "standaardwaarde": "4",
+                    "beschrijving": "Formaatversie (projectSync.js PROJECT_FORMAAT_VERSIE). 3: zonder werkruimte; 4 (15-11): uuid's op modelelementen en velden van canoniek-uml. Een ouder bestand laadt en wordt bij de volgende snapshot het huidige formaat."
+                  }
+                },
+                {
+                  "naam": "geexporteerd",
+                  "fieldType": "attribuut",
+                  "data": {
+                    "typeLabel": "string",
+                    "kardinaliteit": "0..1",
+                    "beschrijving": "Tijdstip (ISO) van de export."
+                  }
+                },
+                {
+                  "naam": "project",
+                  "fieldType": "attribuut",
+                  "data": {
+                    "typeLabel": "Project"
+                  }
+                },
+                {
+                  "naam": "profielVersies",
+                  "fieldType": "attribuut",
+                  "data": {
+                    "typeLabel": "profiel-id → string",
+                    "kardinaliteit": "*",
+                    "beschrijving": "Per profiel de versie (M2) waarmee het project is bewaard; de Studio vergelijkt die bij het openen (types/profielVersie.js)."
+                  }
+                }
+              ]
+            },
+            {
+              "compartmentType": "operaties",
+              "velden": []
+            }
+          ],
+          "data": {
+            "beschrijving": "Het hele bestand (bouwProjectData, modellerenActivity.jsx)."
+          }
+        },
+        "m__Project": {
+          "id": "m__Project",
+          "naam": "Project",
+          "elementType": "datatype",
+          "compartimenten": [
+            {
+              "compartmentType": "attributen",
+              "velden": [
+                {
+                  "naam": "id",
+                  "fieldType": "attribuut",
+                  "data": {
+                    "typeLabel": "string",
+                    "beschrijving": "UUID (de server accepteert 8–64 tekens uit [A-Za-z0-9_-])."
+                  }
+                },
+                {
+                  "naam": "naam",
+                  "fieldType": "attribuut",
+                  "data": {
+                    "typeLabel": "string"
+                  }
+                }
+              ]
+            }
+          ],
+          "data": {
+            "beschrijving": "De identiteit. Een branch draagt daarnaast `herkomst` (ouderProject, basis); die staat in het serverrecord, niet in het bestand."
+          }
+        },
+        "m__Structuur": {
+          "id": "m__Structuur",
+          "naam": "Structuur",
+          "elementType": "klasse",
+          "compartimenten": [
+            {
+              "compartmentType": "attributen",
+              "velden": [
+                {
+                  "naam": "plaatsing",
+                  "fieldType": "attribuut",
+                  "data": {
+                    "typeLabel": "plaatsingssleutel → string",
+                    "kardinaliteit": "*",
+                    "beschrijving": "Sleutel `el::<profiel>::<element>` of `<profiel>::<diagram>`; waarde de map-id, of een element-sleutel als ouder (een element met uitwerking; hooguit één ouder, besluit 04-11)."
+                  }
+                },
+                {
+                  "naam": "plaatsingVolgorde",
+                  "fieldType": "attribuut",
+                  "data": {
+                    "typeLabel": "string",
+                    "kardinaliteit": "*",
+                    "beschrijving": "De plaatsingssleutels in boomvolgorde (jsonb bewaart de sleutelvolgorde niet)."
+                  }
+                }
+              ]
+            },
+            {
+              "compartmentType": "operaties",
+              "velden": []
+            }
+          ],
+          "data": {
+            "beschrijving": "De projectboom: mappen, waar elk element en diagram hangt, en de gedeelde bundels."
+          }
+        },
+        "m__Map": {
+          "id": "m__Map",
+          "naam": "Map",
+          "elementType": "klasse",
+          "compartimenten": [
+            {
+              "compartmentType": "attributen",
+              "velden": [
+                {
+                  "naam": "id",
+                  "fieldType": "attribuut",
+                  "data": {
+                    "typeLabel": "string",
+                    "beschrijving": "`map_<ms>_<n>`."
+                  }
+                },
+                {
+                  "naam": "naam",
+                  "fieldType": "attribuut",
+                  "data": {
+                    "typeLabel": "string"
+                  }
+                },
+                {
+                  "naam": "volgorde",
+                  "fieldType": "attribuut",
+                  "data": {
+                    "typeLabel": "number"
+                  }
+                },
+                {
+                  "naam": "beschrijving",
+                  "fieldType": "attribuut",
+                  "data": {
+                    "typeLabel": "string",
+                    "kardinaliteit": "0..1",
+                    "beschrijving": "Markdown, voor documenten."
+                  }
+                },
+                {
+                  "naam": "kleur",
+                  "fieldType": "attribuut",
+                  "data": {
+                    "typeLabel": "string",
+                    "kardinaliteit": "0..1"
+                  }
+                }
+              ]
+            },
+            {
+              "compartmentType": "operaties",
+              "velden": []
+            }
+          ],
+          "data": {
+            "beschrijving": "Een map in de projectboom."
+          }
+        },
+        "m__Bundel": {
+          "id": "m__Bundel",
+          "naam": "Bundel",
+          "elementType": "klasse",
+          "compartimenten": [
+            {
+              "compartmentType": "attributen",
+              "velden": [
+                {
+                  "naam": "id",
+                  "fieldType": "attribuut",
+                  "data": {
+                    "typeLabel": "string"
+                  }
+                },
+                {
+                  "naam": "naam",
+                  "fieldType": "attribuut",
+                  "data": {
+                    "typeLabel": "string"
+                  }
+                },
+                {
+                  "naam": "tabs",
+                  "fieldType": "attribuut",
+                  "data": {
+                    "typeLabel": "DiagramRef",
+                    "kardinaliteit": "*"
+                  }
+                },
+                {
+                  "naam": "volgorde",
+                  "fieldType": "attribuut",
+                  "data": {
+                    "typeLabel": "number",
+                    "kardinaliteit": "0..1"
+                  }
+                }
+              ]
+            },
+            {
+              "compartmentType": "operaties",
+              "velden": []
+            }
+          ],
+          "data": {
+            "beschrijving": "Een gedeelde set diagrammen die samen open gaan."
+          }
+        },
+        "m__DiagramRef": {
+          "id": "m__DiagramRef",
+          "naam": "DiagramRef",
+          "elementType": "datatype",
+          "compartimenten": [
+            {
+              "compartmentType": "attributen",
+              "velden": [
+                {
+                  "naam": "profielId",
+                  "fieldType": "attribuut",
+                  "data": {
+                    "typeLabel": "string"
+                  }
+                },
+                {
+                  "naam": "diagramId",
+                  "fieldType": "attribuut",
+                  "data": {
+                    "typeLabel": "string"
+                  }
+                }
+              ]
+            }
+          ],
+          "data": {
+            "beschrijving": "Een diagram in een profiel."
+          }
+        },
+        "m__Kruisverband": {
+          "id": "m__Kruisverband",
+          "naam": "Kruisverband",
+          "elementType": "klasse",
+          "compartimenten": [
+            {
+              "compartmentType": "attributen",
+              "velden": [
+                {
+                  "naam": "id",
+                  "fieldType": "attribuut",
+                  "data": {
+                    "typeLabel": "string",
+                    "beschrijving": "`<profiel>::<element>##<profiel>::<element>` (rij ## kolom)."
+                  }
+                },
+                {
+                  "naam": "rij",
+                  "fieldType": "attribuut",
+                  "data": {
+                    "typeLabel": "ElementRef"
+                  }
+                },
+                {
+                  "naam": "kolom",
+                  "fieldType": "attribuut",
+                  "data": {
+                    "typeLabel": "ElementRef",
+                    "beschrijving": "Het bovenliggende uiteinde."
+                  }
+                },
+                {
+                  "naam": "omgekeerd",
+                  "fieldType": "attribuut",
+                  "data": {
+                    "typeLabel": "boolean",
+                    "kardinaliteit": "0..1",
+                    "beschrijving": "Richting kolom → rij."
+                  }
+                }
+              ]
+            },
+            {
+              "compartmentType": "operaties",
+              "velden": []
+            }
+          ],
+          "data": {
+            "beschrijving": "Een koppeling tussen twee elementen, ook in verschillende talen (de koppelingen-matrix)."
+          }
+        },
+        "m__ElementRef": {
+          "id": "m__ElementRef",
+          "naam": "ElementRef",
+          "elementType": "datatype",
+          "compartimenten": [
+            {
+              "compartmentType": "attributen",
+              "velden": [
+                {
+                  "naam": "profielId",
+                  "fieldType": "attribuut",
+                  "data": {
+                    "typeLabel": "string"
+                  }
+                },
+                {
+                  "naam": "elementId",
+                  "fieldType": "attribuut",
+                  "data": {
+                    "typeLabel": "string"
+                  }
+                }
+              ]
+            }
+          ],
+          "data": {
+            "beschrijving": "Een element in een profiel."
+          }
+        },
+        "m__Koppelsoort": {
+          "id": "m__Koppelsoort",
+          "naam": "Koppelsoort",
+          "elementType": "klasse",
+          "compartimenten": [
+            {
+              "compartmentType": "attributen",
+              "velden": [
+                {
+                  "naam": "soort",
+                  "fieldType": "attribuut",
+                  "data": {
+                    "typeLabel": "string"
+                  }
+                },
+                {
+                  "naam": "stijl",
+                  "fieldType": "attribuut",
+                  "data": {
+                    "typeLabel": "KoppelStijl"
+                  }
+                },
+                {
+                  "naam": "defaultOmgekeerd",
+                  "fieldType": "attribuut",
+                  "data": {
+                    "typeLabel": "boolean",
+                    "kardinaliteit": "0..1"
+                  }
+                }
+              ]
+            },
+            {
+              "compartmentType": "operaties",
+              "velden": []
+            }
+          ],
+          "data": {
+            "beschrijving": "Een soort kruisverband (bv. \"traceert naar\")."
+          }
+        },
+        "m__ProfielInhoud": {
+          "id": "m__ProfielInhoud",
+          "naam": "ProfielInhoud",
+          "elementType": "klasse",
+          "compartimenten": [
+            {
+              "compartmentType": "attributen",
+              "velden": [
+                {
+                  "naam": "diagramTypeId",
+                  "fieldType": "attribuut",
+                  "data": {
+                    "typeLabel": "string",
+                    "beschrijving": "Het DiagramType (M2)."
+                  }
+                },
+                {
+                  "naam": "meta",
+                  "fieldType": "attribuut",
+                  "data": {
+                    "typeLabel": "any",
+                    "kardinaliteit": "0..1",
+                    "beschrijving": "Metagegevens van de bron die niet bij een diagram horen; de motor geeft ze ongelezen door."
+                  }
+                }
+              ]
+            },
+            {
+              "compartmentType": "operaties",
+              "velden": []
+            }
+          ],
+          "data": {
+            "beschrijving": "De inhoud van één profiel (de profielstore, createDiagramStore)."
+          }
+        },
+        "m__Element": {
+          "id": "m__Element",
+          "naam": "Element",
+          "elementType": "klasse",
+          "compartimenten": [
+            {
+              "compartmentType": "attributen",
+              "velden": [
+                {
+                  "naam": "id",
+                  "fieldType": "attribuut",
+                  "data": {
+                    "typeLabel": "string"
+                  }
+                },
+                {
+                  "naam": "naam",
+                  "fieldType": "attribuut",
+                  "data": {
+                    "typeLabel": "string"
+                  }
+                },
+                {
+                  "naam": "elementType",
+                  "fieldType": "attribuut",
+                  "data": {
+                    "typeLabel": "string",
+                    "beschrijving": "Het ElementType (M2)."
+                  }
+                },
+                {
+                  "naam": "data",
+                  "fieldType": "attribuut",
+                  "data": {
+                    "typeLabel": "ElementData",
+                    "kardinaliteit": "0..1"
+                  }
+                }
+              ]
+            },
+            {
+              "compartmentType": "operaties",
+              "velden": []
+            }
+          ],
+          "data": {
+            "beschrijving": "Een modelelement; een connector is een element met source en target."
+          }
+        },
+        "m__ElementData": {
+          "id": "m__ElementData",
+          "naam": "ElementData",
+          "elementType": "datatype",
+          "compartimenten": [
+            {
+              "compartmentType": "attributen",
+              "velden": [
+                {
+                  "naam": "uuid",
+                  "fieldType": "attribuut",
+                  "data": {
+                    "typeLabel": "string",
+                    "kardinaliteit": "0..1",
+                    "beschrijving": "Formaat 4: verplicht voor de soorten in UuidSoort (canoniek-uml); de Studio vult een ontbrekende aan met een uuid v5 (canoniek-uml/uuids.js), stam het project of bij een branch herkomst.ouderProject."
+                  }
+                },
+                {
+                  "naam": "beschrijving",
+                  "fieldType": "attribuut",
+                  "data": {
+                    "typeLabel": "string",
+                    "kardinaliteit": "0..1"
+                  }
+                },
+                {
+                  "naam": "verwijstNaar",
+                  "fieldType": "attribuut",
+                  "data": {
+                    "typeLabel": "DiagramRef",
+                    "kardinaliteit": "0..1",
+                    "beschrijving": "De doorklik (dubbelklik opent dat diagram)."
+                  }
+                },
+                {
+                  "naam": "gedragDiagramId",
+                  "fieldType": "attribuut",
+                  "data": {
+                    "typeLabel": "string",
+                    "kardinaliteit": "0..1"
+                  }
+                },
+                {
+                  "naam": "randVan",
+                  "fieldType": "attribuut",
+                  "data": {
+                    "typeLabel": "Element",
+                    "kardinaliteit": "0..1",
+                    "beschrijving": "De gastheer van een rand-element."
+                  }
+                },
+                {
+                  "naam": "kleur",
+                  "fieldType": "attribuut",
+                  "data": {
+                    "typeLabel": "string",
+                    "kardinaliteit": "0..1"
+                  }
+                },
+                {
+                  "naam": "achtergrondKleur",
+                  "fieldType": "attribuut",
+                  "data": {
+                    "typeLabel": "string",
+                    "kardinaliteit": "0..1"
+                  }
+                },
+                {
+                  "naam": "randStijl",
+                  "fieldType": "attribuut",
+                  "data": {
+                    "typeLabel": "string",
+                    "kardinaliteit": "0..1"
+                  }
+                },
+                {
+                  "naam": "zOrde",
+                  "fieldType": "attribuut",
+                  "data": {
+                    "typeLabel": "number",
+                    "kardinaliteit": "0..1"
+                  }
+                },
+                {
+                  "naam": "tekst",
+                  "fieldType": "attribuut",
+                  "data": {
+                    "typeLabel": "string",
+                    "kardinaliteit": "0..1"
+                  }
+                },
+                {
+                  "naam": "expressie",
+                  "fieldType": "attribuut",
+                  "data": {
+                    "typeLabel": "string",
+                    "kardinaliteit": "0..1"
+                  }
+                },
+                {
+                  "naam": "directioneel",
+                  "fieldType": "attribuut",
+                  "data": {
+                    "typeLabel": "boolean",
+                    "kardinaliteit": "0..1"
+                  }
+                },
+                {
+                  "naam": "domein",
+                  "fieldType": "attribuut",
+                  "data": {
+                    "typeLabel": "string",
+                    "kardinaliteit": "0..1"
+                  }
+                },
+                {
+                  "naam": "afgeleid",
+                  "fieldType": "attribuut",
+                  "data": {
+                    "typeLabel": "boolean",
+                    "kardinaliteit": "0..1"
+                  }
+                }
+              ]
+            }
+          ],
+          "data": {
+            "beschrijving": "Vrije gegevens van een element: de sleutels van zijn PropertyTypes (profiel-eigen), plus deze die de motor zelf leest."
+          }
+        },
+        "m__Compartiment": {
+          "id": "m__Compartiment",
+          "naam": "Compartiment",
+          "elementType": "klasse",
+          "compartimenten": [
+            {
+              "compartmentType": "attributen",
+              "velden": [
+                {
+                  "naam": "compartmentType",
+                  "fieldType": "attribuut",
+                  "data": {
+                    "typeLabel": "string"
+                  }
+                }
+              ]
+            },
+            {
+              "compartmentType": "operaties",
+              "velden": []
+            }
+          ],
+          "data": {
+            "beschrijving": "Een vak van een element, van een CompartmentType (M2)."
+          }
+        },
+        "m__Veld": {
+          "id": "m__Veld",
+          "naam": "Veld",
+          "elementType": "klasse",
+          "compartimenten": [
+            {
+              "compartmentType": "attributen",
+              "velden": [
+                {
+                  "naam": "naam",
+                  "fieldType": "attribuut",
+                  "data": {
+                    "typeLabel": "string"
+                  }
+                },
+                {
+                  "naam": "fieldType",
+                  "fieldType": "attribuut",
+                  "data": {
+                    "typeLabel": "string"
+                  }
+                },
+                {
+                  "naam": "data",
+                  "fieldType": "attribuut",
+                  "data": {
+                    "typeLabel": "VeldData",
+                    "kardinaliteit": "0..1"
+                  }
+                }
+              ]
+            },
+            {
+              "compartmentType": "operaties",
+              "velden": []
+            }
+          ],
+          "data": {
+            "beschrijving": "Een regel in een compartiment, van een FieldType (M2)."
+          }
+        },
+        "m__VeldData": {
+          "id": "m__VeldData",
+          "naam": "VeldData",
+          "elementType": "datatype",
+          "compartimenten": [
+            {
+              "compartmentType": "attributen",
+              "velden": [
+                {
+                  "naam": "uuid",
+                  "fieldType": "attribuut",
+                  "data": {
+                    "typeLabel": "string",
+                    "kardinaliteit": "0..1",
+                    "beschrijving": "Formaat 4: verplicht voor een veld met een naam in het compartiment \"velden\" van canoniek-uml."
+                  }
+                },
+                {
+                  "naam": "typeLabel",
+                  "fieldType": "attribuut",
+                  "data": {
+                    "typeLabel": "string",
+                    "kardinaliteit": "0..1"
+                  }
+                },
+                {
+                  "naam": "cursief",
+                  "fieldType": "attribuut",
+                  "data": {
+                    "typeLabel": "boolean",
+                    "kardinaliteit": "0..1"
+                  }
+                },
+                {
+                  "naam": "afgeleid",
+                  "fieldType": "attribuut",
+                  "data": {
+                    "typeLabel": "boolean",
+                    "kardinaliteit": "0..1"
+                  }
+                },
+                {
+                  "naam": "beschrijving",
+                  "fieldType": "attribuut",
+                  "data": {
+                    "typeLabel": "string",
+                    "kardinaliteit": "0..1"
+                  }
+                }
+              ]
+            }
+          ],
+          "data": {
+            "beschrijving": "Vrije gegevens van een veld: de sleutels van zijn PropertyTypes, plus deze die de motor leest."
+          }
+        },
+        "m__Diagram": {
+          "id": "m__Diagram",
+          "naam": "Diagram",
+          "elementType": "klasse",
+          "compartimenten": [
+            {
+              "compartmentType": "attributen",
+              "velden": [
+                {
+                  "naam": "id",
+                  "fieldType": "attribuut",
+                  "data": {
+                    "typeLabel": "string"
+                  }
+                },
+                {
+                  "naam": "naam",
+                  "fieldType": "attribuut",
+                  "data": {
+                    "typeLabel": "string"
+                  }
+                },
+                {
+                  "naam": "diagramType",
+                  "fieldType": "attribuut",
+                  "data": {
+                    "typeLabel": "string"
+                  }
+                },
+                {
+                  "naam": "lijnen",
+                  "fieldType": "attribuut",
+                  "data": {
+                    "typeLabel": "connector-id → Lijn",
+                    "kardinaliteit": "*",
+                    "beschrijving": "De lijnstand per connector op dit diagram."
+                  }
+                },
+                {
+                  "naam": "gedaanteOverrides",
+                  "fieldType": "attribuut",
+                  "data": {
+                    "typeLabel": "connector-id → ConnectorGedaante",
+                    "kardinaliteit": "*"
+                  }
+                },
+                {
+                  "naam": "connectorVoorkomens",
+                  "fieldType": "attribuut",
+                  "data": {
+                    "typeLabel": "connector-id → VoorkomenPaar",
+                    "kardinaliteit": "*"
+                  }
+                },
+                {
+                  "naam": "verbergCompartimenten",
+                  "fieldType": "attribuut",
+                  "data": {
+                    "typeLabel": "boolean",
+                    "kardinaliteit": "0..1"
+                  }
+                },
+                {
+                  "naam": "shapeSetId",
+                  "fieldType": "attribuut",
+                  "data": {
+                    "typeLabel": "string",
+                    "kardinaliteit": "0..1"
+                  }
+                },
+                {
+                  "naam": "beschrijving",
+                  "fieldType": "attribuut",
+                  "data": {
+                    "typeLabel": "string",
+                    "kardinaliteit": "0..1"
+                  }
+                },
+                {
+                  "naam": "layoutStijl",
+                  "fieldType": "attribuut",
+                  "data": {
+                    "typeLabel": "string",
+                    "kardinaliteit": "0..1"
+                  }
+                }
+              ]
+            },
+            {
+              "compartmentType": "operaties",
+              "velden": []
+            }
+          ],
+          "data": {
+            "beschrijving": "Een diagram: voorkomens van elementen; connectoren tekent de motor uit de elementen met source/target."
+          }
+        },
+        "m__DiagramNode": {
+          "id": "m__DiagramNode",
+          "naam": "DiagramNode",
+          "elementType": "klasse",
+          "compartimenten": [
+            {
+              "compartmentType": "attributen",
+              "velden": [
+                {
+                  "naam": "nodeId",
+                  "fieldType": "attribuut",
+                  "data": {
+                    "typeLabel": "string",
+                    "kardinaliteit": "0..1",
+                    "beschrijving": "Zonder: het element-id. Extra voorkomen: `<element>__voorkomen_<ms>_<n>`."
+                  }
+                },
+                {
+                  "naam": "position",
+                  "fieldType": "attribuut",
+                  "data": {
+                    "typeLabel": "Punt",
+                    "beschrijving": "Relatief aan de gastheer bij een rand-element."
+                  }
+                },
+                {
+                  "naam": "size",
+                  "fieldType": "attribuut",
+                  "data": {
+                    "typeLabel": "Maat",
+                    "kardinaliteit": "0..1"
+                  }
+                },
+                {
+                  "naam": "gedaante",
+                  "fieldType": "attribuut",
+                  "data": {
+                    "typeLabel": "Gedaante",
+                    "kardinaliteit": "0..1"
+                  }
+                },
+                {
+                  "naam": "ankerPosition",
+                  "fieldType": "attribuut",
+                  "data": {
+                    "typeLabel": "Punt",
+                    "kardinaliteit": "0..1",
+                    "beschrijving": "Anker van een connector als doos (associatieklasse)."
+                  }
+                },
+                {
+                  "naam": "layoutLocked",
+                  "fieldType": "attribuut",
+                  "data": {
+                    "typeLabel": "boolean",
+                    "kardinaliteit": "0..1"
+                  }
+                }
+              ]
+            },
+            {
+              "compartmentType": "operaties",
+              "velden": []
+            }
+          ],
+          "data": {
+            "beschrijving": "Een voorkomen van een element op een diagram (meer dan één mag als het profiel dat toelaat)."
+          }
+        },
+        "m__DiagramEdge": {
+          "id": "m__DiagramEdge",
+          "naam": "DiagramEdge",
+          "elementType": "klasse",
+          "compartimenten": [
+            {
+              "compartmentType": "attributen",
+              "velden": [
+                {
+                  "naam": "id",
+                  "fieldType": "attribuut",
+                  "data": {
+                    "typeLabel": "string"
+                  }
+                },
+                {
+                  "naam": "source",
+                  "fieldType": "attribuut",
+                  "data": {
+                    "typeLabel": "string"
+                  }
+                },
+                {
+                  "naam": "target",
+                  "fieldType": "attribuut",
+                  "data": {
+                    "typeLabel": "string"
+                  }
+                },
+                {
+                  "naam": "sourceHandle",
+                  "fieldType": "attribuut",
+                  "data": {
+                    "typeLabel": "string",
+                    "kardinaliteit": "0..1"
+                  }
+                },
+                {
+                  "naam": "targetHandle",
+                  "fieldType": "attribuut",
+                  "data": {
+                    "typeLabel": "string",
+                    "kardinaliteit": "0..1"
+                  }
+                },
+                {
+                  "naam": "hidden",
+                  "fieldType": "attribuut",
+                  "data": {
+                    "typeLabel": "boolean",
+                    "kardinaliteit": "0..1"
+                  }
+                },
+                {
+                  "naam": "data",
+                  "fieldType": "attribuut",
+                  "data": {
+                    "typeLabel": "any",
+                    "kardinaliteit": "0..1"
+                  }
+                }
+              ]
+            },
+            {
+              "compartmentType": "operaties",
+              "velden": []
+            }
+          ],
+          "data": {
+            "beschrijving": "Een presentatie-edge uit een import."
+          }
+        },
+        "m__Lijn": {
+          "id": "m__Lijn",
+          "naam": "Lijn",
+          "elementType": "datatype",
+          "compartimenten": [
+            {
+              "compartmentType": "attributen",
+              "velden": [
+                {
+                  "naam": "knikken",
+                  "fieldType": "attribuut",
+                  "data": {
+                    "typeLabel": "Punt",
+                    "kardinaliteit": "*"
+                  }
+                },
+                {
+                  "naam": "vorm",
+                  "fieldType": "attribuut",
+                  "data": {
+                    "typeLabel": "LijnVorm",
+                    "kardinaliteit": "0..1"
+                  }
+                },
+                {
+                  "naam": "sourceHandle",
+                  "fieldType": "attribuut",
+                  "data": {
+                    "typeLabel": "string",
+                    "kardinaliteit": "0..1"
+                  }
+                },
+                {
+                  "naam": "targetHandle",
+                  "fieldType": "attribuut",
+                  "data": {
+                    "typeLabel": "string",
+                    "kardinaliteit": "0..1"
+                  }
+                },
+                {
+                  "naam": "labelOffsets",
+                  "fieldType": "attribuut",
+                  "data": {
+                    "typeLabel": "any",
+                    "kardinaliteit": "0..1"
+                  }
+                },
+                {
+                  "naam": "boomOuder",
+                  "fieldType": "attribuut",
+                  "data": {
+                    "typeLabel": "string",
+                    "kardinaliteit": "0..1"
+                  }
+                },
+                {
+                  "naam": "verschuiving",
+                  "fieldType": "attribuut",
+                  "data": {
+                    "typeLabel": "number",
+                    "kardinaliteit": "0..1",
+                    "beschrijving": "Een rechte lijn zijwaarts verschoven langs de zijden van beide dozen (ConnectorEdge.jsx)."
+                  }
+                }
+              ]
+            }
+          ],
+          "data": {
+            "beschrijving": "De lijnstand van een connector (model/lijnvorm.js); dezelfde sleutels op element.data gelden als standaard, die op het diagram wint."
+          }
+        },
+        "m__VoorkomenPaar": {
+          "id": "m__VoorkomenPaar",
+          "naam": "VoorkomenPaar",
+          "elementType": "datatype",
+          "compartimenten": [
+            {
+              "compartmentType": "attributen",
+              "velden": [
+                {
+                  "naam": "bronNodeId",
+                  "fieldType": "attribuut",
+                  "data": {
+                    "typeLabel": "string"
+                  }
+                },
+                {
+                  "naam": "doelNodeId",
+                  "fieldType": "attribuut",
+                  "data": {
+                    "typeLabel": "string"
+                  }
+                }
+              ]
+            }
+          ],
+          "data": {
+            "beschrijving": "Welke twee voorkomens een connector verbindt."
+          }
+        },
+        "m__Punt": {
+          "id": "m__Punt",
+          "naam": "Punt",
+          "elementType": "datatype",
+          "compartimenten": [
+            {
+              "compartmentType": "attributen",
+              "velden": [
+                {
+                  "naam": "x",
+                  "fieldType": "attribuut",
+                  "data": {
+                    "typeLabel": "number"
+                  }
+                },
+                {
+                  "naam": "y",
+                  "fieldType": "attribuut",
+                  "data": {
+                    "typeLabel": "number"
+                  }
+                }
+              ]
+            }
+          ],
+          "data": {
+            "beschrijving": "Een punt."
+          }
+        },
+        "m__Maat": {
+          "id": "m__Maat",
+          "naam": "Maat",
+          "elementType": "datatype",
+          "compartimenten": [
+            {
+              "compartmentType": "attributen",
+              "velden": [
+                {
+                  "naam": "width",
+                  "fieldType": "attribuut",
+                  "data": {
+                    "typeLabel": "number"
+                  }
+                },
+                {
+                  "naam": "height",
+                  "fieldType": "attribuut",
+                  "data": {
+                    "typeLabel": "number"
+                  }
+                }
+              ]
+            }
+          ],
+          "data": {
+            "beschrijving": "Breedte en hoogte."
+          }
+        },
+        "m__Werkruimte": {
+          "id": "m__Werkruimte",
+          "naam": "Werkruimte",
+          "elementType": "klasse",
+          "compartimenten": [
+            {
+              "compartmentType": "attributen",
+              "velden": [
+                {
+                  "naam": "tabs",
+                  "fieldType": "attribuut",
+                  "data": {
+                    "typeLabel": "Tab",
+                    "kardinaliteit": "*"
+                  }
+                },
+                {
+                  "naam": "actieveTab",
+                  "fieldType": "attribuut",
+                  "data": {
+                    "typeLabel": "string",
+                    "kardinaliteit": "0..1"
+                  }
+                },
+                {
+                  "naam": "mapOpen",
+                  "fieldType": "attribuut",
+                  "data": {
+                    "typeLabel": "map-id → boolean",
+                    "kardinaliteit": "*"
+                  }
+                },
+                {
+                  "naam": "bundels",
+                  "fieldType": "attribuut",
+                  "data": {
+                    "typeLabel": "EigenBundel",
+                    "kardinaliteit": "*"
+                  }
+                },
+                {
+                  "naam": "bijgewerkt",
+                  "fieldType": "attribuut",
+                  "data": {
+                    "typeLabel": "string",
+                    "kardinaliteit": "0..1"
+                  }
+                },
+                {
+                  "naam": "viewports",
+                  "fieldType": "attribuut",
+                  "data": {
+                    "typeLabel": "diagram-id → Viewport",
+                    "kardinaliteit": "*",
+                    "beschrijving": "In de profielstore (lokaal bewaard), niet in de undo."
+                  }
+                }
+              ]
+            },
+            {
+              "compartmentType": "operaties",
+              "velden": []
+            }
+          ],
+          "data": {
+            "beschrijving": "Per gebruiker en project (localStorage `studio-werkruimte:<project>` en de server); niet in het werkbestand."
+          }
+        },
+        "m__Tab": {
+          "id": "m__Tab",
+          "naam": "Tab",
+          "elementType": "datatype",
+          "compartimenten": [
+            {
+              "compartmentType": "attributen",
+              "velden": [
+                {
+                  "naam": "id",
+                  "fieldType": "attribuut",
+                  "data": {
+                    "typeLabel": "string"
+                  }
+                },
+                {
+                  "naam": "profielId",
+                  "fieldType": "attribuut",
+                  "data": {
+                    "typeLabel": "string"
+                  }
+                },
+                {
+                  "naam": "diagramId",
+                  "fieldType": "attribuut",
+                  "data": {
+                    "typeLabel": "string"
+                  }
+                }
+              ]
+            }
+          ],
+          "data": {
+            "beschrijving": "Een open diagram."
+          }
+        },
+        "m__EigenBundel": {
+          "id": "m__EigenBundel",
+          "naam": "EigenBundel",
+          "elementType": "datatype",
+          "compartimenten": [
+            {
+              "compartmentType": "attributen",
+              "velden": [
+                {
+                  "naam": "id",
+                  "fieldType": "attribuut",
+                  "data": {
+                    "typeLabel": "string"
+                  }
+                },
+                {
+                  "naam": "naam",
+                  "fieldType": "attribuut",
+                  "data": {
+                    "typeLabel": "string"
+                  }
+                },
+                {
+                  "naam": "tabs",
+                  "fieldType": "attribuut",
+                  "data": {
+                    "typeLabel": "DiagramRef",
+                    "kardinaliteit": "*"
+                  }
+                }
+              ]
+            }
+          ],
+          "data": {
+            "beschrijving": "Een eigen bundel (niet gedeeld)."
+          }
+        },
+        "m__Viewport": {
+          "id": "m__Viewport",
+          "naam": "Viewport",
+          "elementType": "datatype",
+          "compartimenten": [
+            {
+              "compartmentType": "attributen",
+              "velden": [
+                {
+                  "naam": "x",
+                  "fieldType": "attribuut",
+                  "data": {
+                    "typeLabel": "number"
+                  }
+                },
+                {
+                  "naam": "y",
+                  "fieldType": "attribuut",
+                  "data": {
+                    "typeLabel": "number"
+                  }
+                },
+                {
+                  "naam": "zoom",
+                  "fieldType": "attribuut",
+                  "data": {
+                    "typeLabel": "number"
+                  }
+                }
+              ]
+            }
+          ],
+          "data": {
+            "beschrijving": "Pan en zoom van een diagram."
+          }
+        },
+        "m__Gedaante": {
+          "id": "m__Gedaante",
+          "naam": "Gedaante",
+          "elementType": "enumeratie",
+          "compartimenten": [
+            {
+              "compartmentType": "literals",
+              "velden": [
+                {
+                  "naam": "vol",
+                  "fieldType": "literal",
+                  "data": {}
+                },
+                {
+                  "naam": "kop",
+                  "fieldType": "literal",
+                  "data": {}
+                },
+                {
+                  "naam": "bol",
+                  "fieldType": "literal",
+                  "data": {}
+                }
+              ]
+            }
+          ],
+          "data": {
+            "beschrijving": "De gedaante van een voorkomen: alles, alleen de kop, of het bolletje (samentrekking); een profiel kan eigen gedaanten noemen (opname)."
+          }
+        },
+        "m__LijnVorm": {
+          "id": "m__LijnVorm",
+          "naam": "LijnVorm",
+          "elementType": "enumeratie",
+          "compartimenten": [
+            {
+              "compartmentType": "literals",
+              "velden": [
+                {
+                  "naam": "bezier",
+                  "fieldType": "literal",
+                  "data": {}
+                },
+                {
+                  "naam": "hoekig",
+                  "fieldType": "literal",
+                  "data": {}
+                },
+                {
+                  "naam": "recht",
+                  "fieldType": "literal",
+                  "data": {}
+                },
+                {
+                  "naam": "boom",
+                  "fieldType": "literal",
+                  "data": {}
+                }
+              ]
+            }
+          ],
+          "data": {
+            "beschrijving": "Routering van een lijn."
+          }
+        },
+        "m__ConnectorGedaante": {
+          "id": "m__ConnectorGedaante",
+          "naam": "ConnectorGedaante",
+          "elementType": "enumeratie",
+          "compartimenten": [
+            {
+              "compartmentType": "literals",
+              "velden": [
+                {
+                  "naam": "box",
+                  "fieldType": "literal",
+                  "data": {}
+                },
+                {
+                  "naam": "lijn",
+                  "fieldType": "literal",
+                  "data": {}
+                }
+              ]
+            }
+          ],
+          "data": {
+            "beschrijving": "Een connector met velden als doos of als lijn."
+          }
+        },
+        "m__KoppelStijl": {
+          "id": "m__KoppelStijl",
+          "naam": "KoppelStijl",
+          "elementType": "enumeratie",
+          "compartimenten": [
+            {
+              "compartmentType": "literals",
+              "velden": [
+                {
+                  "naam": "afhankelijk",
+                  "fieldType": "literal",
+                  "data": {}
+                },
+                {
+                  "naam": "realisatie",
+                  "fieldType": "literal",
+                  "data": {}
+                }
+              ]
+            }
+          ],
+          "data": {
+            "beschrijving": "Hoe een kruisverband tekent."
+          }
+        },
+        "m__UuidSoort": {
+          "id": "m__UuidSoort",
+          "naam": "UuidSoort",
+          "elementType": "enumeratie",
+          "compartimenten": [
+            {
+              "compartmentType": "literals",
+              "velden": [
+                {
+                  "naam": "entiteit",
+                  "fieldType": "literal",
+                  "data": {}
+                },
+                {
+                  "naam": "gegevenselement",
+                  "fieldType": "literal",
+                  "data": {}
+                },
+                {
+                  "naam": "relatie",
+                  "fieldType": "literal",
+                  "data": {}
+                },
+                {
+                  "naam": "enumeratie",
+                  "fieldType": "literal",
+                  "data": {}
+                },
+                {
+                  "naam": "gegevenstype",
+                  "fieldType": "literal",
+                  "data": {}
+                },
+                {
+                  "naam": "referentielijstInstantie",
+                  "fieldType": "literal",
+                  "data": {}
+                }
+              ]
+            }
+          ],
+          "data": {
+            "beschrijving": "Formaat 4: de elementsoorten van canoniek-uml die een uuid dragen. Code: diagramprofielen/canoniek-uml/uuids.js (UUID_SOORTEN)."
+          }
+        },
+        "as__Werkbestand__structuur": {
+          "id": "as__Werkbestand__structuur",
+          "naam": "",
+          "elementType": "compositie",
+          "source": "m__Werkbestand",
+          "target": "m__Structuur",
+          "compartimenten": [],
+          "data": {
+            "doelRolNaam": "structuur",
+            "doelKardinaliteit": "1",
+            "doelNavigeerbaar": "ja"
+          }
+        },
+        "as__Werkbestand__kruisverbanden": {
+          "id": "as__Werkbestand__kruisverbanden",
+          "naam": "",
+          "elementType": "compositie",
+          "source": "m__Werkbestand",
+          "target": "m__Kruisverband",
+          "compartimenten": [],
+          "data": {
+            "doelRolNaam": "kruisverbanden",
+            "doelKardinaliteit": "*",
+            "doelNavigeerbaar": "ja"
+          }
+        },
+        "as__Werkbestand__koppelsoorten": {
+          "id": "as__Werkbestand__koppelsoorten",
+          "naam": "",
+          "elementType": "compositie",
+          "source": "m__Werkbestand",
+          "target": "m__Koppelsoort",
+          "compartimenten": [],
+          "data": {
+            "doelRolNaam": "koppelsoorten",
+            "doelKardinaliteit": "*",
+            "doelNavigeerbaar": "ja",
+            "beschrijving": "De soortenlijst van het project (07-11); ontbreekt = de standaardlijst."
+          }
+        },
+        "as__Werkbestand__profielen": {
+          "id": "as__Werkbestand__profielen",
+          "naam": "",
+          "elementType": "compositie",
+          "source": "m__Werkbestand",
+          "target": "m__ProfielInhoud",
+          "compartimenten": [],
+          "data": {
+            "doelRolNaam": "profielen [profiel-id]",
+            "doelKardinaliteit": "*",
+            "doelNavigeerbaar": "ja"
+          }
+        },
+        "as__Structuur__mappen": {
+          "id": "as__Structuur__mappen",
+          "naam": "",
+          "elementType": "compositie",
+          "source": "m__Structuur",
+          "target": "m__Map",
+          "compartimenten": [],
+          "data": {
+            "doelRolNaam": "mappen [map-id]",
+            "doelKardinaliteit": "*",
+            "doelNavigeerbaar": "ja"
+          }
+        },
+        "as__Structuur__bundels": {
+          "id": "as__Structuur__bundels",
+          "naam": "",
+          "elementType": "compositie",
+          "source": "m__Structuur",
+          "target": "m__Bundel",
+          "compartimenten": [],
+          "data": {
+            "doelRolNaam": "bundels [bundel-id]",
+            "doelKardinaliteit": "*",
+            "doelNavigeerbaar": "ja",
+            "beschrijving": "Gedeelde bundels; de eigen bundels staan in de werkruimte."
+          }
+        },
+        "as__Map__ouderId": {
+          "id": "as__Map__ouderId",
+          "naam": "",
+          "elementType": "associatie",
+          "source": "m__Map",
+          "target": "m__Map",
+          "compartimenten": [],
+          "data": {
+            "doelRolNaam": "ouderId",
+            "doelKardinaliteit": "0..1",
+            "doelNavigeerbaar": "ja",
+            "beschrijving": "De oudermap; leeg = wortel."
+          }
+        },
+        "as__Kruisverband__soort": {
+          "id": "as__Kruisverband__soort",
+          "naam": "",
+          "elementType": "associatie",
+          "source": "m__Kruisverband",
+          "target": "m__Koppelsoort",
+          "compartimenten": [],
+          "data": {
+            "doelRolNaam": "soort",
+            "doelKardinaliteit": "1",
+            "doelNavigeerbaar": "ja",
+            "beschrijving": "Op naam."
+          }
+        },
+        "as__ProfielInhoud__elements": {
+          "id": "as__ProfielInhoud__elements",
+          "naam": "",
+          "elementType": "compositie",
+          "source": "m__ProfielInhoud",
+          "target": "m__Element",
+          "compartimenten": [],
+          "data": {
+            "doelRolNaam": "elements [element-id]",
+            "doelKardinaliteit": "*",
+            "doelNavigeerbaar": "ja"
+          }
+        },
+        "as__ProfielInhoud__diagrams": {
+          "id": "as__ProfielInhoud__diagrams",
+          "naam": "",
+          "elementType": "compositie",
+          "source": "m__ProfielInhoud",
+          "target": "m__Diagram",
+          "compartimenten": [],
+          "data": {
+            "doelRolNaam": "diagrams [diagram-id]",
+            "doelKardinaliteit": "*",
+            "doelNavigeerbaar": "ja"
+          }
+        },
+        "as__ProfielInhoud__actiefDiagramId": {
+          "id": "as__ProfielInhoud__actiefDiagramId",
+          "naam": "",
+          "elementType": "associatie",
+          "source": "m__ProfielInhoud",
+          "target": "m__Diagram",
+          "compartimenten": [],
+          "data": {
+            "doelRolNaam": "actiefDiagramId",
+            "doelKardinaliteit": "0..1",
+            "doelNavigeerbaar": "ja"
+          }
+        },
+        "as__Element__compartimenten": {
+          "id": "as__Element__compartimenten",
+          "naam": "",
+          "elementType": "compositie",
+          "source": "m__Element",
+          "target": "m__Compartiment",
+          "compartimenten": [],
+          "data": {
+            "doelRolNaam": "compartimenten",
+            "doelKardinaliteit": "0..9",
+            "doelNavigeerbaar": "ja"
+          }
+        },
+        "as__Element__source": {
+          "id": "as__Element__source",
+          "naam": "",
+          "elementType": "associatie",
+          "source": "m__Element",
+          "target": "m__Element",
+          "compartimenten": [],
+          "data": {
+            "doelRolNaam": "source",
+            "doelKardinaliteit": "0..1",
+            "doelNavigeerbaar": "ja",
+            "beschrijving": "Bron (connector)."
+          }
+        },
+        "as__Element__target": {
+          "id": "as__Element__target",
+          "naam": "",
+          "elementType": "associatie",
+          "source": "m__Element",
+          "target": "m__Element",
+          "compartimenten": [],
+          "data": {
+            "doelRolNaam": "target",
+            "doelKardinaliteit": "0..1",
+            "doelNavigeerbaar": "ja",
+            "beschrijving": "Doel (connector)."
+          }
+        },
+        "as__Compartiment__velden": {
+          "id": "as__Compartiment__velden",
+          "naam": "",
+          "elementType": "compositie",
+          "source": "m__Compartiment",
+          "target": "m__Veld",
+          "compartimenten": [],
+          "data": {
+            "doelRolNaam": "velden",
+            "doelKardinaliteit": "*",
+            "doelNavigeerbaar": "ja"
+          }
+        },
+        "as__Diagram__nodes": {
+          "id": "as__Diagram__nodes",
+          "naam": "",
+          "elementType": "compositie",
+          "source": "m__Diagram",
+          "target": "m__DiagramNode",
+          "compartimenten": [],
+          "data": {
+            "doelRolNaam": "nodes",
+            "doelKardinaliteit": "*",
+            "doelNavigeerbaar": "ja"
+          }
+        },
+        "as__Diagram__edges": {
+          "id": "as__Diagram__edges",
+          "naam": "",
+          "elementType": "compositie",
+          "source": "m__Diagram",
+          "target": "m__DiagramEdge",
+          "compartimenten": [],
+          "data": {
+            "doelRolNaam": "edges",
+            "doelKardinaliteit": "*",
+            "doelNavigeerbaar": "ja",
+            "beschrijving": "Alleen presentatie-edges uit een import."
+          }
+        },
+        "as__Diagram__verborgenConnectoren": {
+          "id": "as__Diagram__verborgenConnectoren",
+          "naam": "",
+          "elementType": "associatie",
+          "source": "m__Diagram",
+          "target": "m__Element",
+          "compartimenten": [],
+          "data": {
+            "doelRolNaam": "verborgenConnectoren",
+            "doelKardinaliteit": "*",
+            "doelNavigeerbaar": "ja",
+            "beschrijving": "Connectoren die alleen op dit diagram verborgen zijn."
+          }
+        },
+        "as__DiagramNode__elementId": {
+          "id": "as__DiagramNode__elementId",
+          "naam": "",
+          "elementType": "associatie",
+          "source": "m__DiagramNode",
+          "target": "m__Element",
+          "compartimenten": [],
+          "data": {
+            "doelRolNaam": "elementId",
+            "doelKardinaliteit": "1",
+            "doelNavigeerbaar": "ja"
+          }
+        },
+        "bv__Werkbestand__Werkbestand": {
+          "id": "bv__Werkbestand__Werkbestand",
+          "naam": "",
+          "elementType": "bevat",
+          "source": "pkg__Werkbestand",
+          "target": "m__Werkbestand",
+          "compartimenten": [],
+          "data": {}
+        },
+        "bv__Werkbestand__Project": {
+          "id": "bv__Werkbestand__Project",
+          "naam": "",
+          "elementType": "bevat",
+          "source": "pkg__Werkbestand",
+          "target": "m__Project",
+          "compartimenten": [],
+          "data": {}
+        },
+        "bv__Werkbestand__Structuur": {
+          "id": "bv__Werkbestand__Structuur",
+          "naam": "",
+          "elementType": "bevat",
+          "source": "pkg__Werkbestand",
+          "target": "m__Structuur",
+          "compartimenten": [],
+          "data": {}
+        },
+        "bv__Werkbestand__Map": {
+          "id": "bv__Werkbestand__Map",
+          "naam": "",
+          "elementType": "bevat",
+          "source": "pkg__Werkbestand",
+          "target": "m__Map",
+          "compartimenten": [],
+          "data": {}
+        },
+        "bv__Werkbestand__Bundel": {
+          "id": "bv__Werkbestand__Bundel",
+          "naam": "",
+          "elementType": "bevat",
+          "source": "pkg__Werkbestand",
+          "target": "m__Bundel",
+          "compartimenten": [],
+          "data": {}
+        },
+        "bv__Werkbestand__DiagramRef": {
+          "id": "bv__Werkbestand__DiagramRef",
+          "naam": "",
+          "elementType": "bevat",
+          "source": "pkg__Werkbestand",
+          "target": "m__DiagramRef",
+          "compartimenten": [],
+          "data": {}
+        },
+        "bv__Werkbestand__Kruisverband": {
+          "id": "bv__Werkbestand__Kruisverband",
+          "naam": "",
+          "elementType": "bevat",
+          "source": "pkg__Werkbestand",
+          "target": "m__Kruisverband",
+          "compartimenten": [],
+          "data": {}
+        },
+        "bv__Werkbestand__ElementRef": {
+          "id": "bv__Werkbestand__ElementRef",
+          "naam": "",
+          "elementType": "bevat",
+          "source": "pkg__Werkbestand",
+          "target": "m__ElementRef",
+          "compartimenten": [],
+          "data": {}
+        },
+        "bv__Werkbestand__Koppelsoort": {
+          "id": "bv__Werkbestand__Koppelsoort",
+          "naam": "",
+          "elementType": "bevat",
+          "source": "pkg__Werkbestand",
+          "target": "m__Koppelsoort",
+          "compartimenten": [],
+          "data": {}
+        },
+        "bv__Werkbestand__KoppelStijl": {
+          "id": "bv__Werkbestand__KoppelStijl",
+          "naam": "",
+          "elementType": "bevat",
+          "source": "pkg__Werkbestand",
+          "target": "m__KoppelStijl",
+          "compartimenten": [],
+          "data": {}
+        },
+        "bv__Model__ProfielInhoud": {
+          "id": "bv__Model__ProfielInhoud",
+          "naam": "",
+          "elementType": "bevat",
+          "source": "pkg__Model",
+          "target": "m__ProfielInhoud",
+          "compartimenten": [],
+          "data": {}
+        },
+        "bv__Model__Element": {
+          "id": "bv__Model__Element",
+          "naam": "",
+          "elementType": "bevat",
+          "source": "pkg__Model",
+          "target": "m__Element",
+          "compartimenten": [],
+          "data": {}
+        },
+        "bv__Model__ElementData": {
+          "id": "bv__Model__ElementData",
+          "naam": "",
+          "elementType": "bevat",
+          "source": "pkg__Model",
+          "target": "m__ElementData",
+          "compartimenten": [],
+          "data": {}
+        },
+        "bv__Model__Compartiment": {
+          "id": "bv__Model__Compartiment",
+          "naam": "",
+          "elementType": "bevat",
+          "source": "pkg__Model",
+          "target": "m__Compartiment",
+          "compartimenten": [],
+          "data": {}
+        },
+        "bv__Model__Veld": {
+          "id": "bv__Model__Veld",
+          "naam": "",
+          "elementType": "bevat",
+          "source": "pkg__Model",
+          "target": "m__Veld",
+          "compartimenten": [],
+          "data": {}
+        },
+        "bv__Model__VeldData": {
+          "id": "bv__Model__VeldData",
+          "naam": "",
+          "elementType": "bevat",
+          "source": "pkg__Model",
+          "target": "m__VeldData",
+          "compartimenten": [],
+          "data": {}
+        },
+        "bv__Model__Diagram": {
+          "id": "bv__Model__Diagram",
+          "naam": "",
+          "elementType": "bevat",
+          "source": "pkg__Model",
+          "target": "m__Diagram",
+          "compartimenten": [],
+          "data": {}
+        },
+        "bv__Model__DiagramNode": {
+          "id": "bv__Model__DiagramNode",
+          "naam": "",
+          "elementType": "bevat",
+          "source": "pkg__Model",
+          "target": "m__DiagramNode",
+          "compartimenten": [],
+          "data": {}
+        },
+        "bv__Model__DiagramEdge": {
+          "id": "bv__Model__DiagramEdge",
+          "naam": "",
+          "elementType": "bevat",
+          "source": "pkg__Model",
+          "target": "m__DiagramEdge",
+          "compartimenten": [],
+          "data": {}
+        },
+        "bv__Model__Lijn": {
+          "id": "bv__Model__Lijn",
+          "naam": "",
+          "elementType": "bevat",
+          "source": "pkg__Model",
+          "target": "m__Lijn",
+          "compartimenten": [],
+          "data": {}
+        },
+        "bv__Model__VoorkomenPaar": {
+          "id": "bv__Model__VoorkomenPaar",
+          "naam": "",
+          "elementType": "bevat",
+          "source": "pkg__Model",
+          "target": "m__VoorkomenPaar",
+          "compartimenten": [],
+          "data": {}
+        },
+        "bv__Model__Punt": {
+          "id": "bv__Model__Punt",
+          "naam": "",
+          "elementType": "bevat",
+          "source": "pkg__Model",
+          "target": "m__Punt",
+          "compartimenten": [],
+          "data": {}
+        },
+        "bv__Model__Maat": {
+          "id": "bv__Model__Maat",
+          "naam": "",
+          "elementType": "bevat",
+          "source": "pkg__Model",
+          "target": "m__Maat",
+          "compartimenten": [],
+          "data": {}
+        },
+        "bv__Model__Gedaante": {
+          "id": "bv__Model__Gedaante",
+          "naam": "",
+          "elementType": "bevat",
+          "source": "pkg__Model",
+          "target": "m__Gedaante",
+          "compartimenten": [],
+          "data": {}
+        },
+        "bv__Model__LijnVorm": {
+          "id": "bv__Model__LijnVorm",
+          "naam": "",
+          "elementType": "bevat",
+          "source": "pkg__Model",
+          "target": "m__LijnVorm",
+          "compartimenten": [],
+          "data": {}
+        },
+        "bv__Model__ConnectorGedaante": {
+          "id": "bv__Model__ConnectorGedaante",
+          "naam": "",
+          "elementType": "bevat",
+          "source": "pkg__Model",
+          "target": "m__ConnectorGedaante",
+          "compartimenten": [],
+          "data": {}
+        },
+        "bv__Model__UuidSoort": {
+          "id": "bv__Model__UuidSoort",
+          "naam": "",
+          "elementType": "bevat",
+          "source": "pkg__Model",
+          "target": "m__UuidSoort",
+          "compartimenten": [],
+          "data": {}
+        },
+        "bv__Werkruimte__Werkruimte": {
+          "id": "bv__Werkruimte__Werkruimte",
+          "naam": "",
+          "elementType": "bevat",
+          "source": "pkg__Werkruimte",
+          "target": "m__Werkruimte",
+          "compartimenten": [],
+          "data": {}
+        },
+        "bv__Werkruimte__Tab": {
+          "id": "bv__Werkruimte__Tab",
+          "naam": "",
+          "elementType": "bevat",
+          "source": "pkg__Werkruimte",
+          "target": "m__Tab",
+          "compartimenten": [],
+          "data": {}
+        },
+        "bv__Werkruimte__EigenBundel": {
+          "id": "bv__Werkruimte__EigenBundel",
+          "naam": "",
+          "elementType": "bevat",
+          "source": "pkg__Werkruimte",
+          "target": "m__EigenBundel",
+          "compartimenten": [],
+          "data": {}
+        },
+        "bv__Werkruimte__Viewport": {
+          "id": "bv__Werkruimte__Viewport",
+          "naam": "",
+          "elementType": "bevat",
+          "source": "pkg__Werkruimte",
+          "target": "m__Viewport",
+          "compartimenten": [],
+          "data": {}
+        }
+      },
+      "diagrams": {
+        "dg__Werkbestand": {
+          "id": "dg__Werkbestand",
+          "naam": "Werkbestand",
+          "diagramType": "puur-uml",
+          "nodes": [
+            {
+              "elementId": "m__Werkbestand",
+              "position": {
+                "x": 275,
+                "y": 40
+              },
+              "size": {
+                "width": 195,
+                "height": 119
+              }
+            },
+            {
+              "elementId": "m__Structuur",
+              "position": {
+                "x": 40,
+                "y": 269
+              },
+              "size": {
+                "width": 209,
+                "height": 71
+              }
+            },
+            {
+              "elementId": "m__Map",
+              "position": {
+                "x": 48,
+                "y": 482
+              },
+              "size": {
+                "width": 180,
+                "height": 119
+              }
+            },
+            {
+              "elementId": "m__Bundel",
+              "position": {
+                "x": 276,
+                "y": 482
+              },
+              "size": {
+                "width": 180,
+                "height": 103
+              }
+            },
+            {
+              "elementId": "m__Kruisverband",
+              "position": {
+                "x": 297,
+                "y": 269
+              },
+              "size": {
+                "width": 180,
+                "height": 103
+              }
+            },
+            {
+              "elementId": "m__Koppelsoort",
+              "position": {
+                "x": 504,
+                "y": 482
+              },
+              "size": {
+                "width": 193,
+                "height": 87
+              }
+            },
+            {
+              "elementId": "m__Project",
+              "position": {
+                "x": 40,
+                "y": 711
+              },
+              "size": {
+                "width": 180,
+                "height": 84
+              }
+            },
+            {
+              "elementId": "m__DiagramRef",
+              "position": {
+                "x": 268,
+                "y": 711
+              },
+              "size": {
+                "width": 180,
+                "height": 84
+              }
+            },
+            {
+              "elementId": "m__ElementRef",
+              "position": {
+                "x": 496,
+                "y": 711
+              },
+              "size": {
+                "width": 180,
+                "height": 84
+              }
+            },
+            {
+              "elementId": "m__KoppelStijl",
+              "position": {
+                "x": 724,
+                "y": 711
+              },
+              "size": {
+                "width": 180,
+                "height": 84
+              }
+            },
+            {
+              "elementId": "m__ProfielInhoud",
+              "position": {
+                "x": 525,
+                "y": 269
+              },
+              "size": {
+                "width": 180,
+                "height": 56
+              },
+              "gedaante": "kop"
+            }
+          ],
+          "edges": [],
+          "verborgenConnectoren": [
+            "as__ProfielInhoud__elements",
+            "as__ProfielInhoud__diagrams",
+            "as__ProfielInhoud__actiefDiagramId",
+            "as__Element__compartimenten",
+            "as__Element__source",
+            "as__Element__target",
+            "as__Compartiment__velden",
+            "as__Diagram__nodes",
+            "as__Diagram__edges",
+            "as__Diagram__verborgenConnectoren",
+            "as__DiagramNode__elementId"
+          ]
+        },
+        "dg__Model": {
+          "id": "dg__Model",
+          "naam": "Model",
+          "diagramType": "puur-uml",
+          "nodes": [
+            {
+              "elementId": "m__ProfielInhoud",
+              "position": {
+                "x": 154,
+                "y": 206
+              },
+              "size": {
+                "width": 180,
+                "height": 71
+              }
+            },
+            {
+              "elementId": "m__Element",
+              "position": {
+                "x": 154,
+                "y": 957
+              },
+              "size": {
+                "width": 180,
+                "height": 103
+              }
+            },
+            {
+              "elementId": "m__Compartiment",
+              "position": {
+                "x": 154,
+                "y": 1170
+              },
+              "size": {
+                "width": 180,
+                "height": 56
+              }
+            },
+            {
+              "elementId": "m__Veld",
+              "position": {
+                "x": 154,
+                "y": 1336
+              },
+              "size": {
+                "width": 180,
+                "height": 87
+              }
+            },
+            {
+              "elementId": "m__Diagram",
+              "position": {
+                "x": 89,
+                "y": 387
+              },
+              "size": {
+                "width": 311,
+                "height": 199
+              }
+            },
+            {
+              "elementId": "m__DiagramNode",
+              "position": {
+                "x": 40,
+                "y": 696
+              },
+              "size": {
+                "width": 180,
+                "height": 135
+              }
+            },
+            {
+              "elementId": "m__DiagramEdge",
+              "position": {
+                "x": 268,
+                "y": 696
+              },
+              "size": {
+                "width": 180,
+                "height": 151
+              }
+            },
+            {
+              "elementId": "m__ElementData",
+              "position": {
+                "x": 40,
+                "y": 1533
+              },
+              "size": {
+                "width": 180,
+                "height": 276
+              }
+            },
+            {
+              "elementId": "m__VeldData",
+              "position": {
+                "x": 268,
+                "y": 1533
+              },
+              "size": {
+                "width": 180,
+                "height": 132
+              }
+            },
+            {
+              "elementId": "m__Lijn",
+              "position": {
+                "x": 496,
+                "y": 1533
+              },
+              "size": {
+                "width": 180,
+                "height": 164
+              }
+            },
+            {
+              "elementId": "m__VoorkomenPaar",
+              "position": {
+                "x": 724,
+                "y": 1533
+              },
+              "size": {
+                "width": 180,
+                "height": 84
+              }
+            },
+            {
+              "elementId": "m__Punt",
+              "position": {
+                "x": 952,
+                "y": 1533
+              },
+              "size": {
+                "width": 180,
+                "height": 84
+              }
+            },
+            {
+              "elementId": "m__Maat",
+              "position": {
+                "x": 1180,
+                "y": 1533
+              },
+              "size": {
+                "width": 180,
+                "height": 84
+              }
+            },
+            {
+              "elementId": "m__Gedaante",
+              "position": {
+                "x": 40,
+                "y": 1849
+              },
+              "size": {
+                "width": 180,
+                "height": 100
+              }
+            },
+            {
+              "elementId": "m__LijnVorm",
+              "position": {
+                "x": 268,
+                "y": 1849
+              },
+              "size": {
+                "width": 180,
+                "height": 116
+              }
+            },
+            {
+              "elementId": "m__ConnectorGedaante",
+              "position": {
+                "x": 496,
+                "y": 1849
+              },
+              "size": {
+                "width": 180,
+                "height": 84
+              }
+            },
+            {
+              "elementId": "m__UuidSoort",
+              "position": {
+                "x": 724,
+                "y": 1849
+              },
+              "size": {
+                "width": 180,
+                "height": 148
+              }
+            },
+            {
+              "elementId": "m__Werkbestand",
+              "position": {
+                "x": 154,
+                "y": 40
+              },
+              "size": {
+                "width": 180,
+                "height": 56
+              },
+              "gedaante": "kop"
+            }
+          ],
+          "edges": [],
+          "verborgenConnectoren": [
+            "as__Werkbestand__structuur",
+            "as__Werkbestand__kruisverbanden",
+            "as__Werkbestand__koppelsoorten",
+            "as__Structuur__mappen",
+            "as__Structuur__bundels",
+            "as__Map__ouderId",
+            "as__Kruisverband__soort"
+          ]
+        },
+        "dg__Werkruimte": {
+          "id": "dg__Werkruimte",
+          "naam": "Werkruimte",
+          "diagramType": "puur-uml",
+          "nodes": [
+            {
+              "elementId": "m__Werkruimte",
+              "position": {
+                "x": 40,
+                "y": 40
+              },
+              "size": {
+                "width": 198,
+                "height": 135
+              }
+            },
+            {
+              "elementId": "m__Tab",
+              "position": {
+                "x": 286,
+                "y": 40
+              },
+              "size": {
+                "width": 180,
+                "height": 100
+              }
+            },
+            {
+              "elementId": "m__EigenBundel",
+              "position": {
+                "x": 514,
+                "y": 40
+              },
+              "size": {
+                "width": 180,
+                "height": 100
+              }
+            },
+            {
+              "elementId": "m__Viewport",
+              "position": {
+                "x": 742,
+                "y": 40
+              },
+              "size": {
+                "width": 180,
+                "height": 100
+              }
+            }
+          ],
+          "edges": [],
+          "verborgenConnectoren": [
+            "as__Werkbestand__structuur",
+            "as__Werkbestand__kruisverbanden",
+            "as__Werkbestand__koppelsoorten",
+            "as__Werkbestand__profielen",
+            "as__Structuur__mappen",
+            "as__Structuur__bundels",
+            "as__Map__ouderId",
+            "as__Kruisverband__soort",
+            "as__ProfielInhoud__elements",
+            "as__ProfielInhoud__diagrams",
+            "as__ProfielInhoud__actiefDiagramId",
+            "as__Element__compartimenten",
+            "as__Element__source",
+            "as__Element__target",
+            "as__Compartiment__velden",
+            "as__Diagram__nodes",
+            "as__Diagram__edges",
+            "as__Diagram__verborgenConnectoren",
+            "as__DiagramNode__elementId"
+          ]
+        }
+      },
+      "actiefDiagramId": "dg__Werkbestand",
+      "meta": {
+        "beschrijving": "De structuur van een Studio-project: het werkbestand (formaat studio-project) en, apart, de werkruimte per gebruiker. Alleen-lezen documentatie, gegenereerd uit studio/projectMetamodel.js (npm run metamodellen); de code is de implementatie."
+      }
+    }
+  }
+}
