@@ -276,6 +276,42 @@ parameters mee, identifiers gequote via `bun.Ident`. Tests: `dynql/filter_test.g
 (SQL en schema, met sqlmock) en `dynql/filter_pg_test.go` (semantiek tegen een echte
 PostgreSQL; draait alleen met `DYNQL_TEST_PG_DSN`, instructies in de kop van het bestand).
 
+### Sorteren
+
+De lijst-queries (`<padnaam>` en `full_<padnaam>_list`) hebben sinds 18-11-2026 een argument
+`sorteer`: een lijst van hooguit drie sleutels `{ veld, aflopend }` (`dynql/sortering.go`).
+
+```graphql
+{
+  initiatieven(
+    filter: { initiatief_gemeenten: { rol: { eq: "Realiseert" } } }
+    sorteer: [{ veld: "initiatief_gemeenten.rol" }, { veld: "initiatief_gemeenten.gemeente_id", aflopend: true }]
+    limit: 20
+    offset: 40
+  ) { id }
+}
+```
+
+- `veld` is een kolom van de entiteit (`id`) of `<GE of relatie>.<veld>`, in dezelfde namen als
+  het filter. Ook de doel-id van een relatie kan (`initiatief_gemeenten.gemeente_id`).
+- De waarde is die van het **actieve** record, op het peiltijdstip als dat is opgegeven: dezelfde
+  regel als het filter.
+- Bij een meervoudig GE telt oplopend de laagste waarde en aflopend de hoogste.
+- Een entiteit zonder waarde komt achteraan, in beide richtingen.
+- Na de sleutels volgt altijd de id, oplopend. De volgorde is daardoor bepaald en paginering met
+  `limit`/`offset` blijft stabiel.
+- Zonder `sorteer` is de volgorde op id, zoals altijd.
+- Een onbekend veld of meer dan drie sleutels geeft een fout, geen stille standaardvolgorde.
+- Met een toegangsbeleid is een veld dat het subject niet mag zien ook geen sorteersleutel:
+  de volgorde zou de waarde verraden.
+- Niet mogelijk: sorteren op een veld van het doel van een relatie (de naam van het zaaktype),
+  en op een afgeleid veld.
+
+**Prestatie.** De sorteerwaarde is een subquery per entiteit. PostgreSQL rekent die uit voor
+alle entiteiten die aan het filter voldoen, en sorteert dan. Dat is evenredig met het aantal
+overgebleven entiteiten, niet met de paginagrootte; een index op de waardekolom helpt daar niet
+bij. Niet gemeten op een grote tabel. Zie `docs/INDEXEN.md`.
+
 ### Uitvoeren op naam (opgeslagen documenten, persisted queries)
 
 *Sinds 24 september 2026 (Claude-sessie). Code: `dynql/opgeslagen_documenten.go`; model:

@@ -259,7 +259,7 @@ func lijstArgs(meta model.TypeMeta) graphql.FieldConfigArgument {
 		"offset": &graphql.ArgumentConfig{
 			Type:         graphql.Int,
 			DefaultValue: 0,
-			Description:  "Offset voor paginering (volgorde: op id)",
+			Description:  "Offset voor paginering (volgorde: sorteer, daarna id)",
 		},
 		"peiltijdstip": &graphql.ArgumentConfig{
 			Type:        DateTimeScalar,
@@ -273,6 +273,12 @@ func lijstArgs(meta model.TypeMeta) graphql.FieldConfigArgument {
 			Type:        graphql.String,
 			Description: geldigOpBeschrijving,
 		},
+	}
+	if filterDefVoor(meta) != nil {
+		args["sorteer"] = &graphql.ArgumentConfig{
+			Type:        graphql.NewList(graphql.NewNonNull(sorteerInput)),
+			Description: "Sorteersleutels, in volgorde van belang (hooguit 3). veld is een kolom van de entiteit of <GE of relatie>.<veld>. Daarna altijd op id. Zonder waarde komt achteraan.",
+		}
 	}
 	if filter := filterInputVoorEntiteit(meta); filter != nil {
 		args["filter"] = &graphql.ArgumentConfig{

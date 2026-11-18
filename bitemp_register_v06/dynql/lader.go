@@ -49,8 +49,8 @@ type LijstVraag struct {
 	Limit, Offset int
 	// Volledig: met alle onderliggende GE's en relaties (full_<padnaam>_list).
 	Volledig bool
-	// Sortering: leeg = op id, oplopend. Wordt ingevuld door het sorteren op een GE-veld
-	// (BACKEND, indexwerk stap 3); de dbLader sorteert tot dan altijd op id.
+	// Sortering: leeg = op id, oplopend. Na de opgegeven sleutels volgt altijd de id
+	// (sortering.go). Een lader die een sleutel niet aankan, geeft een fout.
 	Sortering []Sortering
 }
 
@@ -217,8 +217,9 @@ func (dbLader) LaadLijst(ctx context.Context, meta model.TypeMeta, v LijstVraag)
 	if err != nil {
 		return nil, err
 	}
-	if meta.IDKolom != "" {
-		query = query.OrderExpr("?TableAlias.? ASC", bun.Ident(meta.IDKolom))
+	query, err = pasSorteringToe(query, meta, v.Sortering, &moment, mag)
+	if err != nil {
+		return nil, err
 	}
 	query = query.Limit(v.Limit).Offset(v.Offset)
 	if v.Volledig {

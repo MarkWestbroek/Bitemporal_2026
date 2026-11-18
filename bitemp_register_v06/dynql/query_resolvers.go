@@ -148,7 +148,11 @@ func peiltijdstipUitArgs(args map[string]interface{}) *time.Time {
 //
 // Sinds de Lader-naad (18-11-2026) bouwt dit alleen de LijstVraag uit de argumenten; de query
 // zelf staat in dbLader.LaadLijst (lader.go).
-func lijstVraag(p graphql.ResolveParams, peil *time.Time, volledig bool) LijstVraag {
+func lijstVraag(p graphql.ResolveParams, peil *time.Time, volledig bool) (LijstVraag, error) {
+	sortering, err := sorteringUitArgs(p.Args)
+	if err != nil {
+		return LijstVraag{}, err
+	}
 	limit := 20
 	offset := 0
 	if l, ok := p.Args["limit"]; ok && l != nil {
@@ -166,19 +170,24 @@ func lijstVraag(p graphql.ResolveParams, peil *time.Time, volledig bool) LijstVr
 		}
 	}
 	return LijstVraag{
-		Filter:   p.Args["filter"],
-		Peil:     actueelOfPeil(peil),
-		Limit:    limit,
-		Offset:   offset,
-		Volledig: volledig,
-	}
+		Filter:    p.Args["filter"],
+		Peil:      actueelOfPeil(peil),
+		Limit:     limit,
+		Offset:    offset,
+		Volledig:  volledig,
+		Sortering: sortering,
+	}, nil
 }
 
 // makeListResolver maakt een resolver voor een lijst van entiteiten/representaties met paginering.
 func makeListResolver(meta model.TypeMeta) graphql.FieldResolveFn {
 	return func(p graphql.ResolveParams) (interface{}, error) {
 		peil := peiltijdstipUitArgs(p.Args)
-		entities, err := laderVoor(meta.Typenaam).LaadLijst(metPeilOpgegeven(p.Context, peil != nil), meta, lijstVraag(p, peil, false))
+		vraag, err := lijstVraag(p, peil, false)
+		if err != nil {
+			return nil, err
+		}
+		entities, err := laderVoor(meta.Typenaam).LaadLijst(metPeilOpgegeven(p.Context, peil != nil), meta, vraag)
 		if err != nil {
 			return nil, err
 		}
@@ -211,7 +220,11 @@ func makeFullListResolver(meta model.TypeMeta) graphql.FieldResolveFn {
 			return nil, err
 		}
 		// Laden met alle onderliggende elementen (stap 1, achter de Lader; zie lader.go).
-		entities, err := laderVoor(meta.Typenaam).LaadLijst(metPeilOpgegeven(p.Context, opgegeven != nil), meta, lijstVraag(p, peil, true))
+		vraag, err := lijstVraag(p, peil, true)
+		if err != nil {
+			return nil, err
+		}
+		entities, err := laderVoor(meta.Typenaam).LaadLijst(metPeilOpgegeven(p.Context, opgegeven != nil), meta, vraag)
 		if err != nil {
 			return nil, err
 		}
