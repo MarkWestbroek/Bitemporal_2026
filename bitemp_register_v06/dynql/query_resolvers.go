@@ -47,7 +47,11 @@ func makeFullEntityResolver(meta model.TypeMeta) graphql.FieldResolveFn {
 		}
 
 		// Laden (stap 1, achter de Lader; zie lader.go).
+		// Alleen de groepen die de query vraagt (selectie.go); bij materieel tijdreizen alles.
 		ctx := metPeilOpgegeven(p.Context, peiltijdstipUitArgs(p.Args) != nil)
+		if geldigOp == nil {
+			ctx = metGroepen(ctx, meta.Typenaam, groepenUitSelectie(p, meta))
+		}
 		entity, err := laderVoor(meta.Typenaam).LaadEen(ctx, meta, id, peil)
 		if err != nil {
 			return nil, laadFout(err, "query fout voor %s: %v", meta.Typenaam, err)
@@ -203,6 +207,7 @@ func makeListResolver(meta model.TypeMeta) graphql.FieldResolveFn {
 			}
 			maps = gefilterd
 		}
+		zetBundel(maps) // omgekeerde relaties per lijst in één keer (selectie.go)
 		return maps, nil
 	}
 }
@@ -224,7 +229,12 @@ func makeFullListResolver(meta model.TypeMeta) graphql.FieldResolveFn {
 		if err != nil {
 			return nil, err
 		}
-		entities, err := laderVoor(meta.Typenaam).LaadLijst(metPeilOpgegeven(p.Context, opgegeven != nil), meta, vraag)
+		// Alleen de groepen die de query vraagt (selectie.go); bij materieel tijdreizen alles.
+		ctx := metPeilOpgegeven(p.Context, opgegeven != nil)
+		if geldigOp == nil {
+			ctx = metGroepen(ctx, meta.Typenaam, groepenUitSelectie(p, meta))
+		}
+		entities, err := laderVoor(meta.Typenaam).LaadLijst(ctx, meta, vraag)
 		if err != nil {
 			return nil, err
 		}
@@ -254,6 +264,7 @@ func makeFullListResolver(meta model.TypeMeta) graphql.FieldResolveFn {
 			}
 			maps = gefilterd
 		}
+		zetBundel(maps) // omgekeerde relaties per lijst in één keer (selectie.go)
 		return maps, nil
 	}
 }
@@ -364,51 +375,22 @@ func makeReverseRelationResolver(rev ReverseRelationInfo) graphql.FieldResolveFn
 			}
 		}
 
-		// Stap 1: de bron-id's via de relatie (lader van de bron-entiteit; zie lader.go).
-		// Zoals altijd de actuele stand: het peil van de buitenste query gaat nog niet mee.
+		// De bron-id's via de relatie en dan de bron-entiteiten (selectie.go): alleen de
+		// gevraagde groepen, en voor alle rijen van de lijst in één keer. Zoals altijd de
+		// actuele stand: het peil van de buitenste query gaat nog niet mee.
 		relMeta := rev.RelatieMeta
 		bronMeta := rev.BronEntiteitMeta
-		lader := laderVoor(bronMeta.Typenaam)
 		if !heeftEigenLader(bronMeta.Typenaam) && relMeta.DBSliceFactory == nil {
 			return nil, nil
 		}
-		nu := actueelOfPeil(nil)
-		bronIDs, err := lader.BronIDs(p.Context, rev, doelID, limit, nu)
+		rijen, err := omgekeerdVoor(p, rev, source, doelID, limit)
 		if err != nil {
 			return nil, err
 		}
-		if len(bronIDs) == 0 {
-			return []map[string]interface{}{}, nil
-		}
-
-		// Stap 2: Laad de bron-entiteiten met volledige geneste structuur
-		if bronMeta.SliceFactory == nil {
+		if rijen == nil {
 			return nil, nil
 		}
-		entities, err := lader.LaadIDs(p.Context, bronMeta, bronIDs, nu)
-		if err != nil {
-			return nil, fmt.Errorf("reverse bron-entiteiten laden (%s) fout: %v", bronMeta.Typenaam, err)
-		}
-
-		// Converteer naar maps en flatten
-		results, err := sliceToMaps(entities, bronMeta)
-		if err != nil {
-			return nil, err
-		}
-		for i, m := range results {
-			flat := flattenEntityMap(m, bronMeta)
-			verrijkWeergavenamen(p.Context, flat, bronMeta)
-			results[i] = flat
-		}
-		// Toegangsbeleid (fase 1b): als laatste, met het type van de bron-entiteiten.
-		if bundel := pep.Actief(); bundel != nil {
-			gefilterd, magType := pep.FilterMapsCtx(p.Context, bundel, bronMeta, results)
-			if !magType {
-				return []map[string]interface{}{}, nil // het subject mag van dat type niets zien
-			}
-			results = gefilterd
-		}
-		return results, nil
+		return rijen, nil
 	}
 }
 
@@ -436,7 +418,8 @@ func makeForwardRelationResolver(fwd ForwardRelationInfo) graphql.FieldResolveFn
 
 		// Laden (lader van de doel-entiteit; zie lader.go). Zoals altijd de actuele stand.
 		nu := actueelOfPeil(nil)
-		entity, err := laderVoor(doelMeta.Typenaam).LaadEen(p.Context, doelMeta, fkValue, nu)
+		ctx := metGroepen(p.Context, doelMeta.Typenaam, groepenUitSelectie(p, doelMeta))
+		entity, err := laderVoor(doelMeta.Typenaam).LaadEen(ctx, doelMeta, fkValue, nu)
 		if err != nil {
 			return nil, fmt.Errorf("forward relatie query (%s) fout: %v", doelMeta.Typenaam, err)
 		}
@@ -471,8 +454,13 @@ func makeForwardRelationResolver(fwd ForwardRelationInfo) graphql.FieldResolveFn
 
 // --- Hulpfuncties: Bun-query helpers (vereenvoudigd uit full_handlers.go) ---
 
-func addOnderliggendeRelations(query *bun.SelectQuery, meta model.TypeMeta, peiltijdstip *time.Time) *bun.SelectQuery {
+// kies == nil: alle onderliggende elementen; anders alleen die waarvoor kies true geeft
+// (de groepen die de query selecteert, selectie.go).
+func addOnderliggendeRelations(query *bun.SelectQuery, meta model.TypeMeta, peiltijdstip *time.Time, kies func(model.OnderliggendGegevenselement) bool) *bun.SelectQuery {
 	for _, rel := range meta.OnderliggendeGegevenselementen {
+		if kies != nil && !kies(rel) {
+			continue
+		}
 		capturedRel := rel
 		childMeta, childOK := model.MetaRegistry.GetTypeMeta(capturedRel.Doeltype)
 
@@ -509,7 +497,8 @@ func applyFormeleTijdFilter(query *bun.SelectQuery, _ string, peiltijdstip time.
 
 // laadHubKinderenNaQuery laadt _Data/_Aanvang/_Einde van hub-types.
 // Vereenvoudigd uit handlers/full_handlers.go.
-func laadHubKinderenNaQuery(ctx context.Context, entitiesOrEntity any, entityMeta model.TypeMeta, peiltijdstip *time.Time) error {
+// kies: als bij addOnderliggendeRelations.
+func laadHubKinderenNaQuery(ctx context.Context, entitiesOrEntity any, entityMeta model.TypeMeta, peiltijdstip *time.Time, kies func(model.OnderliggendGegevenselement) bool) error {
 	val := reflect.ValueOf(entitiesOrEntity)
 	if val.Kind() == reflect.Ptr {
 		val = val.Elem()
@@ -543,6 +532,9 @@ func laadHubKinderenNaQuery(ctx context.Context, entitiesOrEntity any, entityMet
 	}
 
 	for _, rel := range entityMeta.OnderliggendeGegevenselementen {
+		if kies != nil && !kies(rel) {
+			continue
+		}
 		hubMeta, ok := model.MetaRegistry.GetTypeMeta(rel.Doeltype)
 		if !ok || hubMeta.GESubtype != model.GESubtypeHub || len(hubMeta.OnderliggendeGegevenselementen) == 0 {
 			continue

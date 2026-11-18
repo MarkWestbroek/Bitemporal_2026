@@ -57,6 +57,7 @@ In tegenstelling tot gqlgen (dat een `.graphqls` schema-file en code generation 
 > **Enum handling**: enum-velden gebruiken GraphQL enum-types met gesanitizede namen.
 > Zie [graphql-enum-handling.md](graphql-enum-handling.md) voor de volledige analyse van de enum cache-bug en het underscore-serialisatiegedrag.
 | `query_resolvers.go`    | ~315 | Full-entity, lijst en registratie resolvers; het laden gaat via de Lader (`lader.go`) |
+| `selectie.go`           | ~330 | Groepen laden op selectie; omgekeerde relaties per lijst gebundeld                    |
 | `lader.go`              | ~190 | De naad naar de opslag: interface `Lader` + `dbLader` (bun op hub + `_Data`), zie hieronder |
 | `mutation_resolvers.go` | ~125 | Registreer/corrigeer/maakOngedaan via REST round-trip naar eigen server               |
 | `schema_builder.go`     | ~160 | `BuildSchema()` — assembleert alles vanuit MetaRegistry                               |
@@ -70,8 +71,10 @@ Een leesresolver doet drie dingen:
 3. **verrijken en snoeien**: weergavenamen, afgeleide velden en relaties, en de PEP.
 
 Alleen stap 1 zit achter de interface `Lader`: `LaadEen`, `LaadIDs`, `LaadLijst` en `BronIDs`.
-Het gewone register gebruikt de `dbLader`; dat is de bestaande bun-code, verhuisd en niet
-gewijzigd. De façade op Common Ground-registers geeft per type een eigen lader, die uit de
+Het gewone register gebruikt de `dbLader`; dat is de bestaande bun-code, verhuisd. Sinds
+18-11-2026 laadt hij alleen de groepen die de query selecteert en lost hij omgekeerde relaties
+per lijst in één keer op (`selectie.go`, uitleg in `docs/INDEXEN.md` §Lezen). De aanwijzing gaat
+via de context; een lader die hem niet kent (de façade) laadt alles. De façade op Common Ground-registers geeft per type een eigen lader, die uit de
 register-API leest en dezelfde struct vult. Stap 2 en 3 blijven zo voor beide gelijk. Zie
 `docs/plans/2026-11-18 Façade fase 1 — technisch ontwerp.md` §3.
 

@@ -14,10 +14,15 @@ package dbsetup
 //	doel     de doelkant van een relatie-hub: (doel_id, bron_id). Zonder deze index is elke
 //	         omgekeerde vraag ("welke zaken wijzen naar deze rol") een scan van de hele
 //	         relatietabel (dynql makeReverseRelationResolver).
-//	uniek    een veld met schema-tag uniek=<bereik>: (kolom) WHERE afvoer IS NULL op de
-//	         _Data-tabel. De uniekheidscontrole (handlers/registration_uniek.go, bezetDoor)
-//	         zoekt bij elke opvoer op die waarde; zonder index is dat een scan per opvoer,
-//	         en wordt een grote seed steeds trager.
+//	uniek    een veld met schema-tag uniek=<bereik>: (kolom) op de _Data-tabel. De
+//	         uniekheidscontrole (handlers/registration_uniek.go, bezetDoor) zoekt bij elke
+//	         opvoer op die waarde; zonder index is dat een scan per opvoer, en wordt een
+//	         grote seed steeds trager. Niet partieel (sinds 18-11-2026): het filter van een
+//	         lijst vraagt "actief op het leesmoment" (opvoer <= t AND (afvoer IS NULL OR
+//	         afvoer > t)), en een index WHERE afvoer IS NULL mag PostgreSQL daar niet voor
+//	         gebruiken. Een uniek veld is zo vanzelf een zoeksleutel. De index heet
+//	         ix_<tabel>_<kolom>_zoek, dezelfde naam als bij de mark; de oude partiële
+//	         ix_<tabel>_<kolom>_uniek wordt weggehaald zodra de nieuwe er staat.
 //
 // Stap 4 voegt de index toe die een aanwijzing vraagt:
 //
@@ -51,6 +56,7 @@ type IndexDefinitie struct {
 	Waar     string   // optionele WHERE van een partiële index (zonder het woord WHERE)
 	Soort    string   // "doel" | "uniek" | "zoek"
 	Reden    string   // voor logregels en het script: waar de index voor dient
+	Vervangt string   // optioneel: de naam van een oudere eigen index die hierdoor overbodig is
 }
 
 // SQL geeft het CREATE INDEX-statement. Met concurrently=true blokkeert het aanmaken geen
@@ -130,11 +136,11 @@ func ModelIndexDefinities() []IndexDefinitie {
 				tag := model.ParseSchemaTag(f.StructField.Tag.Get("schema"))
 				if tag.Uniek != "" {
 					voegToe(IndexDefinitie{
-						Naam:     indexNaam(dataMeta.Tabelnaam, f.Name, "uniek"),
+						Naam:     indexNaam(dataMeta.Tabelnaam, f.Name, "zoek"),
 						Tabel:    dataMeta.Tabelnaam,
 						Kolommen: []string{f.Name},
-						Waar:     "afvoer IS NULL",
 						Soort:    "uniek",
+						Vervangt: indexNaam(dataMeta.Tabelnaam, f.Name, "uniek"),
 						Reden:    fmt.Sprintf("uniekheidscontrole (%s) op %s", tag.Uniek, meta.Typenaam),
 					})
 				}
@@ -217,6 +223,15 @@ func createModelIndexes(ctx context.Context, db bun.IDB) {
 		stmt := def.SQL(false)
 		if err := veiligeStap(ctx, db, func() error { _, err := db.ExecContext(ctx, stmt); return err }); err != nil {
 			fmt.Printf("WARN: index %s niet aangemaakt (%s): %v\n", def.Naam, def.Reden, err)
+			continue
+		}
+		// De voorganger (de partiële index van api 0.28.0/0.29.0) pas weghalen als de nieuwe
+		// er staat. Alleen een index met onze eigen naam; mislukt het, dan blijft hij staan.
+		if def.Vervangt != "" && def.Vervangt != def.Naam {
+			weg := "DROP INDEX IF EXISTS " + pgIdent(def.Vervangt)
+			if err := veiligeStap(ctx, db, func() error { _, err := db.ExecContext(ctx, weg); return err }); err != nil {
+				fmt.Printf("WARN: oude index %s niet weggehaald: %v\n", def.Vervangt, err)
+			}
 		}
 	}
 }

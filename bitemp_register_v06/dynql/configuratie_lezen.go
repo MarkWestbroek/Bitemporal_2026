@@ -28,14 +28,14 @@ func LaadActueleEntiteiten(ctx context.Context, typenaam string, nu time.Time) (
 	}
 	entities := ent.SliceFactory()
 	query := applyFormeleTijdFilter(db.NewSelect().Model(entities), ent.Typenaam, nu)
-	query = addOnderliggendeRelations(query, ent, &nu)
+	query = addOnderliggendeRelations(query, ent, &nu, nil)
 	if ent.IDKolom != "" {
 		query = query.OrderExpr("?TableAlias.? ASC", bun.Ident(ent.IDKolom))
 	}
 	if err := query.Scan(ctx); err != nil {
 		return nil, fmt.Errorf("%s laden: %v", typenaam, err)
 	}
-	if err := laadHubKinderenNaQuery(ctx, entities, ent, &nu); err != nil {
+	if err := laadHubKinderenNaQuery(ctx, entities, ent, &nu, nil); err != nil {
 		return nil, fmt.Errorf("%s hub-kinderen laden: %v", typenaam, err)
 	}
 	return sliceToMaps(entities, ent)
