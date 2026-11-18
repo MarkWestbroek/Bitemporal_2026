@@ -125,7 +125,7 @@ function kenmerkVanVoorwaarde(v, opties = {}) {
     if (!knoop || knoop.aard !== "voorwaarde") return null;
     const doel = graaf.verbindingen.find((x) => x.aard === "waarde" && x.bron === knoop.id);
     const waarde = doel ? { letterlijk: graaf.knopen.find((k) => k.id === doel.doel)?.tekst } : knoop.waarde;
-    return [knoop.anker, knoop.subpad, knoop.operator, waardeSleutel(waarde)].join("|");
+    return [knoop.anker, knoop.subpad, knoop.operator, waardeSleutel(waarde), knoop.waardeVerwijzing || "", knoop.voor || ""].join("|");
   } catch {
     return null;
   }
@@ -239,9 +239,23 @@ export function planNaarBeleid(plan, opties = {}) {
     // Alleen een vergelijking van ODRL, van de eigen woordenschat (ts:) of van het NLGov-profiel
     // (nlgov:, de JSON-LD-export) is dezelfde als die van de taal.
     const bekend = !e.data.operatorIri || /^(odrl|ts|nlgov):/.test(e.data.operatorIri);
-    return { anker: anker || "", subpad: subpad || "", operator: bekend ? e.data.operator || "" : "", operatorNaam: el.get(e.data.operatorIri)?.naam || e.data.operator || "", waarde };
+    return {
+      anker: anker || "",
+      subpad: subpad || "",
+      operator: bekend ? e.data.operator || "" : "",
+      operatorNaam: el.get(e.data.operatorIri)?.naam || e.data.operator || "",
+      waarde: e.data.verwijzing ? undefined : waarde,
+      // Een ander gegeven als rechterterm, en voor wie een bestaansvraag geldt: verwijzingen naar een operand.
+      verwijzing: String(e.data.verwijzing || ""),
+      voor: String(e.data.voor || ""),
+    };
   }
-  const sleutelVan = (s) => [s.anker, s.subpad, s.operator, waardeSleutel(s.waarde)].join("|");
+  const sleutelVan = (s) => [s.anker, s.subpad, s.operator, waardeSleutel(s.waarde), s.verwijzing, s.voor].join("|");
+  /** Een operand van de eigen woordenschat ("ts:aanvrager.afdeling") → anker en subpad, of null. */
+  const operandUit = (iri) => {
+    const m = /^ts:([^.]+)(?:\.(.+))?$/.exec(iri);
+    return m && (ANKERS.includes(m[1]) || m[1] === "veldwaarde") ? { anker: m[1], subpad: m[2] || "" } : null;
+  };
 
   const literal = (w) => {
     const v = eenWaarde(w);
@@ -291,10 +305,12 @@ export function planNaarBeleid(plan, opties = {}) {
       const operand = el.get(`ts:bestaat.${s.subpad}`)?.naam;
       const viaOperand = operand ? leesVoorwaardeZin(`er is ${s.waarde === false ? "geen" : "een"} ${operand}`) : null;
       if (viaOperand && kenmerkVanVoorwaarde(viaOperand, opties) === sleutelVan(s)) return viaOperand;
+      const voor = s.voor ? operandUit(s.voor) : null;
+      if (s.voor && !voor) mis(`de voorwaarde "${naam}" geldt voor "${s.voor}", en dat is geen gegeven dat Toegangsspraak kent`);
       return {
         soort: "voorwaarde",
         operator: "bestaat",
-        existentie: { ontkenning: s.waarde === false, lidwoord: s.waarde === false ? null : "een", woorden: camelNaarWoorden(s.subpad), voor: null },
+        existentie: { ontkenning: s.waarde === false, lidwoord: s.waarde === false ? null : "een", woorden: camelNaarWoorden(s.subpad), voor: voor ? linkerterm(voor, s.voor) : null },
         links: null,
         rechts: null,
         rechts2: null,
@@ -313,6 +329,15 @@ export function planNaarBeleid(plan, opties = {}) {
     const v = { soort: "voorwaarde", links: linkerterm(s, `ts:${s.anker}${s.subpad ? `.${s.subpad}` : ""}`), operator: op.canoniek, rechts: null, rechts2: null, lijst: null };
     const waarden = Array.isArray(s.waarde) ? s.waarde : [s.waarde];
     if (op.unair) return v;
+    if (s.verwijzing) {
+      const ander = operandUit(s.verwijzing);
+      if (!ander || op.lijst || op.tussen) {
+        mis(`de voorwaarde "${naam}" vergelijkt met "${s.verwijzing}" (odrl:rightOperandReference), en dat is geen gegeven dat Toegangsspraak kent`);
+        return null;
+      }
+      v.rechts = linkerterm(ander, s.verwijzing);
+      return v;
+    }
     if (waarden.some((w) => typeof w === "boolean")) interpreteer(`De voorwaarde "${naam}" vergelijkt met waar/onwaar; Toegangsspraak schrijft dat als tekst ("true" of "false").`);
     if (!op.lijst && !op.tussen && waarden.length > 1) {
       mis(`de voorwaarde "${naam}" heeft meer waarden dan de vergelijking "${op.zin}" toelaat`);
@@ -349,6 +374,8 @@ export function planNaarBeleid(plan, opties = {}) {
   // ── wie ──────────────────────────────────────────────────────────────────
   /** @type {Map<string, any>} naam (klein) → begrip */
   const begrippen = new Map();
+  /** Gegevensbegrippen waarvan de afbakening als "waarvan" in het begrip staat. */
+  const inBegrip = new Set();
   const begrip = (b) => {
     if (!begrippen.has(b.naam.toLowerCase())) begrippen.set(b.naam.toLowerCase(), b);
   };
@@ -473,12 +500,17 @@ export function planNaarBeleid(plan, opties = {}) {
       // Benadering: een meervoud zonder lidwoord met "zijn", een enkelvoud met het lidwoord uit de regel en "is".
       const meervoud = /(en|s)$/i.test(naam);
       const kop = meervoud ? { lidwoord: null, werkwoord: "zijn" } : { lidwoord: lidwoordIn(regelEl.data.zin, naam) || lidwoordVoor(naam.split(" ").pop()), werkwoord: "is" };
-      const gebouwd = { soort: "wat", ...kop, naam, wat: watUitRegisterdeel(deel), waarvan: null };
+      // "waarvan …": één verfijning op de verzameling. Meer dan één, of een groep, past niet in
+      // een begrip; die worden voorwaarden van de regel (zie de regels hieronder).
+      const afbakening = uit(doel.sleutel, "als").map((c) => c.el);
+      const waarvan = afbakening.length === 1 && afbakening[0].type === "voorwaarde" ? voorwaarde(afbakening[0], "gegevens") : null;
+      if (waarvan) inBegrip.add(doel.sleutel);
+      const gebouwd = { soort: "wat", ...kop, naam, wat: watUitRegisterdeel(deel), waarvan };
       // De omschrijving in klare taal draagt ook `waarvan`; ze telt als ze hetzelfde deel aanwijst.
       const resolveer = opties.resolveerPad || ((p) => p);
       const gelezen = doel.data.definitie ? leesBegripZin(`${naam} zijn: ${doel.data.definitie}`) : null;
       const klopt = gelezen?.soort === "wat" && resolveer(padVanWat(gelezen.wat) || "") === deel.data.pad;
-      begrip(klopt ? { ...gelezen, ...kop, naam } : gebouwd);
+      begrip(klopt && !waarvan ? { ...gelezen, ...kop, naam } : gebouwd);
     }
     return { soort: "begrip", lidwoord: lidwoordIn(regelEl.data.zin, naam) || "de", naam };
   }
@@ -567,7 +599,7 @@ export function planNaarBeleid(plan, opties = {}) {
     // Een verfijning op de gegevens zelf bakent de populatie af ("alle gegevens van … waarvan …").
     // In de regel is dat een voorwaarde over de gegevens.
     const doelwit = (uit(regelEl.sleutel, "wat")[0] || uit(beleidEl.sleutel, "wat")[0])?.el;
-    const afbakening = doelwit ? uit(doelwit.sleutel, "als").map((c) => c.el) : [];
+    const afbakening = doelwit && !inBegrip.has(doelwit.sleutel) ? uit(doelwit.sleutel, "als").map((c) => c.el) : [];
     const items = [...[...opVerzoek, ...opGegevens].map((e) => item(e, new Set())), ...afbakening.map((e) => item(e, new Set(), "gegevens"))].filter(Boolean);
     const voorwaarden = !items.length ? null : items.length === 1 ? items[0] : { soort: "en", items };
 
@@ -619,9 +651,10 @@ export function planNaarBeleid(plan, opties = {}) {
     ruimer = true;
     meld("warning", "ODRL-GEEN-OVEREENKOMST", `"${naamVan(beleidEl)}" is een ${beleidEl.data.status} (odrl:${beleidEl.data.status === "aanbod" ? "Offer" : "Request"}), geen geldend beleid: het geldt pas als overeenkomst. De regels zijn wel gelezen.`, beleidEl.sleutel);
   }
-  // De conflictregel van ODRL (§2.9). De eigen export schrijft altijd odrl:prohibit; daar zegt het dus niets.
+  // De conflictregel van ODRL (§2.9): prohibit is de standaard van de taal en hoeft niet gezegd.
   let conflict = null;
-  if (!eigen && beleidEl.data.conflict === "perm") conflict = "toestemming-wint";
+  if (beleidEl.data.conflict === "perm") conflict = "toestemming-wint";
+  if (beleidEl.data.conflict === "eersteRegel") conflict = "eerste-geldt";
   if (!eigen && beleidEl.data.conflict === "invalid") {
     ruimer = true;
     meld("warning", "ODRL-CONFLICT", "De ODRL verklaart het hele beleid ongeldig zodra twee regels elkaar tegenspreken (odrl:invalid). Toegangsspraak kent dat niet: hier gaat bij een conflict het verbod voor.", beleidEl.sleutel);
@@ -647,6 +680,7 @@ export function planNaarBeleid(plan, opties = {}) {
     // Eerst wie, dan wat — de gebruikelijke volgorde onder "Begrippen.".
     begrippen: [...lijst.filter((b) => b.soort === "wie"), ...lijst.filter((b) => b.soort === "wat")],
     regels,
+    ...(beleidEl.data.standaard === "toestaan" ? { standaard: "toestaan" } : {}),
     ...(conflict ? { conflict } : {}),
   };
   return { beleid, beleiden, gekozen: beleidEl.sleutel, telling, diagnostics };

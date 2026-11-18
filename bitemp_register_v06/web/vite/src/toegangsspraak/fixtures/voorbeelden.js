@@ -63,4 +63,20 @@ export const RIJK_BELEID = `Beleid "Rijk".
     waarbij: de reden van de wijziging wordt vastgelegd bij de registratie.
 `;
 
+// De superpolicy, waarvan bij een begrip, "voor …" bij een bestaansvraag en een verwijzing als rechterterm.
+export const VOLLEDIG_BELEID = `Beleid "Volledig".
+  Standaard: toestaan.
+  Bij conflict: de eerste regel geldt.
+
+  Begrippen.
+    Een behandelaar is: iemand met rol "behandelaar".
+    Het dossier is: alle gegevens van het dossier van een cliënt waarvan de status van de gegevens "open" is.
+
+  Regel "eigen afdeling".
+    Een behandelaar mag het dossier bekijken
+    als aan alle volgende voorwaarden is voldaan:
+      - de afdeling van de betrokkene is de afdeling van de aanvrager;
+      - er is een behandelrelatie voor de betrokkene.
+`;
+
 export const VOORBEELDEN = { schuldhulp: VOORBEELD_BELEID, demo: DEMO_BELEID, gbo: GBO_BELEID, rijk: RIJK_BELEID };

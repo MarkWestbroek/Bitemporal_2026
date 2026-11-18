@@ -35,6 +35,10 @@ De single source of truth voor het nummer is `package.json` `"version"`.
   handeling) geldt voor elke regel; een afbakening van de gegevens wordt een voorwaarde over de gegevens; een verbod
   op elk gebruik wordt uitgeschreven per handeling; een aanbod of verzoek wordt gelezen met de waarschuwing dat het
   geen geldend beleid is.
+- **ODRL-export (Turtle) vollediger** (Mark 19-11): de export naar ODRL-AP-NL schrijft nu ook de kopregels
+  *Bij conflict* en *Standaard*, `waarvan` bij een begrip (de afbakening van de populatie), voor wie een
+  bestaansvraag geldt, en een verwijzing als rechterterm. Dat stond tot nu toe alleen in de oudere JSON-LD-export.
+  De import leest het terug.
 - **Instellingen van een schrijver als paneel** (Mark 18-11): *BPMN voor GZAC* is geen lijst regels maar de stand
   van de BPMN-schrijver. Die toont de activiteit nu als paneel in groepen (engine, wachtpunten, taken, berichten,
   proceskoppeling), met uitleg per instelling, schakelaars voor ja/nee en gekleurde placeholders. Alleen-lezen.

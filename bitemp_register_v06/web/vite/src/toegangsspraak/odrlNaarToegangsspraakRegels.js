@@ -72,7 +72,8 @@ const voorwaarde = (naam, links, data) => ({
   bij: "knoop",
   // Geen toets op klasse: een voorwaarde is vaak een lege knoop zonder rdf:type.
   als: { "odrl:leftOperand": links },
-  maak: { type: "voorwaarde", data: { ...data, operator: "{odrl.operator|lokaal}", operatorIri: "{odrl.operator}", waarde: "{odrl.rightOperand}" } },
+  // `verwijzing`: de rechterterm is een ander gegeven (odrl:rightOperandReference); `voor`: voor wie een bestaansvraag geldt.
+  maak: { type: "voorwaarde", data: { ...data, operator: "{odrl.operator|lokaal}", operatorIri: "{odrl.operator}", waarde: "{odrl.rightOperand}", verwijzing: "{odrl.rightOperandReference}", voor: "{ts.voor}" } },
 });
 
 const handeling = ({ odrl, woord, exact, ruim }) => ({
@@ -100,6 +101,7 @@ const beleid = (naam, klasse, status) => ({
       profiel: "{odrl.profile}",
       handeling: "{odrl.action}",
       conflict: "{odrl.conflict|lokaal}",
+      standaard: "{ts.standaard}",
     },
   },
 });
@@ -113,7 +115,7 @@ const groep = (predicaat) => ({
 
 export const ODRL_AP_NL_NAAR_TOEGANGSSPRAAK = {
   id: "odrl-ap-nl-naar-toegangsspraak",
-  versie: 3,
+  versie: 4,
   titel: "ODRL (ODRL-AP-NL) → Toegangsspraak",
   bron: "odrl-ap-nl",
   doel: "toegangsspraak",
@@ -173,6 +175,7 @@ export const ODRL_AP_NL_NAAR_TOEGANGSSPRAAK = {
     { naam: "Term: vergelijking", bij: "knoop", als: { klasse: "odrl:Operator" }, maak: { type: "term", data: { termsoort: "operator" } } },
     { naam: "Term: handeling", bij: "knoop", als: { klasse: "odrl:Action" }, maak: { type: "term", data: { termsoort: "handeling", breder: "{odrl.includedIn}" } } },
     { naam: "Term: niveau in het register", bij: "knoop", als: { klasse: "rdfs:Class" }, maak: { type: "term", data: { termsoort: "niveau" } } },
+    { naam: "Term: conflictregel", bij: "knoop", als: { klasse: "odrl:ConflictTerm" }, maak: { type: "term", data: { termsoort: "conflictregel" } } },
     // Na de termen: die zijn ook skos:Concept. Een begrip is hier een waarde (het doel, een afdeling).
     { naam: "Begrip als waarde (doelbinding)", bij: "knoop", als: { klasse: "skos:Concept" }, maak: { type: "doel" } },
 
@@ -203,7 +206,7 @@ export const ODRL_AP_NL_NAAR_TOEGANGSSPRAAK = {
     {
       naam: "Verwijzing die al als eigenschap is gelezen",
       bij: "verbinding",
-      als: { aard: ["odrl:uid", "odrl:leftOperand", "odrl:operator", "rdf:value", "odrl:profile", "odrl:includedIn"] },
+      als: { aard: ["odrl:uid", "odrl:leftOperand", "odrl:operator", "rdf:value", "odrl:profile", "odrl:includedIn", "odrl:conflict", "odrl:rightOperandReference", "ts:voor"] },
       negeer: true,
     },
   ],

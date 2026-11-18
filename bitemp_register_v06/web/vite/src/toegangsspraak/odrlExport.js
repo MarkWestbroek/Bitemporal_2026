@@ -75,6 +75,9 @@ export function odrlContext({ beleidSlug, modelNaam = "model", basisUrl = "https
       "schema:validThrough": DATUM,
       "odrl:leftOperand": IRI,
       "odrl:operator": IRI,
+      "odrl:conflict": IRI,
+      "odrl:rightOperandReference": IRI,
+      "ts:voor": IRI,
       "odrl:action": IRI,
       "rdf:value": IRI,
       "dct:source": IRI,
@@ -92,7 +95,7 @@ export function odrlContext({ beleidSlug, modelNaam = "model", basisUrl = "https
       { titel: "Wie en wat: begrippen uit de beleidstekst", types: ["odrl:PartyCollection", "dct:LegalResource", "skos:Concept"], iri: "^b:gegevens-" },
       { titel: "Het register: paden als assets met partOf", types: ["odrl:Asset", "odrl:AssetCollection"] },
       { titel: "Realisatie: wat de regels uitvoert", types: ["apnl:RegoModule", "apnl:CedarPolicySet", "apnl:PolicyArtifact", "apnl:PolicyBundle"] },
-      { titel: "Woordenschat van Toegangsspraak (labels komen uit de klare taal)", types: ["odrl:Profile", "odrl:LeftOperand", "odrl:Operator", "odrl:Action", "rdfs:Class"] },
+      { titel: "Woordenschat van Toegangsspraak (labels komen uit de klare taal)", types: ["odrl:Profile", "odrl:LeftOperand", "odrl:Operator", "odrl:Action", "rdfs:Class", "odrl:ConflictTerm"] },
     ],
   };
 }
