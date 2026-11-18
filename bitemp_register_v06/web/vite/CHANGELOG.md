@@ -8,7 +8,13 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
 
+## [studio/v0.47.0] — 2026-11-18
+
+Samen met render 0.5.1, in dezelfde ronde als api 0.30.0 (devloop 0.33.0, van BACKEND).
+
 ### Toegevoegd
+- **Marks: beheer in het menu Project**: *Project → Marks: lagen en soorten…* opent het beheer, ook in een model
+  zonder lagen of marks en zonder dat er een element geselecteerd is.
 - **Marks: eigen lagen** (Mark 18-11): een laag kan alleen van jou zijn (*＋ eigen laag*), om iets te proberen. Hij
   staat in je werkruimte en reist mee naar een ander apparaat, maar niet naar het project of de export van de
   server. Met *Deel* wordt hij van het project, met zijn marks.

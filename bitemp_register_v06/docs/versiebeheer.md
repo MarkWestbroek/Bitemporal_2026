@@ -61,7 +61,9 @@ dat, en forceert `git branch -D` het (met opzet).
 ## 6. Huidige stand
 
 - Generatie **v06**; Studio-release = `web/vite/package.json` (bron van waarheid),
-  getagd met prefix `studio/` (§7). Laatst getagd: **`studio/v0.46.0`**
+  getagd met prefix `studio/` (§7). Laatst getagd: **`studio/v0.47.0`**
+  (2026-11-18: marks — eigen lagen met delen, kiezen op label, beheer in het menu Project; samen met
+  render 0.5.1), na **`studio/v0.46.0`**
   (2026-11-18: marks (MDA) — lagen, sectie in Eigenschappen, tekens op het canvas, eigen marksoorten,
   V3-bijlage; samen met render 0.5.0), na **`studio/v0.45.0`**
   (2026-11-16: DMN-beslistabel in het project met invoer uit het DRD en keten, projectboom met root,
@@ -200,7 +202,8 @@ dat, en forceert `git branch -D` het (met opzet).
   brekende wijzigingen). Daarvoor **`api/v0.11.0`** (2026-10-07: Studio-projecten op de server,
   tabel `studio_projecten`); zie `RELEASE.md`.
 - Generator: **`codegen/v0.1.0`**; sindsdien geen release.
-- Render-sidecar: **`render/v0.5.0`** (2026-11-18: de code van studio 0.46.0 — marks in
+- Render-sidecar: **`render/v0.5.1`** (2026-11-18: de code van studio 0.47.0 — eigen lagen van marks;
+  geen wijziging in de routes; image `bitemp-render-svc:0.5.1`), na **`render/v0.5.0`** (2026-11-18: de code van studio 0.46.0 — marks in
   `/export/v3` (`marks`, `markContext`) en in het naspelen; image `bitemp-render-svc:0.5.0`), na **`render/v0.4.9`** (2026-11-16: de code van studio 0.45.0 — 27 profielen met
   Simulatiemodel, DMN DRD 1.1.0, Object 1.1.0; image `bitemp-render-svc:0.4.9`), na **`render/v0.4.8`** (2026-11-15: de code van studio 0.44.0 — samenvoegen per veld,
   profielversies BPMN 1.2.0 en 1.1.0; image `bitemp-render-svc:0.4.8`), na **`render/v0.4.7`** (2026-11-14: de code van studio 0.43.0 — packages en bundels
