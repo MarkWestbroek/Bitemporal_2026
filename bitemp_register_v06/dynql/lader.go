@@ -19,6 +19,7 @@ import (
 
 	"github.com/MarkWestbroek/Bitemporal_2026/bitemp_register_v06/model"
 	"github.com/MarkWestbroek/Bitemporal_2026/bitemp_register_v06/pep"
+	"github.com/graphql-go/graphql"
 	"github.com/uptrace/bun"
 )
 
@@ -72,6 +73,29 @@ func ZetLaders(perType map[string]Lader) {
 	for typenaam, l := range perType {
 		if l != nil {
 			laders[typenaam] = l
+		}
+	}
+}
+
+// extraVelden zijn velden die niet uit het model komen maar uit de omgeving van het schema, per
+// typenaam (gezet met ZetExtraVelden). De façade zet hier bv. `object` op ZaakobjectVerwijzing:
+// het record achter een IRI, opgehaald uit het register. Zonder façade is de set leeg.
+var extraVelden = map[string]graphql.Fields{}
+
+// ZetExtraVelden geeft typen extra velden. Aanroepen vóór BuildSchema; een volgende aanroep
+// vervangt de hele set. Een extra veld overschrijft nooit een veld uit het model.
+func ZetExtraVelden(perType map[string]graphql.Fields) {
+	extraVelden = map[string]graphql.Fields{}
+	for typenaam, velden := range perType {
+		extraVelden[typenaam] = velden
+	}
+}
+
+// voegExtraVeldenToe voegt de extra velden van een type toe (type_builder.go).
+func voegExtraVeldenToe(fields graphql.Fields, typenaam string) {
+	for naam, veld := range extraVelden[typenaam] {
+		if _, bestaat := fields[naam]; !bestaat {
+			fields[naam] = veld
 		}
 	}
 }

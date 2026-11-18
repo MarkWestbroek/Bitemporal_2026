@@ -40,6 +40,7 @@ const (
 	uZO1     = "88888888-8888-4888-8888-888888888881"
 	uZO2     = "88888888-8888-4888-8888-888888888882"
 	uObject  = "99999999-9999-4999-8999-999999999999"
+	uZO3     = "88888888-8888-4888-8888-888888888883"
 )
 
 // stubRegister speelt Open Zaak na: objecten op pad, lijsten gefilterd op query-parameters
@@ -149,6 +150,12 @@ func vulStub(s *stubRegister) {
 		"betrokkeneIdentificatie": map[string]any{"identificatie": "mw-01", "achternaam": "Pietersen", "voorletters": "P", "voorvoegselAchternaam": ""}})
 	s.zet("/zaken/api/v1/zaakobjecten/"+uZO1, map[string]any{"zaak": zaak1, "object": u + "/objecten/api/v2/objects/" + uObject, "objectType": "overige", "relatieomschrijving": "aanvraagformulier"})
 	s.zet("/zaken/api/v1/zaakobjecten/"+uZO2, map[string]any{"zaak": zaak1, "object": "", "objectType": "adres", "relatieomschrijving": "locatie"})
+	// Een zaakobject naar een component buiten de binding: de URL blijft staan als IRI, object = null.
+	s.zet("/zaken/api/v1/zaakobjecten/"+uZO3, map[string]any{"zaak": zaak1, "object": "https://bag.example/api/panden/0599100000000001", "objectType": "pand", "relatieomschrijving": "betreft"})
+	// Het object in de Objecten-API (vorm van Objecten-API v2: object met record).
+	s.zet("/objecten/api/v2/objects/"+uObject, map[string]any{"uuid": uObject, "type": u + "/objecttypen/api/v2/objecttypes/aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+		"record": map[string]any{"index": 2, "typeVersion": 1, "startAt": "2026-11-01", "endAt": nil, "registrationAt": "2026-11-02", "correctionFor": 1, "correctedBy": nil,
+			"data": map[string]any{"kenteken": "AB-123-C", "aanvrager": "Jansen"}}})
 }
 
 func zaakmodelAanwezig(t *testing.T) {
@@ -225,7 +232,7 @@ func TestApiLaderLijstEnEen(t *testing.T) {
 		t.Fatalf("identificatie: %v", got)
 	}
 	rollen, statussen, verw := lijstVan(z, "zaak_rollen"), lijstVan(z, "zaak_statussen"), lijstVan(z, "zaakobject_verwijzingen")
-	if len(rollen) != 2 || len(statussen) != 2 || len(verw) != 1 {
+	if len(rollen) != 2 || len(statussen) != 2 || len(verw) != 2 {
 		t.Fatalf("rollen %d, statussen %d, verwijzingen %d", len(rollen), len(statussen), len(verw))
 	}
 	if got := pad(z, "zaakobject_verwijzingen.0.data.0.objectIri"); got != "https://gemeente.example/id/object/"+uObject {
@@ -357,6 +364,7 @@ func TestGraphQLViaApiLader(t *testing.T) {
 	// Eén schema per testbinary: dynql heeft pakketglobalen (BACKEND, 18-11).
 	schemaEens.Do(func() {
 		dynql.ZetLaders(l.Laders())
+		dynql.ZetExtraVelden(l.ExtraVelden())
 		schemaGQL, schemaFout = dynql.BuildSchema(nil)
 	})
 	if schemaFout != nil {
@@ -370,7 +378,7 @@ func TestGraphQLViaApiLader(t *testing.T) {
 	  zaak_statussen { statustype_id statustoelichting statustype { id statustype_gegevens { statustypeOmschrijving } } }
 	  zaak_rollen { rol_id rol { id rol_natuurlijke_personen { bsn } rol_medewerkers { achternaam } } }
 	  zaak_zaaktypen { zaaktype { id zaaktype_identificaties { zaaktypeIdentificatie } } }
-	  zaakobject_verwijzingen { objectIri objectType }
+	  zaakobject_verwijzingen { objectIri objectType object }
 	} }`)
 	ruw, _ := json.Marshal(res)
 	tekstRes := string(ruw)
@@ -385,10 +393,17 @@ func TestGraphQLViaApiLader(t *testing.T) {
 		`"achternaam":"Pietersen"`,
 		`"zaaktypeIdentificatie":"ZT-AANVRAAG"`,
 		`"objectIri":"https://gemeente.example/id/object/` + uObject + `"`,
+		`"kenteken":"AB-123-C"`, // het façade-veld object: het record uit de Objecten-API
+		`"index":2`,
+		// Onbekend component: de URL blijft staan als IRI, en object is null.
+		`"object":null,"objectIri":"https://bag.example/api/panden/0599100000000001"`,
 	} {
 		if !strings.Contains(tekstRes, moet) {
 			t.Errorf("antwoord mist %s\n%s", moet, tekstRes)
 		}
+	}
+	if s.zonderAuth > 0 {
+		t.Errorf("%d verzoeken zonder autorisatie (ook de Objecten-API vraagt een token)", s.zonderAuth)
 	}
 
 	// Omgekeerd: de zaken van het zaaktype.

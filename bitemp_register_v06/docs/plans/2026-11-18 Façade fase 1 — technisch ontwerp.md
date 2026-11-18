@@ -227,7 +227,19 @@ Dit vervalt grotendeels als het platform uuid als entiteit-id krijgt.
 | `facade/client.go` | JWT-ZGW/Token, paginering (`next`), alleen URL's onder de eigen basis |
 | `facade/apilader.go` | LaadEen/LaadIDs/LaadLijst/BronIDs; filter alleen `eq` + `and` via `filters`; status als materiële relatie met opvolging; IRI-velden |
 | `facade/server.go` + `cmd/facade` | klaar: GraphQL (+ documentId), REST `/full`, `/registratie` alleen voor configuratie, `/health`, `/facade/registers` |
-| veld `object` op ZaakobjectVerwijzing | nog te doen |
+| veld `object` op ZaakobjectVerwijzing | klaar (zie hieronder) |
+
+**Het veld `object`.** Elk onderdeel met een `iriVelden`-veld in de binding krijgt een
+GraphQL-veld `object: JSON`.
+- In dynql gaat dat via `ZetExtraVelden`, met één regel in `type_builder.go`. Zonder façade is
+  de set leeg.
+- Het veld haalt het record pas op als de afnemer erom vraagt: IRI → prefixtabel → URL bij het
+  register → het volledige Objecten-object (`uuid`, `type`, `record` met `index`, `data`,
+  `startAt`, …).
+- Een IRI van een onbekend component (de URL blijft dan staan) geeft `null`.
+- Fase 1 geeft altijd de actuele stand. Peilen met `date`/`registrationDate` volgt na een toets
+  op de echte Objecten-API.
+- REST `/full` neemt het veld mee. Dat kost per zaakobject één verzoek aan de Objecten-API.
 
 ### Starten
 

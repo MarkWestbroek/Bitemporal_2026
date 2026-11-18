@@ -64,6 +64,7 @@ func NieuweServer(cfg Config) (*Server, error) {
 	}
 	handlers.DB = cfg.DB
 	dynql.ZetLaders(lader.Laders())
+	dynql.ZetExtraVelden(lader.ExtraVelden())
 	schema, err := dynql.BuildSchema(cfg.DB)
 	if err != nil {
 		return nil, fmt.Errorf("GraphQL-schema bouwen: %w", err)

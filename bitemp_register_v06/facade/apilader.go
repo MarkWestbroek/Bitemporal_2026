@@ -27,6 +27,7 @@ import (
 
 	"github.com/MarkWestbroek/Bitemporal_2026/bitemp_register_v06/dynql"
 	"github.com/MarkWestbroek/Bitemporal_2026/bitemp_register_v06/model"
+	"github.com/graphql-go/graphql"
 )
 
 // ApiLader leest alle typen uit de binding via de register-API's.
@@ -68,6 +69,65 @@ func (l *ApiLader) Laders() map[string]dynql.Lader {
 
 // IRI geeft de IRI-tabel (voor het façade-veld object op ZaakobjectVerwijzing).
 func (l *ApiLader) IRI() *IRITabel { return l.iri }
+
+// ExtraVelden geeft, voor dynql.ZetExtraVelden, het façade-veld `object` op elk onderdeel met
+// een IRI-veld (ontwerp §10.3). Het veld haalt het record achter de IRI op bij het register
+// uit de IRI-tabel, alleen als de afnemer erom vraagt. Een IRI zonder bekend prefix geeft null.
+// Bij meer IRI-velden op één onderdeel heet het veld <iriVeld>_object.
+//
+// Fase 1: altijd de actuele stand van het object. Peilen in de Objecten-API (date,
+// registrationDate) volgt als we de echte API hebben getoetst.
+func (l *ApiLader) ExtraVelden() map[string]graphql.Fields {
+	uit := map[string]graphql.Fields{}
+	for _, tb := range l.b.Typen {
+		for doeltype, ob := range tb.Onderdelen {
+			for _, veld := range ob.IRIVelden {
+				naam := "object"
+				if len(ob.IRIVelden) > 1 {
+					naam = veld + "_object"
+				}
+				if uit[doeltype] == nil {
+					uit[doeltype] = graphql.Fields{}
+				}
+				uit[doeltype][naam] = &graphql.Field{
+					Type:        dynql.JSONScalar,
+					Description: "Façade: het object achter " + veld + ", opgehaald uit het register dat bij de IRI hoort (actuele stand). Null als de IRI bij geen bekend register hoort.",
+					Resolve:     l.objectResolver(veld),
+				}
+			}
+		}
+	}
+	return uit
+}
+
+func (l *ApiLader) objectResolver(veld string) graphql.FieldResolveFn {
+	return func(p graphql.ResolveParams) (any, error) {
+		bron, ok := p.Source.(map[string]any)
+		if !ok {
+			return nil, nil
+		}
+		iri, _ := bron[veld].(string)
+		if iri == "" {
+			return nil, nil
+		}
+		v, ok := l.iri.NaarURL(iri)
+		if !ok {
+			return nil, nil
+		}
+		cl, ok := l.clients[v.Register]
+		if !ok {
+			return nil, fmt.Errorf("façade: geen client voor register %s", v.Register)
+		}
+		obj, err := cl.HaalJSON(p.Context, v.URL)
+		if errors.Is(err, ErrNietGevonden) {
+			return nil, nil
+		}
+		if err != nil {
+			return nil, err
+		}
+		return obj, nil
+	}
+}
 
 // Client geeft de client van een register.
 func (l *ApiLader) Client(register string) (*Client, bool) {
