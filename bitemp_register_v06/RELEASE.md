@@ -8,6 +8,48 @@
 
 ---
 
+## api 0.28.0 / devloop 0.31.0 (2026-11-18)
+
+Akkoord Mark 18-11 ("okee, release maar"). Studio blijft 0.45.0 en render 0.4.9; devloop 0.31.0 is
+api 0.28.0 met studio 0.45.0 en render 0.4.9. Aanleiding: het zaakmodel voor de loadtest (derde
+stack naast OneGround en Open Zaak) en wat de bouwproef daarvan aan het licht bracht.
+
+- **Indexen uit het model** (`dbsetup/indexen.go`, `docs/INDEXEN.md`): elke relatie krijgt een
+  index op de doelkant `(doel_id, bron_id)`, elk veld met `uniek` een partiële index op de actuele
+  stand. Ze worden bij start en rebuild aangemaakt (`IF NOT EXISTS`, niet fataal). Gemeten op een
+  miljoen rijen: de omgekeerde relatie van 14 ms naar 0,07 ms, de uniekheidscontrole van 16 ms
+  naar 0,02 ms per opvoer.
+- **Fix codegen: een enum die meerdere domeinen gebruiken komt in één domein**
+  (`model/v3_enum_domein.go`, `docs/CODEGEN.md` §8). Voorheen compileerde `model` niet meer
+  ("redeclared in this block"). De rebuild zet de domeinen in de goede volgorde. Gevonden door
+  FACADE en AI-INRICHTEN.
+- **Codegen: validatiefout als type/format het gegevenstype tegenspreken** (`docs/CODEGEN.md`
+  §4). Een veld zonder goType met `"type": "string"` en datatype Geheel, JaNee, Datum of DatumTijd
+  werd zonder melding een tekstveld. Een Studio-export heeft goType en valt erbuiten.
+- **Melding bij een afwijkend kolomtype** (`dbsetup/kolomtypen.go`, `docs/KOLOMTYPEN.md`):
+  `dbsetup` zet het type van een bestaande kolom niet om; een kolom die niet bij het model past,
+  staat nu bij elke start in het logboek, met het statement dat hem zou omzetten.
+- BACKLOG §43: de kolomnaam van datumvelden wijkt af van andere velden (besluit: laten staan).
+
+Getest: `go test ./...` groen (in de basismap; de EA-importtest heeft `web/vite/node_modules`
+nodig), regressiesuite np-loc, afgeleide relaties en databaseproef groen met de indexen en de
+kolomtypecontrole, oude en nieuwe codegen vergeleken op tien bestaande domeinen (uitvoer gelijk),
+zaakmodel: codegen voor vier domeinen, build en zelftest in een proefkopie. Niet getest: een
+rebuild via de devloop met het zaakmodel, en gelijktijdige belasting.
+
+Uitrol:
+- **Schemawijziging: ja, alleen indexen.** Bij de eerste start komen er indexen bij; geen tabel of
+  kolom verandert. Op een grote tabel blokkeert het aanmaken schrijvers zolang het duurt.
+- **Rebuild uit het Studio-project: niet nodig.** De codegen-wijzigingen werken pas bij de
+  eerstvolgende rebuild.
+- **Andere stap: nee voor de release zelf.** Los ervan: het migratiescript
+  `docs/migraties/2026-11-18-cg-test-kolomtypen.sql` voor vijf tekstkolommen op cg-test (akkoord
+  Mark 18-11; FUNDAMENT voert het uit).
+- Na de eerste start: het logboek nalopen op regels `[dbsetup] LET OP: kolom …`.
+- App en pf: `bitemp-go-api:0.28.0` via `update.sh`. Fundament: `bitemp-devloop:0.31.0`.
+
+---
+
 ## studio 0.45.0 / render 0.4.9 (2026-11-16)
 
 Akkoord Mark 16-11 ("daarna 1 en 2 en daarna een release als je wilt"). api blijft 0.27.0; devloop

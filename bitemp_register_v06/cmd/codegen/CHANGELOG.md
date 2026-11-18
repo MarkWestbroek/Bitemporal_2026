@@ -7,6 +7,8 @@ Formaat: [Keep a Changelog](https://keepachangelog.com); versionering volgens
 [`docs/versiebeheer.md`](../../docs/versiebeheer.md) (prefix `codegen/`).
 
 ## [Unreleased]
+
+## Met api 0.28.0 — 2026-11-18
 - **Nieuw: validatiefout als type/format het gegevenstype tegenspreken** (18-11-2026; gevonden door
   AI-INRICHTEN). Een veld zonder goType met `"type": "string"` en datatype Geheel, JaNee, Datum
   of DatumTijd werd zonder melding een tekstveld. De codegen stopt er nu op en noemt het veld.
