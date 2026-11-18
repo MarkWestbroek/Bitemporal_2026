@@ -127,6 +127,9 @@ func voerCodegenEnBuildUit(appDir string, modelBytes []byte, domeinRuns []Rebuil
 	stappen = append(stappen, fmt.Sprintf("Model opgeslagen als %s", modelPath))
 
 	// Stap 2: codegen per domein (altijd additive).
+	// Een domein dat een gedeelde enum genereert gaat vóór de domeinen die hem alleen gebruiken
+	// (model/v3_enum_domein.go); anders breekt `go run ./cmd/codegen` op een ontbrekend type.
+	domeinRuns = sorteerRunsOpEnumEigenaar(modelBytes, domeinRuns)
 	stappen = append(stappen, fmt.Sprintf("Codegen voor %d domein(en)", len(domeinRuns)))
 	for i, run := range domeinRuns {
 		runPrefix := prefixVoorRun(run)
@@ -404,4 +407,27 @@ func VoerStartupRebuildUit() (herbouwd bool, stappen []string, err error) {
 	}
 	os.Remove(mislukteSchemaMarkerPad(appDir))
 	return true, stappen, nil
+}
+
+// sorteerRunsOpEnumEigenaar zet de codegen-runs in de volgorde van model.EnumDomeinVolgorde.
+// Een model dat niet te lezen is laat de volgorde ongemoeid (de codegen meldt de fout zelf).
+func sorteerRunsOpEnumEigenaar(modelBytes []byte, runs []RebuildDomeinSpec) []RebuildDomeinSpec {
+	var v3 model.V3Model
+	if err := json.Unmarshal(modelBytes, &v3); err != nil || len(runs) < 2 {
+		return runs
+	}
+	namen := make([]string, len(runs))
+	perNaam := map[string]RebuildDomeinSpec{}
+	for i, r := range runs {
+		namen[i] = r.Domein
+		perNaam[r.Domein] = r
+	}
+	if len(perNaam) != len(runs) { // dubbele domeinnaam: niet aankomen
+		return runs
+	}
+	uit := make([]RebuildDomeinSpec, 0, len(runs))
+	for _, n := range model.EnumDomeinVolgorde(v3, namen) {
+		uit = append(uit, perNaam[n])
+	}
+	return uit
 }

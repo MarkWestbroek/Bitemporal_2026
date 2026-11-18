@@ -672,6 +672,38 @@ dus met de rijen van het verkeerde item.
 nu zelf registreren), de controle dat `referentielijst_id` het gebonden record is (33.4), en de
 opties-route voor een `$ref` naar zo'n relatie.
 
+### Een enum die meerdere domeinen gebruiken
+
+Een enum mag door velden in meer dan één domein gebruikt worden (het zaakmodel:
+`Vertrouwelijkheidaanduiding` in catalogus, zaken en documenten). Alle domeinen komen in
+package `model`, dus de enum mag maar één keer gegenereerd worden. Tot 18-11-2026 kwam hij in
+elk domein dat hem gebruikte en compileerde het pakket niet meer ("… redeclared in this block").
+
+De regel (`model/v3_enum_domein.go`):
+
+- Gebruikt één domein de enum, dan komt hij in dat domein. Dat is ongewijzigd.
+- Gebruiken meerdere domeinen hem, dan komt hij in het domein van de enum zelf, mits dat domein
+  hem ook gebruikt. Anders in het alfabetisch eerste domein dat hem gebruikt.
+- De andere domeinen verwijzen naar hetzelfde Go-type. De codegen meldt dat per enum:
+  `Enum X: gedeeld, wordt gegenereerd in domein "catalogus"`.
+
+Gevolgen:
+
+- **Het genererende domein moet meegebouwd zijn.** Een register met zaken maar zonder catalogus
+  compileert niet. Dat is dezelfde afhankelijkheid als een relatie naar een entiteit in een
+  ander domein, maar nu al bij het bouwen zichtbaar.
+- **De volgorde doet ertoe bij `go run ./cmd/codegen`**, omdat die het pakket bij elke run
+  compileert: eerst het genererende domein. De rebuild zet de runs zelf in die volgorde
+  (`sorteerRunsOpEnumEigenaar` in `handlers/rebuild_core.go`). Wie de codegen met de hand
+  draait, moet er zelf op letten. Met een vooraf gebouwde codegen (devloop-image) maakt de
+  volgorde niet uit.
+- Twee domeinen die elk een enum voor de ander genereren (een kring) kunnen met `go run` in geen
+  enkele volgorde; met de vooraf gebouwde codegen wel.
+
+Voor modellen zonder gedeelde enum is de uitvoer byte-voor-byte gelijk aan die van vóór de
+wijziging (vergeleken op np-loc, org-geo, CG, kennis2, configuratie, ide-bestanden, register,
+gegevenstypen, meldingen en beheer).
+
 ---
 
 ## 9. Bestandsoverzicht
