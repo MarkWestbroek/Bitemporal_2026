@@ -312,7 +312,10 @@ func (w *waardeSortering) bijEntiteit(b *filterBouwer) string {
 
 // laadIDsOpWaarde geeft de id's van één pagina in de gevraagde volgorde: eerst de entiteiten
 // met een waarde (deel 1), dan die zonder (deel 2, op id).
-func laadIDsOpWaarde(ctx context.Context, meta model.TypeMeta, v LijstVraag, w *waardeSortering, mag func(string) bool) ([]int64, error) {
+//
+// Met zg (een passende zoektabel, zoektabel.go) komt deel 1 uit de zoektabel in plaats van uit
+// de brontabellen; deel 2 blijft de gewone weg.
+func laadIDsOpWaarde(ctx context.Context, meta model.TypeMeta, v LijstVraag, w *waardeSortering, mag func(string) bool, zg *zoekGebruik) ([]int64, error) {
 	moment := v.Peil
 	toegang := &filterBouwer{peil: &moment, mag: mag}
 	if err := toegang.sorteerToegang(w.pad); err != nil {
@@ -350,7 +353,9 @@ func laadIDsOpWaarde(ctx context.Context, meta model.TypeMeta, v LijstVraag, w *
 		richting = "DESC"
 	}
 	var ids []int64
-	if heeftFilter(v.Filter) {
+	if zg != nil {
+		ids, err = zg.ids(ctx, moment, w.aflopend, v.Limit, v.Offset)
+	} else if heeftFilter(v.Filter) {
 		// Filter eerst: de CTE is een grens voor de planner.
 		q1 = q1.ColumnExpr("?.? AS sorteerwaarde", bun.Ident(w.waardeAlias()), bun.Ident(w.veld.kolom))
 		err = db.NewRaw("WITH w AS MATERIALIZED (?) SELECT ? FROM w ORDER BY sorteerwaarde "+richting+", ? "+richting+" LIMIT ? OFFSET ?",
@@ -377,7 +382,12 @@ func laadIDsOpWaarde(ctx context.Context, meta model.TypeMeta, v LijstVraag, w *
 		if err != nil {
 			return nil, err
 		}
-		if aantalMetWaarde, err = qn.Count(ctx); err != nil {
+		if zg != nil {
+			aantalMetWaarde, err = zg.aantal(ctx, moment)
+		} else {
+			aantalMetWaarde, err = qn.Count(ctx)
+		}
+		if err != nil {
 			return nil, err
 		}
 	}

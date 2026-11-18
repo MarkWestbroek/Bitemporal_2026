@@ -257,14 +257,140 @@ de grens tussen de twee delen, een offset voorbij het eerste deel, een filter, e
 peiltijdstip en de full-lijst. 0 verschillen; 220 vragen gingen via de join-vorm. Np-loc is
 klein (zes personen): de test bewijst de volgorde, niet de snelheid.
 
+## Zoektabellen (19-11-2026)
+
+Ontwerp en besluiten: `docs/plans/2026-11-18 Zoekdefinities — zoektabellen als inrichting
+(ontwerp).md`. Code: `dynql/zoektabel.go`; de haak in `handlers/registration_core.go`
+(`VoorCommit`); aansluiting in `main.go`. Test: `TestZoektabel` (tag `integration`).
+
+**Waarvoor.** Een lijst "binnen één relatie, gesorteerd op één veld van een gegevenselement"
+(zaken van een zaaktype op startdatum) kan geen index gebruiken: de relatie en het veld staan in
+verschillende tabellen. PostgreSQL moet dan alle entiteiten van dat doel met hun waarde ophalen
+voordat het de eerste pagina kan kiezen. Een zoektabel zet doel, waarde en entiteit bij elkaar
+in één tabel met één index.
+
+**Instellen: een `ZoekDefinitie`.** Registerdata in het configuratiedomein (inrichting), zoals
+een `QueryDefinitie`. Er is geen rebuild en geen herstart nodig; het type heeft de gewone
+registratie-API, REST-routes en GraphQL.
+
+| Gegevenselement | Velden | |
+|---|---|---|
+| `ZoekdefinitieNaam` | `naam`, `beschrijving` | voor beheer en het log |
+| `ZoekdefinitiePad` | `binnen`, `sorteerveld` | `Zaak.zaak_zaaktypen` en `Zaak.zaaklooptijd.startdatum`, in de namen van het GraphQL-schema |
+| `ZoekdefinitieStatus` | `status` (`concept`, `actief`, `inactief`), `reden` | materieel: "actief vanaf …" kan vooruit |
+
+```json
+{ "registratie": { "registratietype": "registratie" }, "wijzigingen": [
+  { "opvoer": { "zoekdefinitie": { "id": 1, "aanvang": "2026-11-19" } } },
+  { "opvoer": { "zoekdefinitienaam": { "zoekdefinitie_id": 1, "naam": "zaken-per-zaaktype-op-startdatum" } } },
+  { "opvoer": { "zoekdefinitiepad": { "zoekdefinitie_id": 1,
+      "binnen": "Zaak.zaak_zaaktypen", "sorteerveld": "Zaak.zaaklooptijd.startdatum" } } },
+  { "opvoer": { "zoekdefinitiestatus": { "zoekdefinitie_id": 1, "status": "actief", "aanvang": "2026-11-19" } } } ] }
+```
+
+Voorwaarden: de relatie en het gegevenselement hangen aan dezelfde entiteit; het
+gegevenselement is enkelvoudig en niet materieel; de doel-id van de relatie staat in de hub. Een
+definitie die daar niet aan voldoet, wordt overgeslagen met een regel in het log
+(`zoekdefinitie … overgeslagen: …`); de registratie zelf wordt niet geweigerd, want de
+registratiecode kent de zoektabellen niet.
+
+**Inrichten in stappen.**
+
+1. Neem de namen uit de GraphQL-vraag die je wilt versnellen. Uit
+   `zaken(filter: { zaak_zaaktypen: { zaaktype_id: { eq: 9 } } }, sorteer: [{ veld:
+   "zaaklooptijd.startdatum" }])` volgt `binnen` = `Zaak.zaak_zaaktypen` en `sorteerveld` =
+   `Zaak.zaaklooptijd.startdatum`. `Zaak` is de typenaam van de entiteit, niet de naam van de
+   lijst.
+2. Registreer de zoekdefinitie (het voorbeeld hierboven), als beheerder. Kies een `id` die nog
+   niet bestaat.
+3. Kijk in het log van de API. Direct na de registratie staat er een regel
+   `zoektabellen: zk_… (naam): … — vullen`, of `zoekdefinitie … overgeslagen: <reden>` als een
+   pad niet klopt.
+4. Volg het vullen in de database: `SELECT tabel, status, gevuld_tot_id, melding FROM
+   zoektabel_stand`. `gevuld_tot_id` loopt op tot de hoogste entiteit-id; daarna wordt de status
+   `gevuld`. Vanaf dat moment gebruikt de API de zoektabel.
+5. Controleer het gebruik met het queryplan van de vraag in `pg_stat_statements`: de vraag
+   leest dan `FROM "zk_…"`.
+6. Uitzetten: registreer een status `inactief`, of voer de definitie af
+   (`DELETE /zoek_definities/<id>`). De zoektabel wordt niet meer gelezen en na vijf minuten
+   weggegooid. Tijdelijk uitzetten zonder iets te registreren kan met de noodrem
+   `GRAPHQL_KLASSIEK_LADEN=1`, maar die zet ook het laden op selectie en het snelle sorteren
+   uit.
+7. Een andere relatie of een ander sorteerveld is een nieuwe zoekdefinitie. Elke zoektabel
+   kost schrijftijd bij elke registratie die de entiteit raakt, en schijfruimte.
+
+**De zoektabel.** `zk_<id van de definitie>_<hash>` met `doel_id`, `waarde`, `entiteit_id`,
+`rel_id`, `opvoer`, `afvoer`, en de index `(doel_id, waarde, entiteit_id)`. De hash in de naam
+maakt van een gewijzigd pad een nieuwe tabel. `opvoer` en `afvoer` zijn de doorsnede van de
+geldigheid van de entiteit, het relatievoorkomen, de GE-hub en het datarecord; de leesregel is
+dus dezelfde als op elke tabel, ook met een peiltijdstip. Een rij met een lege `opvoer` (een
+ongedaan gemaakte opvoer) telt niet mee. De zoektabel is plumbing: geen `wijziging`-rijen, geen
+registratie, altijd herbouwbaar uit de brontabellen.
+
+**De stand: `zoektabel_stand`.** Eén rij per zoektabel met de definitie, de paden en de status:
+
+| Status | Lezen | Bijhouden |
+|---|---|---|
+| `vullen` | nee | ja |
+| `gevuld` | ja, als de definitie nu actief is | ja |
+| `uitfaseren` | nee | ja, tot hij na vijf minuten wordt weggegooid |
+| `fout` | nee | nee; wordt bij het volgende afstemmen opnieuw gevuld |
+
+**Afstemmen.** Bij de start, elke minuut, en direct na een registratie in het
+configuratiedomein vergelijkt de API de zoekdefinities met de stand: aanmaken en vullen wat
+gewenst is (nu actief, of later actief), uitfaseren en opruimen wat niet meer gewenst is. Het
+vullen loopt op de achtergrond in groepen van 500 entiteiten en hervat na een herstart.
+
+**Bijhouden.** De registratiecode biedt een haak vlak voor de commit (`handlers.VoorCommit`);
+de zoektabellen melden zich daarop aan. Voor elke entiteit die de registratie heeft geraakt
+(ook via een ongedaanmaking of correctie) worden de rijen verwijderd en opnieuw afgeleid, onder
+een slot per entiteit. Opvoer, afvoer, correctie, ongedaanmaking en replay lopen zo langs
+dezelfde code.
+
+**De zoektabel staat het register niet in de weg** (besluit Mark, 18-11-2026; de
+afhankelijkheid loopt van zoektabel naar register). De haak draait in een savepoint. Mislukt
+het bijhouden, of duurt het wachten op een slot langer dan 200 ms, dan slaagt de registratie
+toch, gaat de zoektabel naar `fout` en volgt het lezen de gewone weg tot hij opnieuw is gevuld.
+
+**Lezen.** `LaadLijst` gebruikt een zoektabel als: het filter precies één voorwaarde is (de
+doel-id van de relatie `eq` één waarde), de enige sorteersleutel het sorteerveld is, er geen
+toegangsbeleid actief is en de noodrem `GRAPHQL_KLASSIEK_LADEN` uit staat. De id's van de
+pagina komen dan uit de zoektabel; de entiteiten worden daarna op id geladen. Entiteiten zonder
+waarde staan niet in de zoektabel en vullen de pagina aan via de gewone weg. In elk ander geval
+volgt de vraag de gewone weg. Twee voorkomens van de relatie naar hetzelfde doel geven twee
+rijen; de leesvraag ontdubbelt lopend over de index.
+
+**Grenzen.** Eén relatie en één sorteerveld per definitie; alleen `eq` op één doel, zonder
+extra filtervoorwaarden; alleen een enkelvoudig, niet-materieel gegevenselement; alleen
+GraphQL-lijsten. Een rebuild of `DeleteTables` kent de zoektabellen niet: ze blijven staan tot
+het afstemmen ze opruimt of opnieuw vult.
+
+**Bewijs.** `TestZoektabel` registreert op np-loc een zoekdefinitie (personen binnen een
+locatie, op achternaam) en draait in zeven fasen 42 lijstvragen twee keer, via de gewone weg en
+via de zoektabel: na het vullen, na een nieuwe waarde, een eerste waarde, een nieuwe relatie,
+een ongedaanmaking, het afvoeren van een entiteit, en op een peiltijdstip van vóór de
+wijzigingen. 0 verschillen; alle vragen gingen via de zoektabel. Daarna: leegmaken en opnieuw
+vullen geeft dezelfde rijen, en na het afvoeren van de definitie faseert de tabel uit en wordt
+hij opgeruimd. Np-loc is klein: de test bewijst de uitkomst, niet de snelheid.
+
+Proef op nagebouwde tabellen (373.000 zaken, 100 zaaktypen, één gebruiker; geen meting op het
+register):
+
+| Vraag | Gewone weg (api 0.30.1) | Zoektabel |
+|---|---|---|
+| zaken van één zaaktype op startdatum, eerste 50 | 23 ms, 34.000 pagina's | 0,05 ms, 34 pagina's |
+| idem, tiende pagina | (als boven) | 0,3 ms, 500 pagina's |
+
+Daar komt in beide gevallen het laden van de 50 entiteiten bij. De zoektabel was 30 MB. Niet
+gemeten: het register onder gelijktijdige belasting, de kosten per registratie, en het vullen
+op een groot register terwijl er geschreven wordt.
+
 ## Vervolg
 
-- **Zoektabellen (ontwerp, 18-11-2026).** Een filter op een relatie met een sortering op een
-  veld van een gegevenselement ("zaken van een zaaktype op startdatum") kan geen index
-  gebruiken: de twee staan in verschillende tabellen. Ontwerp voor een zoektabel buiten de
-  formele historie, ingesteld met een `ZoekDefinitie` als registerdata:
-  `docs/plans/2026-11-18 Zoekdefinities — zoektabellen als inrichting (ontwerp).md`. Niet
-  gebouwd.
+- **Zoektabellen: vervolg.** Versie 1 is gebouwd (§Zoektabellen). Open: een mark als bron
+  van zoek- en querydefinities; een weigering (422) bij het registreren van een ongeldige
+  definitie; `in` en extra filtervoorwaarden; de zoektabel ook gebruiken voor een lijst
+  binnen een doel zonder sortering.
 - **Stap 3.**
   - *GraphQL, gebouwd:* het argument `sorteer` op de lijst-queries (`dynql/sortering.go`,
     uitleg in `docs/dynamische-graphql-laag.md` §Sorteren). Exact filteren kon GraphQL al

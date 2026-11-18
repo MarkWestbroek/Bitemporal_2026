@@ -1,7 +1,22 @@
 # Zoekdefinities — zoektabellen als inrichting (ontwerp)
 
-Datum: 18-11-2026. Status: **ontwerp, niet gebouwd.** Claude-sessie (BACKEND), op verzoek van
-Mark. Hoort bij het indexwerk (`docs/INDEXEN.md`) en bij `dynql/sortering.go`.
+Datum: 18-11-2026. Status: **versie 1 gebouwd (19-11-2026)**, na akkoord van Mark. Wat er
+staat en hoe het werkt: `docs/INDEXEN.md` §Zoektabellen. Claude-sessie (BACKEND).
+
+Afwijkingen van dit ontwerp in de bouw:
+
+- **Geen 422 bij het registreren van een ongeldige definitie** (§4). De registratiecode kent
+  de zoektabellen niet; een ongeldige definitie wordt bij het afstemmen overgeslagen met een
+  regel in het log.
+- **De tabelnaam is `zk_<id>_<hash>`** (§5), niet `zk_<id>`. Een gewijzigd pad is zo een nieuwe
+  tabel en de oude faseert uit; een ander API-proces kan de oude naam nooit met de nieuwe
+  inhoud lezen. De standtabel heeft de tabelnaam als sleutel en bewaart de paden (§6).
+- **Een rij met een lege `opvoer` telt niet mee** (§5). Zo laat een ongedaan gemaakte opvoer
+  zijn rij achter; de vergelijkingstest vond dit.
+- **De ontdubbeling van twee voorkomens naar hetzelfde doel** (§11) zit in de leesvraag
+  (`SELECT DISTINCT waarde, entiteit_id`); PostgreSQL doet dat lopend over de index.
+- **De status `fout` na een mislukt bijhouden** wordt in dezelfde transactie gezet; de
+  wachtgrens op een slot is 200 ms (§7), nog niet getoetst met een meting.
 
 ## 1. Aanleiding
 

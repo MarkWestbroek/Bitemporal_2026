@@ -317,6 +317,9 @@ De lijst-queries (`<padnaam>` en `full_<padnaam>_list`) hebben sinds 18-11-2026 
 - *Eén sleutel op een enkelvoudig, niet-materieel GE:* een join op de waarde zelf. Met een
   index op de kolom (`uniek`, of een mark zoeksleutel of sorteerbaar) leest PostgreSQL alleen
   de pagina. Sinds 18-11-2026.
+- *Een filter op één doel van een relatie met die ene sleutel, en een actieve `ZoekDefinitie`
+  daarvoor:* de id's van de pagina komen uit een zoektabel (`docs/INDEXEN.md` §Zoektabellen).
+  Sinds 19-11-2026.
 - *Alle andere gevallen* (meer sleutels, een meervoudig of materieel GE, een eigen kolom): de
   sorteerwaarde is een subquery per entiteit. PostgreSQL rekent die uit voor alle entiteiten
   die aan het filter voldoen. Dat is evenredig met het aantal overgebleven entiteiten, niet
