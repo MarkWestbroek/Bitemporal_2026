@@ -8,6 +8,31 @@
 
 ---
 
+## studio 0.47.0 / render 0.5.1 (2026-11-18)
+
+Akkoord Mark 18-11 ("Ja, release het werk maar mee"). In dezelfde ronde als api 0.30.0; de devloop
+0.33.0 bouwt BACKEND met deze Studio en render.
+
+- **Marks: eigen lagen.** Een laag is van het project of alleen van jou (*＋ eigen laag*). Een eigen
+  laag doet lokaal mee, staat in je werkruimte (reist mee naar een ander apparaat) en gaat niet
+  naar het werkbestand, de sync of de export van de server. *Deel* maakt hem van het project, met
+  zijn marks; terugnemen kan niet.
+- **Marks: kiezen op label.** *Kies op label…* in het lagenbeheer laat de lagen met dat label
+  meedoen, plus de lagen zonder label.
+- **Marks: beheer in het menu Project** (*Marks: lagen en soorten…*), ook in een model zonder lagen
+  of marks.
+- render 0.5.1: de code van studio 0.47.0. Geen wijziging in de routes en geen nieuwe
+  profielversies; een render 0.5.0 werkt ongewijzigd met deze Studio.
+
+Getest: Studio-unit 1792/1792, render-svc 34/34, e2e 187/187.
+
+Uitrol:
+- App: `viz-frontend:0.47.0` en `bitemp-render-svc:0.5.1` via `update.sh`.
+- Fundament: frontend 0.47.0 en render 0.5.1, met de devloop 0.33.0 van BACKEND.
+- Schemawijziging nee, rebuild uit Studio-project nee, andere stap buiten de images nee.
+
+---
+
 ## api 0.30.0 / devloop 0.33.0 (2026-11-18)
 
 Akkoord Mark 18-11 (op punt 2, 3 en 4: "ja, als 3 punt 1 overbodig maakt: beter 3 doen"; daarna
