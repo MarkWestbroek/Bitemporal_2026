@@ -222,11 +222,38 @@ Dit vervalt grotendeels als het platform uuid als entiteit-id krijgt.
 | Lader-naad in dynql (`lader.go`) | klaar, commit a602d7a3; daarna ook de weergavenamen via de lader |
 | `PeilOpgegeven(ctx)`, `NietOndersteund` (code in GraphQL-extensions), `ZetLaders` | klaar |
 | `facade/iri.go` | klaar (alleen bekende basis + uuid) |
-| `facade/idmap.go` | geheugenvariant klaar; de PostgreSQL-variant komt in `cmd/facade` |
+| `facade/idmap.go`, `idmap_pg.go` | geheugen + PostgreSQL (`facade_id`, één bigserial, `ON CONFLICT`); id's overleven een herstart |
 | `facade/binding.go` + `binding/zgw-zaakmodel.json` | klaar voor Zaak, Rol, Zaaktype, Statustype, Roltype; validatie tegen de MetaRegistry |
 | `facade/client.go` | JWT-ZGW/Token, paginering (`next`), alleen URL's onder de eigen basis |
 | `facade/apilader.go` | LaadEen/LaadIDs/LaadLijst/BronIDs; filter alleen `eq` + `and` via `filters`; status als materiële relatie met opvolging; IRI-velden |
-| `cmd/facade`, REST `/full`, veld `object` op ZaakobjectVerwijzing | nog te doen |
+| `facade/server.go` + `cmd/facade` | klaar: GraphQL (+ documentId), REST `/full`, `/registratie` alleen voor configuratie, `/health`, `/facade/registers` |
+| veld `object` op ZaakobjectVerwijzing | nog te doen |
+
+### Starten
+
+```
+DATABASE_URL=postgres://…/facade      # eigen database: configuratie, plumbing, facade_id
+FACADE_BINDING=facade/binding/zgw-zaakmodel.json
+OPENZAAK_URL=…  OPENZAAK_CLIENT_ID=…  OPENZAAK_SECRET=…
+OBJECTEN_URL=…  OBJECTEN_TOKEN=…  FACADE_IRI_BASIS=https://<domein-organisatie>
+PORT=8090
+go run ./cmd/facade
+```
+
+Het CM moet in `model/` gegenereerd zijn: lokaal met `go run ./cmd/codegen` (CODEGEN §4), of
+voor een image met `scripts/bouw-domeinen.ps1`. De CM-domeinen krijgen in de eigen database lege
+tabellen; de façade schrijft er nooit in.
+
+Wat de façade in fase 1 doet en weigert:
+
+| Verzoek | Antwoord |
+|---|---|
+| GraphQL-query, ook `documentId` | gelezen uit het register (zaaktypen) of uit de eigen database (configuratie) |
+| GraphQL-mutatie | **501**, `extensions.code = niet_ondersteund_door_register` |
+| `GET /full/<padnaam>[/:id]` | dezelfde GraphQL-weg, drie niveaus diep, zonder `gerelateerde_*`; `peiltijdstip`/`t`/`geldigOp` als query-parameter |
+| peiltijdstip op Open Zaak | **501** |
+| `POST /registratie` op configuratie (QueryDefinitie) | 201, in de eigen database |
+| `POST /registratie` op een ander domein | **501** |
 
 Wat de bouw opleverde:
 
