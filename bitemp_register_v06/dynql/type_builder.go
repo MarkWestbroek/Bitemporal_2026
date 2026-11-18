@@ -299,6 +299,9 @@ func buildObjectType(typenaam string, meta model.TypeMeta) *graphql.Object {
 				}
 			}
 
+			// Extra velden van buiten het model (de façade; lader.go). Zonder façade leeg.
+			voegExtraVeldenToe(fields, typenaam)
+
 			return fields
 		}),
 	})

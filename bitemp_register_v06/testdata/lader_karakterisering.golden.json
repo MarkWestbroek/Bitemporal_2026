@@ -1,0 +1,5442 @@
+{
+ "adellijke_titels@lijst": {
+  "data": {
+   "r": [
+    {
+     "afvoer": null,
+     "id": 1,
+     "opvoer": "2026-01-01T17:00:00.000017Z"
+    },
+    {
+     "afvoer": null,
+     "id": 2,
+     "opvoer": "2026-01-01T17:00:00.000017Z"
+    },
+    {
+     "afvoer": null,
+     "id": 3,
+     "opvoer": "2026-01-01T17:00:00.000017Z"
+    },
+    {
+     "afvoer": null,
+     "id": 4,
+     "opvoer": "2026-01-01T17:00:00.000017Z"
+    },
+    {
+     "afvoer": null,
+     "id": 5,
+     "opvoer": "2026-01-01T17:00:00.000017Z"
+    }
+   ]
+  }
+ },
+ "afdelingen@lijst": {
+  "data": {
+   "r": []
+  }
+ },
+ "api_standaarden@lijst": {
+  "data": {
+   "r": []
+  }
+ },
+ "as@lijst": {
+  "data": {
+   "r": []
+  }
+ },
+ "bs@lijst": {
+  "data": {
+   "r": []
+  }
+ },
+ "c_subs@lijst": {
+  "data": {
+   "r": []
+  }
+ },
+ "cs@lijst": {
+  "data": {
+   "r": []
+  }
+ },
+ "dashboard_definities@lijst": {
+  "data": {
+   "r": []
+  }
+ },
+ "domeinen@lijst": {
+  "data": {
+   "r": []
+  }
+ },
+ "formulier_definities@lijst": {
+  "data": {
+   "r": []
+  }
+ },
+ "full_adellijke_titels(1)": {
+  "data": {
+   "r": {
+    "adellijke_titel_titels": {
+     "adellijketitel_id": 1,
+     "afvoer": null,
+     "data": null,
+     "opvoer": "2026-01-01T17:00:00.000017Z",
+     "rel_id": 1,
+     "titel": "Baron",
+     "versie": 1
+    },
+    "afvoer": null,
+    "gerelateerde_referentielijsten": [
+     {
+      "aanvang": null,
+      "adellijke_titels_titels": [
+       {
+        "adellijketitel_id": 1,
+        "afvoer": null,
+        "opvoer": "2026-01-01T18:00:00.000018Z",
+        "referentielijst_id": 1,
+        "rel_id": 1,
+        "versie": 1
+       },
+       {
+        "adellijketitel_id": 10,
+        "afvoer": null,
+        "opvoer": "2026-01-01T18:00:00.000018Z",
+        "referentielijst_id": 1,
+        "rel_id": 10,
+        "versie": 1
+       },
+       {
+        "adellijketitel_id": 11,
+        "afvoer": null,
+        "opvoer": "2026-01-01T18:00:00.000018Z",
+        "referentielijst_id": 1,
+        "rel_id": 11,
+        "versie": 1
+       },
+       {
+        "adellijketitel_id": 12,
+        "afvoer": null,
+        "opvoer": "2026-01-01T18:00:00.000018Z",
+        "referentielijst_id": 1,
+        "rel_id": 12,
+        "versie": 1
+       },
+       {
+        "adellijketitel_id": 13,
+        "afvoer": null,
+        "opvoer": "2026-01-01T18:00:00.000018Z",
+        "referentielijst_id": 1,
+        "rel_id": 13,
+        "versie": 1
+       },
+       {
+        "adellijketitel_id": 2,
+        "afvoer": null,
+        "opvoer": "2026-01-01T18:00:00.000018Z",
+        "referentielijst_id": 1,
+        "rel_id": 2,
+        "versie": 1
+       },
+       {
+        "adellijketitel_id": 3,
+        "afvoer": null,
+        "opvoer": "2026-01-01T18:00:00.000018Z",
+        "referentielijst_id": 1,
+        "rel_id": 3,
+        "versie": 1
+       },
+       {
+        "adellijketitel_id": 4,
+        "afvoer": null,
+        "opvoer": "2026-01-01T18:00:00.000018Z",
+        "referentielijst_id": 1,
+        "rel_id": 4,
+        "versie": 1
+       },
+       {
+        "adellijketitel_id": 5,
+        "afvoer": null,
+        "opvoer": "2026-01-01T18:00:00.000018Z",
+        "referentielijst_id": 1,
+        "rel_id": 5,
+        "versie": 1
+       },
+       {
+        "adellijketitel_id": 6,
+        "afvoer": null,
+        "opvoer": "2026-01-01T18:00:00.000018Z",
+        "referentielijst_id": 1,
+        "rel_id": 6,
+        "versie": 1
+       },
+       {
+        "adellijketitel_id": 7,
+        "afvoer": null,
+        "opvoer": "2026-01-01T18:00:00.000018Z",
+        "referentielijst_id": 1,
+        "rel_id": 7,
+        "versie": 1
+       },
+       {
+        "adellijketitel_id": 8,
+        "afvoer": null,
+        "opvoer": "2026-01-01T18:00:00.000018Z",
+        "referentielijst_id": 1,
+        "rel_id": 8,
+        "versie": 1
+       },
+       {
+        "adellijketitel_id": 9,
+        "afvoer": null,
+        "opvoer": "2026-01-01T18:00:00.000018Z",
+        "referentielijst_id": 1,
+        "rel_id": 9,
+        "versie": 1
+       }
+      ],
+      "afvoer": null,
+      "einde": null,
+      "id": 1,
+      "internetadressen": null,
+      "landenlijst_landen": null,
+      "opvoer": "2026-01-01T16:00:00.000016Z",
+      "referentielijstnamen": {
+       "afvoer": null,
+       "naam": "AdellijkeTitels",
+       "opvoer": "2026-01-01T16:00:00.000016Z",
+       "referentielijst_id": 1,
+       "rel_id": 1,
+       "versie": 1
+      },
+      "referentielijstomschrijvingen": null,
+      "visibilities": null
+     }
+    ],
+    "id": 1,
+    "opvoer": "2026-01-01T17:00:00.000017Z"
+   }
+  }
+ },
+ "full_adellijke_titels(2)": {
+  "data": {
+   "r": {
+    "adellijke_titel_titels": {
+     "adellijketitel_id": 2,
+     "afvoer": null,
+     "data": null,
+     "opvoer": "2026-01-01T17:00:00.000017Z",
+     "rel_id": 1,
+     "titel": "Barones",
+     "versie": 1
+    },
+    "afvoer": null,
+    "gerelateerde_referentielijsten": [
+     {
+      "aanvang": null,
+      "adellijke_titels_titels": [
+       {
+        "adellijketitel_id": 1,
+        "afvoer": null,
+        "opvoer": "2026-01-01T18:00:00.000018Z",
+        "referentielijst_id": 1,
+        "rel_id": 1,
+        "versie": 1
+       },
+       {
+        "adellijketitel_id": 10,
+        "afvoer": null,
+        "opvoer": "2026-01-01T18:00:00.000018Z",
+        "referentielijst_id": 1,
+        "rel_id": 10,
+        "versie": 1
+       },
+       {
+        "adellijketitel_id": 11,
+        "afvoer": null,
+        "opvoer": "2026-01-01T18:00:00.000018Z",
+        "referentielijst_id": 1,
+        "rel_id": 11,
+        "versie": 1
+       },
+       {
+        "adellijketitel_id": 12,
+        "afvoer": null,
+        "opvoer": "2026-01-01T18:00:00.000018Z",
+        "referentielijst_id": 1,
+        "rel_id": 12,
+        "versie": 1
+       },
+       {
+        "adellijketitel_id": 13,
+        "afvoer": null,
+        "opvoer": "2026-01-01T18:00:00.000018Z",
+        "referentielijst_id": 1,
+        "rel_id": 13,
+        "versie": 1
+       },
+       {
+        "adellijketitel_id": 2,
+        "afvoer": null,
+        "opvoer": "2026-01-01T18:00:00.000018Z",
+        "referentielijst_id": 1,
+        "rel_id": 2,
+        "versie": 1
+       },
+       {
+        "adellijketitel_id": 3,
+        "afvoer": null,
+        "opvoer": "2026-01-01T18:00:00.000018Z",
+        "referentielijst_id": 1,
+        "rel_id": 3,
+        "versie": 1
+       },
+       {
+        "adellijketitel_id": 4,
+        "afvoer": null,
+        "opvoer": "2026-01-01T18:00:00.000018Z",
+        "referentielijst_id": 1,
+        "rel_id": 4,
+        "versie": 1
+       },
+       {
+        "adellijketitel_id": 5,
+        "afvoer": null,
+        "opvoer": "2026-01-01T18:00:00.000018Z",
+        "referentielijst_id": 1,
+        "rel_id": 5,
+        "versie": 1
+       },
+       {
+        "adellijketitel_id": 6,
+        "afvoer": null,
+        "opvoer": "2026-01-01T18:00:00.000018Z",
+        "referentielijst_id": 1,
+        "rel_id": 6,
+        "versie": 1
+       },
+       {
+        "adellijketitel_id": 7,
+        "afvoer": null,
+        "opvoer": "2026-01-01T18:00:00.000018Z",
+        "referentielijst_id": 1,
+        "rel_id": 7,
+        "versie": 1
+       },
+       {
+        "adellijketitel_id": 8,
+        "afvoer": null,
+        "opvoer": "2026-01-01T18:00:00.000018Z",
+        "referentielijst_id": 1,
+        "rel_id": 8,
+        "versie": 1
+       },
+       {
+        "adellijketitel_id": 9,
+        "afvoer": null,
+        "opvoer": "2026-01-01T18:00:00.000018Z",
+        "referentielijst_id": 1,
+        "rel_id": 9,
+        "versie": 1
+       }
+      ],
+      "afvoer": null,
+      "einde": null,
+      "id": 1,
+      "internetadressen": null,
+      "landenlijst_landen": null,
+      "opvoer": "2026-01-01T16:00:00.000016Z",
+      "referentielijstnamen": {
+       "afvoer": null,
+       "naam": "AdellijkeTitels",
+       "opvoer": "2026-01-01T16:00:00.000016Z",
+       "referentielijst_id": 1,
+       "rel_id": 1,
+       "versie": 1
+      },
+      "referentielijstomschrijvingen": null,
+      "visibilities": null
+     }
+    ],
+    "id": 2,
+    "opvoer": "2026-01-01T17:00:00.000017Z"
+   }
+  }
+ },
+ "full_adellijke_titels(2)@t3": {
+  "data": {
+   "r": null
+  },
+  "errors": [
+   {
+    "locations": [
+     {
+      "column": 3,
+      "line": 1
+     }
+    ],
+    "message": "query fout voor AdellijkeTitel: sql: no rows in result set",
+    "path": [
+     "r"
+    ]
+   }
+  ]
+ },
+ "full_adellijke_titels(3)": {
+  "data": {
+   "r": {
+    "adellijke_titel_titels": {
+     "adellijketitel_id": 3,
+     "afvoer": null,
+     "data": null,
+     "opvoer": "2026-01-01T17:00:00.000017Z",
+     "rel_id": 1,
+     "titel": "Graaf",
+     "versie": 1
+    },
+    "afvoer": null,
+    "gerelateerde_referentielijsten": [
+     {
+      "aanvang": null,
+      "adellijke_titels_titels": [
+       {
+        "adellijketitel_id": 1,
+        "afvoer": null,
+        "opvoer": "2026-01-01T18:00:00.000018Z",
+        "referentielijst_id": 1,
+        "rel_id": 1,
+        "versie": 1
+       },
+       {
+        "adellijketitel_id": 10,
+        "afvoer": null,
+        "opvoer": "2026-01-01T18:00:00.000018Z",
+        "referentielijst_id": 1,
+        "rel_id": 10,
+        "versie": 1
+       },
+       {
+        "adellijketitel_id": 11,
+        "afvoer": null,
+        "opvoer": "2026-01-01T18:00:00.000018Z",
+        "referentielijst_id": 1,
+        "rel_id": 11,
+        "versie": 1
+       },
+       {
+        "adellijketitel_id": 12,
+        "afvoer": null,
+        "opvoer": "2026-01-01T18:00:00.000018Z",
+        "referentielijst_id": 1,
+        "rel_id": 12,
+        "versie": 1
+       },
+       {
+        "adellijketitel_id": 13,
+        "afvoer": null,
+        "opvoer": "2026-01-01T18:00:00.000018Z",
+        "referentielijst_id": 1,
+        "rel_id": 13,
+        "versie": 1
+       },
+       {
+        "adellijketitel_id": 2,
+        "afvoer": null,
+        "opvoer": "2026-01-01T18:00:00.000018Z",
+        "referentielijst_id": 1,
+        "rel_id": 2,
+        "versie": 1
+       },
+       {
+        "adellijketitel_id": 3,
+        "afvoer": null,
+        "opvoer": "2026-01-01T18:00:00.000018Z",
+        "referentielijst_id": 1,
+        "rel_id": 3,
+        "versie": 1
+       },
+       {
+        "adellijketitel_id": 4,
+        "afvoer": null,
+        "opvoer": "2026-01-01T18:00:00.000018Z",
+        "referentielijst_id": 1,
+        "rel_id": 4,
+        "versie": 1
+       },
+       {
+        "adellijketitel_id": 5,
+        "afvoer": null,
+        "opvoer": "2026-01-01T18:00:00.000018Z",
+        "referentielijst_id": 1,
+        "rel_id": 5,
+        "versie": 1
+       },
+       {
+        "adellijketitel_id": 6,
+        "afvoer": null,
+        "opvoer": "2026-01-01T18:00:00.000018Z",
+        "referentielijst_id": 1,
+        "rel_id": 6,
+        "versie": 1
+       },
+       {
+        "adellijketitel_id": 7,
+        "afvoer": null,
+        "opvoer": "2026-01-01T18:00:00.000018Z",
+        "referentielijst_id": 1,
+        "rel_id": 7,
+        "versie": 1
+       },
+       {
+        "adellijketitel_id": 8,
+        "afvoer": null,
+        "opvoer": "2026-01-01T18:00:00.000018Z",
+        "referentielijst_id": 1,
+        "rel_id": 8,
+        "versie": 1
+       },
+       {
+        "adellijketitel_id": 9,
+        "afvoer": null,
+        "opvoer": "2026-01-01T18:00:00.000018Z",
+        "referentielijst_id": 1,
+        "rel_id": 9,
+        "versie": 1
+       }
+      ],
+      "afvoer": null,
+      "einde": null,
+      "id": 1,
+      "internetadressen": null,
+      "landenlijst_landen": null,
+      "opvoer": "2026-01-01T16:00:00.000016Z",
+      "referentielijstnamen": {
+       "afvoer": null,
+       "naam": "AdellijkeTitels",
+       "opvoer": "2026-01-01T16:00:00.000016Z",
+       "referentielijst_id": 1,
+       "rel_id": 1,
+       "versie": 1
+      },
+      "referentielijstomschrijvingen": null,
+      "visibilities": null
+     }
+    ],
+    "id": 3,
+    "opvoer": "2026-01-01T17:00:00.000017Z"
+   }
+  }
+ },
+ "full_adellijke_titels_list": {
+  "data": {
+   "r": [
+    {
+     "adellijke_titel_titels": {
+      "adellijketitel_id": 1,
+      "afvoer": null,
+      "data": null,
+      "opvoer": "2026-01-01T17:00:00.000017Z",
+      "rel_id": 1,
+      "titel": "Baron",
+      "versie": 1
+     },
+     "afvoer": null,
+     "gerelateerde_referentielijsten": [
+      {
+       "aanvang": null,
+       "adellijke_titels_titels": [
+        {
+         "adellijketitel_id": 1,
+         "afvoer": null,
+         "opvoer": "2026-01-01T18:00:00.000018Z",
+         "referentielijst_id": 1,
+         "rel_id": 1,
+         "versie": 1
+        },
+        {
+         "adellijketitel_id": 10,
+         "afvoer": null,
+         "opvoer": "2026-01-01T18:00:00.000018Z",
+         "referentielijst_id": 1,
+         "rel_id": 10,
+         "versie": 1
+        },
+        {
+         "adellijketitel_id": 11,
+         "afvoer": null,
+         "opvoer": "2026-01-01T18:00:00.000018Z",
+         "referentielijst_id": 1,
+         "rel_id": 11,
+         "versie": 1
+        },
+        {
+         "adellijketitel_id": 12,
+         "afvoer": null,
+         "opvoer": "2026-01-01T18:00:00.000018Z",
+         "referentielijst_id": 1,
+         "rel_id": 12,
+         "versie": 1
+        },
+        {
+         "adellijketitel_id": 13,
+         "afvoer": null,
+         "opvoer": "2026-01-01T18:00:00.000018Z",
+         "referentielijst_id": 1,
+         "rel_id": 13,
+         "versie": 1
+        },
+        {
+         "adellijketitel_id": 2,
+         "afvoer": null,
+         "opvoer": "2026-01-01T18:00:00.000018Z",
+         "referentielijst_id": 1,
+         "rel_id": 2,
+         "versie": 1
+        },
+        {
+         "adellijketitel_id": 3,
+         "afvoer": null,
+         "opvoer": "2026-01-01T18:00:00.000018Z",
+         "referentielijst_id": 1,
+         "rel_id": 3,
+         "versie": 1
+        },
+        {
+         "adellijketitel_id": 4,
+         "afvoer": null,
+         "opvoer": "2026-01-01T18:00:00.000018Z",
+         "referentielijst_id": 1,
+         "rel_id": 4,
+         "versie": 1
+        },
+        {
+         "adellijketitel_id": 5,
+         "afvoer": null,
+         "opvoer": "2026-01-01T18:00:00.000018Z",
+         "referentielijst_id": 1,
+         "rel_id": 5,
+         "versie": 1
+        },
+        {
+         "adellijketitel_id": 6,
+         "afvoer": null,
+         "opvoer": "2026-01-01T18:00:00.000018Z",
+         "referentielijst_id": 1,
+         "rel_id": 6,
+         "versie": 1
+        },
+        {
+         "adellijketitel_id": 7,
+         "afvoer": null,
+         "opvoer": "2026-01-01T18:00:00.000018Z",
+         "referentielijst_id": 1,
+         "rel_id": 7,
+         "versie": 1
+        },
+        {
+         "adellijketitel_id": 8,
+         "afvoer": null,
+         "opvoer": "2026-01-01T18:00:00.000018Z",
+         "referentielijst_id": 1,
+         "rel_id": 8,
+         "versie": 1
+        },
+        {
+         "adellijketitel_id": 9,
+         "afvoer": null,
+         "opvoer": "2026-01-01T18:00:00.000018Z",
+         "referentielijst_id": 1,
+         "rel_id": 9,
+         "versie": 1
+        }
+       ],
+       "afvoer": null,
+       "einde": null,
+       "id": 1,
+       "internetadressen": null,
+       "landenlijst_landen": null,
+       "opvoer": "2026-01-01T16:00:00.000016Z",
+       "referentielijstnamen": {
+        "afvoer": null,
+        "naam": "AdellijkeTitels",
+        "opvoer": "2026-01-01T16:00:00.000016Z",
+        "referentielijst_id": 1,
+        "rel_id": 1,
+        "versie": 1
+       },
+       "referentielijstomschrijvingen": null,
+       "visibilities": null
+      }
+     ],
+     "id": 1,
+     "opvoer": "2026-01-01T17:00:00.000017Z"
+    },
+    {
+     "adellijke_titel_titels": {
+      "adellijketitel_id": 2,
+      "afvoer": null,
+      "data": null,
+      "opvoer": "2026-01-01T17:00:00.000017Z",
+      "rel_id": 1,
+      "titel": "Barones",
+      "versie": 1
+     },
+     "afvoer": null,
+     "gerelateerde_referentielijsten": [
+      {
+       "aanvang": null,
+       "adellijke_titels_titels": [
+        {
+         "adellijketitel_id": 1,
+         "afvoer": null,
+         "opvoer": "2026-01-01T18:00:00.000018Z",
+         "referentielijst_id": 1,
+         "rel_id": 1,
+         "versie": 1
+        },
+        {
+         "adellijketitel_id": 10,
+         "afvoer": null,
+         "opvoer": "2026-01-01T18:00:00.000018Z",
+         "referentielijst_id": 1,
+         "rel_id": 10,
+         "versie": 1
+        },
+        {
+         "adellijketitel_id": 11,
+         "afvoer": null,
+         "opvoer": "2026-01-01T18:00:00.000018Z",
+         "referentielijst_id": 1,
+         "rel_id": 11,
+         "versie": 1
+        },
+        {
+         "adellijketitel_id": 12,
+         "afvoer": null,
+         "opvoer": "2026-01-01T18:00:00.000018Z",
+         "referentielijst_id": 1,
+         "rel_id": 12,
+         "versie": 1
+        },
+        {
+         "adellijketitel_id": 13,
+         "afvoer": null,
+         "opvoer": "2026-01-01T18:00:00.000018Z",
+         "referentielijst_id": 1,
+         "rel_id": 13,
+         "versie": 1
+        },
+        {
+         "adellijketitel_id": 2,
+         "afvoer": null,
+         "opvoer": "2026-01-01T18:00:00.000018Z",
+         "referentielijst_id": 1,
+         "rel_id": 2,
+         "versie": 1
+        },
+        {
+         "adellijketitel_id": 3,
+         "afvoer": null,
+         "opvoer": "2026-01-01T18:00:00.000018Z",
+         "referentielijst_id": 1,
+         "rel_id": 3,
+         "versie": 1
+        },
+        {
+         "adellijketitel_id": 4,
+         "afvoer": null,
+         "opvoer": "2026-01-01T18:00:00.000018Z",
+         "referentielijst_id": 1,
+         "rel_id": 4,
+         "versie": 1
+        },
+        {
+         "adellijketitel_id": 5,
+         "afvoer": null,
+         "opvoer": "2026-01-01T18:00:00.000018Z",
+         "referentielijst_id": 1,
+         "rel_id": 5,
+         "versie": 1
+        },
+        {
+         "adellijketitel_id": 6,
+         "afvoer": null,
+         "opvoer": "2026-01-01T18:00:00.000018Z",
+         "referentielijst_id": 1,
+         "rel_id": 6,
+         "versie": 1
+        },
+        {
+         "adellijketitel_id": 7,
+         "afvoer": null,
+         "opvoer": "2026-01-01T18:00:00.000018Z",
+         "referentielijst_id": 1,
+         "rel_id": 7,
+         "versie": 1
+        },
+        {
+         "adellijketitel_id": 8,
+         "afvoer": null,
+         "opvoer": "2026-01-01T18:00:00.000018Z",
+         "referentielijst_id": 1,
+         "rel_id": 8,
+         "versie": 1
+        },
+        {
+         "adellijketitel_id": 9,
+         "afvoer": null,
+         "opvoer": "2026-01-01T18:00:00.000018Z",
+         "referentielijst_id": 1,
+         "rel_id": 9,
+         "versie": 1
+        }
+       ],
+       "afvoer": null,
+       "einde": null,
+       "id": 1,
+       "internetadressen": null,
+       "landenlijst_landen": null,
+       "opvoer": "2026-01-01T16:00:00.000016Z",
+       "referentielijstnamen": {
+        "afvoer": null,
+        "naam": "AdellijkeTitels",
+        "opvoer": "2026-01-01T16:00:00.000016Z",
+        "referentielijst_id": 1,
+        "rel_id": 1,
+        "versie": 1
+       },
+       "referentielijstomschrijvingen": null,
+       "visibilities": null
+      }
+     ],
+     "id": 2,
+     "opvoer": "2026-01-01T17:00:00.000017Z"
+    },
+    {
+     "adellijke_titel_titels": {
+      "adellijketitel_id": 3,
+      "afvoer": null,
+      "data": null,
+      "opvoer": "2026-01-01T17:00:00.000017Z",
+      "rel_id": 1,
+      "titel": "Graaf",
+      "versie": 1
+     },
+     "afvoer": null,
+     "gerelateerde_referentielijsten": [
+      {
+       "aanvang": null,
+       "adellijke_titels_titels": [
+        {
+         "adellijketitel_id": 1,
+         "afvoer": null,
+         "opvoer": "2026-01-01T18:00:00.000018Z",
+         "referentielijst_id": 1,
+         "rel_id": 1,
+         "versie": 1
+        },
+        {
+         "adellijketitel_id": 10,
+         "afvoer": null,
+         "opvoer": "2026-01-01T18:00:00.000018Z",
+         "referentielijst_id": 1,
+         "rel_id": 10,
+         "versie": 1
+        },
+        {
+         "adellijketitel_id": 11,
+         "afvoer": null,
+         "opvoer": "2026-01-01T18:00:00.000018Z",
+         "referentielijst_id": 1,
+         "rel_id": 11,
+         "versie": 1
+        },
+        {
+         "adellijketitel_id": 12,
+         "afvoer": null,
+         "opvoer": "2026-01-01T18:00:00.000018Z",
+         "referentielijst_id": 1,
+         "rel_id": 12,
+         "versie": 1
+        },
+        {
+         "adellijketitel_id": 13,
+         "afvoer": null,
+         "opvoer": "2026-01-01T18:00:00.000018Z",
+         "referentielijst_id": 1,
+         "rel_id": 13,
+         "versie": 1
+        },
+        {
+         "adellijketitel_id": 2,
+         "afvoer": null,
+         "opvoer": "2026-01-01T18:00:00.000018Z",
+         "referentielijst_id": 1,
+         "rel_id": 2,
+         "versie": 1
+        },
+        {
+         "adellijketitel_id": 3,
+         "afvoer": null,
+         "opvoer": "2026-01-01T18:00:00.000018Z",
+         "referentielijst_id": 1,
+         "rel_id": 3,
+         "versie": 1
+        },
+        {
+         "adellijketitel_id": 4,
+         "afvoer": null,
+         "opvoer": "2026-01-01T18:00:00.000018Z",
+         "referentielijst_id": 1,
+         "rel_id": 4,
+         "versie": 1
+        },
+        {
+         "adellijketitel_id": 5,
+         "afvoer": null,
+         "opvoer": "2026-01-01T18:00:00.000018Z",
+         "referentielijst_id": 1,
+         "rel_id": 5,
+         "versie": 1
+        },
+        {
+         "adellijketitel_id": 6,
+         "afvoer": null,
+         "opvoer": "2026-01-01T18:00:00.000018Z",
+         "referentielijst_id": 1,
+         "rel_id": 6,
+         "versie": 1
+        },
+        {
+         "adellijketitel_id": 7,
+         "afvoer": null,
+         "opvoer": "2026-01-01T18:00:00.000018Z",
+         "referentielijst_id": 1,
+         "rel_id": 7,
+         "versie": 1
+        },
+        {
+         "adellijketitel_id": 8,
+         "afvoer": null,
+         "opvoer": "2026-01-01T18:00:00.000018Z",
+         "referentielijst_id": 1,
+         "rel_id": 8,
+         "versie": 1
+        },
+        {
+         "adellijketitel_id": 9,
+         "afvoer": null,
+         "opvoer": "2026-01-01T18:00:00.000018Z",
+         "referentielijst_id": 1,
+         "rel_id": 9,
+         "versie": 1
+        }
+       ],
+       "afvoer": null,
+       "einde": null,
+       "id": 1,
+       "internetadressen": null,
+       "landenlijst_landen": null,
+       "opvoer": "2026-01-01T16:00:00.000016Z",
+       "referentielijstnamen": {
+        "afvoer": null,
+        "naam": "AdellijkeTitels",
+        "opvoer": "2026-01-01T16:00:00.000016Z",
+        "referentielijst_id": 1,
+        "rel_id": 1,
+        "versie": 1
+       },
+       "referentielijstomschrijvingen": null,
+       "visibilities": null
+      }
+     ],
+     "id": 3,
+     "opvoer": "2026-01-01T17:00:00.000017Z"
+    },
+    {
+     "adellijke_titel_titels": {
+      "adellijketitel_id": 4,
+      "afvoer": null,
+      "data": null,
+      "opvoer": "2026-01-01T17:00:00.000017Z",
+      "rel_id": 1,
+      "titel": "Gravin",
+      "versie": 1
+     },
+     "afvoer": null,
+     "gerelateerde_referentielijsten": [
+      {
+       "aanvang": null,
+       "adellijke_titels_titels": [
+        {
+         "adellijketitel_id": 1,
+         "afvoer": null,
+         "opvoer": "2026-01-01T18:00:00.000018Z",
+         "referentielijst_id": 1,
+         "rel_id": 1,
+         "versie": 1
+        },
+        {
+         "adellijketitel_id": 10,
+         "afvoer": null,
+         "opvoer": "2026-01-01T18:00:00.000018Z",
+         "referentielijst_id": 1,
+         "rel_id": 10,
+         "versie": 1
+        },
+        {
+         "adellijketitel_id": 11,
+         "afvoer": null,
+         "opvoer": "2026-01-01T18:00:00.000018Z",
+         "referentielijst_id": 1,
+         "rel_id": 11,
+         "versie": 1
+        },
+        {
+         "adellijketitel_id": 12,
+         "afvoer": null,
+         "opvoer": "2026-01-01T18:00:00.000018Z",
+         "referentielijst_id": 1,
+         "rel_id": 12,
+         "versie": 1
+        },
+        {
+         "adellijketitel_id": 13,
+         "afvoer": null,
+         "opvoer": "2026-01-01T18:00:00.000018Z",
+         "referentielijst_id": 1,
+         "rel_id": 13,
+         "versie": 1
+        },
+        {
+         "adellijketitel_id": 2,
+         "afvoer": null,
+         "opvoer": "2026-01-01T18:00:00.000018Z",
+         "referentielijst_id": 1,
+         "rel_id": 2,
+         "versie": 1
+        },
+        {
+         "adellijketitel_id": 3,
+         "afvoer": null,
+         "opvoer": "2026-01-01T18:00:00.000018Z",
+         "referentielijst_id": 1,
+         "rel_id": 3,
+         "versie": 1
+        },
+        {
+         "adellijketitel_id": 4,
+         "afvoer": null,
+         "opvoer": "2026-01-01T18:00:00.000018Z",
+         "referentielijst_id": 1,
+         "rel_id": 4,
+         "versie": 1
+        },
+        {
+         "adellijketitel_id": 5,
+         "afvoer": null,
+         "opvoer": "2026-01-01T18:00:00.000018Z",
+         "referentielijst_id": 1,
+         "rel_id": 5,
+         "versie": 1
+        },
+        {
+         "adellijketitel_id": 6,
+         "afvoer": null,
+         "opvoer": "2026-01-01T18:00:00.000018Z",
+         "referentielijst_id": 1,
+         "rel_id": 6,
+         "versie": 1
+        },
+        {
+         "adellijketitel_id": 7,
+         "afvoer": null,
+         "opvoer": "2026-01-01T18:00:00.000018Z",
+         "referentielijst_id": 1,
+         "rel_id": 7,
+         "versie": 1
+        },
+        {
+         "adellijketitel_id": 8,
+         "afvoer": null,
+         "opvoer": "2026-01-01T18:00:00.000018Z",
+         "referentielijst_id": 1,
+         "rel_id": 8,
+         "versie": 1
+        },
+        {
+         "adellijketitel_id": 9,
+         "afvoer": null,
+         "opvoer": "2026-01-01T18:00:00.000018Z",
+         "referentielijst_id": 1,
+         "rel_id": 9,
+         "versie": 1
+        }
+       ],
+       "afvoer": null,
+       "einde": null,
+       "id": 1,
+       "internetadressen": null,
+       "landenlijst_landen": null,
+       "opvoer": "2026-01-01T16:00:00.000016Z",
+       "referentielijstnamen": {
+        "afvoer": null,
+        "naam": "AdellijkeTitels",
+        "opvoer": "2026-01-01T16:00:00.000016Z",
+        "referentielijst_id": 1,
+        "rel_id": 1,
+        "versie": 1
+       },
+       "referentielijstomschrijvingen": null,
+       "visibilities": null
+      }
+     ],
+     "id": 4,
+     "opvoer": "2026-01-01T17:00:00.000017Z"
+    },
+    {
+     "adellijke_titel_titels": {
+      "adellijketitel_id": 5,
+      "afvoer": null,
+      "data": null,
+      "opvoer": "2026-01-01T17:00:00.000017Z",
+      "rel_id": 1,
+      "titel": "Hertog",
+      "versie": 1
+     },
+     "afvoer": null,
+     "gerelateerde_referentielijsten": [
+      {
+       "aanvang": null,
+       "adellijke_titels_titels": [
+        {
+         "adellijketitel_id": 1,
+         "afvoer": null,
+         "opvoer": "2026-01-01T18:00:00.000018Z",
+         "referentielijst_id": 1,
+         "rel_id": 1,
+         "versie": 1
+        },
+        {
+         "adellijketitel_id": 10,
+         "afvoer": null,
+         "opvoer": "2026-01-01T18:00:00.000018Z",
+         "referentielijst_id": 1,
+         "rel_id": 10,
+         "versie": 1
+        },
+        {
+         "adellijketitel_id": 11,
+         "afvoer": null,
+         "opvoer": "2026-01-01T18:00:00.000018Z",
+         "referentielijst_id": 1,
+         "rel_id": 11,
+         "versie": 1
+        },
+        {
+         "adellijketitel_id": 12,
+         "afvoer": null,
+         "opvoer": "2026-01-01T18:00:00.000018Z",
+         "referentielijst_id": 1,
+         "rel_id": 12,
+         "versie": 1
+        },
+        {
+         "adellijketitel_id": 13,
+         "afvoer": null,
+         "opvoer": "2026-01-01T18:00:00.000018Z",
+         "referentielijst_id": 1,
+         "rel_id": 13,
+         "versie": 1
+        },
+        {
+         "adellijketitel_id": 2,
+         "afvoer": null,
+         "opvoer": "2026-01-01T18:00:00.000018Z",
+         "referentielijst_id": 1,
+         "rel_id": 2,
+         "versie": 1
+        },
+        {
+         "adellijketitel_id": 3,
+         "afvoer": null,
+         "opvoer": "2026-01-01T18:00:00.000018Z",
+         "referentielijst_id": 1,
+         "rel_id": 3,
+         "versie": 1
+        },
+        {
+         "adellijketitel_id": 4,
+         "afvoer": null,
+         "opvoer": "2026-01-01T18:00:00.000018Z",
+         "referentielijst_id": 1,
+         "rel_id": 4,
+         "versie": 1
+        },
+        {
+         "adellijketitel_id": 5,
+         "afvoer": null,
+         "opvoer": "2026-01-01T18:00:00.000018Z",
+         "referentielijst_id": 1,
+         "rel_id": 5,
+         "versie": 1
+        },
+        {
+         "adellijketitel_id": 6,
+         "afvoer": null,
+         "opvoer": "2026-01-01T18:00:00.000018Z",
+         "referentielijst_id": 1,
+         "rel_id": 6,
+         "versie": 1
+        },
+        {
+         "adellijketitel_id": 7,
+         "afvoer": null,
+         "opvoer": "2026-01-01T18:00:00.000018Z",
+         "referentielijst_id": 1,
+         "rel_id": 7,
+         "versie": 1
+        },
+        {
+         "adellijketitel_id": 8,
+         "afvoer": null,
+         "opvoer": "2026-01-01T18:00:00.000018Z",
+         "referentielijst_id": 1,
+         "rel_id": 8,
+         "versie": 1
+        },
+        {
+         "adellijketitel_id": 9,
+         "afvoer": null,
+         "opvoer": "2026-01-01T18:00:00.000018Z",
+         "referentielijst_id": 1,
+         "rel_id": 9,
+         "versie": 1
+        }
+       ],
+       "afvoer": null,
+       "einde": null,
+       "id": 1,
+       "internetadressen": null,
+       "landenlijst_landen": null,
+       "opvoer": "2026-01-01T16:00:00.000016Z",
+       "referentielijstnamen": {
+        "afvoer": null,
+        "naam": "AdellijkeTitels",
+        "opvoer": "2026-01-01T16:00:00.000016Z",
+        "referentielijst_id": 1,
+        "rel_id": 1,
+        "versie": 1
+       },
+       "referentielijstomschrijvingen": null,
+       "visibilities": null
+      }
+     ],
+     "id": 5,
+     "opvoer": "2026-01-01T17:00:00.000017Z"
+    }
+   ]
+  }
+ },
+ "full_adellijke_titels_list@t3": {
+  "data": {
+   "r": []
+  }
+ },
+ "full_afdelingen(1)": {
+  "data": {
+   "r": null
+  },
+  "errors": [
+   {
+    "locations": [
+     {
+      "column": 3,
+      "line": 1
+     }
+    ],
+    "message": "query fout voor Afdeling: sql: no rows in result set",
+    "path": [
+     "r"
+    ]
+   }
+  ]
+ },
+ "full_afdelingen(2)": {
+  "data": {
+   "r": null
+  },
+  "errors": [
+   {
+    "locations": [
+     {
+      "column": 3,
+      "line": 1
+     }
+    ],
+    "message": "query fout voor Afdeling: sql: no rows in result set",
+    "path": [
+     "r"
+    ]
+   }
+  ]
+ },
+ "full_afdelingen(2)@t3": {
+  "data": {
+   "r": null
+  },
+  "errors": [
+   {
+    "locations": [
+     {
+      "column": 3,
+      "line": 1
+     }
+    ],
+    "message": "query fout voor Afdeling: sql: no rows in result set",
+    "path": [
+     "r"
+    ]
+   }
+  ]
+ },
+ "full_afdelingen(3)": {
+  "data": {
+   "r": null
+  },
+  "errors": [
+   {
+    "locations": [
+     {
+      "column": 3,
+      "line": 1
+     }
+    ],
+    "message": "query fout voor Afdeling: sql: no rows in result set",
+    "path": [
+     "r"
+    ]
+   }
+  ]
+ },
+ "full_afdelingen_list": {
+  "data": {
+   "r": []
+  }
+ },
+ "full_afdelingen_list@t3": {
+  "data": {
+   "r": []
+  }
+ },
+ "full_api_standaarden(1)": {
+  "data": {
+   "r": null
+  },
+  "errors": [
+   {
+    "locations": [
+     {
+      "column": 3,
+      "line": 1
+     }
+    ],
+    "message": "query fout voor ApiStandaard: sql: no rows in result set",
+    "path": [
+     "r"
+    ]
+   }
+  ]
+ },
+ "full_api_standaarden(2)": {
+  "data": {
+   "r": null
+  },
+  "errors": [
+   {
+    "locations": [
+     {
+      "column": 3,
+      "line": 1
+     }
+    ],
+    "message": "query fout voor ApiStandaard: sql: no rows in result set",
+    "path": [
+     "r"
+    ]
+   }
+  ]
+ },
+ "full_api_standaarden(2)@t3": {
+  "data": {
+   "r": null
+  },
+  "errors": [
+   {
+    "locations": [
+     {
+      "column": 3,
+      "line": 1
+     }
+    ],
+    "message": "query fout voor ApiStandaard: sql: no rows in result set",
+    "path": [
+     "r"
+    ]
+   }
+  ]
+ },
+ "full_api_standaarden(3)": {
+  "data": {
+   "r": null
+  },
+  "errors": [
+   {
+    "locations": [
+     {
+      "column": 3,
+      "line": 1
+     }
+    ],
+    "message": "query fout voor ApiStandaard: sql: no rows in result set",
+    "path": [
+     "r"
+    ]
+   }
+  ]
+ },
+ "full_api_standaarden_list": {
+  "data": {
+   "r": []
+  }
+ },
+ "full_api_standaarden_list@t3": {
+  "data": {
+   "r": []
+  }
+ },
+ "full_as(1)": {
+  "data": {
+   "r": null
+  },
+  "errors": [
+   {
+    "locations": [
+     {
+      "column": 3,
+      "line": 1
+     }
+    ],
+    "message": "query fout voor A: sql: no rows in result set",
+    "path": [
+     "r"
+    ]
+   }
+  ]
+ },
+ "full_as(2)": {
+  "data": {
+   "r": null
+  },
+  "errors": [
+   {
+    "locations": [
+     {
+      "column": 3,
+      "line": 1
+     }
+    ],
+    "message": "query fout voor A: sql: no rows in result set",
+    "path": [
+     "r"
+    ]
+   }
+  ]
+ },
+ "full_as(2)@t3": {
+  "data": {
+   "r": null
+  },
+  "errors": [
+   {
+    "locations": [
+     {
+      "column": 3,
+      "line": 1
+     }
+    ],
+    "message": "query fout voor A: sql: no rows in result set",
+    "path": [
+     "r"
+    ]
+   }
+  ]
+ },
+ "full_as(3)": {
+  "data": {
+   "r": null
+  },
+  "errors": [
+   {
+    "locations": [
+     {
+      "column": 3,
+      "line": 1
+     }
+    ],
+    "message": "query fout voor A: sql: no rows in result set",
+    "path": [
+     "r"
+    ]
+   }
+  ]
+ },
+ "full_as_list": {
+  "data": {
+   "r": []
+  }
+ },
+ "full_as_list@t3": {
+  "data": {
+   "r": []
+  }
+ },
+ "full_bs(1)": {
+  "data": {
+   "r": null
+  },
+  "errors": [
+   {
+    "locations": [
+     {
+      "column": 3,
+      "line": 1
+     }
+    ],
+    "message": "query fout voor B: sql: no rows in result set",
+    "path": [
+     "r"
+    ]
+   }
+  ]
+ },
+ "full_bs(2)": {
+  "data": {
+   "r": null
+  },
+  "errors": [
+   {
+    "locations": [
+     {
+      "column": 3,
+      "line": 1
+     }
+    ],
+    "message": "query fout voor B: sql: no rows in result set",
+    "path": [
+     "r"
+    ]
+   }
+  ]
+ },
+ "full_bs(2)@t3": {
+  "data": {
+   "r": null
+  },
+  "errors": [
+   {
+    "locations": [
+     {
+      "column": 3,
+      "line": 1
+     }
+    ],
+    "message": "query fout voor B: sql: no rows in result set",
+    "path": [
+     "r"
+    ]
+   }
+  ]
+ },
+ "full_bs(3)": {
+  "data": {
+   "r": null
+  },
+  "errors": [
+   {
+    "locations": [
+     {
+      "column": 3,
+      "line": 1
+     }
+    ],
+    "message": "query fout voor B: sql: no rows in result set",
+    "path": [
+     "r"
+    ]
+   }
+  ]
+ },
+ "full_bs_list": {
+  "data": {
+   "r": []
+  }
+ },
+ "full_bs_list@t3": {
+  "data": {
+   "r": []
+  }
+ },
+ "full_c_subs(1)": {
+  "data": {
+   "r": null
+  },
+  "errors": [
+   {
+    "locations": [
+     {
+      "column": 3,
+      "line": 1
+     }
+    ],
+    "message": "query fout voor C_sub: sql: no rows in result set",
+    "path": [
+     "r"
+    ]
+   }
+  ]
+ },
+ "full_c_subs(2)": {
+  "data": {
+   "r": null
+  },
+  "errors": [
+   {
+    "locations": [
+     {
+      "column": 3,
+      "line": 1
+     }
+    ],
+    "message": "query fout voor C_sub: sql: no rows in result set",
+    "path": [
+     "r"
+    ]
+   }
+  ]
+ },
+ "full_c_subs(2)@t3": {
+  "data": {
+   "r": null
+  },
+  "errors": [
+   {
+    "locations": [
+     {
+      "column": 3,
+      "line": 1
+     }
+    ],
+    "message": "query fout voor C_sub: sql: no rows in result set",
+    "path": [
+     "r"
+    ]
+   }
+  ]
+ },
+ "full_c_subs(3)": {
+  "data": {
+   "r": null
+  },
+  "errors": [
+   {
+    "locations": [
+     {
+      "column": 3,
+      "line": 1
+     }
+    ],
+    "message": "query fout voor C_sub: sql: no rows in result set",
+    "path": [
+     "r"
+    ]
+   }
+  ]
+ },
+ "full_c_subs_list": {
+  "data": {
+   "r": []
+  }
+ },
+ "full_c_subs_list@t3": {
+  "data": {
+   "r": []
+  }
+ },
+ "full_cs(1)": {
+  "data": {
+   "r": null
+  },
+  "errors": [
+   {
+    "locations": [
+     {
+      "column": 3,
+      "line": 1
+     }
+    ],
+    "message": "query fout voor C: sql: no rows in result set",
+    "path": [
+     "r"
+    ]
+   }
+  ]
+ },
+ "full_cs(2)": {
+  "data": {
+   "r": null
+  },
+  "errors": [
+   {
+    "locations": [
+     {
+      "column": 3,
+      "line": 1
+     }
+    ],
+    "message": "query fout voor C: sql: no rows in result set",
+    "path": [
+     "r"
+    ]
+   }
+  ]
+ },
+ "full_cs(2)@t3": {
+  "data": {
+   "r": null
+  },
+  "errors": [
+   {
+    "locations": [
+     {
+      "column": 3,
+      "line": 1
+     }
+    ],
+    "message": "query fout voor C: sql: no rows in result set",
+    "path": [
+     "r"
+    ]
+   }
+  ]
+ },
+ "full_cs(3)": {
+  "data": {
+   "r": null
+  },
+  "errors": [
+   {
+    "locations": [
+     {
+      "column": 3,
+      "line": 1
+     }
+    ],
+    "message": "query fout voor C: sql: no rows in result set",
+    "path": [
+     "r"
+    ]
+   }
+  ]
+ },
+ "full_cs_list": {
+  "data": {
+   "r": []
+  }
+ },
+ "full_cs_list@t3": {
+  "data": {
+   "r": []
+  }
+ },
+ "full_dashboard_definities(1)": {
+  "data": {
+   "r": null
+  },
+  "errors": [
+   {
+    "locations": [
+     {
+      "column": 3,
+      "line": 1
+     }
+    ],
+    "message": "query fout voor DashboardDefinitie: sql: no rows in result set",
+    "path": [
+     "r"
+    ]
+   }
+  ]
+ },
+ "full_dashboard_definities(2)": {
+  "data": {
+   "r": null
+  },
+  "errors": [
+   {
+    "locations": [
+     {
+      "column": 3,
+      "line": 1
+     }
+    ],
+    "message": "query fout voor DashboardDefinitie: sql: no rows in result set",
+    "path": [
+     "r"
+    ]
+   }
+  ]
+ },
+ "full_dashboard_definities(2)@t3": {
+  "data": {
+   "r": null
+  },
+  "errors": [
+   {
+    "locations": [
+     {
+      "column": 3,
+      "line": 1
+     }
+    ],
+    "message": "query fout voor DashboardDefinitie: sql: no rows in result set",
+    "path": [
+     "r"
+    ]
+   }
+  ]
+ },
+ "full_dashboard_definities(3)": {
+  "data": {
+   "r": null
+  },
+  "errors": [
+   {
+    "locations": [
+     {
+      "column": 3,
+      "line": 1
+     }
+    ],
+    "message": "query fout voor DashboardDefinitie: sql: no rows in result set",
+    "path": [
+     "r"
+    ]
+   }
+  ]
+ },
+ "full_dashboard_definities_list": {
+  "data": {
+   "r": []
+  }
+ },
+ "full_dashboard_definities_list@t3": {
+  "data": {
+   "r": []
+  }
+ },
+ "full_domeinen(1)": {
+  "data": {
+   "r": null
+  },
+  "errors": [
+   {
+    "locations": [
+     {
+      "column": 3,
+      "line": 1
+     }
+    ],
+    "message": "query fout voor Domein: sql: no rows in result set",
+    "path": [
+     "r"
+    ]
+   }
+  ]
+ },
+ "full_domeinen(2)": {
+  "data": {
+   "r": null
+  },
+  "errors": [
+   {
+    "locations": [
+     {
+      "column": 3,
+      "line": 1
+     }
+    ],
+    "message": "query fout voor Domein: sql: no rows in result set",
+    "path": [
+     "r"
+    ]
+   }
+  ]
+ },
+ "full_domeinen(2)@t3": {
+  "data": {
+   "r": null
+  },
+  "errors": [
+   {
+    "locations": [
+     {
+      "column": 3,
+      "line": 1
+     }
+    ],
+    "message": "query fout voor Domein: sql: no rows in result set",
+    "path": [
+     "r"
+    ]
+   }
+  ]
+ },
+ "full_domeinen(3)": {
+  "data": {
+   "r": null
+  },
+  "errors": [
+   {
+    "locations": [
+     {
+      "column": 3,
+      "line": 1
+     }
+    ],
+    "message": "query fout voor Domein: sql: no rows in result set",
+    "path": [
+     "r"
+    ]
+   }
+  ]
+ },
+ "full_domeinen_list": {
+  "data": {
+   "r": []
+  }
+ },
+ "full_domeinen_list@t3": {
+  "data": {
+   "r": []
+  }
+ },
+ "full_formulier_definities(1)": {
+  "data": {
+   "r": null
+  },
+  "errors": [
+   {
+    "locations": [
+     {
+      "column": 3,
+      "line": 1
+     }
+    ],
+    "message": "query fout voor FormulierDefinitie: sql: no rows in result set",
+    "path": [
+     "r"
+    ]
+   }
+  ]
+ },
+ "full_formulier_definities(2)": {
+  "data": {
+   "r": null
+  },
+  "errors": [
+   {
+    "locations": [
+     {
+      "column": 3,
+      "line": 1
+     }
+    ],
+    "message": "query fout voor FormulierDefinitie: sql: no rows in result set",
+    "path": [
+     "r"
+    ]
+   }
+  ]
+ },
+ "full_formulier_definities(2)@t3": {
+  "data": {
+   "r": null
+  },
+  "errors": [
+   {
+    "locations": [
+     {
+      "column": 3,
+      "line": 1
+     }
+    ],
+    "message": "query fout voor FormulierDefinitie: sql: no rows in result set",
+    "path": [
+     "r"
+    ]
+   }
+  ]
+ },
+ "full_formulier_definities(3)": {
+  "data": {
+   "r": null
+  },
+  "errors": [
+   {
+    "locations": [
+     {
+      "column": 3,
+      "line": 1
+     }
+    ],
+    "message": "query fout voor FormulierDefinitie: sql: no rows in result set",
+    "path": [
+     "r"
+    ]
+   }
+  ]
+ },
+ "full_formulier_definities_list": {
+  "data": {
+   "r": []
+  }
+ },
+ "full_formulier_definities_list@t3": {
+  "data": {
+   "r": []
+  }
+ },
+ "full_gemeentedelen(1)": {
+  "data": {
+   "r": null
+  },
+  "errors": [
+   {
+    "locations": [
+     {
+      "column": 3,
+      "line": 1
+     }
+    ],
+    "message": "query fout voor Gemeentedeel: sql: no rows in result set",
+    "path": [
+     "r"
+    ]
+   }
+  ]
+ },
+ "full_gemeentedelen(2)": {
+  "data": {
+   "r": null
+  },
+  "errors": [
+   {
+    "locations": [
+     {
+      "column": 3,
+      "line": 1
+     }
+    ],
+    "message": "query fout voor Gemeentedeel: sql: no rows in result set",
+    "path": [
+     "r"
+    ]
+   }
+  ]
+ },
+ "full_gemeentedelen(2)@t3": {
+  "data": {
+   "r": null
+  },
+  "errors": [
+   {
+    "locations": [
+     {
+      "column": 3,
+      "line": 1
+     }
+    ],
+    "message": "query fout voor Gemeentedeel: sql: no rows in result set",
+    "path": [
+     "r"
+    ]
+   }
+  ]
+ },
+ "full_gemeentedelen(3)": {
+  "data": {
+   "r": null
+  },
+  "errors": [
+   {
+    "locations": [
+     {
+      "column": 3,
+      "line": 1
+     }
+    ],
+    "message": "query fout voor Gemeentedeel: sql: no rows in result set",
+    "path": [
+     "r"
+    ]
+   }
+  ]
+ },
+ "full_gemeentedelen_list": {
+  "data": {
+   "r": []
+  }
+ },
+ "full_gemeentedelen_list@t3": {
+  "data": {
+   "r": []
+  }
+ },
+ "full_gemeenten(1)": {
+  "data": {
+   "r": null
+  },
+  "errors": [
+   {
+    "locations": [
+     {
+      "column": 3,
+      "line": 1
+     }
+    ],
+    "message": "query fout voor Gemeente: sql: no rows in result set",
+    "path": [
+     "r"
+    ]
+   }
+  ]
+ },
+ "full_gemeenten(2)": {
+  "data": {
+   "r": null
+  },
+  "errors": [
+   {
+    "locations": [
+     {
+      "column": 3,
+      "line": 1
+     }
+    ],
+    "message": "query fout voor Gemeente: sql: no rows in result set",
+    "path": [
+     "r"
+    ]
+   }
+  ]
+ },
+ "full_gemeenten(2)@t3": {
+  "data": {
+   "r": null
+  },
+  "errors": [
+   {
+    "locations": [
+     {
+      "column": 3,
+      "line": 1
+     }
+    ],
+    "message": "query fout voor Gemeente: sql: no rows in result set",
+    "path": [
+     "r"
+    ]
+   }
+  ]
+ },
+ "full_gemeenten(3)": {
+  "data": {
+   "r": null
+  },
+  "errors": [
+   {
+    "locations": [
+     {
+      "column": 3,
+      "line": 1
+     }
+    ],
+    "message": "query fout voor Gemeente: sql: no rows in result set",
+    "path": [
+     "r"
+    ]
+   }
+  ]
+ },
+ "full_gemeenten_list": {
+  "data": {
+   "r": []
+  }
+ },
+ "full_gemeenten_list@t3": {
+  "data": {
+   "r": []
+  }
+ },
+ "full_ide_bestanden(1)": {
+  "data": {
+   "r": null
+  },
+  "errors": [
+   {
+    "locations": [
+     {
+      "column": 3,
+      "line": 1
+     }
+    ],
+    "message": "query fout voor IdeBestand: sql: no rows in result set",
+    "path": [
+     "r"
+    ]
+   }
+  ]
+ },
+ "full_ide_bestanden(2)": {
+  "data": {
+   "r": null
+  },
+  "errors": [
+   {
+    "locations": [
+     {
+      "column": 3,
+      "line": 1
+     }
+    ],
+    "message": "query fout voor IdeBestand: sql: no rows in result set",
+    "path": [
+     "r"
+    ]
+   }
+  ]
+ },
+ "full_ide_bestanden(2)@t3": {
+  "data": {
+   "r": null
+  },
+  "errors": [
+   {
+    "locations": [
+     {
+      "column": 3,
+      "line": 1
+     }
+    ],
+    "message": "query fout voor IdeBestand: sql: no rows in result set",
+    "path": [
+     "r"
+    ]
+   }
+  ]
+ },
+ "full_ide_bestanden(3)": {
+  "data": {
+   "r": null
+  },
+  "errors": [
+   {
+    "locations": [
+     {
+      "column": 3,
+      "line": 1
+     }
+    ],
+    "message": "query fout voor IdeBestand: sql: no rows in result set",
+    "path": [
+     "r"
+    ]
+   }
+  ]
+ },
+ "full_ide_bestanden_list": {
+  "data": {
+   "r": []
+  }
+ },
+ "full_ide_bestanden_list@t3": {
+  "data": {
+   "r": []
+  }
+ },
+ "full_initiatieven(1)": {
+  "data": {
+   "r": null
+  },
+  "errors": [
+   {
+    "locations": [
+     {
+      "column": 3,
+      "line": 1
+     }
+    ],
+    "message": "query fout voor Initiatief: sql: no rows in result set",
+    "path": [
+     "r"
+    ]
+   }
+  ]
+ },
+ "full_initiatieven(2)": {
+  "data": {
+   "r": null
+  },
+  "errors": [
+   {
+    "locations": [
+     {
+      "column": 3,
+      "line": 1
+     }
+    ],
+    "message": "query fout voor Initiatief: sql: no rows in result set",
+    "path": [
+     "r"
+    ]
+   }
+  ]
+ },
+ "full_initiatieven(2)@t3": {
+  "data": {
+   "r": null
+  },
+  "errors": [
+   {
+    "locations": [
+     {
+      "column": 3,
+      "line": 1
+     }
+    ],
+    "message": "query fout voor Initiatief: sql: no rows in result set",
+    "path": [
+     "r"
+    ]
+   }
+  ]
+ },
+ "full_initiatieven(3)": {
+  "data": {
+   "r": null
+  },
+  "errors": [
+   {
+    "locations": [
+     {
+      "column": 3,
+      "line": 1
+     }
+    ],
+    "message": "query fout voor Initiatief: sql: no rows in result set",
+    "path": [
+     "r"
+    ]
+   }
+  ]
+ },
+ "full_initiatieven_list": {
+  "data": {
+   "r": []
+  }
+ },
+ "full_initiatieven_list@t3": {
+  "data": {
+   "r": []
+  }
+ },
+ "full_kennisartikelen(1)": {
+  "data": {
+   "r": null
+  },
+  "errors": [
+   {
+    "locations": [
+     {
+      "column": 3,
+      "line": 1
+     }
+    ],
+    "message": "query fout voor Kennisartikel: sql: no rows in result set",
+    "path": [
+     "r"
+    ]
+   }
+  ]
+ },
+ "full_kennisartikelen(2)": {
+  "data": {
+   "r": null
+  },
+  "errors": [
+   {
+    "locations": [
+     {
+      "column": 3,
+      "line": 1
+     }
+    ],
+    "message": "query fout voor Kennisartikel: sql: no rows in result set",
+    "path": [
+     "r"
+    ]
+   }
+  ]
+ },
+ "full_kennisartikelen(2)@t3": {
+  "data": {
+   "r": null
+  },
+  "errors": [
+   {
+    "locations": [
+     {
+      "column": 3,
+      "line": 1
+     }
+    ],
+    "message": "query fout voor Kennisartikel: sql: no rows in result set",
+    "path": [
+     "r"
+    ]
+   }
+  ]
+ },
+ "full_kennisartikelen(3)": {
+  "data": {
+   "r": null
+  },
+  "errors": [
+   {
+    "locations": [
+     {
+      "column": 3,
+      "line": 1
+     }
+    ],
+    "message": "query fout voor Kennisartikel: sql: no rows in result set",
+    "path": [
+     "r"
+    ]
+   }
+  ]
+ },
+ "full_kennisartikelen_list": {
+  "data": {
+   "r": []
+  }
+ },
+ "full_kennisartikelen_list@t3": {
+  "data": {
+   "r": []
+  }
+ },
+ "full_kennisartikeltaalvarianten(1)": {
+  "data": {
+   "r": null
+  },
+  "errors": [
+   {
+    "locations": [
+     {
+      "column": 3,
+      "line": 1
+     }
+    ],
+    "message": "query fout voor KennisartikelTaalvariant: sql: no rows in result set",
+    "path": [
+     "r"
+    ]
+   }
+  ]
+ },
+ "full_kennisartikeltaalvarianten(2)": {
+  "data": {
+   "r": null
+  },
+  "errors": [
+   {
+    "locations": [
+     {
+      "column": 3,
+      "line": 1
+     }
+    ],
+    "message": "query fout voor KennisartikelTaalvariant: sql: no rows in result set",
+    "path": [
+     "r"
+    ]
+   }
+  ]
+ },
+ "full_kennisartikeltaalvarianten(2)@t3": {
+  "data": {
+   "r": null
+  },
+  "errors": [
+   {
+    "locations": [
+     {
+      "column": 3,
+      "line": 1
+     }
+    ],
+    "message": "query fout voor KennisartikelTaalvariant: sql: no rows in result set",
+    "path": [
+     "r"
+    ]
+   }
+  ]
+ },
+ "full_kennisartikeltaalvarianten(3)": {
+  "data": {
+   "r": null
+  },
+  "errors": [
+   {
+    "locations": [
+     {
+      "column": 3,
+      "line": 1
+     }
+    ],
+    "message": "query fout voor KennisartikelTaalvariant: sql: no rows in result set",
+    "path": [
+     "r"
+    ]
+   }
+  ]
+ },
+ "full_kennisartikeltaalvarianten_list": {
+  "data": {
+   "r": []
+  }
+ },
+ "full_kennisartikeltaalvarianten_list@t3": {
+  "data": {
+   "r": []
+  }
+ },
+ "full_landen(1)": {
+  "data": {
+   "r": null
+  },
+  "errors": [
+   {
+    "locations": [
+     {
+      "column": 3,
+      "line": 1
+     }
+    ],
+    "message": "query fout voor Land: sql: no rows in result set",
+    "path": [
+     "r"
+    ]
+   }
+  ]
+ },
+ "full_landen(2)": {
+  "data": {
+   "r": null
+  },
+  "errors": [
+   {
+    "locations": [
+     {
+      "column": 3,
+      "line": 1
+     }
+    ],
+    "message": "query fout voor Land: sql: no rows in result set",
+    "path": [
+     "r"
+    ]
+   }
+  ]
+ },
+ "full_landen(2)@t3": {
+  "data": {
+   "r": null
+  },
+  "errors": [
+   {
+    "locations": [
+     {
+      "column": 3,
+      "line": 1
+     }
+    ],
+    "message": "query fout voor Land: sql: no rows in result set",
+    "path": [
+     "r"
+    ]
+   }
+  ]
+ },
+ "full_landen(3)": {
+  "data": {
+   "r": null
+  },
+  "errors": [
+   {
+    "locations": [
+     {
+      "column": 3,
+      "line": 1
+     }
+    ],
+    "message": "query fout voor Land: sql: no rows in result set",
+    "path": [
+     "r"
+    ]
+   }
+  ]
+ },
+ "full_landen_list": {
+  "data": {
+   "r": []
+  }
+ },
+ "full_landen_list@t3": {
+  "data": {
+   "r": []
+  }
+ },
+ "full_lijst_definities(1)": {
+  "data": {
+   "r": null
+  },
+  "errors": [
+   {
+    "locations": [
+     {
+      "column": 3,
+      "line": 1
+     }
+    ],
+    "message": "query fout voor LijstDefinitie: sql: no rows in result set",
+    "path": [
+     "r"
+    ]
+   }
+  ]
+ },
+ "full_lijst_definities(2)": {
+  "data": {
+   "r": null
+  },
+  "errors": [
+   {
+    "locations": [
+     {
+      "column": 3,
+      "line": 1
+     }
+    ],
+    "message": "query fout voor LijstDefinitie: sql: no rows in result set",
+    "path": [
+     "r"
+    ]
+   }
+  ]
+ },
+ "full_lijst_definities(2)@t3": {
+  "data": {
+   "r": null
+  },
+  "errors": [
+   {
+    "locations": [
+     {
+      "column": 3,
+      "line": 1
+     }
+    ],
+    "message": "query fout voor LijstDefinitie: sql: no rows in result set",
+    "path": [
+     "r"
+    ]
+   }
+  ]
+ },
+ "full_lijst_definities(3)": {
+  "data": {
+   "r": null
+  },
+  "errors": [
+   {
+    "locations": [
+     {
+      "column": 3,
+      "line": 1
+     }
+    ],
+    "message": "query fout voor LijstDefinitie: sql: no rows in result set",
+    "path": [
+     "r"
+    ]
+   }
+  ]
+ },
+ "full_lijst_definities_list": {
+  "data": {
+   "r": []
+  }
+ },
+ "full_lijst_definities_list@t3": {
+  "data": {
+   "r": []
+  }
+ },
+ "full_locaties(1)": {
+  "data": {
+   "r": null
+  },
+  "errors": [
+   {
+    "locations": [
+     {
+      "column": 3,
+      "line": 1
+     }
+    ],
+    "message": "query fout voor Locatie: sql: no rows in result set",
+    "path": [
+     "r"
+    ]
+   }
+  ]
+ },
+ "full_locaties(2)": {
+  "data": {
+   "r": {
+    "aanvang": {
+     "afvoer": null,
+     "datum": "2018-09-01",
+     "locatie_id": 2,
+     "opvoer": "2026-01-01T02:00:00.000002Z",
+     "versie": 1
+    },
+    "adressen": {
+     "afvoer": null,
+     "data": null,
+     "gemeente": 0,
+     "huisnummer": "42A",
+     "land": 0,
+     "locatie_id": 2,
+     "opvoer": "2026-01-01T02:00:00.000002Z",
+     "plaats": null,
+     "postcode": "3511AA",
+     "rel_id": 1,
+     "straatnaam": "Lindelaan",
+     "versie": 1
+    },
+    "afvoer": null,
+    "baglocaties": {
+     "adresaanduiding": "0363200000123456",
+     "afvoer": null,
+     "data": null,
+     "locatie_id": 2,
+     "opvoer": "2026-01-01T02:00:00.000002Z",
+     "rel_id": 1,
+     "versie": 1
+    },
+    "einde": null,
+    "gebiedsligging": null,
+    "gerelateerde_natuurlijk_personen": [],
+    "id": 2,
+    "opvoer": "2026-01-01T02:00:00.000002Z",
+    "weergaveadres": "Lindelaan 42A, 3511AA"
+   }
+  }
+ },
+ "full_locaties(2)@t3": {
+  "data": {
+   "r": {
+    "aanvang": {
+     "afvoer": null,
+     "datum": "2018-09-01",
+     "locatie_id": 2,
+     "opvoer": "2026-01-01T02:00:00.000002Z",
+     "versie": 1
+    },
+    "adressen": {
+     "afvoer": null,
+     "data": null,
+     "gemeente": 0,
+     "huisnummer": "42A",
+     "land": 0,
+     "locatie_id": 2,
+     "opvoer": "2026-01-01T02:00:00.000002Z",
+     "plaats": null,
+     "postcode": "3511AA",
+     "rel_id": 1,
+     "straatnaam": "Lindelaan",
+     "versie": 1
+    },
+    "afvoer": null,
+    "baglocaties": {
+     "adresaanduiding": "0363200000123456",
+     "afvoer": null,
+     "data": null,
+     "locatie_id": 2,
+     "opvoer": "2026-01-01T02:00:00.000002Z",
+     "rel_id": 1,
+     "versie": 1
+    },
+    "einde": null,
+    "gebiedsligging": null,
+    "gerelateerde_natuurlijk_personen": [],
+    "id": 2,
+    "opvoer": "2026-01-01T02:00:00.000002Z",
+    "weergaveadres": "Lindelaan 42A, 3511AA"
+   }
+  }
+ },
+ "full_locaties(3)": {
+  "data": {
+   "r": {
+    "aanvang": {
+     "afvoer": null,
+     "datum": "2019-06-15",
+     "locatie_id": 3,
+     "opvoer": "2026-01-01T05:00:00.000005Z",
+     "versie": 1
+    },
+    "adressen": {
+     "afvoer": null,
+     "data": null,
+     "gemeente": 0,
+     "huisnummer": "7",
+     "land": 0,
+     "locatie_id": 3,
+     "opvoer": "2026-01-01T05:00:00.000005Z",
+     "plaats": null,
+     "postcode": "3061AA",
+     "rel_id": 1,
+     "straatnaam": "Beukenplein",
+     "versie": 1
+    },
+    "afvoer": null,
+    "baglocaties": {
+     "adresaanduiding": "0599300000000003",
+     "afvoer": null,
+     "data": null,
+     "locatie_id": 3,
+     "opvoer": "2026-01-01T05:00:00.000005Z",
+     "rel_id": 1,
+     "versie": 1
+    },
+    "einde": null,
+    "gebiedsligging": null,
+    "gerelateerde_natuurlijk_personen": [],
+    "id": 3,
+    "opvoer": "2026-01-01T05:00:00.000005Z",
+    "weergaveadres": "Beukenplein 7, 3061AA"
+   }
+  }
+ },
+ "full_locaties_list": {
+  "data": {
+   "r": [
+    {
+     "aanvang": {
+      "afvoer": null,
+      "datum": "2016-04-01",
+      "locatie_id": 4,
+      "opvoer": "2026-01-01T08:00:00.000008Z",
+      "versie": 1
+     },
+     "adressen": {
+      "afvoer": null,
+      "data": null,
+      "gemeente": 0,
+      "huisnummer": "118",
+      "land": 0,
+      "locatie_id": 4,
+      "opvoer": "2026-01-01T08:00:00.000008Z",
+      "plaats": null,
+      "postcode": "1811MJ",
+      "rel_id": 1,
+      "straatnaam": "Noorderkade",
+      "versie": 1
+     },
+     "afvoer": null,
+     "baglocaties": {
+      "adresaanduiding": "0361000000000004",
+      "afvoer": null,
+      "data": null,
+      "locatie_id": 4,
+      "opvoer": "2026-01-01T08:00:00.000008Z",
+      "rel_id": 1,
+      "versie": 1
+     },
+     "einde": null,
+     "gebiedsligging": null,
+     "gerelateerde_natuurlijk_personen": [],
+     "id": 4,
+     "opvoer": "2026-01-01T08:00:00.000008Z",
+     "weergaveadres": "Noorderkade 118, 1811MJ"
+    },
+    {
+     "aanvang": {
+      "afvoer": null,
+      "datum": "2017-11-01",
+      "locatie_id": 5,
+      "opvoer": "2026-01-01T11:00:00.000011Z",
+      "versie": 1
+     },
+     "adressen": {
+      "afvoer": null,
+      "data": null,
+      "gemeente": 0,
+      "huisnummer": "56",
+      "land": 0,
+      "locatie_id": 5,
+      "opvoer": "2026-01-01T11:00:00.000011Z",
+      "plaats": null,
+      "postcode": "5611AZ",
+      "rel_id": 1,
+      "straatnaam": "Rivierstraat",
+      "versie": 1
+     },
+     "afvoer": null,
+     "baglocaties": {
+      "adresaanduiding": "0772000000000005",
+      "afvoer": null,
+      "data": null,
+      "locatie_id": 5,
+      "opvoer": "2026-01-01T11:00:00.000011Z",
+      "rel_id": 1,
+      "versie": 1
+     },
+     "einde": null,
+     "gebiedsligging": null,
+     "gerelateerde_natuurlijk_personen": [],
+     "id": 5,
+     "opvoer": "2026-01-01T11:00:00.000011Z",
+     "weergaveadres": "Rivierstraat 56, 5611AZ"
+    },
+    {
+     "aanvang": {
+      "afvoer": null,
+      "datum": "2018-09-01",
+      "locatie_id": 2,
+      "opvoer": "2026-01-01T02:00:00.000002Z",
+      "versie": 1
+     },
+     "adressen": {
+      "afvoer": null,
+      "data": null,
+      "gemeente": 0,
+      "huisnummer": "42A",
+      "land": 0,
+      "locatie_id": 2,
+      "opvoer": "2026-01-01T02:00:00.000002Z",
+      "plaats": null,
+      "postcode": "3511AA",
+      "rel_id": 1,
+      "straatnaam": "Lindelaan",
+      "versie": 1
+     },
+     "afvoer": null,
+     "baglocaties": {
+      "adresaanduiding": "0363200000123456",
+      "afvoer": null,
+      "data": null,
+      "locatie_id": 2,
+      "opvoer": "2026-01-01T02:00:00.000002Z",
+      "rel_id": 1,
+      "versie": 1
+     },
+     "einde": null,
+     "gebiedsligging": null,
+     "gerelateerde_natuurlijk_personen": [],
+     "id": 2,
+     "opvoer": "2026-01-01T02:00:00.000002Z",
+     "weergaveadres": "Lindelaan 42A, 3511AA"
+    },
+    {
+     "aanvang": {
+      "afvoer": null,
+      "datum": "2019-06-15",
+      "locatie_id": 3,
+      "opvoer": "2026-01-01T05:00:00.000005Z",
+      "versie": 1
+     },
+     "adressen": {
+      "afvoer": null,
+      "data": null,
+      "gemeente": 0,
+      "huisnummer": "7",
+      "land": 0,
+      "locatie_id": 3,
+      "opvoer": "2026-01-01T05:00:00.000005Z",
+      "plaats": null,
+      "postcode": "3061AA",
+      "rel_id": 1,
+      "straatnaam": "Beukenplein",
+      "versie": 1
+     },
+     "afvoer": null,
+     "baglocaties": {
+      "adresaanduiding": "0599300000000003",
+      "afvoer": null,
+      "data": null,
+      "locatie_id": 3,
+      "opvoer": "2026-01-01T05:00:00.000005Z",
+      "rel_id": 1,
+      "versie": 1
+     },
+     "einde": null,
+     "gebiedsligging": null,
+     "gerelateerde_natuurlijk_personen": [],
+     "id": 3,
+     "opvoer": "2026-01-01T05:00:00.000005Z",
+     "weergaveadres": "Beukenplein 7, 3061AA"
+    },
+    {
+     "aanvang": {
+      "afvoer": null,
+      "datum": "2021-03-01",
+      "locatie_id": 6,
+      "opvoer": "2026-01-01T14:00:00.000014Z",
+      "versie": 1
+     },
+     "adressen": {
+      "afvoer": null,
+      "data": null,
+      "gemeente": 0,
+      "huisnummer": "203",
+      "land": 0,
+      "locatie_id": 6,
+      "opvoer": "2026-01-01T14:00:00.000014Z",
+      "plaats": null,
+      "postcode": "8011AB",
+      "rel_id": 1,
+      "straatnaam": "Havenweg",
+      "versie": 1
+     },
+     "afvoer": null,
+     "baglocaties": {
+      "adresaanduiding": "1930000000000006",
+      "afvoer": null,
+      "data": null,
+      "locatie_id": 6,
+      "opvoer": "2026-01-01T14:00:00.000014Z",
+      "rel_id": 1,
+      "versie": 1
+     },
+     "einde": null,
+     "gebiedsligging": null,
+     "gerelateerde_natuurlijk_personen": [],
+     "id": 6,
+     "opvoer": "2026-01-01T14:00:00.000014Z",
+     "weergaveadres": "Havenweg 203, 8011AB"
+    }
+   ]
+  }
+ },
+ "full_locaties_list@t3": {
+  "data": {
+   "r": [
+    {
+     "aanvang": {
+      "afvoer": null,
+      "datum": "2018-09-01",
+      "locatie_id": 2,
+      "opvoer": "2026-01-01T02:00:00.000002Z",
+      "versie": 1
+     },
+     "adressen": {
+      "afvoer": null,
+      "data": null,
+      "gemeente": 0,
+      "huisnummer": "42A",
+      "land": 0,
+      "locatie_id": 2,
+      "opvoer": "2026-01-01T02:00:00.000002Z",
+      "plaats": null,
+      "postcode": "3511AA",
+      "rel_id": 1,
+      "straatnaam": "Lindelaan",
+      "versie": 1
+     },
+     "afvoer": null,
+     "baglocaties": {
+      "adresaanduiding": "0363200000123456",
+      "afvoer": null,
+      "data": null,
+      "locatie_id": 2,
+      "opvoer": "2026-01-01T02:00:00.000002Z",
+      "rel_id": 1,
+      "versie": 1
+     },
+     "einde": null,
+     "gebiedsligging": null,
+     "gerelateerde_natuurlijk_personen": [],
+     "id": 2,
+     "opvoer": "2026-01-01T02:00:00.000002Z",
+     "weergaveadres": "Lindelaan 42A, 3511AA"
+    }
+   ]
+  }
+ },
+ "full_medewerkers(1)": {
+  "data": {
+   "r": null
+  },
+  "errors": [
+   {
+    "locations": [
+     {
+      "column": 3,
+      "line": 1
+     }
+    ],
+    "message": "query fout voor Medewerker: sql: no rows in result set",
+    "path": [
+     "r"
+    ]
+   }
+  ]
+ },
+ "full_medewerkers(2)": {
+  "data": {
+   "r": null
+  },
+  "errors": [
+   {
+    "locations": [
+     {
+      "column": 3,
+      "line": 1
+     }
+    ],
+    "message": "query fout voor Medewerker: sql: no rows in result set",
+    "path": [
+     "r"
+    ]
+   }
+  ]
+ },
+ "full_medewerkers(2)@t3": {
+  "data": {
+   "r": null
+  },
+  "errors": [
+   {
+    "locations": [
+     {
+      "column": 3,
+      "line": 1
+     }
+    ],
+    "message": "query fout voor Medewerker: sql: no rows in result set",
+    "path": [
+     "r"
+    ]
+   }
+  ]
+ },
+ "full_medewerkers(3)": {
+  "data": {
+   "r": null
+  },
+  "errors": [
+   {
+    "locations": [
+     {
+      "column": 3,
+      "line": 1
+     }
+    ],
+    "message": "query fout voor Medewerker: sql: no rows in result set",
+    "path": [
+     "r"
+    ]
+   }
+  ]
+ },
+ "full_medewerkers_list": {
+  "data": {
+   "r": []
+  }
+ },
+ "full_medewerkers_list@t3": {
+  "data": {
+   "r": []
+  }
+ },
+ "full_natuurlijk_personen(1)": {
+  "data": {
+   "r": null
+  },
+  "errors": [
+   {
+    "locations": [
+     {
+      "column": 3,
+      "line": 1
+     }
+    ],
+    "message": "query fout voor NatuurlijkPersoon: sql: no rows in result set",
+    "path": [
+     "r"
+    ]
+   }
+  ]
+ },
+ "full_natuurlijk_personen(2)": {
+  "data": {
+   "r": {
+    "aanspraak": null,
+    "aanvang": {
+     "afvoer": null,
+     "datum": "1990-05-14",
+     "natuurlijkpersoon_id": 2,
+     "opvoer": "2026-01-01T01:00:00.000001Z",
+     "versie": 1
+    },
+    "afvoer": null,
+    "bereikbaarheden": {
+     "aanvang": {
+      "afvoer": null,
+      "datum": "2020-01-01",
+      "natuurlijkpersoon_id": 2,
+      "opvoer": "2026-01-01T03:00:00.000003Z",
+      "rel_id": 1,
+      "versie": 1
+     },
+     "afvoer": null,
+     "data": null,
+     "einde": null,
+     "locatie": {
+      "afvoer": null,
+      "id": 2,
+      "opvoer": "2026-01-01T02:00:00.000002Z",
+      "weergaveadres": null
+     },
+     "locatie_id": 2,
+     "natuurlijkpersoon_id": 2,
+     "opvoer": "2026-01-01T03:00:00.000003Z",
+     "rel_id": 1,
+     "soort": "Woonadres",
+     "versie": 1
+    },
+    "burgerschappen": {
+     "aanvang": null,
+     "afvoer": null,
+     "data": null,
+     "einde": null,
+     "landcode": "NL",
+     "landreferentie": null,
+     "nationaliteit": "Nederlandse",
+     "natuurlijkpersoon_id": 2,
+     "opvoer": "2026-01-01T01:00:00.000001Z",
+     "rel_id": 1,
+     "versie": 1
+    },
+    "einde": null,
+    "geslacht": null,
+    "id": 2,
+    "naamgebruiken": {
+     "afvoer": null,
+     "data": null,
+     "naamgebruik": "EigenNaam",
+     "natuurlijkpersoon_id": 2,
+     "opvoer": "2026-01-01T01:00:00.000001Z",
+     "rel_id": 1,
+     "versie": 1
+    },
+    "namen": {
+     "achternaam": "Vries",
+     "afvoer": null,
+     "data": null,
+     "natuurlijkpersoon_id": 2,
+     "opvoer": "2026-01-01T01:00:00.000001Z",
+     "rel_id": 1,
+     "roepnaam": "Joris",
+     "tussenvoegsel": "de",
+     "versie": 1,
+     "voorletters": "J.K.",
+     "weergavenaam": null
+    },
+    "opvoer": "2026-01-01T01:00:00.000001Z",
+    "partnernamen": {
+     "achternaam": "Bakker",
+     "afvoer": null,
+     "data": null,
+     "natuurlijkpersoon_id": 2,
+     "opvoer": "2026-01-01T01:00:00.000001Z",
+     "rel_id": 1,
+     "versie": 1
+    },
+    "persoonsidentificaties": {
+     "afvoer": null,
+     "bsn": "100000010",
+     "bsnEnIngezeten": null,
+     "data": null,
+     "ingezetene": true,
+     "natuurlijkpersoon_id": 2,
+     "opvoer": "2026-01-01T01:00:00.000001Z",
+     "rel_id": 1,
+     "versie": 1
+    },
+    "weergavenaam": "Joris de Vries",
+    "woonlocatie": null
+   }
+  }
+ },
+ "full_natuurlijk_personen(2)@t3": {
+  "data": {
+   "r": {
+    "aanspraak": null,
+    "aanvang": {
+     "afvoer": null,
+     "datum": "1990-05-14",
+     "natuurlijkpersoon_id": 2,
+     "opvoer": "2026-01-01T01:00:00.000001Z",
+     "versie": 1
+    },
+    "afvoer": null,
+    "bereikbaarheden": {
+     "aanvang": {
+      "afvoer": null,
+      "datum": "2020-01-01",
+      "natuurlijkpersoon_id": 2,
+      "opvoer": "2026-01-01T03:00:00.000003Z",
+      "rel_id": 1,
+      "versie": 1
+     },
+     "afvoer": null,
+     "data": null,
+     "einde": null,
+     "locatie": {
+      "afvoer": null,
+      "id": 2,
+      "opvoer": "2026-01-01T02:00:00.000002Z",
+      "weergaveadres": null
+     },
+     "locatie_id": 2,
+     "natuurlijkpersoon_id": 2,
+     "opvoer": "2026-01-01T03:00:00.000003Z",
+     "rel_id": 1,
+     "soort": "Woonadres",
+     "versie": 1
+    },
+    "burgerschappen": {
+     "aanvang": null,
+     "afvoer": null,
+     "data": null,
+     "einde": null,
+     "landcode": "NL",
+     "landreferentie": null,
+     "nationaliteit": "Nederlandse",
+     "natuurlijkpersoon_id": 2,
+     "opvoer": "2026-01-01T01:00:00.000001Z",
+     "rel_id": 1,
+     "versie": 1
+    },
+    "einde": null,
+    "geslacht": null,
+    "id": 2,
+    "naamgebruiken": {
+     "afvoer": null,
+     "data": null,
+     "naamgebruik": "EigenNaam",
+     "natuurlijkpersoon_id": 2,
+     "opvoer": "2026-01-01T01:00:00.000001Z",
+     "rel_id": 1,
+     "versie": 1
+    },
+    "namen": {
+     "achternaam": "Vries",
+     "afvoer": null,
+     "data": null,
+     "natuurlijkpersoon_id": 2,
+     "opvoer": "2026-01-01T01:00:00.000001Z",
+     "rel_id": 1,
+     "roepnaam": "Joris",
+     "tussenvoegsel": "de",
+     "versie": 1,
+     "voorletters": "J.K.",
+     "weergavenaam": null
+    },
+    "opvoer": "2026-01-01T01:00:00.000001Z",
+    "partnernamen": {
+     "achternaam": "Bakker",
+     "afvoer": null,
+     "data": null,
+     "natuurlijkpersoon_id": 2,
+     "opvoer": "2026-01-01T01:00:00.000001Z",
+     "rel_id": 1,
+     "versie": 1
+    },
+    "persoonsidentificaties": {
+     "afvoer": null,
+     "bsn": "100000010",
+     "bsnEnIngezeten": null,
+     "data": null,
+     "ingezetene": true,
+     "natuurlijkpersoon_id": 2,
+     "opvoer": "2026-01-01T01:00:00.000001Z",
+     "rel_id": 1,
+     "versie": 1
+    },
+    "weergavenaam": "Joris de Vries",
+    "woonlocatie": null
+   }
+  }
+ },
+ "full_natuurlijk_personen(3)": {
+  "data": {
+   "r": {
+    "aanspraak": null,
+    "aanvang": {
+     "afvoer": null,
+     "datum": "1994-11-03",
+     "natuurlijkpersoon_id": 3,
+     "opvoer": "2026-01-01T04:00:00.000004Z",
+     "versie": 1
+    },
+    "afvoer": null,
+    "bereikbaarheden": {
+     "aanvang": {
+      "afvoer": null,
+      "datum": "2021-02-01",
+      "natuurlijkpersoon_id": 3,
+      "opvoer": "2026-01-01T06:00:00.000006Z",
+      "rel_id": 1,
+      "versie": 1
+     },
+     "afvoer": null,
+     "data": null,
+     "einde": null,
+     "locatie": {
+      "afvoer": null,
+      "id": 3,
+      "opvoer": "2026-01-01T05:00:00.000005Z",
+      "weergaveadres": null
+     },
+     "locatie_id": 3,
+     "natuurlijkpersoon_id": 3,
+     "opvoer": "2026-01-01T06:00:00.000006Z",
+     "rel_id": 1,
+     "soort": "Woonadres",
+     "versie": 1
+    },
+    "burgerschappen": {
+     "aanvang": null,
+     "afvoer": null,
+     "data": null,
+     "einde": null,
+     "landcode": "NL",
+     "landreferentie": null,
+     "nationaliteit": "Nederlandse",
+     "natuurlijkpersoon_id": 3,
+     "opvoer": "2026-01-01T04:00:00.000004Z",
+     "rel_id": 1,
+     "versie": 1
+    },
+    "einde": null,
+    "geslacht": null,
+    "id": 3,
+    "naamgebruiken": {
+     "afvoer": null,
+     "data": null,
+     "naamgebruik": "PartnerNaam",
+     "natuurlijkpersoon_id": 3,
+     "opvoer": "2026-01-01T04:00:00.000004Z",
+     "rel_id": 1,
+     "versie": 1
+    },
+    "namen": {
+     "achternaam": "Vermeer",
+     "afvoer": null,
+     "data": null,
+     "natuurlijkpersoon_id": 3,
+     "opvoer": "2026-01-01T04:00:00.000004Z",
+     "rel_id": 1,
+     "roepnaam": "Mila",
+     "tussenvoegsel": "",
+     "versie": 1,
+     "voorletters": "M.",
+     "weergavenaam": null
+    },
+    "opvoer": "2026-01-01T04:00:00.000004Z",
+    "partnernamen": {
+     "achternaam": "Smit",
+     "afvoer": null,
+     "data": null,
+     "natuurlijkpersoon_id": 3,
+     "opvoer": "2026-01-01T04:00:00.000004Z",
+     "rel_id": 1,
+     "versie": 1
+    },
+    "persoonsidentificaties": {
+     "afvoer": null,
+     "bsn": "100000022",
+     "bsnEnIngezeten": null,
+     "data": null,
+     "ingezetene": true,
+     "natuurlijkpersoon_id": 3,
+     "opvoer": "2026-01-01T04:00:00.000004Z",
+     "rel_id": 1,
+     "versie": 1
+    },
+    "weergavenaam": "Mila  Vermeer",
+    "woonlocatie": null
+   }
+  }
+ },
+ "full_natuurlijk_personen_list": {
+  "data": {
+   "r": [
+    {
+     "aanspraak": null,
+     "aanvang": {
+      "afvoer": null,
+      "datum": "1987-08-22",
+      "natuurlijkpersoon_id": 4,
+      "opvoer": "2026-01-01T07:00:00.000007Z",
+      "versie": 1
+     },
+     "afvoer": null,
+     "bereikbaarheden": {
+      "aanvang": {
+       "afvoer": null,
+       "datum": "2019-09-01",
+       "natuurlijkpersoon_id": 4,
+       "opvoer": "2026-01-01T09:00:00.000009Z",
+       "rel_id": 1,
+       "versie": 1
+      },
+      "afvoer": null,
+      "data": null,
+      "einde": null,
+      "locatie": {
+       "afvoer": null,
+       "id": 4,
+       "opvoer": "2026-01-01T08:00:00.000008Z",
+       "weergaveadres": null
+      },
+      "locatie_id": 4,
+      "natuurlijkpersoon_id": 4,
+      "opvoer": "2026-01-01T09:00:00.000009Z",
+      "rel_id": 1,
+      "soort": "Woonadres",
+      "versie": 1
+     },
+     "burgerschappen": {
+      "aanvang": null,
+      "afvoer": null,
+      "data": null,
+      "einde": null,
+      "landcode": "NL",
+      "landreferentie": null,
+      "nationaliteit": "Nederlandse",
+      "natuurlijkpersoon_id": 4,
+      "opvoer": "2026-01-01T07:00:00.000007Z",
+      "rel_id": 1,
+      "versie": 1
+     },
+     "einde": null,
+     "geslacht": null,
+     "id": 4,
+     "naamgebruiken": {
+      "afvoer": null,
+      "data": null,
+      "naamgebruik": "EigenNaam",
+      "natuurlijkpersoon_id": 4,
+      "opvoer": "2026-01-01T07:00:00.000007Z",
+      "rel_id": 1,
+      "versie": 1
+     },
+     "namen": {
+      "achternaam": "Leeuwen",
+      "afvoer": null,
+      "data": null,
+      "natuurlijkpersoon_id": 4,
+      "opvoer": "2026-01-01T07:00:00.000007Z",
+      "rel_id": 1,
+      "roepnaam": "Ravi",
+      "tussenvoegsel": "van",
+      "versie": 1,
+      "voorletters": "R.",
+      "weergavenaam": null
+     },
+     "opvoer": "2026-01-01T07:00:00.000007Z",
+     "partnernamen": {
+      "achternaam": "Kok",
+      "afvoer": null,
+      "data": null,
+      "natuurlijkpersoon_id": 4,
+      "opvoer": "2026-01-01T07:00:00.000007Z",
+      "rel_id": 1,
+      "versie": 1
+     },
+     "persoonsidentificaties": {
+      "afvoer": null,
+      "bsn": "100000034",
+      "bsnEnIngezeten": null,
+      "data": null,
+      "ingezetene": false,
+      "natuurlijkpersoon_id": 4,
+      "opvoer": "2026-01-01T07:00:00.000007Z",
+      "rel_id": 1,
+      "versie": 1
+     },
+     "weergavenaam": "Ravi van Leeuwen",
+     "woonlocatie": null
+    },
+    {
+     "aanspraak": null,
+     "aanvang": {
+      "afvoer": null,
+      "datum": "1990-05-14",
+      "natuurlijkpersoon_id": 2,
+      "opvoer": "2026-01-01T01:00:00.000001Z",
+      "versie": 1
+     },
+     "afvoer": null,
+     "bereikbaarheden": {
+      "aanvang": {
+       "afvoer": null,
+       "datum": "2020-01-01",
+       "natuurlijkpersoon_id": 2,
+       "opvoer": "2026-01-01T03:00:00.000003Z",
+       "rel_id": 1,
+       "versie": 1
+      },
+      "afvoer": null,
+      "data": null,
+      "einde": null,
+      "locatie": {
+       "afvoer": null,
+       "id": 2,
+       "opvoer": "2026-01-01T02:00:00.000002Z",
+       "weergaveadres": null
+      },
+      "locatie_id": 2,
+      "natuurlijkpersoon_id": 2,
+      "opvoer": "2026-01-01T03:00:00.000003Z",
+      "rel_id": 1,
+      "soort": "Woonadres",
+      "versie": 1
+     },
+     "burgerschappen": {
+      "aanvang": null,
+      "afvoer": null,
+      "data": null,
+      "einde": null,
+      "landcode": "NL",
+      "landreferentie": null,
+      "nationaliteit": "Nederlandse",
+      "natuurlijkpersoon_id": 2,
+      "opvoer": "2026-01-01T01:00:00.000001Z",
+      "rel_id": 1,
+      "versie": 1
+     },
+     "einde": null,
+     "geslacht": null,
+     "id": 2,
+     "naamgebruiken": {
+      "afvoer": null,
+      "data": null,
+      "naamgebruik": "EigenNaam",
+      "natuurlijkpersoon_id": 2,
+      "opvoer": "2026-01-01T01:00:00.000001Z",
+      "rel_id": 1,
+      "versie": 1
+     },
+     "namen": {
+      "achternaam": "Vries",
+      "afvoer": null,
+      "data": null,
+      "natuurlijkpersoon_id": 2,
+      "opvoer": "2026-01-01T01:00:00.000001Z",
+      "rel_id": 1,
+      "roepnaam": "Joris",
+      "tussenvoegsel": "de",
+      "versie": 1,
+      "voorletters": "J.K.",
+      "weergavenaam": null
+     },
+     "opvoer": "2026-01-01T01:00:00.000001Z",
+     "partnernamen": {
+      "achternaam": "Bakker",
+      "afvoer": null,
+      "data": null,
+      "natuurlijkpersoon_id": 2,
+      "opvoer": "2026-01-01T01:00:00.000001Z",
+      "rel_id": 1,
+      "versie": 1
+     },
+     "persoonsidentificaties": {
+      "afvoer": null,
+      "bsn": "100000010",
+      "bsnEnIngezeten": null,
+      "data": null,
+      "ingezetene": true,
+      "natuurlijkpersoon_id": 2,
+      "opvoer": "2026-01-01T01:00:00.000001Z",
+      "rel_id": 1,
+      "versie": 1
+     },
+     "weergavenaam": "Joris de Vries",
+     "woonlocatie": null
+    },
+    {
+     "aanspraak": null,
+     "aanvang": {
+      "afvoer": null,
+      "datum": "1991-07-09",
+      "natuurlijkpersoon_id": 6,
+      "opvoer": "2026-01-01T13:00:00.000013Z",
+      "versie": 1
+     },
+     "afvoer": null,
+     "bereikbaarheden": {
+      "aanvang": {
+       "afvoer": null,
+       "datum": "2023-07-01",
+       "natuurlijkpersoon_id": 6,
+       "opvoer": "2026-01-01T15:00:00.000015Z",
+       "rel_id": 1,
+       "versie": 1
+      },
+      "afvoer": null,
+      "data": null,
+      "einde": null,
+      "locatie": {
+       "afvoer": null,
+       "id": 6,
+       "opvoer": "2026-01-01T14:00:00.000014Z",
+       "weergaveadres": null
+      },
+      "locatie_id": 6,
+      "natuurlijkpersoon_id": 6,
+      "opvoer": "2026-01-01T15:00:00.000015Z",
+      "rel_id": 1,
+      "soort": "Woonadres",
+      "versie": 1
+     },
+     "burgerschappen": {
+      "aanvang": null,
+      "afvoer": null,
+      "data": null,
+      "einde": null,
+      "landcode": "NL",
+      "landreferentie": null,
+      "nationaliteit": "Nederlandse",
+      "natuurlijkpersoon_id": 6,
+      "opvoer": "2026-01-01T13:00:00.000013Z",
+      "rel_id": 1,
+      "versie": 1
+     },
+     "einde": null,
+     "geslacht": null,
+     "id": 6,
+     "naamgebruiken": {
+      "afvoer": null,
+      "data": null,
+      "naamgebruik": "EigenNaam",
+      "natuurlijkpersoon_id": 6,
+      "opvoer": "2026-01-01T13:00:00.000013Z",
+      "rel_id": 1,
+      "versie": 1
+     },
+     "namen": {
+      "achternaam": "de Jong",
+      "afvoer": null,
+      "data": null,
+      "natuurlijkpersoon_id": 6,
+      "opvoer": "2026-01-01T13:00:00.000013Z",
+      "rel_id": 1,
+      "roepnaam": "Yara",
+      "tussenvoegsel": "",
+      "versie": 1,
+      "voorletters": "Y.",
+      "weergavenaam": null
+     },
+     "opvoer": "2026-01-01T13:00:00.000013Z",
+     "partnernamen": {
+      "achternaam": "Visser",
+      "afvoer": null,
+      "data": null,
+      "natuurlijkpersoon_id": 6,
+      "opvoer": "2026-01-01T13:00:00.000013Z",
+      "rel_id": 1,
+      "versie": 1
+     },
+     "persoonsidentificaties": {
+      "afvoer": null,
+      "bsn": "100000058",
+      "bsnEnIngezeten": null,
+      "data": null,
+      "ingezetene": true,
+      "natuurlijkpersoon_id": 6,
+      "opvoer": "2026-01-01T13:00:00.000013Z",
+      "rel_id": 1,
+      "versie": 1
+     },
+     "weergavenaam": "Yara  de Jong",
+     "woonlocatie": null
+    },
+    {
+     "aanspraak": null,
+     "aanvang": {
+      "afvoer": null,
+      "datum": "1994-11-03",
+      "natuurlijkpersoon_id": 3,
+      "opvoer": "2026-01-01T04:00:00.000004Z",
+      "versie": 1
+     },
+     "afvoer": null,
+     "bereikbaarheden": {
+      "aanvang": {
+       "afvoer": null,
+       "datum": "2021-02-01",
+       "natuurlijkpersoon_id": 3,
+       "opvoer": "2026-01-01T06:00:00.000006Z",
+       "rel_id": 1,
+       "versie": 1
+      },
+      "afvoer": null,
+      "data": null,
+      "einde": null,
+      "locatie": {
+       "afvoer": null,
+       "id": 3,
+       "opvoer": "2026-01-01T05:00:00.000005Z",
+       "weergaveadres": null
+      },
+      "locatie_id": 3,
+      "natuurlijkpersoon_id": 3,
+      "opvoer": "2026-01-01T06:00:00.000006Z",
+      "rel_id": 1,
+      "soort": "Woonadres",
+      "versie": 1
+     },
+     "burgerschappen": {
+      "aanvang": null,
+      "afvoer": null,
+      "data": null,
+      "einde": null,
+      "landcode": "NL",
+      "landreferentie": null,
+      "nationaliteit": "Nederlandse",
+      "natuurlijkpersoon_id": 3,
+      "opvoer": "2026-01-01T04:00:00.000004Z",
+      "rel_id": 1,
+      "versie": 1
+     },
+     "einde": null,
+     "geslacht": null,
+     "id": 3,
+     "naamgebruiken": {
+      "afvoer": null,
+      "data": null,
+      "naamgebruik": "PartnerNaam",
+      "natuurlijkpersoon_id": 3,
+      "opvoer": "2026-01-01T04:00:00.000004Z",
+      "rel_id": 1,
+      "versie": 1
+     },
+     "namen": {
+      "achternaam": "Vermeer",
+      "afvoer": null,
+      "data": null,
+      "natuurlijkpersoon_id": 3,
+      "opvoer": "2026-01-01T04:00:00.000004Z",
+      "rel_id": 1,
+      "roepnaam": "Mila",
+      "tussenvoegsel": "",
+      "versie": 1,
+      "voorletters": "M.",
+      "weergavenaam": null
+     },
+     "opvoer": "2026-01-01T04:00:00.000004Z",
+     "partnernamen": {
+      "achternaam": "Smit",
+      "afvoer": null,
+      "data": null,
+      "natuurlijkpersoon_id": 3,
+      "opvoer": "2026-01-01T04:00:00.000004Z",
+      "rel_id": 1,
+      "versie": 1
+     },
+     "persoonsidentificaties": {
+      "afvoer": null,
+      "bsn": "100000022",
+      "bsnEnIngezeten": null,
+      "data": null,
+      "ingezetene": true,
+      "natuurlijkpersoon_id": 3,
+      "opvoer": "2026-01-01T04:00:00.000004Z",
+      "rel_id": 1,
+      "versie": 1
+     },
+     "weergavenaam": "Mila  Vermeer",
+     "woonlocatie": null
+    },
+    {
+     "aanspraak": null,
+     "aanvang": {
+      "afvoer": null,
+      "datum": "1996-01-17",
+      "natuurlijkpersoon_id": 5,
+      "opvoer": "2026-01-01T10:00:00.00001Z",
+      "versie": 1
+     },
+     "afvoer": null,
+     "bereikbaarheden": {
+      "aanvang": {
+       "afvoer": null,
+       "datum": "2022-11-01",
+       "natuurlijkpersoon_id": 5,
+       "opvoer": "2026-01-01T12:00:00.000012Z",
+       "rel_id": 1,
+       "versie": 1
+      },
+      "afvoer": null,
+      "data": null,
+      "einde": null,
+      "locatie": {
+       "afvoer": null,
+       "id": 5,
+       "opvoer": "2026-01-01T11:00:00.000011Z",
+       "weergaveadres": null
+      },
+      "locatie_id": 5,
+      "natuurlijkpersoon_id": 5,
+      "opvoer": "2026-01-01T12:00:00.000012Z",
+      "rel_id": 1,
+      "soort": "Woonadres",
+      "versie": 1
+     },
+     "burgerschappen": {
+      "aanvang": null,
+      "afvoer": null,
+      "data": null,
+      "einde": null,
+      "landcode": "NL",
+      "landreferentie": null,
+      "nationaliteit": "Nederlandse",
+      "natuurlijkpersoon_id": 5,
+      "opvoer": "2026-01-01T10:00:00.00001Z",
+      "rel_id": 1,
+      "versie": 1
+     },
+     "einde": null,
+     "geslacht": null,
+     "id": 5,
+     "naamgebruiken": {
+      "afvoer": null,
+      "data": null,
+      "naamgebruik": "PartnerNaam",
+      "natuurlijkpersoon_id": 5,
+      "opvoer": "2026-01-01T10:00:00.00001Z",
+      "rel_id": 1,
+      "versie": 1
+     },
+     "namen": {
+      "achternaam": "Meijer",
+      "afvoer": null,
+      "data": null,
+      "natuurlijkpersoon_id": 5,
+      "opvoer": "2026-01-01T10:00:00.00001Z",
+      "rel_id": 1,
+      "roepnaam": "Lotte",
+      "tussenvoegsel": "",
+      "versie": 1,
+      "voorletters": "L.",
+      "weergavenaam": null
+     },
+     "opvoer": "2026-01-01T10:00:00.00001Z",
+     "partnernamen": {
+      "achternaam": "Hendriks",
+      "afvoer": null,
+      "data": null,
+      "natuurlijkpersoon_id": 5,
+      "opvoer": "2026-01-01T10:00:00.00001Z",
+      "rel_id": 1,
+      "versie": 1
+     },
+     "persoonsidentificaties": {
+      "afvoer": null,
+      "bsn": "100000046",
+      "bsnEnIngezeten": null,
+      "data": null,
+      "ingezetene": true,
+      "natuurlijkpersoon_id": 5,
+      "opvoer": "2026-01-01T10:00:00.00001Z",
+      "rel_id": 1,
+      "versie": 1
+     },
+     "weergavenaam": "Lotte  Meijer",
+     "woonlocatie": null
+    }
+   ]
+  }
+ },
+ "full_natuurlijk_personen_list@t3": {
+  "data": {
+   "r": [
+    {
+     "aanspraak": null,
+     "aanvang": {
+      "afvoer": null,
+      "datum": "1990-05-14",
+      "natuurlijkpersoon_id": 2,
+      "opvoer": "2026-01-01T01:00:00.000001Z",
+      "versie": 1
+     },
+     "afvoer": null,
+     "bereikbaarheden": {
+      "aanvang": {
+       "afvoer": null,
+       "datum": "2020-01-01",
+       "natuurlijkpersoon_id": 2,
+       "opvoer": "2026-01-01T03:00:00.000003Z",
+       "rel_id": 1,
+       "versie": 1
+      },
+      "afvoer": null,
+      "data": null,
+      "einde": null,
+      "locatie": {
+       "afvoer": null,
+       "id": 2,
+       "opvoer": "2026-01-01T02:00:00.000002Z",
+       "weergaveadres": null
+      },
+      "locatie_id": 2,
+      "natuurlijkpersoon_id": 2,
+      "opvoer": "2026-01-01T03:00:00.000003Z",
+      "rel_id": 1,
+      "soort": "Woonadres",
+      "versie": 1
+     },
+     "burgerschappen": {
+      "aanvang": null,
+      "afvoer": null,
+      "data": null,
+      "einde": null,
+      "landcode": "NL",
+      "landreferentie": null,
+      "nationaliteit": "Nederlandse",
+      "natuurlijkpersoon_id": 2,
+      "opvoer": "2026-01-01T01:00:00.000001Z",
+      "rel_id": 1,
+      "versie": 1
+     },
+     "einde": null,
+     "geslacht": null,
+     "id": 2,
+     "naamgebruiken": {
+      "afvoer": null,
+      "data": null,
+      "naamgebruik": "EigenNaam",
+      "natuurlijkpersoon_id": 2,
+      "opvoer": "2026-01-01T01:00:00.000001Z",
+      "rel_id": 1,
+      "versie": 1
+     },
+     "namen": {
+      "achternaam": "Vries",
+      "afvoer": null,
+      "data": null,
+      "natuurlijkpersoon_id": 2,
+      "opvoer": "2026-01-01T01:00:00.000001Z",
+      "rel_id": 1,
+      "roepnaam": "Joris",
+      "tussenvoegsel": "de",
+      "versie": 1,
+      "voorletters": "J.K.",
+      "weergavenaam": null
+     },
+     "opvoer": "2026-01-01T01:00:00.000001Z",
+     "partnernamen": {
+      "achternaam": "Bakker",
+      "afvoer": null,
+      "data": null,
+      "natuurlijkpersoon_id": 2,
+      "opvoer": "2026-01-01T01:00:00.000001Z",
+      "rel_id": 1,
+      "versie": 1
+     },
+     "persoonsidentificaties": {
+      "afvoer": null,
+      "bsn": "100000010",
+      "bsnEnIngezeten": null,
+      "data": null,
+      "ingezetene": true,
+      "natuurlijkpersoon_id": 2,
+      "opvoer": "2026-01-01T01:00:00.000001Z",
+      "rel_id": 1,
+      "versie": 1
+     },
+     "weergavenaam": "Joris de Vries",
+     "woonlocatie": null
+    }
+   ]
+  }
+ },
+ "full_notificatie_definities(1)": {
+  "data": {
+   "r": null
+  },
+  "errors": [
+   {
+    "locations": [
+     {
+      "column": 3,
+      "line": 1
+     }
+    ],
+    "message": "query fout voor NotificatieDefinitie: sql: no rows in result set",
+    "path": [
+     "r"
+    ]
+   }
+  ]
+ },
+ "full_notificatie_definities(2)": {
+  "data": {
+   "r": null
+  },
+  "errors": [
+   {
+    "locations": [
+     {
+      "column": 3,
+      "line": 1
+     }
+    ],
+    "message": "query fout voor NotificatieDefinitie: sql: no rows in result set",
+    "path": [
+     "r"
+    ]
+   }
+  ]
+ },
+ "full_notificatie_definities(2)@t3": {
+  "data": {
+   "r": null
+  },
+  "errors": [
+   {
+    "locations": [
+     {
+      "column": 3,
+      "line": 1
+     }
+    ],
+    "message": "query fout voor NotificatieDefinitie: sql: no rows in result set",
+    "path": [
+     "r"
+    ]
+   }
+  ]
+ },
+ "full_notificatie_definities(3)": {
+  "data": {
+   "r": null
+  },
+  "errors": [
+   {
+    "locations": [
+     {
+      "column": 3,
+      "line": 1
+     }
+    ],
+    "message": "query fout voor NotificatieDefinitie: sql: no rows in result set",
+    "path": [
+     "r"
+    ]
+   }
+  ]
+ },
+ "full_notificatie_definities_list": {
+  "data": {
+   "r": []
+  }
+ },
+ "full_notificatie_definities_list@t3": {
+  "data": {
+   "r": []
+  }
+ },
+ "full_organisaties(1)": {
+  "data": {
+   "r": null
+  },
+  "errors": [
+   {
+    "locations": [
+     {
+      "column": 3,
+      "line": 1
+     }
+    ],
+    "message": "query fout voor Organisatie: sql: no rows in result set",
+    "path": [
+     "r"
+    ]
+   }
+  ]
+ },
+ "full_organisaties(2)": {
+  "data": {
+   "r": null
+  },
+  "errors": [
+   {
+    "locations": [
+     {
+      "column": 3,
+      "line": 1
+     }
+    ],
+    "message": "query fout voor Organisatie: sql: no rows in result set",
+    "path": [
+     "r"
+    ]
+   }
+  ]
+ },
+ "full_organisaties(2)@t3": {
+  "data": {
+   "r": null
+  },
+  "errors": [
+   {
+    "locations": [
+     {
+      "column": 3,
+      "line": 1
+     }
+    ],
+    "message": "query fout voor Organisatie: sql: no rows in result set",
+    "path": [
+     "r"
+    ]
+   }
+  ]
+ },
+ "full_organisaties(3)": {
+  "data": {
+   "r": null
+  },
+  "errors": [
+   {
+    "locations": [
+     {
+      "column": 3,
+      "line": 1
+     }
+    ],
+    "message": "query fout voor Organisatie: sql: no rows in result set",
+    "path": [
+     "r"
+    ]
+   }
+  ]
+ },
+ "full_organisaties_list": {
+  "data": {
+   "r": []
+  }
+ },
+ "full_organisaties_list@t3": {
+  "data": {
+   "r": []
+  }
+ },
+ "full_personen(1)": {
+  "data": {
+   "r": null
+  },
+  "errors": [
+   {
+    "locations": [
+     {
+      "column": 3,
+      "line": 1
+     }
+    ],
+    "message": "query fout voor Persoon: sql: no rows in result set",
+    "path": [
+     "r"
+    ]
+   }
+  ]
+ },
+ "full_personen(2)": {
+  "data": {
+   "r": null
+  },
+  "errors": [
+   {
+    "locations": [
+     {
+      "column": 3,
+      "line": 1
+     }
+    ],
+    "message": "query fout voor Persoon: sql: no rows in result set",
+    "path": [
+     "r"
+    ]
+   }
+  ]
+ },
+ "full_personen(2)@t3": {
+  "data": {
+   "r": null
+  },
+  "errors": [
+   {
+    "locations": [
+     {
+      "column": 3,
+      "line": 1
+     }
+    ],
+    "message": "query fout voor Persoon: sql: no rows in result set",
+    "path": [
+     "r"
+    ]
+   }
+  ]
+ },
+ "full_personen(3)": {
+  "data": {
+   "r": null
+  },
+  "errors": [
+   {
+    "locations": [
+     {
+      "column": 3,
+      "line": 1
+     }
+    ],
+    "message": "query fout voor Persoon: sql: no rows in result set",
+    "path": [
+     "r"
+    ]
+   }
+  ]
+ },
+ "full_personen_list": {
+  "data": {
+   "r": []
+  }
+ },
+ "full_personen_list@t3": {
+  "data": {
+   "r": []
+  }
+ },
+ "full_query_definities(1)": {
+  "data": {
+   "r": null
+  },
+  "errors": [
+   {
+    "locations": [
+     {
+      "column": 3,
+      "line": 1
+     }
+    ],
+    "message": "query fout voor QueryDefinitie: sql: no rows in result set",
+    "path": [
+     "r"
+    ]
+   }
+  ]
+ },
+ "full_query_definities(2)": {
+  "data": {
+   "r": null
+  },
+  "errors": [
+   {
+    "locations": [
+     {
+      "column": 3,
+      "line": 1
+     }
+    ],
+    "message": "query fout voor QueryDefinitie: sql: no rows in result set",
+    "path": [
+     "r"
+    ]
+   }
+  ]
+ },
+ "full_query_definities(2)@t3": {
+  "data": {
+   "r": null
+  },
+  "errors": [
+   {
+    "locations": [
+     {
+      "column": 3,
+      "line": 1
+     }
+    ],
+    "message": "query fout voor QueryDefinitie: sql: no rows in result set",
+    "path": [
+     "r"
+    ]
+   }
+  ]
+ },
+ "full_query_definities(3)": {
+  "data": {
+   "r": null
+  },
+  "errors": [
+   {
+    "locations": [
+     {
+      "column": 3,
+      "line": 1
+     }
+    ],
+    "message": "query fout voor QueryDefinitie: sql: no rows in result set",
+    "path": [
+     "r"
+    ]
+   }
+  ]
+ },
+ "full_query_definities_list": {
+  "data": {
+   "r": []
+  }
+ },
+ "full_query_definities_list@t3": {
+  "data": {
+   "r": []
+  }
+ },
+ "full_referentielijsten(1)": {
+  "data": {
+   "r": {
+    "aanvang": null,
+    "adellijke_titels_titels": [
+     {
+      "adellijketitel": {
+       "afvoer": null,
+       "id": 1,
+       "opvoer": "2026-01-01T17:00:00.000017Z"
+      },
+      "adellijketitel_id": 1,
+      "afvoer": null,
+      "data": null,
+      "opvoer": "2026-01-01T18:00:00.000018Z",
+      "referentielijst_id": 1,
+      "rel_id": 1,
+      "versie": 1
+     },
+     {
+      "adellijketitel": {
+       "afvoer": null,
+       "id": 10,
+       "opvoer": "2026-01-01T17:00:00.000017Z"
+      },
+      "adellijketitel_id": 10,
+      "afvoer": null,
+      "data": null,
+      "opvoer": "2026-01-01T18:00:00.000018Z",
+      "referentielijst_id": 1,
+      "rel_id": 10,
+      "versie": 1
+     },
+     {
+      "adellijketitel": {
+       "afvoer": null,
+       "id": 11,
+       "opvoer": "2026-01-01T17:00:00.000017Z"
+      },
+      "adellijketitel_id": 11,
+      "afvoer": null,
+      "data": null,
+      "opvoer": "2026-01-01T18:00:00.000018Z",
+      "referentielijst_id": 1,
+      "rel_id": 11,
+      "versie": 1
+     },
+     {
+      "adellijketitel": {
+       "afvoer": null,
+       "id": 12,
+       "opvoer": "2026-01-01T17:00:00.000017Z"
+      },
+      "adellijketitel_id": 12,
+      "afvoer": null,
+      "data": null,
+      "opvoer": "2026-01-01T18:00:00.000018Z",
+      "referentielijst_id": 1,
+      "rel_id": 12,
+      "versie": 1
+     },
+     {
+      "adellijketitel": {
+       "afvoer": null,
+       "id": 13,
+       "opvoer": "2026-01-01T17:00:00.000017Z"
+      },
+      "adellijketitel_id": 13,
+      "afvoer": null,
+      "data": null,
+      "opvoer": "2026-01-01T18:00:00.000018Z",
+      "referentielijst_id": 1,
+      "rel_id": 13,
+      "versie": 1
+     },
+     {
+      "adellijketitel": {
+       "afvoer": null,
+       "id": 2,
+       "opvoer": "2026-01-01T17:00:00.000017Z"
+      },
+      "adellijketitel_id": 2,
+      "afvoer": null,
+      "data": null,
+      "opvoer": "2026-01-01T18:00:00.000018Z",
+      "referentielijst_id": 1,
+      "rel_id": 2,
+      "versie": 1
+     },
+     {
+      "adellijketitel": {
+       "afvoer": null,
+       "id": 3,
+       "opvoer": "2026-01-01T17:00:00.000017Z"
+      },
+      "adellijketitel_id": 3,
+      "afvoer": null,
+      "data": null,
+      "opvoer": "2026-01-01T18:00:00.000018Z",
+      "referentielijst_id": 1,
+      "rel_id": 3,
+      "versie": 1
+     },
+     {
+      "adellijketitel": {
+       "afvoer": null,
+       "id": 4,
+       "opvoer": "2026-01-01T17:00:00.000017Z"
+      },
+      "adellijketitel_id": 4,
+      "afvoer": null,
+      "data": null,
+      "opvoer": "2026-01-01T18:00:00.000018Z",
+      "referentielijst_id": 1,
+      "rel_id": 4,
+      "versie": 1
+     },
+     {
+      "adellijketitel": {
+       "afvoer": null,
+       "id": 5,
+       "opvoer": "2026-01-01T17:00:00.000017Z"
+      },
+      "adellijketitel_id": 5,
+      "afvoer": null,
+      "data": null,
+      "opvoer": "2026-01-01T18:00:00.000018Z",
+      "referentielijst_id": 1,
+      "rel_id": 5,
+      "versie": 1
+     },
+     {
+      "adellijketitel": {
+       "afvoer": null,
+       "id": 6,
+       "opvoer": "2026-01-01T17:00:00.000017Z"
+      },
+      "adellijketitel_id": 6,
+      "afvoer": null,
+      "data": null,
+      "opvoer": "2026-01-01T18:00:00.000018Z",
+      "referentielijst_id": 1,
+      "rel_id": 6,
+      "versie": 1
+     },
+     {
+      "adellijketitel": {
+       "afvoer": null,
+       "id": 7,
+       "opvoer": "2026-01-01T17:00:00.000017Z"
+      },
+      "adellijketitel_id": 7,
+      "afvoer": null,
+      "data": null,
+      "opvoer": "2026-01-01T18:00:00.000018Z",
+      "referentielijst_id": 1,
+      "rel_id": 7,
+      "versie": 1
+     },
+     {
+      "adellijketitel": {
+       "afvoer": null,
+       "id": 8,
+       "opvoer": "2026-01-01T17:00:00.000017Z"
+      },
+      "adellijketitel_id": 8,
+      "afvoer": null,
+      "data": null,
+      "opvoer": "2026-01-01T18:00:00.000018Z",
+      "referentielijst_id": 1,
+      "rel_id": 8,
+      "versie": 1
+     },
+     {
+      "adellijketitel": {
+       "afvoer": null,
+       "id": 9,
+       "opvoer": "2026-01-01T17:00:00.000017Z"
+      },
+      "adellijketitel_id": 9,
+      "afvoer": null,
+      "data": null,
+      "opvoer": "2026-01-01T18:00:00.000018Z",
+      "referentielijst_id": 1,
+      "rel_id": 9,
+      "versie": 1
+     }
+    ],
+    "afvoer": null,
+    "einde": null,
+    "id": 1,
+    "internetadressen": null,
+    "landenlijst_landen": null,
+    "opvoer": "2026-01-01T16:00:00.000016Z",
+    "referentielijstnamen": {
+     "afvoer": null,
+     "data": null,
+     "naam": "AdellijkeTitels",
+     "opvoer": "2026-01-01T16:00:00.000016Z",
+     "referentielijst_id": 1,
+     "rel_id": 1,
+     "versie": 1
+    },
+    "referentielijstomschrijvingen": null,
+    "visibilities": null
+   }
+  }
+ },
+ "full_referentielijsten(2)": {
+  "data": {
+   "r": null
+  },
+  "errors": [
+   {
+    "locations": [
+     {
+      "column": 3,
+      "line": 1
+     }
+    ],
+    "message": "query fout voor Referentielijst: sql: no rows in result set",
+    "path": [
+     "r"
+    ]
+   }
+  ]
+ },
+ "full_referentielijsten(2)@t3": {
+  "data": {
+   "r": null
+  },
+  "errors": [
+   {
+    "locations": [
+     {
+      "column": 3,
+      "line": 1
+     }
+    ],
+    "message": "query fout voor Referentielijst: sql: no rows in result set",
+    "path": [
+     "r"
+    ]
+   }
+  ]
+ },
+ "full_referentielijsten(3)": {
+  "data": {
+   "r": null
+  },
+  "errors": [
+   {
+    "locations": [
+     {
+      "column": 3,
+      "line": 1
+     }
+    ],
+    "message": "query fout voor Referentielijst: sql: no rows in result set",
+    "path": [
+     "r"
+    ]
+   }
+  ]
+ },
+ "full_referentielijsten_list": {
+  "data": {
+   "r": [
+    {
+     "aanvang": null,
+     "adellijke_titels_titels": [
+      {
+       "adellijketitel": {
+        "afvoer": null,
+        "id": 1,
+        "opvoer": "2026-01-01T17:00:00.000017Z"
+       },
+       "adellijketitel_id": 1,
+       "afvoer": null,
+       "data": null,
+       "opvoer": "2026-01-01T18:00:00.000018Z",
+       "referentielijst_id": 1,
+       "rel_id": 1,
+       "versie": 1
+      },
+      {
+       "adellijketitel": {
+        "afvoer": null,
+        "id": 10,
+        "opvoer": "2026-01-01T17:00:00.000017Z"
+       },
+       "adellijketitel_id": 10,
+       "afvoer": null,
+       "data": null,
+       "opvoer": "2026-01-01T18:00:00.000018Z",
+       "referentielijst_id": 1,
+       "rel_id": 10,
+       "versie": 1
+      },
+      {
+       "adellijketitel": {
+        "afvoer": null,
+        "id": 11,
+        "opvoer": "2026-01-01T17:00:00.000017Z"
+       },
+       "adellijketitel_id": 11,
+       "afvoer": null,
+       "data": null,
+       "opvoer": "2026-01-01T18:00:00.000018Z",
+       "referentielijst_id": 1,
+       "rel_id": 11,
+       "versie": 1
+      },
+      {
+       "adellijketitel": {
+        "afvoer": null,
+        "id": 12,
+        "opvoer": "2026-01-01T17:00:00.000017Z"
+       },
+       "adellijketitel_id": 12,
+       "afvoer": null,
+       "data": null,
+       "opvoer": "2026-01-01T18:00:00.000018Z",
+       "referentielijst_id": 1,
+       "rel_id": 12,
+       "versie": 1
+      },
+      {
+       "adellijketitel": {
+        "afvoer": null,
+        "id": 13,
+        "opvoer": "2026-01-01T17:00:00.000017Z"
+       },
+       "adellijketitel_id": 13,
+       "afvoer": null,
+       "data": null,
+       "opvoer": "2026-01-01T18:00:00.000018Z",
+       "referentielijst_id": 1,
+       "rel_id": 13,
+       "versie": 1
+      },
+      {
+       "adellijketitel": {
+        "afvoer": null,
+        "id": 2,
+        "opvoer": "2026-01-01T17:00:00.000017Z"
+       },
+       "adellijketitel_id": 2,
+       "afvoer": null,
+       "data": null,
+       "opvoer": "2026-01-01T18:00:00.000018Z",
+       "referentielijst_id": 1,
+       "rel_id": 2,
+       "versie": 1
+      },
+      {
+       "adellijketitel": {
+        "afvoer": null,
+        "id": 3,
+        "opvoer": "2026-01-01T17:00:00.000017Z"
+       },
+       "adellijketitel_id": 3,
+       "afvoer": null,
+       "data": null,
+       "opvoer": "2026-01-01T18:00:00.000018Z",
+       "referentielijst_id": 1,
+       "rel_id": 3,
+       "versie": 1
+      },
+      {
+       "adellijketitel": {
+        "afvoer": null,
+        "id": 4,
+        "opvoer": "2026-01-01T17:00:00.000017Z"
+       },
+       "adellijketitel_id": 4,
+       "afvoer": null,
+       "data": null,
+       "opvoer": "2026-01-01T18:00:00.000018Z",
+       "referentielijst_id": 1,
+       "rel_id": 4,
+       "versie": 1
+      },
+      {
+       "adellijketitel": {
+        "afvoer": null,
+        "id": 5,
+        "opvoer": "2026-01-01T17:00:00.000017Z"
+       },
+       "adellijketitel_id": 5,
+       "afvoer": null,
+       "data": null,
+       "opvoer": "2026-01-01T18:00:00.000018Z",
+       "referentielijst_id": 1,
+       "rel_id": 5,
+       "versie": 1
+      },
+      {
+       "adellijketitel": {
+        "afvoer": null,
+        "id": 6,
+        "opvoer": "2026-01-01T17:00:00.000017Z"
+       },
+       "adellijketitel_id": 6,
+       "afvoer": null,
+       "data": null,
+       "opvoer": "2026-01-01T18:00:00.000018Z",
+       "referentielijst_id": 1,
+       "rel_id": 6,
+       "versie": 1
+      },
+      {
+       "adellijketitel": {
+        "afvoer": null,
+        "id": 7,
+        "opvoer": "2026-01-01T17:00:00.000017Z"
+       },
+       "adellijketitel_id": 7,
+       "afvoer": null,
+       "data": null,
+       "opvoer": "2026-01-01T18:00:00.000018Z",
+       "referentielijst_id": 1,
+       "rel_id": 7,
+       "versie": 1
+      },
+      {
+       "adellijketitel": {
+        "afvoer": null,
+        "id": 8,
+        "opvoer": "2026-01-01T17:00:00.000017Z"
+       },
+       "adellijketitel_id": 8,
+       "afvoer": null,
+       "data": null,
+       "opvoer": "2026-01-01T18:00:00.000018Z",
+       "referentielijst_id": 1,
+       "rel_id": 8,
+       "versie": 1
+      },
+      {
+       "adellijketitel": {
+        "afvoer": null,
+        "id": 9,
+        "opvoer": "2026-01-01T17:00:00.000017Z"
+       },
+       "adellijketitel_id": 9,
+       "afvoer": null,
+       "data": null,
+       "opvoer": "2026-01-01T18:00:00.000018Z",
+       "referentielijst_id": 1,
+       "rel_id": 9,
+       "versie": 1
+      }
+     ],
+     "afvoer": null,
+     "einde": null,
+     "id": 1,
+     "internetadressen": null,
+     "landenlijst_landen": null,
+     "opvoer": "2026-01-01T16:00:00.000016Z",
+     "referentielijstnamen": {
+      "afvoer": null,
+      "data": null,
+      "naam": "AdellijkeTitels",
+      "opvoer": "2026-01-01T16:00:00.000016Z",
+      "referentielijst_id": 1,
+      "rel_id": 1,
+      "versie": 1
+     },
+     "referentielijstomschrijvingen": null,
+     "visibilities": null
+    }
+   ]
+  }
+ },
+ "full_referentielijsten_list@t3": {
+  "data": {
+   "r": []
+  }
+ },
+ "full_testentiteiten_gegevenstypen(1)": {
+  "data": {
+   "r": null
+  },
+  "errors": [
+   {
+    "locations": [
+     {
+      "column": 3,
+      "line": 1
+     }
+    ],
+    "message": "query fout voor TestEntiteitGegevenstypen: sql: no rows in result set",
+    "path": [
+     "r"
+    ]
+   }
+  ]
+ },
+ "full_testentiteiten_gegevenstypen(2)": {
+  "data": {
+   "r": null
+  },
+  "errors": [
+   {
+    "locations": [
+     {
+      "column": 3,
+      "line": 1
+     }
+    ],
+    "message": "query fout voor TestEntiteitGegevenstypen: sql: no rows in result set",
+    "path": [
+     "r"
+    ]
+   }
+  ]
+ },
+ "full_testentiteiten_gegevenstypen(2)@t3": {
+  "data": {
+   "r": null
+  },
+  "errors": [
+   {
+    "locations": [
+     {
+      "column": 3,
+      "line": 1
+     }
+    ],
+    "message": "query fout voor TestEntiteitGegevenstypen: sql: no rows in result set",
+    "path": [
+     "r"
+    ]
+   }
+  ]
+ },
+ "full_testentiteiten_gegevenstypen(3)": {
+  "data": {
+   "r": null
+  },
+  "errors": [
+   {
+    "locations": [
+     {
+      "column": 3,
+      "line": 1
+     }
+    ],
+    "message": "query fout voor TestEntiteitGegevenstypen: sql: no rows in result set",
+    "path": [
+     "r"
+    ]
+   }
+  ]
+ },
+ "full_testentiteiten_gegevenstypen_list": {
+  "data": {
+   "r": []
+  }
+ },
+ "full_testentiteiten_gegevenstypen_list@t3": {
+  "data": {
+   "r": []
+  }
+ },
+ "full_trefwoorden(1)": {
+  "data": {
+   "r": null
+  },
+  "errors": [
+   {
+    "locations": [
+     {
+      "column": 3,
+      "line": 1
+     }
+    ],
+    "message": "query fout voor Trefwoord: sql: no rows in result set",
+    "path": [
+     "r"
+    ]
+   }
+  ]
+ },
+ "full_trefwoorden(2)": {
+  "data": {
+   "r": null
+  },
+  "errors": [
+   {
+    "locations": [
+     {
+      "column": 3,
+      "line": 1
+     }
+    ],
+    "message": "query fout voor Trefwoord: sql: no rows in result set",
+    "path": [
+     "r"
+    ]
+   }
+  ]
+ },
+ "full_trefwoorden(2)@t3": {
+  "data": {
+   "r": null
+  },
+  "errors": [
+   {
+    "locations": [
+     {
+      "column": 3,
+      "line": 1
+     }
+    ],
+    "message": "query fout voor Trefwoord: sql: no rows in result set",
+    "path": [
+     "r"
+    ]
+   }
+  ]
+ },
+ "full_trefwoorden(3)": {
+  "data": {
+   "r": null
+  },
+  "errors": [
+   {
+    "locations": [
+     {
+      "column": 3,
+      "line": 1
+     }
+    ],
+    "message": "query fout voor Trefwoord: sql: no rows in result set",
+    "path": [
+     "r"
+    ]
+   }
+  ]
+ },
+ "full_trefwoorden_list": {
+  "data": {
+   "r": []
+  }
+ },
+ "full_trefwoorden_list@t3": {
+  "data": {
+   "r": []
+  }
+ },
+ "full_uitleggen(1)": {
+  "data": {
+   "r": null
+  },
+  "errors": [
+   {
+    "locations": [
+     {
+      "column": 3,
+      "line": 1
+     }
+    ],
+    "message": "query fout voor Uitleg: sql: no rows in result set",
+    "path": [
+     "r"
+    ]
+   }
+  ]
+ },
+ "full_uitleggen(2)": {
+  "data": {
+   "r": null
+  },
+  "errors": [
+   {
+    "locations": [
+     {
+      "column": 3,
+      "line": 1
+     }
+    ],
+    "message": "query fout voor Uitleg: sql: no rows in result set",
+    "path": [
+     "r"
+    ]
+   }
+  ]
+ },
+ "full_uitleggen(2)@t3": {
+  "data": {
+   "r": null
+  },
+  "errors": [
+   {
+    "locations": [
+     {
+      "column": 3,
+      "line": 1
+     }
+    ],
+    "message": "query fout voor Uitleg: sql: no rows in result set",
+    "path": [
+     "r"
+    ]
+   }
+  ]
+ },
+ "full_uitleggen(3)": {
+  "data": {
+   "r": null
+  },
+  "errors": [
+   {
+    "locations": [
+     {
+      "column": 3,
+      "line": 1
+     }
+    ],
+    "message": "query fout voor Uitleg: sql: no rows in result set",
+    "path": [
+     "r"
+    ]
+   }
+  ]
+ },
+ "full_uitleggen_list": {
+  "data": {
+   "r": []
+  }
+ },
+ "full_uitleggen_list@t3": {
+  "data": {
+   "r": []
+  }
+ },
+ "full_weergave_definities(1)": {
+  "data": {
+   "r": null
+  },
+  "errors": [
+   {
+    "locations": [
+     {
+      "column": 3,
+      "line": 1
+     }
+    ],
+    "message": "query fout voor WeergaveDefinitie: sql: no rows in result set",
+    "path": [
+     "r"
+    ]
+   }
+  ]
+ },
+ "full_weergave_definities(2)": {
+  "data": {
+   "r": null
+  },
+  "errors": [
+   {
+    "locations": [
+     {
+      "column": 3,
+      "line": 1
+     }
+    ],
+    "message": "query fout voor WeergaveDefinitie: sql: no rows in result set",
+    "path": [
+     "r"
+    ]
+   }
+  ]
+ },
+ "full_weergave_definities(2)@t3": {
+  "data": {
+   "r": null
+  },
+  "errors": [
+   {
+    "locations": [
+     {
+      "column": 3,
+      "line": 1
+     }
+    ],
+    "message": "query fout voor WeergaveDefinitie: sql: no rows in result set",
+    "path": [
+     "r"
+    ]
+   }
+  ]
+ },
+ "full_weergave_definities(3)": {
+  "data": {
+   "r": null
+  },
+  "errors": [
+   {
+    "locations": [
+     {
+      "column": 3,
+      "line": 1
+     }
+    ],
+    "message": "query fout voor WeergaveDefinitie: sql: no rows in result set",
+    "path": [
+     "r"
+    ]
+   }
+  ]
+ },
+ "full_weergave_definities_list": {
+  "data": {
+   "r": []
+  }
+ },
+ "full_weergave_definities_list@t3": {
+  "data": {
+   "r": []
+  }
+ },
+ "gemeentedelen@lijst": {
+  "data": {
+   "r": []
+  }
+ },
+ "gemeenten@lijst": {
+  "data": {
+   "r": []
+  }
+ },
+ "ide_bestanden@lijst": {
+  "data": {
+   "r": []
+  }
+ },
+ "initiatieven@lijst": {
+  "data": {
+   "r": []
+  }
+ },
+ "kennisartikelen@lijst": {
+  "data": {
+   "r": []
+  }
+ },
+ "kennisartikeltaalvarianten@lijst": {
+  "data": {
+   "r": []
+  }
+ },
+ "landen@lijst": {
+  "data": {
+   "r": []
+  }
+ },
+ "lijst_definities@lijst": {
+  "data": {
+   "r": []
+  }
+ },
+ "locaties@lijst": {
+  "data": {
+   "r": [
+    {
+     "afvoer": null,
+     "id": 2,
+     "opvoer": "2026-01-01T02:00:00.000002Z",
+     "weergaveadres": null
+    },
+    {
+     "afvoer": null,
+     "id": 3,
+     "opvoer": "2026-01-01T05:00:00.000005Z",
+     "weergaveadres": null
+    },
+    {
+     "afvoer": null,
+     "id": 4,
+     "opvoer": "2026-01-01T08:00:00.000008Z",
+     "weergaveadres": null
+    },
+    {
+     "afvoer": null,
+     "id": 5,
+     "opvoer": "2026-01-01T11:00:00.000011Z",
+     "weergaveadres": null
+    },
+    {
+     "afvoer": null,
+     "id": 6,
+     "opvoer": "2026-01-01T14:00:00.000014Z",
+     "weergaveadres": null
+    }
+   ]
+  }
+ },
+ "medewerkers@lijst": {
+  "data": {
+   "r": []
+  }
+ },
+ "natuurlijk_personen@lijst": {
+  "data": {
+   "r": [
+    {
+     "afvoer": null,
+     "id": 2,
+     "opvoer": "2026-01-01T01:00:00.000001Z",
+     "weergavenaam": null
+    },
+    {
+     "afvoer": null,
+     "id": 3,
+     "opvoer": "2026-01-01T04:00:00.000004Z",
+     "weergavenaam": null
+    },
+    {
+     "afvoer": null,
+     "id": 4,
+     "opvoer": "2026-01-01T07:00:00.000007Z",
+     "weergavenaam": null
+    },
+    {
+     "afvoer": null,
+     "id": 5,
+     "opvoer": "2026-01-01T10:00:00.00001Z",
+     "weergavenaam": null
+    },
+    {
+     "afvoer": null,
+     "id": 6,
+     "opvoer": "2026-01-01T13:00:00.000013Z",
+     "weergavenaam": null
+    }
+   ]
+  }
+ },
+ "notificatie_definities@lijst": {
+  "data": {
+   "r": []
+  }
+ },
+ "organisaties@lijst": {
+  "data": {
+   "r": []
+  }
+ },
+ "personen@lijst": {
+  "data": {
+   "r": []
+  }
+ },
+ "query_definities@lijst": {
+  "data": {
+   "r": []
+  }
+ },
+ "referentielijsten@lijst": {
+  "data": {
+   "r": [
+    {
+     "afvoer": null,
+     "id": 1,
+     "opvoer": "2026-01-01T16:00:00.000016Z"
+    }
+   ]
+  }
+ },
+ "testentiteiten_gegevenstypen@lijst": {
+  "data": {
+   "r": []
+  }
+ },
+ "trefwoorden@lijst": {
+  "data": {
+   "r": []
+  }
+ },
+ "uitleggen@lijst": {
+  "data": {
+   "r": []
+  }
+ },
+ "weergave_definities@lijst": {
+  "data": {
+   "r": []
+  }
+ }
+}

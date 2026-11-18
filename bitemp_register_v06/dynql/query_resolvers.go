@@ -33,13 +33,6 @@ var errGeenToegang = fmt.Errorf("geen toegang volgens het actieve toegangsbeleid
 
 func makeFullEntityResolver(meta model.TypeMeta) graphql.FieldResolveFn {
 	return func(p graphql.ResolveParams) (interface{}, error) {
-		if db == nil {
-			return nil, fmt.Errorf("database niet geïnitialiseerd")
-		}
-		if meta.Factory == nil {
-			return nil, fmt.Errorf("Factory ontbreekt voor type %s", meta.Typenaam)
-		}
-
 		// ID argument
 		id, ok := p.Args["id"]
 		if !ok {
@@ -53,23 +46,14 @@ func makeFullEntityResolver(meta model.TypeMeta) graphql.FieldResolveFn {
 			return nil, err
 		}
 
-		entity := meta.Factory()
-		query := db.NewSelect().Model(entity)
-		query = applyFormeleTijdFilter(query, meta.Typenaam, peil)
-
-		// Onderliggende relaties laden (zelfde patroon als addOnderliggendeRelations)
-		query = addOnderliggendeRelations(query, meta, peiltijdstip)
-
-		err = query.
-			Where(meta.IDKolom+" = ?", id).
-			Scan(p.Context)
+		// Laden (stap 1, achter de Lader; zie lader.go).
+		ctx := metPeilOpgegeven(p.Context, peiltijdstipUitArgs(p.Args) != nil)
+		entity, err := laderVoor(meta.Typenaam).LaadEen(ctx, meta, id, peil)
 		if err != nil {
-			return nil, fmt.Errorf("query fout voor %s: %v", meta.Typenaam, err)
+			return nil, laadFout(err, "query fout voor %s: %v", meta.Typenaam, err)
 		}
-
-		// Hub-kinderen laden (Bun workaround)
-		if err := laadHubKinderenNaQuery(p.Context, entity, meta, peiltijdstip); err != nil {
-			return nil, fmt.Errorf("hub-kinderen laden mislukt: %v", err)
+		if entity == nil {
+			return nil, nil // niet gevonden
 		}
 
 		// Check of entity gevonden is (ID != zero)
@@ -161,7 +145,10 @@ func peiltijdstipUitArgs(args map[string]interface{}) *time.Time {
 // lijstQuery bouwt de gemeenschappelijke basis van de lijst-queries: formele tijd op
 // de entiteit, het filter-argument, een vaste volgorde en paginering.
 // Zonder vaste volgorde levert paginering met limit/offset willekeurige pagina's op.
-func lijstQuery(p graphql.ResolveParams, meta model.TypeMeta, entities interface{}, peil *time.Time) (*bun.SelectQuery, error) {
+//
+// Sinds de Lader-naad (18-11-2026) bouwt dit alleen de LijstVraag uit de argumenten; de query
+// zelf staat in dbLader.LaadLijst (lader.go).
+func lijstVraag(p graphql.ResolveParams, peil *time.Time, volledig bool) LijstVraag {
 	limit := 20
 	offset := 0
 	if l, ok := p.Args["limit"]; ok && l != nil {
@@ -178,40 +165,22 @@ func lijstQuery(p graphql.ResolveParams, meta model.TypeMeta, entities interface
 			offset = v
 		}
 	}
-
-	moment := actueelOfPeil(peil)
-	query := applyFormeleTijdFilter(db.NewSelect().Model(entities), meta.Typenaam, moment)
-	var mag func(string) bool
-	if bundel := pep.Actief(); bundel != nil {
-		mag = func(pad string) bool { return pep.MagPadCtx(p.Context, bundel, pad) }
+	return LijstVraag{
+		Filter:   p.Args["filter"],
+		Peil:     actueelOfPeil(peil),
+		Limit:    limit,
+		Offset:   offset,
+		Volledig: volledig,
 	}
-	query, err := pasFilterToeMetToegang(query, meta, p.Args["filter"], &moment, mag)
-	if err != nil {
-		return nil, err
-	}
-	if meta.IDKolom != "" {
-		query = query.OrderExpr("?TableAlias.? ASC", bun.Ident(meta.IDKolom))
-	}
-	return query.Limit(limit).Offset(offset), nil
 }
 
 // makeListResolver maakt een resolver voor een lijst van entiteiten/representaties met paginering.
 func makeListResolver(meta model.TypeMeta) graphql.FieldResolveFn {
 	return func(p graphql.ResolveParams) (interface{}, error) {
-		if db == nil {
-			return nil, fmt.Errorf("database niet geïnitialiseerd")
-		}
-		if meta.SliceFactory == nil {
-			return nil, fmt.Errorf("SliceFactory ontbreekt voor type %s", meta.Typenaam)
-		}
-
-		entities := meta.SliceFactory()
-		query, err := lijstQuery(p, meta, entities, peiltijdstipUitArgs(p.Args))
+		peil := peiltijdstipUitArgs(p.Args)
+		entities, err := laderVoor(meta.Typenaam).LaadLijst(metPeilOpgegeven(p.Context, peil != nil), meta, lijstVraag(p, peil, false))
 		if err != nil {
 			return nil, err
-		}
-		if err := query.Scan(p.Context); err != nil {
-			return nil, fmt.Errorf("lijst query fout voor %s: %v", meta.Typenaam, err)
 		}
 
 		maps, err := sliceToMaps(entities, meta)
@@ -234,35 +203,17 @@ func makeListResolver(meta model.TypeMeta) graphql.FieldResolveFn {
 // Equivalent van de REST GET /full/{padnaam}?page=1&size=N, maar met GraphQL flattening.
 func makeFullListResolver(meta model.TypeMeta) graphql.FieldResolveFn {
 	return func(p graphql.ResolveParams) (interface{}, error) {
-		if db == nil {
-			return nil, fmt.Errorf("database niet geïnitialiseerd")
-		}
-		if meta.SliceFactory == nil {
-			return nil, fmt.Errorf("SliceFactory ontbreekt voor type %s", meta.Typenaam)
-		}
-
-		moment := actueelOfPeil(peiltijdstipUitArgs(p.Args))
+		opgegeven := peiltijdstipUitArgs(p.Args)
+		moment := actueelOfPeil(opgegeven)
 		peil := &moment
 		geldigOp, err := geldigOpUitArgs(p.Args)
 		if err != nil {
 			return nil, err
 		}
-		entities := meta.SliceFactory()
-		query, err := lijstQuery(p, meta, entities, peil)
+		// Laden met alle onderliggende elementen (stap 1, achter de Lader; zie lader.go).
+		entities, err := laderVoor(meta.Typenaam).LaadLijst(metPeilOpgegeven(p.Context, opgegeven != nil), meta, lijstVraag(p, peil, true))
 		if err != nil {
 			return nil, err
-		}
-
-		// Onderliggende relaties laden
-		query = addOnderliggendeRelations(query, meta, peil)
-
-		if err := query.Scan(p.Context); err != nil {
-			return nil, fmt.Errorf("full lijst query fout voor %s: %v", meta.Typenaam, err)
-		}
-
-		// Hub-kinderen laden (Bun workaround)
-		if err := laadHubKinderenNaQuery(p.Context, entities, meta, peil); err != nil {
-			return nil, fmt.Errorf("hub-kinderen laden mislukt: %v", err)
 		}
 
 		// Materieel tijdreizen (geldigOp): snoei tot wat op dat moment geldt.
@@ -378,10 +329,6 @@ func makeRegistratieResolver() graphql.FieldResolveFn {
 // 4. Laad die bron-entiteiten met hun volledige geneste structuur
 func makeReverseRelationResolver(rev ReverseRelationInfo) graphql.FieldResolveFn {
 	return func(p graphql.ResolveParams) (interface{}, error) {
-		if db == nil {
-			return nil, fmt.Errorf("database niet geïnitialiseerd")
-		}
-
 		// Haal het id van de huidige entiteit (doel) uit de parent-source
 		source, ok := p.Source.(map[string]interface{})
 		if !ok {
@@ -404,54 +351,30 @@ func makeReverseRelationResolver(rev ReverseRelationInfo) graphql.FieldResolveFn
 			}
 		}
 
-		// Stap 1: Query de relatietabel voor bron-IDs
-		// SELECT DISTINCT bron_id_kolom FROM relatie_tabel WHERE sec_id_kolom = doelID AND afvoer IS NULL
+		// Stap 1: de bron-id's via de relatie (lader van de bron-entiteit; zie lader.go).
+		// Zoals altijd de actuele stand: het peil van de buitenste query gaat nog niet mee.
 		relMeta := rev.RelatieMeta
-		if relMeta.DBSliceFactory == nil {
+		bronMeta := rev.BronEntiteitMeta
+		lader := laderVoor(bronMeta.Typenaam)
+		if !heeftEigenLader(bronMeta.Typenaam) && relMeta.DBSliceFactory == nil {
 			return nil, nil
 		}
-
-		type bronIDRow struct {
-			BronID interface{}
-		}
-
-		var bronIDs []interface{}
-		err := db.NewRaw(
-			fmt.Sprintf(
-				"SELECT DISTINCT %s FROM %s WHERE %s = ? AND afvoer IS NULL LIMIT ?",
-				rev.BronIDKolom, relMeta.Tabelnaam, rev.SecondaireIDKolom,
-			),
-			doelID, limit,
-		).Scan(p.Context, &bronIDs)
+		nu := actueelOfPeil(nil)
+		bronIDs, err := lader.BronIDs(p.Context, rev, doelID, limit, nu)
 		if err != nil {
-			return nil, fmt.Errorf("reverse relatie query (%s) fout: %v", relMeta.Typenaam, err)
+			return nil, err
 		}
 		if len(bronIDs) == 0 {
 			return []map[string]interface{}{}, nil
 		}
 
 		// Stap 2: Laad de bron-entiteiten met volledige geneste structuur
-		bronMeta := rev.BronEntiteitMeta
 		if bronMeta.SliceFactory == nil {
 			return nil, nil
 		}
-
-		nu := actueelOfPeil(nil)
-		entities := bronMeta.SliceFactory()
-		query := applyFormeleTijdFilter(db.NewSelect().
-			Model(entities).
-			Where(bronMeta.IDKolom+" IN (?)", bun.In(bronIDs)), bronMeta.Typenaam, nu)
-
-		// Onderliggende relaties laden (actueel)
-		query = addOnderliggendeRelations(query, bronMeta, &nu)
-
-		if err := query.Scan(p.Context); err != nil {
+		entities, err := lader.LaadIDs(p.Context, bronMeta, bronIDs, nu)
+		if err != nil {
 			return nil, fmt.Errorf("reverse bron-entiteiten laden (%s) fout: %v", bronMeta.Typenaam, err)
-		}
-
-		// Hub-kinderen laden
-		if err := laadHubKinderenNaQuery(p.Context, entities, bronMeta, &nu); err != nil {
-			return nil, fmt.Errorf("reverse hub-kinderen laden fout: %v", err)
 		}
 
 		// Converteer naar maps en flatten
@@ -482,10 +405,6 @@ func makeReverseRelationResolver(rev ReverseRelationInfo) graphql.FieldResolveFn
 // De resolver wordt alleen getriggerd als het veld daadwerkelijk wordt opgevraagd.
 func makeForwardRelationResolver(fwd ForwardRelationInfo) graphql.FieldResolveFn {
 	return func(p graphql.ResolveParams) (interface{}, error) {
-		if db == nil {
-			return nil, fmt.Errorf("database niet geïnitialiseerd")
-		}
-
 		// Haal de FK-waarde uit de source (de geflattende map van de relatie-hub)
 		source, ok := p.Source.(map[string]interface{})
 		if !ok {
@@ -502,23 +421,14 @@ func makeForwardRelationResolver(fwd ForwardRelationInfo) graphql.FieldResolveFn
 			return nil, nil
 		}
 
+		// Laden (lader van de doel-entiteit; zie lader.go). Zoals altijd de actuele stand.
 		nu := actueelOfPeil(nil)
-		entity := doelMeta.Factory()
-		query := applyFormeleTijdFilter(db.NewSelect().Model(entity), doelMeta.Typenaam, nu)
-
-		// Onderliggende relaties laden (actueel)
-		query = addOnderliggendeRelations(query, doelMeta, &nu)
-
-		err := query.
-			Where(doelMeta.IDKolom+" = ?", fkValue).
-			Scan(p.Context)
+		entity, err := laderVoor(doelMeta.Typenaam).LaadEen(p.Context, doelMeta, fkValue, nu)
 		if err != nil {
 			return nil, fmt.Errorf("forward relatie query (%s) fout: %v", doelMeta.Typenaam, err)
 		}
-
-		// Hub-kinderen laden
-		if err := laadHubKinderenNaQuery(p.Context, entity, doelMeta, &nu); err != nil {
-			return nil, fmt.Errorf("forward hub-kinderen laden fout: %v", err)
+		if entity == nil {
+			return nil, nil
 		}
 
 		// Check of entity gevonden is
@@ -1046,21 +956,20 @@ func extractIntFromMap(m map[string]interface{}, key string) int {
 // laadWeergavenamenBatch laadt doelentiteiten en berekent hun weergavenaam.
 // Retourneert een map van ID → weergavenaam-string.
 func laadWeergavenamenBatch(ctx context.Context, doelMeta model.TypeMeta, ids []int) map[int]string {
-	if db == nil || doelMeta.SliceFactory == nil || len(ids) == 0 {
+	if doelMeta.SliceFactory == nil || len(ids) == 0 {
+		return nil
+	}
+	if db == nil && !heeftEigenLader(doelMeta.Typenaam) {
 		return nil
 	}
 
-	targetEntities := doelMeta.SliceFactory()
-	query := db.NewSelect().Model(targetEntities)
-	nu := actueelOfPeil(nil)
-	query = applyFormeleTijdFilter(query, doelMeta.Typenaam, nu)
-	query = addOnderliggendeRelations(query, doelMeta, &nu)
-	if err := query.Where(doelMeta.IDKolom+" IN (?)", bun.In(ids)).Scan(ctx); err != nil {
-		return nil
+	// Laden via de lader van het doeltype (lader.go): de database, of bij de façade het register.
+	idsAny := make([]any, len(ids))
+	for i, id := range ids {
+		idsAny[i] = id
 	}
-
-	// Hub-kinderen laden (Bun workaround)
-	if err := laadHubKinderenNaQuery(ctx, targetEntities, doelMeta, &nu); err != nil {
+	targetEntities, err := laderVoor(doelMeta.Typenaam).LaadIDs(ctx, doelMeta, idsAny, actueelOfPeil(nil))
+	if err != nil {
 		return nil
 	}
 
