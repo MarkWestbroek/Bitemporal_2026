@@ -8,6 +8,10 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
 
+## [studio/v0.46.0] — 2026-11-18
+
+Samen met render 0.5.0. De api (0.29.0: sorteren en indexen uit marks) en de devloop volgen van BACKEND.
+
 ### Toegevoegd
 - **Marks in Eigenschappen en op het canvas** (Mark 18-11): de sectie *Marks* toont per element en per veld welke
   marks gelden en laat je ze zetten in een laag; *Lagen…* beheert de lagen en welke meedoen, in welke volgorde.
