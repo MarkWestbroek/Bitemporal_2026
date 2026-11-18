@@ -20,7 +20,7 @@
  *   term — een woord uit de taal dat in het doel een eigen naam nodig heeft:
  *     operand, operator, handeling, plichthandeling, niveau
  *
- * Verbindingen dragen `aard`: regel, grondslag, doet, wie, wat, als, lid,
+ * Verbindingen dragen `aard`: regel, grondslag, doel, doet, wie, wat, als, lid,
  * waarbij, onderdeel-van, waarde, zie-ook, niveau, kenmerk.
  *
  * Eén keuze van de lezer verdient uitleg: **waar een voorwaarde aan hangt.**
@@ -127,6 +127,9 @@ export function beleidNaarGraaf(beleid, opties = {}) {
     geldigVanaf: beleid.geldigVanaf || "",
     geldigTot: beleid.geldigTot || "",
     uitgegeven: opties.uitgegeven || "",
+    // De canonieke klare taal reist mee (ts:brontekst): de import neemt haar over als ze
+    // aantoonbaar hetzelfde zegt als de ODRL, en houdt zo woordkeus en volgorde (odrlImport.js).
+    brontekst: canoniek,
     toelichting:
       "Geschreven in Toegangsspraak (klare taal) en daaruit vertaald naar ODRL. Elke regel draagt zijn oorspronkelijke zin als beschrijving." +
       (beleid.doel ? ` Doel: ${beleid.doel}.` : "") +
@@ -151,6 +154,8 @@ export function beleidNaarGraaf(beleid, opties = {}) {
     return id;
   };
   const beleidsdoel = beleid.doel ? doelVoorwaarde(beleid.doel) : null;
+  // Het doel van het beleid zelf (kopregel "Doel:"), los van de voorwaarde die eruit volgt.
+  if (beleid.doel) verbind("doel", "beleid", doel(beleid.doel));
 
   // ── voorwaarden ──────────────────────────────────────────────────────────
   /** Kenmerk van de aanvrager (uit een wie-begrip) als voorwaarde. */
@@ -277,10 +282,11 @@ export function beleidNaarGraaf(beleid, opties = {}) {
   }
 
   // ── regels ───────────────────────────────────────────────────────────────
-  for (const regel of beleid.regels) {
+  for (const [nr, regel] of beleid.regels.entries()) {
     const rs = slug(regel.naam);
     const modaliteit = regel.verbod ? "mag-niet" : "mag";
-    const regelId = knoop(`regel-${rs}`, { aard: "regel", tekst: regel.naam, zin: regelZin.get(regel.naam) || "", modaliteit });
+    // `volgorde`: RDF kent geen volgorde tussen toestemmingen en verboden; het volgnummer houdt die van de tekst.
+    const regelId = knoop(`regel-${rs}`, { aard: "regel", tekst: regel.naam, zin: regelZin.get(regel.naam) || "", modaliteit, volgorde: nr + 1 });
     verbind("regel", "beleid", regelId, { modaliteit });
 
     term(`ts:${regel.actie}`, "handeling", regel.actie);

@@ -15,6 +15,13 @@ De single source of truth voor het nummer is `package.json` `"version"`.
   DMN-XML) of op een map uit je project (use case-model) en laat per regel zien welke bron-items hij pakte, welke
   regels niets raakten en welke items bij geen regel landden. Er wordt niets in je model geschreven. Bewerken
   kan nog niet. De lijst is ingedeeld in *Import*, *Export* en *Inrichting*.
+- **ODRL importeren in Toegangverlening** (Mark 18-11): *Beleid → Importeer ODRL (Turtle)…* leest een beleid in
+  ODRL-AP-NL terug als klare taal, en *Exporteer ODRL (Turtle, ODRL-AP-NL)…* schrijft het zo weg (tot nu toe kon dat
+  alleen met een script). Een export uit de Studio komt letterlijk terug: het bestand draagt de klare taal mee, en
+  de import neemt die over zolang ze hetzelfde zegt als de ODRL. Is het bestand elders bewerkt, dan bouwt de import
+  het beleid uit de ODRL zelf en meldt dat onder de editor; woordkeus en volgorde kunnen dan afwijken. Wat
+  Toegangsspraak niet kent (een andere handeling, een plicht met gevolgen) wordt gemeld en weggelaten. De regelset
+  staat in *Transformaties* onder Import en is proef te draaien op geplakte Turtle.
 - **Instellingen van een schrijver als paneel** (Mark 18-11): *BPMN voor GZAC* is geen lijst regels maar de stand
   van de BPMN-schrijver. Die toont de activiteit nu als paneel in groepen (engine, wachtpunten, taken, berichten,
   proceskoppeling), met uitleg per instelling, schakelaars voor ja/nee en gekleurde placeholders. Alleen-lezen.

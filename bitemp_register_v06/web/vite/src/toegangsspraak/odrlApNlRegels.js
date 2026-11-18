@@ -48,7 +48,7 @@ const kernHandeling = (woord, odrl) => ({
 
 export const TOEGANGSSPRAAK_NAAR_ODRL_AP_NL = {
   id: "toegangsspraak-naar-odrl-ap-nl",
-  versie: 1,
+  versie: 2,
   titel: "Toegangsspraak → ODRL (ODRL-AP-NL)",
   bron: "toegangsspraak",
   doel: "odrl-ap-nl",
@@ -68,6 +68,8 @@ export const TOEGANGSSPRAAK_NAAR_ODRL_AP_NL = {
           "schema:validFrom": "{geldigVanaf}",
           "schema:validThrough": "{geldigTot}",
           "odrl:conflict": iri("odrl:prohibit"),
+          // De klare taal waaruit dit beleid komt; de import leest haar terug (odrlImport.js).
+          "ts:brontekst": "{brontekst}",
         },
       },
     },
@@ -80,8 +82,8 @@ export const TOEGANGSSPRAAK_NAAR_ODRL_AP_NL = {
     { naam: "Doelbinding", bij: "knoop", als: { aard: "doel" }, maak: { type: "skos:Concept", data: { "skos:definition": 'Doelbinding "{tekst}" zoals genoemd in het beleid.' } } },
 
     // ── Regels ──────────────────────────────────────────────────────────────
-    { naam: "Toestemming", bij: "knoop", als: { aard: "regel", modaliteit: "mag" }, maak: { type: "odrl:Permission", data: { "odrl:uid": ZELF, "dct:description": "{zin}" } } },
-    { naam: "Verbod", bij: "knoop", als: { aard: "regel", modaliteit: "mag-niet" }, maak: { type: "odrl:Prohibition", data: { "odrl:uid": ZELF, "dct:description": "{zin}" } } },
+    { naam: "Toestemming", bij: "knoop", als: { aard: "regel", modaliteit: "mag" }, maak: { type: "odrl:Permission", data: { "odrl:uid": ZELF, "dct:description": "{zin}", "ts:volgorde": "{volgorde}" } } },
+    { naam: "Verbod", bij: "knoop", als: { aard: "regel", modaliteit: "mag-niet" }, maak: { type: "odrl:Prohibition", data: { "odrl:uid": ZELF, "dct:description": "{zin}", "ts:volgorde": "{volgorde}" } } },
 
     // De handeling per regel is een knoop met rdf:value, zodat verfijningen
     // eraan kunnen hangen. Woorden die ODRL kent eerst.
@@ -136,6 +138,7 @@ export const TOEGANGSSPRAAK_NAAR_ODRL_AP_NL = {
     { naam: "Het beleid staat toe", bij: "verbinding", als: { aard: "regel", modaliteit: "mag" }, maak: { type: "odrl:permission" } },
     { naam: "Het beleid verbiedt", bij: "verbinding", als: { aard: "regel", modaliteit: "mag-niet" }, maak: { type: "odrl:prohibition" } },
     { naam: "Grondslag van het beleid", bij: "verbinding", als: { aard: "grondslag" }, maak: { type: "dpv:hasLegalBasis" } },
+    { naam: "Doel van het beleid", bij: "verbinding", als: { aard: "doel" }, maak: { type: "dpv:hasPurpose" } },
     { naam: "Handeling van de regel", bij: "verbinding", als: { aard: "doet" }, maak: { type: "odrl:action" } },
     { naam: "Wie", bij: "verbinding", als: { aard: "wie" }, maak: { type: "odrl:assignee" } },
     { naam: "Wat", bij: "verbinding", als: { aard: "wat" }, maak: { type: "odrl:target" } },

@@ -4,9 +4,9 @@ import { alleRegelsets, regelsetsPerRichting, getRegelsetVermelding, regelRijen,
 import "../studio/activities/regelsetsIngebouwd.js";
 import { geenProefUitleg } from "../studio/activities/regelsetsIngebouwd.js";
 
-test("de catalogus kent de tien ingebouwde regelsets, in twee vormen, alle geldig", () => {
+test("de catalogus kent de elf ingebouwde regelsets, in twee vormen, alle geldig", () => {
   const alle = alleRegelsets();
-  assert.equal(alle.length, 10);
+  assert.equal(alle.length, 11);
   assert.deepEqual(alle.filter((v) => v.vorm === "instellingen").map((v) => v.regelset.id).sort(), ["bpmn-naar-gzac", "canoniek-naar-gzac-dossier", "canoniek-naar-zaaktype"]);
   for (const v of alle) {
     assert.equal(v.vindplaats, "ingebouwd");
@@ -18,7 +18,7 @@ test("de catalogus kent de tien ingebouwde regelsets, in twee vormen, alle geldi
 
 test("de lijst is ingedeeld op richting: import, export, inrichting", () => {
   const groepen = regelsetsPerRichting();
-  assert.deepEqual(groepen.map((g) => [g.id, g.vermeldingen.length]), [["import", 3], ["export", 2], ["inrichting", 5]]);
+  assert.deepEqual(groepen.map((g) => [g.id, g.vermeldingen.length]), [["import", 4], ["export", 2], ["inrichting", 5]]);
   assert.deepEqual(groepen[1].vermeldingen.map((v) => v.regelset.id).sort(), ["toegangsspraak-naar-odrl-ap-nl", "usecase-naar-mermaid-flowchart"]);
 });
 

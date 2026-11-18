@@ -37,7 +37,9 @@ import {
 } from "../../toegangsspraak";
 import { IconToegang } from "../icons";
 import { menuBus } from "../menuBus";
-import { apiBase, downloadJson } from "../studioUtils";
+import { apiBase, downloadJson, downloadTekst } from "../studioUtils";
+import { toegangsspraakNaarOdrl } from "../../toegangsspraak/odrlExport.js";
+import { odrlNaarToegangsspraak, importMeldingen } from "../../toegangsspraak/odrlImport.js";
 import ToegangDiagram from "./ToegangDiagram.jsx";
 import { registreerToegangsregelProfiel } from "../../diagramprofielen/toegangsregel/index.js";
 import { registreerToegangsregelIconen } from "../../diagramprofielen/toegangsregel/iconen.jsx";
@@ -250,6 +252,36 @@ function ToegangProvider({ children }) {
         if (odrl) {
           downloadJson(odrl, `${(resultaat.beleid?.naam || "beleid").replace(/\s+/g, "_")}.odrl.json`);
         }
+      }),
+      // ODRL-AP-NL in Turtle (docs/TRANSFORMATIES.md §3): de export via de regelset, met de paden
+      // uit het metamodel waar dat geladen is. De klare taal reist mee (ts:brontekst).
+      menuBus.on("toegang:odrl-turtle", () => {
+        const { resultaat, geresolved } = ref.current;
+        if (!resultaat.ok) { window.alert("Het beleid bevat nog parseerfouten."); return; }
+        const uit = toegangsspraakNaarOdrl(geresolved?.beleid || resultaat.beleid, { uitgegeven: new Date().toISOString().slice(0, 10) });
+        downloadTekst(uit.turtle, `${(resultaat.beleid?.naam || "beleid").replace(/\s+/g, "_")}.odrl.ttl`, "text/turtle");
+      }),
+      // De terugweg (toegangsspraak/odrlImport.js): een Turtle-bestand kiezen, de tekst vervangen
+      // (Ctrl+Z kan) en melden wat niet overkwam.
+      menuBus.on("toegang:odrl-import", () => {
+        const kiezer = document.createElement("input");
+        kiezer.type = "file";
+        kiezer.accept = ".ttl,text/turtle";
+        kiezer.onchange = async () => {
+          const bestand = kiezer.files?.[0];
+          if (!bestand) return;
+          const { veldIndex } = ref.current;
+          const r = odrlNaarToegangsspraak(await bestand.text(), {
+            bereidVoor: veldIndex ? (beleid) => resolveerBeleid(beleid, veldIndex).beleid : undefined,
+          });
+          if (r.tekst) {
+            const ta = vindTextarea();
+            if (ta) invoegOpCursor(r.tekst, 0, { van: 0, tot: ta.value.length });
+            else setTekst(r.tekst);
+          }
+          setTerugMeldingen(importMeldingen(r));
+        };
+        kiezer.click();
       }),
       // Beleidsbundel voor de PDP in de Go-API (TOEGANG_BUNDEL, plan 2026-10-12 fase 1b).
       // Alleen met een volledig opgelost beleid: een onopgelost pad zou stil te veel of te
@@ -701,6 +733,8 @@ export default {
         { id: "toegang-herformatteer", label: "Herformatteer (canonieke vorm)", onClick: () => menuBus.emit("toegang:herformatteer") },
         { type: "separator" },
         { id: "toegang-odrl", label: "Exporteer ODRL (JSON-LD)…", onClick: () => menuBus.emit("toegang:odrl") },
+        { id: "toegang-odrl-turtle", label: "Exporteer ODRL (Turtle, ODRL-AP-NL)…", onClick: () => menuBus.emit("toegang:odrl-turtle") },
+        { id: "toegang-odrl-import", label: "Importeer ODRL (Turtle; vervangt tekst; Ctrl+Z kan)…", onClick: () => menuBus.emit("toegang:odrl-import") },
         { id: "toegang-bundel", label: "Exporteer beleidsbundel voor de API (TOEGANG_BUNDEL)…", onClick: () => menuBus.emit("toegang:bundel") },
         { id: "toegang-publiceer", label: "Publiceer naar Modelleren (layout blijft behouden)", onClick: () => menuBus.emit("toegang:publiceer") },
         { id: "toegang-teruglezen", label: "Lees terug uit Modelleren (vervangt tekst; Ctrl+Z kan)", onClick: () => menuBus.emit("toegang:teruglezen") },
