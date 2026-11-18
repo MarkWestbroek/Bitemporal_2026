@@ -63,6 +63,7 @@ import formulierActivity from "./formulierActivity";
 import formulierDiagramActivity from "./formulierDiagramActivity";
 import toegangActivity from "./toegangActivity";
 import toegangsregelsActivity from "./toegangsregelsActivity";
+import transformatiesActivity from "./transformatiesActivity";
 
 // ── Nog te bouwen functies: uniforme placeholder met de drie-slot-structuur ──
 const apiActivity = maakPlaceholderActiviteit({
@@ -153,6 +154,7 @@ registreerActiviteiten([
   // beheer (onderaan de balk)
   profielActivity, // "Profiel-editor" — meta-editor trede 1 (JSON, §8.9)
   profielOntwerpActivity, // "Profiel-ontwerp" — meta-editor trede 2 (tekenen, §8.9)
+  transformatiesActivity, // "Transformaties" — regelsets (M2) bekijken en proefdraaien (TRANS-1 stap 1)
   gebruikersActivity, // "Gebruikers" — accounts, rollen, wachtwoorden (domein beheer, AUTH_DEVELOPER_GUIDE §11)
   aiToegangActivity, // "AI-toegang" — toegangscodes voor de AI-proxy (docs/AI_ASSISTENT.md)
   studioInstellingenActivity, // globale vorm-/icoon-galerij (P07-vervolg)
