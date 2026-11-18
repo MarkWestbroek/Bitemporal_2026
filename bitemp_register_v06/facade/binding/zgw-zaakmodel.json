@@ -1,0 +1,156 @@
+{
+  "registers": {
+    "openzaak": {
+      "soort": "zgw",
+      "basis": "${OPENZAAK_URL}/",
+      "auth": "jwt-zgw",
+      "clientId": "${OPENZAAK_CLIENT_ID}",
+      "secret": "${OPENZAAK_SECRET}"
+    },
+    "objecten": {
+      "soort": "objecten",
+      "basis": "${OBJECTEN_URL}/",
+      "auth": "token",
+      "token": "${OBJECTEN_TOKEN}"
+    }
+  },
+  "iri": [
+    { "prefix": "${FACADE_IRI_BASIS}/id/object/", "register": "objecten", "resource": "api/v2/objects" }
+  ],
+  "typen": {
+    "Zaak": {
+      "register": "openzaak",
+      "resource": "zaken/api/v1/zaken",
+      "onderdelen": {
+        "Zaak_ZaakIdentificatie": {
+          "velden": {
+            "zaakidentificatie": "identificatie",
+            "bronorganisatie": "bronorganisatie",
+            "verantwoordelijkeOrganisatie": "verantwoordelijkeOrganisatie"
+          }
+        },
+        "Zaak_ZaakOmschrijving": {
+          "velden": { "omschrijving": "omschrijving", "toelichting": "toelichting" }
+        },
+        "Zaak_ZaakLooptijd": {
+          "velden": {
+            "startdatum": "startdatum",
+            "registratiedatum": "registratiedatum",
+            "einddatumGepland": "einddatumGepland",
+            "uiterlijkeEinddatumAfdoening": "uiterlijkeEinddatumAfdoening",
+            "einddatum": "einddatum"
+          }
+        },
+        "Zaak_ZaakVertrouwelijkheid": {
+          "velden": { "vertrouwelijkheidaanduiding": "vertrouwelijkheidaanduiding" }
+        },
+        "Zaak_ZaakobjectVerwijzing": {
+          "bron": "zaken/api/v1/zaakobjecten",
+          "filterOp": "zaak",
+          "als": { "veld": "object", "gevuld": true },
+          "velden": {
+            "objectIri": "object",
+            "objectType": "objectType",
+            "verwijzingRelatieomschrijving": "relatieomschrijving"
+          },
+          "iriVelden": ["objectIri"]
+        },
+        "ZaakZaaktype": { "doel": "zaaktype", "omgekeerdFilter": "zaaktype" },
+        "ZaakHoofdzaak": { "doel": "hoofdzaak" },
+        "ZaakRol": { "bron": "zaken/api/v1/rollen", "filterOp": "zaak", "doel": "url" },
+        "ZaakStatus": {
+          "bron": "zaken/api/v1/statussen",
+          "filterOp": "zaak",
+          "doel": "statustype",
+          "velden": { "statustoelichting": "statustoelichting" },
+          "aanvang": "datumStatusGezet"
+        }
+      },
+      "filters": {
+        "zaak_identificaties.zaakidentificatie": "identificatie",
+        "zaak_identificaties.bronorganisatie": "bronorganisatie"
+      }
+    },
+    "Rol": {
+      "register": "openzaak",
+      "resource": "zaken/api/v1/rollen",
+      "onderdelen": {
+        "Rol_RolGegevens": {
+          "velden": {
+            "roltoelichting": "roltoelichting",
+            "indicatieMachtiging": "indicatieMachtiging",
+            "rolRegistratiedatum": "registratiedatum"
+          }
+        },
+        "Rol_RolNatuurlijkPersoon": {
+          "als": { "veld": "betrokkeneType", "is": "natuurlijk_persoon" },
+          "velden": {
+            "bsn": "betrokkeneIdentificatie.inpBsn",
+            "geslachtsnaam": "betrokkeneIdentificatie.geslachtsnaam",
+            "voorvoegselGeslachtsnaam": "betrokkeneIdentificatie.voorvoegselGeslachtsnaam",
+            "voornamen": "betrokkeneIdentificatie.voornamen",
+            "geboortedatum": "betrokkeneIdentificatie.geboortedatum"
+          }
+        },
+        "Rol_RolMedewerker": {
+          "als": { "veld": "betrokkeneType", "is": "medewerker" },
+          "velden": {
+            "medewerkerIdentificatie": "betrokkeneIdentificatie.identificatie",
+            "achternaam": "betrokkeneIdentificatie.achternaam",
+            "voorletters": "betrokkeneIdentificatie.voorletters",
+            "voorvoegselAchternaam": "betrokkeneIdentificatie.voorvoegselAchternaam"
+          }
+        },
+        "RolRoltype": { "doel": "roltype" }
+      }
+    },
+    "Zaaktype": {
+      "register": "openzaak",
+      "resource": "catalogi/api/v1/zaaktypen",
+      "onderdelen": {
+        "Zaaktype_ZaaktypeIdentificatie": {
+          "velden": { "zaaktypeIdentificatie": "identificatie" }
+        },
+        "Zaaktype_ZaaktypeOmschrijving": {
+          "velden": {
+            "zaaktypeOmschrijving": "omschrijving",
+            "zaaktypeOmschrijvingGeneriek": "omschrijvingGeneriek",
+            "doel": "doel",
+            "aanleiding": "aanleiding",
+            "onderwerp": "onderwerp",
+            "zaaktypeToelichting": "toelichting"
+          }
+        },
+        "ZaaktypeStatustype": { "bron": "catalogi/api/v1/statustypen", "filterOp": "zaaktype", "doel": "url" },
+        "ZaaktypeRoltype": { "bron": "catalogi/api/v1/roltypen", "filterOp": "zaaktype", "doel": "url" }
+      }
+    },
+    "Statustype": {
+      "register": "openzaak",
+      "resource": "catalogi/api/v1/statustypen",
+      "onderdelen": {
+        "Statustype_StatustypeGegevens": {
+          "velden": {
+            "statustypeOmschrijving": "omschrijving",
+            "statustypeOmschrijvingGeneriek": "omschrijvingGeneriek",
+            "statustypeVolgnummer": "volgnummer",
+            "statustekst": "statustekst",
+            "statustypeToelichting": "toelichting"
+          }
+        }
+      }
+    },
+    "Roltype": {
+      "register": "openzaak",
+      "resource": "catalogi/api/v1/roltypen",
+      "onderdelen": {
+        "Roltype_RoltypeGegevens": {
+          "velden": {
+            "roltypeOmschrijving": "omschrijving",
+            "roltypeOmschrijvingGeneriek": "omschrijvingGeneriek"
+          }
+        }
+      }
+    }
+  }
+}

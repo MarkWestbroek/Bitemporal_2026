@@ -215,6 +215,38 @@ Dit vervalt grotendeels als het platform uuid als entiteit-id krijgt.
 - **Integratie:** een echte Open Zaak + Objecten-API in tijdelijke containers, of lezend op het
   eigen cluster. Dat beslist Mark (§10).
 
+## 9a. Stand van de bouw (18-11)
+
+| Onderdeel | Stand |
+|---|---|
+| Lader-naad in dynql (`lader.go`) | klaar, commit a602d7a3; daarna ook de weergavenamen via de lader |
+| `PeilOpgegeven(ctx)`, `NietOndersteund` (code in GraphQL-extensions), `ZetLaders` | klaar |
+| `facade/iri.go` | klaar (alleen bekende basis + uuid) |
+| `facade/idmap.go` | geheugenvariant klaar; de PostgreSQL-variant komt in `cmd/facade` |
+| `facade/binding.go` + `binding/zgw-zaakmodel.json` | klaar voor Zaak, Rol, Zaaktype, Statustype, Roltype; validatie tegen de MetaRegistry |
+| `facade/client.go` | JWT-ZGW/Token, paginering (`next`), alleen URL's onder de eigen basis |
+| `facade/apilader.go` | LaadEen/LaadIDs/LaadLijst/BronIDs; filter alleen `eq` + `and` via `filters`; status als materiële relatie met opvolging; IRI-velden |
+| `cmd/facade`, REST `/full`, veld `object` op ZaakobjectVerwijzing | nog te doen |
+
+Wat de bouw opleverde:
+
+- **`omgekeerdFilter`** in de binding: voor `gerelateerde_*` op een relatie die in het object
+  zelf staat (zaak.zaaktype), de query-parameter waarmee het register de bronnen zoekt.
+- **Typeverschillen** tussen register en CM worden recht gezet waar het eenvoudig is: een getal
+  naar tekst, of tekst naar een getal (`pasAan`, een vangrail).
+  - Gevonden: `statustypeVolgnummer` was tekst in het zaakmodel en is een geheel getal in ZGW.
+  - Oorzaak (AI-INRICHTEN): alle velden stonden als `"type": "string"`, en codegen leidt het
+    Go-type af uit `type`/`format`, niet uit het gegevenstype.
+  - Hersteld op 18-11: 36 velden zijn nu integer, boolean of date(-time). Met die typen laadt
+    de façade de ZGW-antwoorden zonder omzetting.
+- **Codegen.** Een enum dat domeinen delen, wordt in elk gebruikend domein opnieuw gegenereerd
+  (`Vertrouwelijkheidaanduiding`). Gemeld aan BACKEND; lokaal opgevangen met een noodgreep.
+- **Tests:** `facade/apilader_test.go`, met een nagespeeld Open Zaak (gepagineerd, controle op de
+  autorisatieheader), rechtstreeks en via het GraphQL-schema. De tests slaan over zonder het
+  lokaal gegenereerde zaakmodel.
+- **Karakteriseringstest:** een query die niet in de golden staat (een type dat erbij kwam), telt
+  niet als verschil.
+
 ## 10. Open punten
 
 1. **Testomgeving** (Mark): lokaal in containers, of lezend op het cluster `commonground`? Voor

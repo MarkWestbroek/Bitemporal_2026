@@ -47,9 +47,10 @@ func makeFullEntityResolver(meta model.TypeMeta) graphql.FieldResolveFn {
 		}
 
 		// Laden (stap 1, achter de Lader; zie lader.go).
-		entity, err := laderVoor(meta.Typenaam).LaadEen(p.Context, meta, id, peil)
+		ctx := metPeilOpgegeven(p.Context, peiltijdstipUitArgs(p.Args) != nil)
+		entity, err := laderVoor(meta.Typenaam).LaadEen(ctx, meta, id, peil)
 		if err != nil {
-			return nil, fmt.Errorf("query fout voor %s: %v", meta.Typenaam, err)
+			return nil, laadFout(err, "query fout voor %s: %v", meta.Typenaam, err)
 		}
 		if entity == nil {
 			return nil, nil // niet gevonden
@@ -176,7 +177,8 @@ func lijstVraag(p graphql.ResolveParams, peil *time.Time, volledig bool) LijstVr
 // makeListResolver maakt een resolver voor een lijst van entiteiten/representaties met paginering.
 func makeListResolver(meta model.TypeMeta) graphql.FieldResolveFn {
 	return func(p graphql.ResolveParams) (interface{}, error) {
-		entities, err := laderVoor(meta.Typenaam).LaadLijst(p.Context, meta, lijstVraag(p, peiltijdstipUitArgs(p.Args), false))
+		peil := peiltijdstipUitArgs(p.Args)
+		entities, err := laderVoor(meta.Typenaam).LaadLijst(metPeilOpgegeven(p.Context, peil != nil), meta, lijstVraag(p, peil, false))
 		if err != nil {
 			return nil, err
 		}
@@ -201,14 +203,15 @@ func makeListResolver(meta model.TypeMeta) graphql.FieldResolveFn {
 // Equivalent van de REST GET /full/{padnaam}?page=1&size=N, maar met GraphQL flattening.
 func makeFullListResolver(meta model.TypeMeta) graphql.FieldResolveFn {
 	return func(p graphql.ResolveParams) (interface{}, error) {
-		moment := actueelOfPeil(peiltijdstipUitArgs(p.Args))
+		opgegeven := peiltijdstipUitArgs(p.Args)
+		moment := actueelOfPeil(opgegeven)
 		peil := &moment
 		geldigOp, err := geldigOpUitArgs(p.Args)
 		if err != nil {
 			return nil, err
 		}
 		// Laden met alle onderliggende elementen (stap 1, achter de Lader; zie lader.go).
-		entities, err := laderVoor(meta.Typenaam).LaadLijst(p.Context, meta, lijstVraag(p, peil, true))
+		entities, err := laderVoor(meta.Typenaam).LaadLijst(metPeilOpgegeven(p.Context, opgegeven != nil), meta, lijstVraag(p, peil, true))
 		if err != nil {
 			return nil, err
 		}
@@ -953,21 +956,20 @@ func extractIntFromMap(m map[string]interface{}, key string) int {
 // laadWeergavenamenBatch laadt doelentiteiten en berekent hun weergavenaam.
 // Retourneert een map van ID → weergavenaam-string.
 func laadWeergavenamenBatch(ctx context.Context, doelMeta model.TypeMeta, ids []int) map[int]string {
-	if db == nil || doelMeta.SliceFactory == nil || len(ids) == 0 {
+	if doelMeta.SliceFactory == nil || len(ids) == 0 {
+		return nil
+	}
+	if db == nil && !heeftEigenLader(doelMeta.Typenaam) {
 		return nil
 	}
 
-	targetEntities := doelMeta.SliceFactory()
-	query := db.NewSelect().Model(targetEntities)
-	nu := actueelOfPeil(nil)
-	query = applyFormeleTijdFilter(query, doelMeta.Typenaam, nu)
-	query = addOnderliggendeRelations(query, doelMeta, &nu)
-	if err := query.Where(doelMeta.IDKolom+" IN (?)", bun.In(ids)).Scan(ctx); err != nil {
-		return nil
+	// Laden via de lader van het doeltype (lader.go): de database, of bij de façade het register.
+	idsAny := make([]any, len(ids))
+	for i, id := range ids {
+		idsAny[i] = id
 	}
-
-	// Hub-kinderen laden (Bun workaround)
-	if err := laadHubKinderenNaQuery(ctx, targetEntities, doelMeta, &nu); err != nil {
+	targetEntities, err := laderVoor(doelMeta.Typenaam).LaadIDs(ctx, doelMeta, idsAny, actueelOfPeil(nil))
+	if err != nil {
 		return nil
 	}
 

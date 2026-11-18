@@ -221,10 +221,17 @@ func TestLaderKarakterisering(t *testing.T) {
 	}
 	var oud map[string]any
 	_ = json.Unmarshal(verwacht, &oud)
-	verschillen := 0
-	for k, nieuw := range resultaten {
-		jo, _ := json.Marshal(oud[k])
-		jn, _ := json.Marshal(nieuw)
+	// Een query die niet in de golden staat (een type dat erbij kwam, bv. lokaal gegenereerde
+	// domeinen) is geen verschil in gedrag: melden, niet afkeuren. Gewijzigd of verdwenen wel.
+	verschillen, nieuw := 0, 0
+	for k, res := range resultaten {
+		o, bestond := oud[k]
+		if !bestond {
+			nieuw++
+			continue
+		}
+		jo, _ := json.Marshal(o)
+		jn, _ := json.Marshal(res)
 		if string(jo) != string(jn) {
 			verschillen++
 			if verschillen <= 5 {
@@ -238,8 +245,11 @@ func TestLaderKarakterisering(t *testing.T) {
 			t.Errorf("%s ontbreekt in de nieuwe uitvoer", k)
 		}
 	}
-	if verschillen == 0 {
+	if nieuw > 0 {
+		t.Logf("%d nieuwe queries zonder golden (typen die erbij kwamen); niet vergeleken", nieuw)
+	}
+	if verschillen == 0 && nieuw == 0 {
 		t.Error("golden verschilt alleen in opmaak; werk hem bij met LADER_GOLDEN_BIJWERKEN=1")
 	}
-	t.Logf("%d van %d queries verschillen", verschillen, len(resultaten))
+	t.Logf("%d van %d bestaande queries verschillen", verschillen, len(oud))
 }

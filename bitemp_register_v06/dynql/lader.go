@@ -13,6 +13,7 @@ package dynql
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -60,9 +61,61 @@ type Sortering struct {
 	Aflopend bool
 }
 
-// laders bevat per typenaam een eigen lader (gezet door BuildSchemaMet). Een type dat er niet
-// in staat, gebruikt de dbLader.
+// laders bevat per typenaam een eigen lader (gezet met ZetLaders). Een type dat er niet in
+// staat, gebruikt de dbLader.
 var laders = map[string]Lader{}
+
+// ZetLaders geeft typen een eigen lader (de façade). Aanroepen vóór BuildSchema; een volgende
+// aanroep vervangt de hele set. Typen zonder eigen lader houden de dbLader.
+func ZetLaders(perType map[string]Lader) {
+	laders = map[string]Lader{}
+	for typenaam, l := range perType {
+		if l != nil {
+			laders[typenaam] = l
+		}
+	}
+}
+
+// peilOpgegevenSleutel markeert in de context dat de afnemer een formeel peiltijdstip opgaf
+// (peiltijdstip of t). Zonder die markering is het peil "nu" (actueel). Een lader voor een
+// register zonder formele tijd weigert alleen een opgegeven peil.
+type peilOpgegevenSleutel struct{}
+
+func metPeilOpgegeven(ctx context.Context, opgegeven bool) context.Context {
+	if !opgegeven {
+		return ctx
+	}
+	return context.WithValue(ctx, peilOpgegevenSleutel{}, true)
+}
+
+// laadFout pakt een laadfout in met de context van de resolver, behalve een NietOndersteund:
+// die gaat onverpakt door, omdat graphql-go de extensions met een type-assertie leest.
+func laadFout(err error, format string, a ...any) error {
+	var nie NietOndersteund
+	if errors.As(err, &nie) {
+		return nie
+	}
+	return fmt.Errorf(format, a...)
+}
+
+// PeilOpgegeven zegt of de afnemer een formeel peiltijdstip opgaf.
+func PeilOpgegeven(ctx context.Context) bool {
+	v, _ := ctx.Value(peilOpgegevenSleutel{}).(bool)
+	return v
+}
+
+// NietOndersteund is de fout van een lader die iets niet kan (een filter, een tijdas, een
+// mutatie). In GraphQL staat de code in extensions (GraphQL kent geen 501); REST geeft 501.
+type NietOndersteund struct {
+	Reden string
+}
+
+func (f NietOndersteund) Error() string { return "niet ondersteund door het register: " + f.Reden }
+
+// Extensions maakt de code zichtbaar in het GraphQL-antwoord (gqlerrors.ExtendedError).
+func (f NietOndersteund) Extensions() map[string]interface{} {
+	return map[string]interface{}{"code": "niet_ondersteund_door_register", "reden": f.Reden}
+}
 
 // laderVoor kiest de lader van een type.
 func laderVoor(typenaam string) Lader {
