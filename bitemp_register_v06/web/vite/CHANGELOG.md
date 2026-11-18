@@ -18,6 +18,8 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 - **Instellingen van een schrijver als paneel** (Mark 18-11): *BPMN voor GZAC* is geen lijst regels maar de stand
   van de BPMN-schrijver. Die toont de activiteit nu als paneel in groepen (engine, wachtpunten, taken, berichten,
   proceskoppeling), met uitleg per instelling, schakelaars voor ja/nee en gekleurde placeholders. Alleen-lezen.
+  Ook de *GZAC-dossierbundel* (ingedeeld per onderdeel van de bundel) en het *zaaktype* (afleidingen en
+  volgnummers) tonen hun instellingen zo.
 
 ## [studio/v0.47.0] — 2026-11-18
 

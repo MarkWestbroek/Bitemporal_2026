@@ -1,6 +1,10 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { placeholdersIn, sjabloonDelen, soortVan, knoopVoor, paneelBoom, onbekendePlaceholders } from "./schemaPaneel.js";
+import { placeholdersIn, sjabloonDelen, soortVan, knoopVoor, paneelBoom, onbekendePlaceholders, lijstAlsTabel, isWaardenlijst, celTekst } from "./schemaPaneel.js";
+import { DOSSIER_SCHRIJVER_SCHEMA, ZAAKTYPE_SCHRIJVER_SCHEMA } from "../diagramprofielen/canoniek-uml/inrichtingSchemas.js";
+import { CANONIEK_NAAR_DOSSIER } from "../diagramprofielen/canoniek-uml/dossierRegels.js";
+import { CANONIEK_NAAR_ZAAKTYPE } from "../diagramprofielen/canoniek-uml/zaaktypeRegels.js";
+import { standVan } from "../transformatie/regelsetCatalogus.js";
 import { valideerSchema } from "./schemaValidatie.js";
 import { BPMN_SCHRIJVER_SCHEMA } from "../diagramprofielen/bpmn/bpmnSchrijverSchema.js";
 import { BPMN_NAAR_GZAC } from "../diagramprofielen/bpmn/bpmnGzacRegels.js";
@@ -60,4 +64,36 @@ test("een onbekende placeholder in een sjabloonwaarde wordt gevonden", () => {
   const fout = JSON.parse(JSON.stringify(stand));
   fout.berichten.variabel = "execution.getVariable('{variabel}')";
   assert.deepEqual(onbekendePlaceholders(BPMN_SCHRIJVER_SCHEMA, fout), [{ pad: "berichten.variabel", naam: "variabel" }]);
+});
+
+test("de stand van de dossierbundel is geldig, volledig beschreven en ingedeeld per onderdeel", () => {
+  const stand = standVan(CANONIEK_NAAR_DOSSIER);
+  assert.deepEqual(valideerSchema(stand, DOSSIER_SCHRIJVER_SCHEMA), []);
+  const boom = paneelBoom(DOSSIER_SCHRIJVER_SCHEMA, stand);
+  assert.deepEqual(boom.onbeschreven, []);
+  assert.deepEqual(onbekendePlaceholders(DOSSIER_SCHRIJVER_SCHEMA, stand), []);
+  assert.deepEqual(boom.groepen.map((g) => g.naam), ["Dossierdefinitie", "Documentdefinitie", "Dossierformulier", "Tabbladen", "Dossierlijst", "Statussen", "Processen", "Documentkolommen", "Zaaktypekoppeling"]);
+  // Elke instelling van de stand staat in het paneel.
+  assert.deepEqual(boom.groepen.flatMap((g) => g.knopen.map((k) => k.sleutel)).sort(), Object.keys(stand).sort());
+
+  const componenten = boom.groepen.find((g) => g.naam === "Dossierformulier").knopen.find((k) => k.sleutel === "componenten");
+  const tabel = lijstAlsTabel(componenten);
+  assert.deepEqual(tabel.kolommen.map((k) => k.titel), ["Regel", "Als het veld", "Component"]);
+  assert.deepEqual(tabel.rijen[2].map((c) => c.tekst), ["Getal: number", "type: integer of number", "number"]);
+  assert.equal(tabel.rijen[4][1].tekst, "altijd");
+
+  const formats = boom.groepen.find((g) => g.naam === "Documentdefinitie").knopen[0].kinderen.find((k) => k.sleutel === "formats");
+  assert.equal(isWaardenlijst(formats), true);
+  assert.equal(isWaardenlijst(componenten), false);
+  assert.equal(celTekst(true), "ja");
+});
+
+test("de stand van het zaaktype is geldig en volledig beschreven", () => {
+  const stand = standVan(CANONIEK_NAAR_ZAAKTYPE);
+  assert.deepEqual(valideerSchema(stand, ZAAKTYPE_SCHRIJVER_SCHEMA), []);
+  const boom = paneelBoom(ZAAKTYPE_SCHRIJVER_SCHEMA, stand);
+  assert.deepEqual(boom.onbeschreven, []);
+  assert.deepEqual(boom.groepen.map((g) => g.naam), ["Afleidingen", "Volgnummers"]);
+  const afleidingen = lijstAlsTabel(boom.groepen[0].knopen[0]);
+  assert.deepEqual(afleidingen.rijen[0].map((c) => c.tekst), ["Identificatie uit het aanvraagtype (M0)", "zaaktype.identificatie", "referentielijst: Aanvraagtype; veld: zaaktypeIdentificatie", "altijd"]);
 });
