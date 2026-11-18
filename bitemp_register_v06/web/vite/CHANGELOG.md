@@ -9,7 +9,11 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 ## [Unreleased]
 
 ### Toegevoegd
-- **Marks, de onderlaag** (plan 2026-11-18, stap 2 en 3; nog zonder scherm): marks (MDA) zijn aanwijzingen op een
+- **Marks in Eigenschappen en op het canvas** (Mark 18-11): de sectie *Marks* toont per element en per veld welke
+  marks gelden en laat je ze zetten in een laag; *Lagen…* beheert de lagen en welke meedoen, in welke volgorde.
+  Een element met marks draagt op het canvas een teken (◆ met het aantal). Eerste soorten: zoeksleutel,
+  sorteerbaar en tekstzoeken op een veld van het canonieke model (voor de indexen van het register).
+- **Marks, de onderlaag** (plan 2026-11-18, stap 2 en 3): marks (MDA) zijn aanwijzingen op een
   modelelement voor een transformatie, los van het model. Lagen met labels, contexten (een keuze van lagen in een
   volgorde), effectieve marks, marksoorten per transformatie (`register.zoeksleutel`, `register.sorteerbaar`). Ze
   staan in het werkbestand (`marks`), lopen mee in de projectsync (`marks/patchMarks`) en in het vergelijken en
