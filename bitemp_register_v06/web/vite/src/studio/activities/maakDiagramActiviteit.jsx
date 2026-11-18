@@ -84,6 +84,7 @@ import MarksPopup from "../MarksPopup.jsx";
 import { useMarksStore } from "../marksStore.js";
 import { markRegels, markTeken, schermContext } from "../../marks/marksPaneel.js";
 import { metMarksBijlage } from "../../marks/v3Bijlage.js";
+import { effectieveMarks } from "../../marks/marks.js";
 import { useKruisStore, useKoppelsoorten } from "./koppelingenActivity.jsx";
 import { openVerwijzing, alleDiagrammen, naamVanVerwijzing, diagrammenViaType } from "../doorklik.js";
 import VerwezenDoorPaneel from "../VerwezenDoorPaneel.jsx";
@@ -414,6 +415,16 @@ export function maakDiagramActiviteit(opties) {
       setSelectieIdState(elementId);
       setSelectieVoorkomenId(voorkomenId || null);
     }, []);
+    // Een klik op een mark-teken selecteert het element erbij (op een lijn is dat de verbinding:
+    // het label hangt los van de lijn, dus de gewone klik selecteert daar niet).
+    useEffect(() => {
+      const toon = (e) => {
+        const eid = e.detail?.elementId;
+        if (eid && useStore.getState().elements[eid]) setSelectieId(eid);
+      };
+      window.addEventListener("omnium:marks-toon", toon);
+      return () => window.removeEventListener("omnium:marks-toon", toon);
+    }, [setSelectieId]);
     const [verbindingsType, setVerbindingsType] = useState(null);
     // Werkbestand-import met keuze: het gelezen bestand wacht hier tot de
     // gebruiker kiest (over huidig diagram / ernaast / alles vervangen).
@@ -2192,6 +2203,7 @@ export function maakDiagramActiviteit(opties) {
     const markContexten = useMarksStore((s) => s.contexten);
     const markLijst = useMarksStore((s) => s.marks);
     const markContext = useMarksStore((s) => s.actieveContext);
+    const markSoorten = useMarksStore((s) => s.soorten);
     const markStand = useMemo(() => ({ lagen: markLagen, contexten: markContexten, marks: markLijst }), [markLagen, markContexten, markLijst]);
     const canvasModel = useMemo(() => {
       const v = metVreemdeElementen({ elements, descriptor, diagram, bron: vreemdeBron });
@@ -2204,11 +2216,13 @@ export function maakDiagramActiviteit(opties) {
       // `data._mark`), zoals `vreemd`; ze worden niet bewaard.
       if (!markStand.marks.length) return model;
       const context = schermContext(markStand, markContext);
+      const eff = effectieveMarks(markStand, context);
+      if (!eff.size) return model;
       let metMarks = null;
-      for (const n of diagram?.nodes || []) {
-        const el = elements[n.elementId];
-        if (!el || !model.elements[el.id]) continue;
-        const regels = markRegels({ st: markStand, context, profielId: id, descriptorId: descriptor.id, element: el });
+      // Alle eigen elementen: ook een verbinding, en een relatie die als lijn getekend is.
+      for (const el of Object.values(elements)) {
+        if (!model.elements[el.id]) continue;
+        const regels = markRegels({ st: markStand, context, profielId: id, descriptorId: descriptor.id, element: el, eff });
         if (!regels) continue;
         metMarks = metMarks || { ...model.elements };
         const bron = model.elements[el.id];
@@ -2223,7 +2237,7 @@ export function maakDiagramActiviteit(opties) {
       }
       return metMarks ? { ...model, elements: metMarks } : model;
       // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [elements, diagram, vreemdTik, kruisLinks, koppelsoorten, markStand, markContext]);
+    }, [elements, diagram, vreemdTik, kruisLinks, koppelsoorten, markStand, markContext, markSoorten]);
 
     // Tips na een toestandsovergang (hints.js): het eerste element op een diagram, en de
     // eerste relatie in dit profiel. Alleen bij een toename tijdens de sessie, niet bij laden.

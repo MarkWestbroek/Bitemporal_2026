@@ -185,10 +185,10 @@ export function plaatsingSleutel(p) {
 }
 
 /** De verschilsoort per onderdeel van de marks (verschilMetMain en de keuzeboom gebruiken dezelfde). */
-export const MARK_SOORT = { lagen: "marklaag", contexten: "markcontext", marks: "mark" };
+export const MARK_SOORT = { lagen: "marklaag", contexten: "markcontext", marks: "mark", soorten: "marksoort" };
 
 /**
- * @typedef {{soort: "element"|"diagram"|"map"|"plaatsing"|"bundel"|"kruisverband"|"koppelsoorten"|"marklaag"|"markcontext"|"mark",
+ * @typedef {{soort: "element"|"diagram"|"map"|"plaatsing"|"bundel"|"kruisverband"|"koppelsoorten"|"marklaag"|"markcontext"|"mark"|"marksoort",
  *            profielId: string|null, id: string, gekozen?: "tak"|"main", velden?: string[]}} Conflict
  * `velden`: bij een element dat per veld is samengevoegd, de velden die aan beide kanten anders
  * veranderden.
@@ -267,9 +267,9 @@ export function voegSamen({ basis, tak, main, keuze = null }) {
 
   // Marks (18-11): lagen, contexten en marks elk op id. Een mark is één eenheid (laag, soort, doel).
   const mk = (deel) => voegMapSamen(opId(st.basis.marks?.[deel]), opId(st.tak.marks?.[deel]), opId(st.main.marks?.[deel]), neemVoor((id) => verschilSleutel({ soort: MARK_SOORT[deel], id })));
-  const markDelen = { lagen: mk("lagen"), contexten: mk("contexten"), marks: mk("marks") };
+  const markDelen = { lagen: mk("lagen"), contexten: mk("contexten"), marks: mk("marks"), soorten: mk("soorten") };
   for (const deel of Object.keys(markDelen)) meld(markDelen[deel], MARK_SOORT[deel], null);
-  const marksVoor = (kant) => normaliseerMarks({ lagen: Object.values(markDelen.lagen[kant]), contexten: Object.values(markDelen.contexten[kant]), marks: Object.values(markDelen.marks[kant]) });
+  const marksVoor = (kant) => normaliseerMarks({ lagen: Object.values(markDelen.lagen[kant]), contexten: Object.values(markDelen.contexten[kant]), marks: Object.values(markDelen.marks[kant]), soorten: Object.values(markDelen.soorten[kant]) });
 
   const bouw = (basisStand, kant) => {
     const uit = {

@@ -255,10 +255,37 @@ De Go-API moet `marks` en de marks-ops nog doorgeven (BACKEND).
 **Verweesde marks (18-11).** Het lagenbeheer toont marks waarvan het element of veld niet meer
 bestaat (`marksPaneel.bestaatIn`) en haalt ze op verzoek weg; vanzelf verdwijnen ze niet.
 
+**Kaartje bij het teken (18-11).** `studio/MarksPopup.jsx`: hang je boven een ruitje, dan toont een
+kaartje welke marks er gelden en uit welke laag; een klik zet het vast tot je elders klikt of Esc
+drukt. Het ruitje achter een veldnaam is een eigen tekst (`data-dc-mark`), zodat een klik het veld
+niet gaat hernoemen.
+
+**Eigen marksoorten van het project (Mark 18-11).** Naast de soorten die een transformatie
+declareert maakt een project zijn eigen soorten, zoals het koppelsoorten bijmaakt. Ze staan in
+`marks.soorten` (`{id: "project.<naam>", label, datatype, opties?, doelen}`), reizen mee in de sync
+(`patchMarks`, onderdeel `soorten`) en in het samenvoegen (verschilsoort `marksoort`), en gelden
+in elke taal op de gekozen doelen (element, veld, relatie). Beheer: *Lagen…* → *Eigen marksoorten*
+(naam, ja/nee, tekst, getal of keuze, en waarop hij mag). De registry voegt ze bij de
+transformatiesoorten (`marksoorten.zetProjectsoorten`; de store houdt dat bij). Zo is een mark op
+een entiteit, gegevenselement of relatie als geheel te zetten. Haal je een soort weg, dan blijven
+zijn marks staan; het scherm toont ze als onbekend en je kunt ze alleen nog weghalen.
+
+**Marks op een lijn (Mark 18-11).** Een verbinding, of een relatie die als lijn getekend is, toont
+het ruitje in het label: achter de naam, of als eigen label midden op de lijn als die geen naam
+heeft (`materialiseerConnectoren.js`, labeldeel soort `mark`; `ConnectorEdge` zet
+`data-mark-element`). Een klik selecteert de verbinding en toont haar marks; het label blijft te
+verslepen en de naam blijft te hernoemen. Het canvasmodel loopt daarvoor alle elementen af, niet
+alleen de vakken, en rekent de effectieve marks één keer uit.
+
+**Beheer (18-11).** Het venster *Lagen…* heeft drie delen: de lagen (met uitleg; kort zolang er
+één laag is), de **soorten van transformaties** (alleen-lezen: soort, transformatie, waarde, waarop
+en wat het doet) en de eigen marksoorten van het project.
+
+Bekende grens: een mark op een element zonder uuid verwijst met profiel en element-id. Krijgt dat
+element later een uuid (projectformaat 5, alle talen), dan moeten die marks mee worden omgezet.
+
 **Nog niet:** eigen lagen in de werkruimte die je daarna deelt (nu is elke laag meteen van het
-project), filteren op labels in het beheer, en marksoorten die het project zelf maakt (nu alleen
-soorten die een transformatie declareert; daardoor is er nog geen soort voor een entiteit,
-gegevenselement of relatie als geheel).
+project) en filteren op labels in het beheer.
 
 Wat nu al in het model staat en eigenlijk een mark is, verhuizen we **niet** vooraf. Kandidaten om
 later te bekijken: de vorm van invoer in een formulier (inhoud en vorm scheiden we al), een

@@ -31,6 +31,7 @@ export default function MarksPopup({ profielId, descriptorId, elements, diagram 
   const contexten = useMarksStore((s) => s.contexten);
   const marks = useMarksStore((s) => s.marks);
   const actieveContext = useMarksStore((s) => s.actieveContext);
+  const soorten = useMarksStore((s) => s.soorten);
   /** @type {[null | {x: number, y: number, elementId: string, veld: string|null, vast: boolean}, Function]} */
   const [open, setOpen] = useState(null);
 
@@ -40,11 +41,14 @@ export default function MarksPopup({ profielId, descriptorId, elements, diagram 
     const doelVan = (e) => {
       const teken = e.target instanceof Element ? e.target.closest(TEKEN) : null;
       if (!teken || !vak()?.contains(teken)) return null;
-      const nodeId = teken.closest(".react-flow__node")?.getAttribute("data-id");
-      if (!nodeId) return null;
-      const elementId = (diagram?.nodes || []).find((n) => n.id === nodeId || n.elementId === nodeId)?.elementId || nodeId;
+      // Op een lijn draagt het teken zijn element zelf; op een vak volgt het uit de node eromheen.
+      const opLijn = teken.getAttribute("data-mark-element");
+      const nodeId = opLijn ? null : teken.closest(".react-flow__node")?.getAttribute("data-id");
+      if (!opLijn && !nodeId) return null;
+      const elementId = opLijn || (diagram?.nodes || []).find((n) => n.id === nodeId || n.elementId === nodeId)?.elementId || nodeId;
       const r = teken.getBoundingClientRect();
-      return { x: r.right + 6, y: r.top - 2, elementId, veld: teken.getAttribute("data-dc-mark") };
+      const veld = opLijn ? null : teken.getAttribute("data-dc-mark");
+      return { x: r.right + 6, y: r.top - 2, elementId, veld };
     };
     const over = (e) => {
       const d = doelVan(e);
@@ -55,8 +59,13 @@ export default function MarksPopup({ profielId, descriptorId, elements, diagram 
     };
     const klik = (e) => {
       const d = doelVan(e);
-      if (d) setOpen({ ...d, vast: true });
-      else if (!(e.target instanceof Element && e.target.closest(".studio-marks-popup"))) setOpen(null);
+      if (d) return setOpen({ ...d, vast: true });
+      // Op een lijn valt de klik op het hele label (het slepen van het label vangt de aanwijzer):
+      // stond het kaartje van dat label al open, dan zet de klik het vast.
+      const label = e.target instanceof Element ? e.target.closest(".dc-edge-label") : null;
+      const opLabel = label?.querySelector("[data-mark-element]")?.getAttribute("data-mark-element");
+      if (opLabel) return setOpen((nu) => (nu && nu.elementId === opLabel ? { ...nu, vast: true } : nu));
+      if (!(e.target instanceof Element && e.target.closest(".studio-marks-popup"))) setOpen(null);
     };
     const toets = (e) => e.key === "Escape" && setOpen(null);
     document.addEventListener("mouseover", over);
@@ -85,7 +94,8 @@ export default function MarksPopup({ profielId, descriptorId, elements, diagram 
     }
     const groepen = [{ regels: p.element.filter(geldt).map(regel) }, ...p.velden.map((v) => ({ kop: v.naam, regels: v.cellen.filter(geldt).map(regel) }))].filter((g) => g.regels.length);
     return { titel: element.naam || element.id, groepen };
-  }, [open, elements, lagen, contexten, marks, actieveContext, profielId, descriptorId]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, elements, lagen, contexten, marks, soorten, actieveContext, profielId, descriptorId]);
 
   if (!open || !inhoud || !inhoud.groepen.some((g) => g.regels.length)) return null;
   return createPortal(

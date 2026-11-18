@@ -62,7 +62,7 @@ import { gelijk } from "../sync/operaties.js";
 
 /** De verschilsoort per onderdeel van de marks (zelfde tabel als in samenvoegen.js; hier herhaald
  * omdat samenvoegen.js dit bestand importeert). */
-const MARK_SOORT = { lagen: "marklaag", contexten: "markcontext", marks: "mark" };
+const MARK_SOORT = { lagen: "marklaag", contexten: "markcontext", marks: "mark", soorten: "marksoort" };
 
 const leeg = Object.freeze({});
 const isObject = (v) => !!v && typeof v === "object" && !Array.isArray(v);
@@ -426,7 +426,7 @@ export function verschilMetMain({ basis, tak, main, mapId = null, ouderVan = nul
       const inScope = doel?.profielId && doel?.elementId
         ? inScopeVia((st) => { const k = mapVanElement(st, doel.profielId, doel.elementId); return k && scope.has(k) ? k : null; })
         : !!mapId;
-      verschillen.push({ soort, profielId: null, id, naam: deel === "marks" ? String(x?.soort || "") : naamVan(x), ...r, inScope });
+      verschillen.push({ soort, profielId: null, id, naam: deel === "marks" ? String(x?.soort || "") : deel === "soorten" ? String(x?.label || x?.id || "") : naamVan(x), ...r, inScope });
     }
   }
 
@@ -495,7 +495,7 @@ export function verschilMetMain({ basis, tak, main, mapId = null, ouderVan = nul
   }
 
   const volgorde = { conflict: 0, nieuw: 1, gewijzigd: 2, weg: 3, main: 4 };
-  const soortVolgorde = { map: 0, element: 1, diagram: 2, bundel: 3, kruisverband: 4, marklaag: 5, markcontext: 6, mark: 7 };
+  const soortVolgorde = { map: 0, element: 1, diagram: 2, bundel: 3, kruisverband: 4, marksoort: 5, marklaag: 6, markcontext: 7, mark: 8 };
   verschillen.sort((a, b) => volgorde[a.status] - volgorde[b.status]
     || soortVolgorde[a.soort] - soortVolgorde[b.soort]
     || String(a.profielId).localeCompare(String(b.profielId))

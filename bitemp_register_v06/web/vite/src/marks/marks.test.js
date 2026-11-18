@@ -168,3 +168,32 @@ test("V3-bijlage: alleen wat geldt en in het model staat; zonder marks blijft he
   assert.equal(metMarksBijlage(v3, leegMarks()), v3);
   assert.equal(metMarksBijlage({ model: { entiteiten: [] } }, st).marks, undefined);
 });
+
+test("eigen marksoorten van het project: maken, bijwerken, weghalen; mee in diff en patch", async () => {
+  const { metSoort, zonderSoort, projectSoortId } = await import("./marks.js");
+  const { zetProjectsoorten, getMarksoort, marksoortenVoor } = await import("./marksoorten.js");
+  let st = basis();
+  assert.equal(projectSoortId("Archiveren na 5 jaar", st.soorten), "project.Archiveren-na-5-jaar");
+  st = metSoort(st, { id: "project.archief", label: "archiveren", datatype: "boolean", doelen: ["element", "relatie"] });
+  st = metSoort(st, { id: "project.niveau", label: "niveau", datatype: "keuze", opties: [{ waarde: "laag" }, { waarde: "hoog" }, { waarde: "" }], doelen: ["bestaat-niet"] });
+  assert.equal(projectSoortId("archief", st.soorten), "project.archief-2");
+  assert.deepEqual(st.soorten[1], { id: "project.niveau", label: "niveau", datatype: "keuze", opties: [{ waarde: "laag" }, { waarde: "hoog" }], doelen: ["element"] });
+  // Zonder de naamruimte van het project komt een soort er niet in.
+  assert.equal(metSoort(st, { id: "register.eigen", label: "x" }), st);
+  // In de registry gelden ze in elke taal, op de gekozen doelen.
+  zetProjectsoorten(st.soorten);
+  assert.equal(getMarksoort("project.archief").label, "archiveren");
+  assert.ok(marksoortenVoor({ soort: "element" }, { profiel: "bpmn", elementType: "userTask" }).some((s) => s.id === "project.archief"));
+  assert.equal(marksoortenVoor({ soort: "veld" }, { profiel: "bpmn" }).some((s) => s.id === "project.archief"), false);
+  // Diff en patch nemen de soorten mee; weghalen laat de marks staan.
+  const patch = diffMarks(basis(), st);
+  assert.deepEqual(patch.soorten.zet.map((s) => s.id), ["project.archief", "project.niveau"]);
+  assert.deepEqual(patchMarks(basis(), patch), st);
+  const met = zetMark(st, { laag: "algemeen", soort: "project.archief", doel: TAAK, waarde: true });
+  const zonder = zonderSoort(met, "project.archief");
+  assert.equal(zonder.soorten.length, 1);
+  assert.equal(zonder.marks.some((m) => m.soort === "project.archief"), true);
+  assert.equal(heeftMarks({ ...leegMarks(), soorten: st.soorten }), true);
+  zetProjectsoorten([]);
+  assert.equal(getMarksoort("project.archief"), null);
+});

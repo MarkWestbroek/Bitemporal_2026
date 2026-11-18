@@ -13,7 +13,12 @@
  * Vorm (in het werkbestand, naast `kruisverbanden`):
  *   { lagen: [{id, naam, labels: [{soort, waarde}]}],
  *     contexten: [{id, naam, lagen: [laagId, …]}],
- *     marks: [{id, laag, soort, doel, waarde}] }
+ *     marks: [{id, laag, soort, doel, waarde}],
+ *     soorten: [{id: "project.<naam>", label, datatype, opties?, doelen?, uitleg?}] }
+ *
+ * `soorten` zijn de **eigen marksoorten van het project** (Mark 18-11): naast de soorten die een
+ * transformatie declareert (marksoorten.js) maakt een project er zelf bij, zoals koppelsoorten.
+ * Ze hebben de naamruimte `project.` en gelden in elke taal.
  *
  * Doel: `{soort: "element"|"veld"|"relatie", uuid}` (canoniek model), of zonder uuid
  * `{soort, profielId, elementId, veldNaam?}` (BPMN, DMN, …), of `{soort: "map", mapId}`.
@@ -26,10 +31,41 @@
 /** @typedef {{id: string, naam: string, lagen: string[]}} Context */
 /** @typedef {{soort: string, uuid?: string, profielId?: string, elementId?: string, veldNaam?: string, mapId?: string}} Doel */
 /** @typedef {{id: string, laag: string, soort: string, doel: Doel, waarde: any}} Mark */
-/** @typedef {{lagen: Laag[], contexten: Context[], marks: Mark[]}} Marks */
+/** @typedef {{id: string, label: string, datatype: string, opties?: {waarde: string, label?: string}[], doelen?: string[], uitleg?: string}} Projectsoort */
+/** @typedef {{lagen: Laag[], contexten: Context[], marks: Mark[], soorten: Projectsoort[]}} Marks */
 
 /** @returns {Marks} */
-export const leegMarks = () => ({ lagen: [], contexten: [], marks: [] });
+export const leegMarks = () => ({ lagen: [], contexten: [], marks: [], soorten: [] });
+
+export const PROJECT_NAAMRUIMTE = "project";
+const SOORT_ID = /^project\.[A-Za-z][A-Za-z0-9-]*$/;
+const DATATYPES = new Set(["boolean", "string", "tekst", "getal", "keuze"]);
+const DOELEN = new Set(["element", "veld", "relatie", "map"]);
+
+/** Een eigen marksoort in de vaste vorm, of null als hij niet te lezen is. */
+function normaliseerSoort(s) {
+  if (!s || typeof s.id !== "string" || !SOORT_ID.test(s.id)) return null;
+  const datatype = DATATYPES.has(s.datatype) ? s.datatype : "boolean";
+  const doelen = (Array.isArray(s.doelen) ? s.doelen : []).filter((d) => DOELEN.has(d));
+  const opties = (Array.isArray(s.opties) ? s.opties : []).filter((o) => o && o.waarde !== undefined && o.waarde !== "").map((o) => ({ waarde: String(o.waarde), ...(o.label ? { label: String(o.label) } : {}) }));
+  return {
+    id: s.id,
+    label: String(s.label || s.id.slice(PROJECT_NAAMRUIMTE.length + 1)),
+    datatype,
+    ...(datatype === "keuze" ? { opties } : {}),
+    doelen: doelen.length ? doelen : ["element"],
+    ...(s.uitleg ? { uitleg: String(s.uitleg) } : {}),
+  };
+}
+
+/** Het id voor een nieuwe eigen soort met deze naam, uniek binnen `bestaand`. */
+export function projectSoortId(naam, bestaand = []) {
+  const ids = new Set(bestaand.map((s) => s.id));
+  const stam = String(naam || "").normalize("NFKD").replace(/[^A-Za-z0-9]+/g, "-").replace(/^-+|-+$/g, "").replace(/^[^A-Za-z]+/, "") || "soort";
+  let id = `${PROJECT_NAAMRUIMTE}.${stam}`;
+  for (let i = 2; ids.has(id); i++) id = `${PROJECT_NAAMRUIMTE}.${stam}-${i}`;
+  return id;
+}
 
 /**
  * Sleutel van een doel: één per aanwijsbaar ding. De uuid wint (hernoemen breekt niets);
@@ -73,7 +109,9 @@ export function normaliseerMarks(ruw) {
     gezien.add(id);
     marks.push({ id, laag: m.laag, soort: m.soort, doel: m.doel, waarde: m.waarde === undefined ? null : m.waarde });
   }
-  return { lagen, contexten, marks };
+  const soortIds = new Set();
+  const soorten = (Array.isArray(ruw?.soorten) ? ruw.soorten : []).map(normaliseerSoort).filter((s) => s && !soortIds.has(s.id) && soortIds.add(s.id));
+  return { lagen, contexten, marks, soorten };
 }
 
 /** Voeg een laag toe of werk hem bij (op id). */
@@ -89,8 +127,20 @@ export function zonderLaag(st, laagId) {
     lagen: st.lagen.filter((l) => l.id !== laagId),
     contexten: st.contexten.map((c) => ({ ...c, lagen: c.lagen.filter((id) => id !== laagId) })),
     marks: st.marks.filter((m) => m.laag !== laagId),
+    soorten: st.soorten || [],
   };
 }
+
+/** Voeg een eigen marksoort toe of werk hem bij (op id). Onleesbaar: de stand blijft. */
+export function metSoort(st, soort) {
+  const nieuw = normaliseerSoort(soort);
+  if (!nieuw) return st;
+  const soorten = st.soorten || [];
+  return { ...st, soorten: soorten.some((s) => s.id === nieuw.id) ? soorten.map((s) => (s.id === nieuw.id ? nieuw : s)) : [...soorten, nieuw] };
+}
+
+/** Haal een eigen marksoort weg. De marks van die soort blijven staan (het scherm toont ze als onbekend). */
+export const zonderSoort = (st, soortId) => ({ ...st, soorten: (st.soorten || []).filter((s) => s.id !== soortId) });
 
 /** Voeg een context toe of werk hem bij (op id); onbekende lagen vallen eruit. */
 export function metContext(st, context) {
@@ -216,11 +266,11 @@ const zelfde = (a, b) => JSON.stringify(a) === JSON.stringify(b);
  * Het verschil tussen twee standen, per onderdeel als `{zet, wis}` op id. `null` als er niets
  * verschilt. Inhoudelijk vergeleken, zodat twee los opgebouwde standen ook werken.
  * @param {Marks} voor @param {Marks} na
- * @returns {{lagen?: {zet: any[], wis: string[]}, contexten?: {zet: any[], wis: string[]}, marks?: {zet: any[], wis: string[]}} | null}
+ * @returns {{lagen?: {zet: any[], wis: string[]}, contexten?: {zet: any[], wis: string[]}, marks?: {zet: any[], wis: string[]}, soorten?: {zet: any[], wis: string[]}} | null}
  */
 export function diffMarks(voor, na) {
   const uit = {};
-  for (const deel of /** @type {const} */ (["lagen", "contexten", "marks"])) {
+  for (const deel of /** @type {const} */ (["lagen", "contexten", "marks", "soorten"])) {
     const v = perId(voor?.[deel]);
     const n = perId(na?.[deel]);
     const zet = [...n.values()].filter((x) => !v.has(x.id) || (v.get(x.id) !== x && !zelfde(v.get(x.id), x)));
@@ -249,8 +299,9 @@ export function patchMarks(st, patch) {
     lagen: pas(st.lagen, patch?.lagen),
     contexten: pas(st.contexten, patch?.contexten),
     marks: pas(st.marks, patch?.marks),
+    soorten: pas(st.soorten, patch?.soorten),
   });
 }
 
 /** Staat er iets in? Een leeg onderdeel hoeft niet in het werkbestand. */
-export const heeftMarks = (st) => !!(st?.lagen?.length || st?.contexten?.length || st?.marks?.length);
+export const heeftMarks = (st) => !!(st?.lagen?.length || st?.contexten?.length || st?.marks?.length || st?.soorten?.length);

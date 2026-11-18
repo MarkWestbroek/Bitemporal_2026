@@ -427,7 +427,7 @@ export function kruisNet(voor, na) {
 // Zelfde aanpak als de kruisverbanden: de netto wijziging van lagen, contexten en marks is één
 // operatie `patchMarks` (plan 2026-11-18 Marks, stap 3). `actieveContext` is van de gebruiker en
 // hoort hier niet bij.
-export const MARKS_VELDEN = ["lagen", "contexten", "marks"];
+export const MARKS_VELDEN = ["lagen", "contexten", "marks", "soorten"];
 
 export function marksNet(voor, na) {
   const patch = diffMarks(voor, na);

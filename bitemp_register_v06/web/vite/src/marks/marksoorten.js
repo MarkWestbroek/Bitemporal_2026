@@ -30,10 +30,19 @@ export function registreerMarksoorten(soorten) {
   }
 }
 
-/** @param {string} id */
-export const getMarksoort = (id) => _soorten.get(id) || null;
+/** De eigen marksoorten van het open project (naamruimte `project.`); de Studio houdt ze bij. */
+/** @type {Map<string, Marksoort>} */
+let _project = new Map();
 
-export const alleMarksoorten = () => [..._soorten.values()].sort((a, b) => a.id.localeCompare(b.id));
+/** Zet de eigen marksoorten van het project (vervangt de vorige lijst). */
+export function zetProjectsoorten(soorten) {
+  _project = new Map((soorten || []).filter((s) => s?.id).map((s) => [s.id, { datatype: "boolean", ...s }]));
+}
+
+/** @param {string} id */
+export const getMarksoort = (id) => _soorten.get(id) || _project.get(id) || null;
+
+export const alleMarksoorten = () => [..._soorten.values(), ..._project.values()].sort((a, b) => a.id.localeCompare(b.id));
 
 /** De naamruimte van een marksoort: de transformatie waar hij bij hoort. */
 export const naamruimteVan = (id) => String(id || "").split(".")[0];

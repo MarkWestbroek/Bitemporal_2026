@@ -2137,7 +2137,8 @@ onderdelen mee (`marklaag`, `markcontext`, `mark`). `actieveContext` is van de g
 niet in het werkbestand. Scherm: de sectie *Marks* in Eigenschappen (`studio/MarksPaneel.jsx`,
 regels `marks/marksPaneel.js`), het lagenbeheer daarin, en het teken ◆ op het canvas (afgeleid
 gegeven `data._marks` in het canvasmodel, zoals `vreemd`; `ElementNode` stuurt bij een klik
-`omnium:marks-toon`). Plan en stand:
+`omnium:marks-toon`), het kaartje `studio/MarksPopup.jsx`, en eigen marksoorten van het project
+(`marks.soorten`, naamruimte `project.`). Plan en stand:
 `docs/plans/2026-11-18 Marks — markeringen op het model (plan).md`.
 
 ### OpenAPI → canoniek model (transformatie)

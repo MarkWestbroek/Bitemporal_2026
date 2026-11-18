@@ -38,7 +38,8 @@ export function schermContext(st, actieveContext) {
 
 /**
  * Wat het paneel toont voor één element.
- * @param {{st: any, context: string[], profielId: string, descriptorId: string, element: any}} p
+ * @param {{st: any, context: string[], profielId: string, descriptorId: string, element: any, eff?: Map<string, any>}} p
+ *   `eff`: de al uitgerekende effectieve marks (wie veel elementen afloopt rekent ze één keer uit)
  * @returns {{
  *   element: {soort: any, doel: any, eff: any|null}[],
  *   veldSoorten: any[],
@@ -46,8 +47,7 @@ export function schermContext(st, actieveContext) {
  *   aantal: number,
  * }}
  */
-export function paneelVoorElement({ st, context, profielId, descriptorId, element }) {
-  const eff = effectieveMarks(st, context);
+export function paneelVoorElement({ st, context, profielId, descriptorId, element, eff = effectieveMarks(st, context) }) {
   const bij = { profiel: descriptorId, elementType: element.elementType };
   const effVoor = (doel, soortId) => eff.get(doelSleutel(doel))?.soorten?.[soortId] || null;
   const elDoel = doelVanElement(profielId, element);
@@ -75,8 +75,8 @@ export function paneelVoorElement({ st, context, profielId, descriptorId, elemen
  * canvas): die op het element zelf, en per veldnaam die op het veld. `null` als er geen zijn.
  * @returns {{element: string[], velden: Record<string, string[]>} | null}
  */
-export function markRegels({ st, context, profielId, descriptorId, element }) {
-  const p = paneelVoorElement({ st, context, profielId, descriptorId, element });
+export function markRegels({ st, context, profielId, descriptorId, element, eff = undefined }) {
+  const p = paneelVoorElement({ st, context, profielId, descriptorId, element, ...(eff ? { eff } : {}) });
   const toon = (soort, e) => `${soort.label || soort.id}${e.waarde === true ? "" : `: ${e.waarde}`}`;
   const opElement = p.element.filter((r) => r.eff && !r.eff.uit).map((r) => toon(r.soort, r.eff));
   /** @type {Record<string, string[]>} */
