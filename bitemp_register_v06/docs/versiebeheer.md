@@ -154,7 +154,8 @@ dat, en forceert `git branch -D` het (met opzet).
   **`studio/v0.14.0`** (2026-10-07: project op de server, operatielaag, projectboom-fixes) en
   **`studio/v0.13.0`** (2026-10-07: canvas-bediening — inline hernoemen, verbind-modus, kaders,
   taakbalken op een rij); zie `web/vite/CHANGELOG.md`.
-- Backend: **`api/v0.27.0`** (2026-11-14: `keuze` op `POST …/samenvoegen`, 409 `samenhang`;
+- Backend: **`api/v0.28.0`** (2026-11-18: indexen uit het model, codegen-fix gedeelde enum, validatiefout
+  bij type tegenover gegevenstype, melding bij afwijkend kolomtype; devloop-image 0.31.0). Daarvoor **`api/v0.27.0`** (2026-11-14: `keuze` op `POST …/samenvoegen`, 409 `samenhang`;
   devloop-image 0.30.0). Daarvoor **`api/v0.26.0`** (2026-11-14: `POST …/samenvoegen` — branch naar main in één
   transactie, via de render-sidecar; devloop-image 0.29.0). Daarvoor **`api/v0.25.0`** (2026-11-10: `GET …/model/:profiel` via de render-sidecar, één branch
   per ouder + map; devloop-image 0.28.0; 0.28.1 = dezelfde api met studio 0.38.1; 0.28.2 met studio 0.38.2; 0.28.3 met studio 0.38.3; 0.28.4 met studio 0.39.0). Daarvoor **`api/v0.24.0`** (2026-11-10: `GET …/vergelijk` via de render-sidecar en `namens` op het
