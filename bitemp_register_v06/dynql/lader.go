@@ -156,7 +156,8 @@ func heeftEigenLader(typenaam string) bool {
 }
 
 // dbLader is de lader van het gewone register: bun-queries op hub + _Data. De code is verhuisd
-// uit de resolvers (query_resolvers.go) en verder ongewijzigd.
+// uit de resolvers (query_resolvers.go). Sinds 18-11-2026 laadt hij alleen de groepen die de
+// resolver via de context aanwijst (groepKiezer, selectie.go); zonder aanwijzing alles.
 type dbLader struct{}
 
 func (dbLader) LaadEen(ctx context.Context, meta model.TypeMeta, id any, peil time.Time) (any, error) {
@@ -168,11 +169,12 @@ func (dbLader) LaadEen(ctx context.Context, meta model.TypeMeta, id any, peil ti
 	}
 	entity := meta.Factory()
 	query := applyFormeleTijdFilter(db.NewSelect().Model(entity), meta.Typenaam, peil)
-	query = addOnderliggendeRelations(query, meta, &peil)
+	kies := groepKiezer(ctx, meta)
+	query = addOnderliggendeRelations(query, meta, &peil, kies)
 	if err := query.Where(meta.IDKolom+" = ?", id).Scan(ctx); err != nil {
 		return nil, err
 	}
-	if err := laadHubKinderenNaQuery(ctx, entity, meta, &peil); err != nil {
+	if err := laadHubKinderenNaQuery(ctx, entity, meta, &peil, kies); err != nil {
 		return nil, fmt.Errorf("hub-kinderen laden mislukt: %v", err)
 	}
 	return entity, nil
@@ -189,11 +191,12 @@ func (dbLader) LaadIDs(ctx context.Context, meta model.TypeMeta, ids []any, peil
 	query := applyFormeleTijdFilter(db.NewSelect().
 		Model(entities).
 		Where(meta.IDKolom+" IN (?)", bun.In(ids)), meta.Typenaam, peil)
-	query = addOnderliggendeRelations(query, meta, &peil)
+	kies := groepKiezer(ctx, meta)
+	query = addOnderliggendeRelations(query, meta, &peil, kies)
 	if err := query.Scan(ctx); err != nil {
 		return nil, err
 	}
-	if err := laadHubKinderenNaQuery(ctx, entities, meta, &peil); err != nil {
+	if err := laadHubKinderenNaQuery(ctx, entities, meta, &peil, kies); err != nil {
 		return nil, fmt.Errorf("hub-kinderen laden mislukt: %v", err)
 	}
 	return entities, nil
@@ -222,8 +225,9 @@ func (dbLader) LaadLijst(ctx context.Context, meta model.TypeMeta, v LijstVraag)
 		return nil, err
 	}
 	query = query.Limit(v.Limit).Offset(v.Offset)
+	kies := groepKiezer(ctx, meta)
 	if v.Volledig {
-		query = addOnderliggendeRelations(query, meta, &moment)
+		query = addOnderliggendeRelations(query, meta, &moment, kies)
 	}
 	if err := query.Scan(ctx); err != nil {
 		if v.Volledig {
@@ -232,7 +236,7 @@ func (dbLader) LaadLijst(ctx context.Context, meta model.TypeMeta, v LijstVraag)
 		return nil, fmt.Errorf("lijst query fout voor %s: %v", meta.Typenaam, err)
 	}
 	if v.Volledig {
-		if err := laadHubKinderenNaQuery(ctx, entities, meta, &moment); err != nil {
+		if err := laadHubKinderenNaQuery(ctx, entities, meta, &moment, kies); err != nil {
 			return nil, fmt.Errorf("hub-kinderen laden mislukt: %v", err)
 		}
 	}
@@ -249,7 +253,7 @@ func (dbLader) BronIDs(ctx context.Context, rev ReverseRelationInfo, doelID any,
 	var bronIDs []any
 	err := db.NewRaw(
 		fmt.Sprintf(
-			"SELECT DISTINCT %s FROM %s WHERE %s = ? AND afvoer IS NULL LIMIT ?",
+			"SELECT DISTINCT %s FROM %s WHERE %s = ? AND afvoer IS NULL ORDER BY 1 LIMIT ?",
 			rev.BronIDKolom, relMeta.Tabelnaam, rev.SecondaireIDKolom,
 		),
 		doelID, limit,

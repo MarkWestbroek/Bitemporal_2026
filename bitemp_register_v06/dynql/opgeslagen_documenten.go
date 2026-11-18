@@ -215,7 +215,7 @@ func laadOpgeslagen(ctx context.Context, filter map[string]interface{}, nu time.
 			return nil, err
 		}
 	}
-	query = addOnderliggendeRelations(query, ent, &nu)
+	query = addOnderliggendeRelations(query, ent, &nu, nil)
 	if ent.IDKolom != "" {
 		query = query.OrderExpr("?TableAlias.? ASC", bun.Ident(ent.IDKolom))
 	}
@@ -225,7 +225,7 @@ func laadOpgeslagen(ctx context.Context, filter map[string]interface{}, nu time.
 	if err := query.Scan(ctx); err != nil {
 		return nil, fmt.Errorf("QueryDefinitie laden: %v", err)
 	}
-	if err := laadHubKinderenNaQuery(ctx, entities, ent, &nu); err != nil {
+	if err := laadHubKinderenNaQuery(ctx, entities, ent, &nu, nil); err != nil {
 		return nil, fmt.Errorf("QueryDefinitie hub-kinderen laden: %v", err)
 	}
 	// Bewust niet platgeslagen op entiteitniveau: bij een enkelvoudig GE zou

@@ -35,14 +35,21 @@ func TestModelIndexDefinities_DoelEnUniek(t *testing.T) {
 		t.Errorf("onverwachte SQL: %s", got)
 	}
 
-	// Elk uniek veld: partiële index op de actuele stand, zoals de uniekheidscontrole zoekt.
+	// Elk uniek veld: een index op de kolom, niet partieel (anders mag het lijstfilter hem niet
+	// gebruiken), onder de naam van de zoeksleutel; hij vervangt de oude partiële _uniek-index.
 	for _, d := range defs {
 		if d.Soort != "uniek" {
 			continue
 		}
 		sql := d.SQL(true)
-		if !strings.HasPrefix(sql, "CREATE INDEX CONCURRENTLY IF NOT EXISTS ") || !strings.HasSuffix(sql, " WHERE afvoer IS NULL") {
+		if !strings.HasPrefix(sql, "CREATE INDEX CONCURRENTLY IF NOT EXISTS ") || strings.Contains(sql, " WHERE ") {
 			t.Errorf("onverwachte SQL voor uniek veld: %s", sql)
+		}
+		if !strings.HasSuffix(d.Naam, "_zoek") && len(d.Naam) < 63 {
+			t.Errorf("uniek veld hoort de naam van een zoeksleutel te hebben: %s", d.Naam)
+		}
+		if d.Vervangt == "" || d.Vervangt == d.Naam {
+			t.Errorf("uniek veld hoort de oude index te vervangen: %+v", d)
 		}
 	}
 }

@@ -26,15 +26,25 @@ verandert nooit wat een vraag teruggeeft, alleen hoe snel.
 | Soort | Waar | Vorm | Dient |
 |---|---|---|---|
 | `doel` | elke relatie-hub | `(doel_id, bron_id)` | de omgekeerde relatie: "welke bronnen wijzen naar dit record" (`gerelateerde_<bron>` in GraphQL) |
-| `uniek` | de `_Data`-tabel van een GE met een veld `uniek=<bereik>` | `(kolom) WHERE afvoer IS NULL` | de uniekheidscontrole bij elke opvoer (`handlers/registration_uniek.go`, `bezetDoor`) |
+| `uniek` | de `_Data`-tabel van een GE met een veld `uniek=<bereik>` | `(kolom)`, naam `…_zoek` | de uniekheidscontrole bij elke opvoer (`handlers/registration_uniek.go`, `bezetDoor`) én het filter van een lijst op dat veld |
 
 - Geen van beide vraagt een aanwijzing in het model. De doelkant volgt uit het bestaan van de
   relatie, de unieke index uit de bestaande eigenschap `uniek` van het veld.
 - `uniek` blijft een eigenschap van het veld en wordt geen MARK: het is een regel van het model,
   geen afstemming.
-- De unieke index is een gewone, partiële index en géén `UNIQUE`-constraint. De regel zelf bewaakt
+- De unieke index is een gewone index en géén `UNIQUE`-constraint. De regel zelf bewaakt
   de engine (422), omdat het bereik `domein` of `register` over meerdere tabellen gaat en omdat de
   entiteit en de hub ook actief moeten zijn.
+- **De unieke index is niet partieel (sinds api 0.30.0).** In 0.28.0 en 0.29.0 was hij
+  `WHERE afvoer IS NULL`. Het filter van een lijst vraagt echter altijd "actief op het
+  leesmoment": `opvoer <= t AND (afvoer IS NULL OR afvoer > t)`. Daaruit volgt niet
+  `afvoer IS NULL`, dus PostgreSQL mocht de index niet gebruiken en las bij elke zoekvraag op
+  bijvoorbeeld een zaakidentificatie de hele tabel. Gevonden met de meting op het zaakmodel
+  (18-11). Op proefdata (102.000 rijen): 3,5 ms met de partiële index (volledige scan), 0,06 ms
+  met de gewone. Een uniek veld is daarmee vanzelf een zoeksleutel; een mark is er niet voor
+  nodig. De index heet nu `ix_<tabel>_<kolom>_zoek`, dezelfde naam als bij de mark.
+- **Bestaand register:** bij de start komt de nieuwe index erbij en gaat de oude
+  `ix_<tabel>_<kolom>_uniek` weg, in die volgorde en alleen als het aanmaken lukte. Niets doen.
 - De doel-index is niet partieel. Zo dient hij ook een vraag op een peiltijdstip, die juist
   afgevoerde rijen nodig heeft.
 - Namen: `ix_<tabel>_<kolom>_<soort>`. PostgreSQL kapt namen af op 63 tekens; een langere naam
@@ -149,6 +159,32 @@ Grenzen van de meting:
 Regressie: `TestRegressieNpLoc`, `TestAfgeleideRelatiesNpLoc` en `TestDatabaseproef` zijn groen
 met de indexen erin.
 
+## Lezen: alleen wat gevraagd is, en omgekeerde relaties per lijst (18-11-2026)
+
+Aanleiding: de meting van FUNDAMENT op het register met zaken (102.000 zaken, 16 gelijktijdige
+gebruikers; de database stond op 2,0 van 2 CPU). Naast de index hierboven bleek het aantal
+SQL-vragen per GraphQL-verzoek de oorzaak. Twee wijzigingen in `dynql/selectie.go`:
+
+- **Groepen op selectie.** Een full-query laadde altijd alle onderliggende gegevenselementen en
+  relaties van een entiteit. Voor Zaak zijn dat 14 groepen, ongeveer 25 tot 30 SQL-vragen per
+  verzoek, ook als de query er vijf selecteert. De resolver leest nu de selectie en laadt alleen
+  die groepen. Alles laden gebeurt nog als de query een afgeleid veld, een afgeleide relatie of
+  een extra veld vraagt (die rekenen met andere groepen), als er een toegangsbeleid actief is
+  (een regel kan van elk veld afhangen) en bij `geldigOp`.
+- **Omgekeerde relaties gebundeld.** `gerelateerde_<bron>` werd per ouder opgelost: per ouder
+  één vraag voor de id's en dan de hele bron-entiteit. Nu doet de eerste rij van een lijst het
+  voor alle rijen: één vraag voor de paren (doel, bron), met de grens per doel, en één lading
+  van de bronnen. De volgorde binnen één doel is nu vast (oplopend op bron-id); die was
+  onbepaald.
+- Forward-relaties (`zaak_zaaktypen { zaaktype { … } }`) laden nog per voorkomen; wel alleen de
+  gevraagde groepen.
+- **Noodrem:** `GRAPHQL_KLASSIEK_LADEN=1` zet beide uit (het gedrag tot en met api 0.29.0).
+
+Bewijs dat het antwoord gelijk blijft: `TestLadenOpSelectie` (tag `integration`) draait 346
+deelselecties op np-loc twee keer, klassiek en nieuw: 0 verschillen, 2225 tegen 693 SQL-vragen.
+`TestLaderKarakterisering` (volledige selectie, 210 queries) is ongewijzigd groen. Niet gemeten:
+het effect op het register met zaken onder belasting; dat meet FUNDAMENT na de uitrol.
+
 ## Vervolg
 
 - **Stap 3.**
@@ -167,6 +203,7 @@ met de indexen erin.
 - **Sorteren met een index.** De sortering van een lijst rekent de waarde per entiteit uit en
   sorteert dan; de index op de kolom helpt daar niet bij. Een vorm die bij de `_Data`-tabel
   begint en de index in volgorde afloopt, is voor het eenvoudige geval (één sleutel op een
-  enkelvoudig GE) mogelijk, maar nog niet ontworpen. Eerst meten of het nodig is.
+  enkelvoudig GE) mogelijk. Het ontwerp met een proefmeting (351 ms wordt 0,4 ms) staat in
+  `docs/plans/2026-11-18 Sorteren via de index — ontwerp.md`; nog niet gebouwd.
 - **Stap 5.** Een script dat `ModelIndexDefinities` afloopt met `CONCURRENTLY`, voor registers
   met veel data waar de start niet mag blokkeren.
