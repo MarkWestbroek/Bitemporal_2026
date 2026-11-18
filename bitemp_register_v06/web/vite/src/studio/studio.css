@@ -829,3 +829,6 @@
 .studio-marks-popup__kop { margin-top: 4px; font-size: 11px; color: var(--s-fg-muted); }
 .studio-marks-popup__regel { display: flex; justify-content: space-between; gap: 10px; padding: 1px 0; }
 .studio-marks-popup__laag { font-size: 10px; color: var(--s-fg-muted); white-space: nowrap; }
+.studio-marks__tussenkop { margin: 18px 0 2px; font-size: 13px; }
+.studio-marks__lagen select { font: inherit; font-size: 12px; color: var(--s-fg, #1e293b); background: var(--s-panel, #fff); border: 1px solid var(--s-border, #cbd5e1); border-radius: 5px; padding: 2px 4px; }
+.studio-marks { overflow-x: auto; }

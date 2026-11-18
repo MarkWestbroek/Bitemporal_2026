@@ -16,6 +16,14 @@ De single source of truth voor het nummer is `package.json` `"version"`.
   veld van het canonieke model (voor de indexen van het register).
 - **Marks in de V3-export** (18-11): *Exporteer V3* zet de marks die gelden als bijlage `marks` naast het model
   (niet op het veld); de serverexport (`/export/v3`) kan dat ook, met `marks` en `markContext`.
+- **Eigen marksoorten van het project** (Mark 18-11): onder *Lagen…* maak je zelf marksoorten (naam; ja/nee, tekst,
+  getal of keuze; op een element, veld of relatie). Ze gelden in elke taal en reizen mee met het project. Zo zet je
+  ook een mark op een entiteit, gegevenselement of relatie als geheel.
+- **Kaartje bij een mark-teken**: hang je boven het ruitje, dan zie je welke marks gelden en uit welke laag; een
+  klik zet het kaartje vast.
+- **Marks op een lijn**: een verbinding, of een relatie die als lijn getekend is, toont het ruitje in het label;
+  een klik selecteert de verbinding en toont haar marks.
+- **Lagen…** toont ook de soorten die een transformatie meebrengt (alleen-lezen) en legt de lagen uit.
 - **Marks zonder doel**: het lagenbeheer toont marks waarvan het element of veld niet meer bestaat en ruimt ze op
   verzoek op.
 - **Marks, de onderlaag** (plan 2026-11-18, stap 2 en 3): marks (MDA) zijn aanwijzingen op een

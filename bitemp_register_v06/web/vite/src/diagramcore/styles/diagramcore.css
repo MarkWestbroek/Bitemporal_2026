@@ -1236,3 +1236,4 @@
   z-index: 2;
 }
 .dc-mark-teken { cursor: pointer; }
+.dc-edge-mark { color: #b45309; cursor: pointer; font-size: 0.85em; }

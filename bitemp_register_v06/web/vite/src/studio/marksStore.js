@@ -16,8 +16,8 @@
 import { create } from "zustand";
 import { koppelStore, marksNet, MARKS_VELDEN } from "./sync/operaties.js";
 import { sleutelIn } from "../diagramcore/model/opslagRuimte.js";
-import { registreerMarksoorten, REGISTER_MARKSOORTEN } from "../marks/marksoorten.js";
-import { leegMarks, normaliseerMarks, patchMarks, metLaag, zonderLaag, metContext, zonderContext, zetMark, wisMark } from "../marks/marks.js";
+import { registreerMarksoorten, zetProjectsoorten, REGISTER_MARKSOORTEN } from "../marks/marksoorten.js";
+import { leegMarks, normaliseerMarks, patchMarks, metLaag, zonderLaag, metContext, zonderContext, zetMark, wisMark, metSoort, zonderSoort } from "../marks/marks.js";
 
 export const LS_MARKS = "studio-marks";
 
@@ -31,12 +31,12 @@ function leesOpslag() {
 
 function bewaar(s) {
   try {
-    globalThis.localStorage?.setItem(sleutelIn(LS_MARKS), JSON.stringify({ lagen: s.lagen, contexten: s.contexten, marks: s.marks, actieveContext: s.actieveContext, werklaag: s.werklaag }));
+    globalThis.localStorage?.setItem(sleutelIn(LS_MARKS), JSON.stringify({ lagen: s.lagen, contexten: s.contexten, marks: s.marks, soorten: s.soorten, actieveContext: s.actieveContext, werklaag: s.werklaag }));
   } catch { /* geen opslag */ }
 }
 
 const opgeslagen = leesOpslag();
-const stand = (s) => ({ lagen: s.lagen, contexten: s.contexten, marks: s.marks });
+const stand = (s) => ({ lagen: s.lagen, contexten: s.contexten, marks: s.marks, soorten: s.soorten });
 
 export const useMarksStore = create((set) => {
   /** Zet de nieuwe stand (alleen de delen die veranderden krijgen een nieuwe referentie). */
@@ -60,6 +60,9 @@ export const useMarksStore = create((set) => {
     wisLaag: (id) => naar((st) => zonderLaag(st, id)),
     zetContext: (context) => naar((st) => metContext(st, context)),
     wisContext: (id) => naar((st) => zonderContext(st, id)),
+    /** Eigen marksoorten van het project (zoals koppelsoorten). */
+    zetSoort: (soort) => naar((st) => metSoort(st, soort)),
+    wisSoort: (id) => naar((st) => zonderSoort(st, id)),
     zetMark: (mark) => naar((st) => zetMark(st, mark)),
     wisMark: (id) => naar((st) => wisMark(st, id)),
 
@@ -87,6 +90,12 @@ export const useMarksStore = create((set) => {
 // De marksoorten van de transformaties die de Studio kent. Voorlopig hier; een regelset die er
 // zelf declareert, registreert ze bij haar eigen code (marks/marksoorten.js).
 registreerMarksoorten(REGISTER_MARKSOORTEN);
+
+// De eigen soorten van het project in de registry, ook na elke wijziging (lokaal of van een ander).
+zetProjectsoorten(useMarksStore.getState().soorten);
+useMarksStore.subscribe((s, vorig) => {
+  if (s.soorten !== vorig?.soorten) zetProjectsoorten(s.soorten);
+});
 
 // Projectsync: de netto wijziging is de operatie (zoals bij de kruisverbanden).
 koppelStore("marks", useMarksStore, { velden: MARKS_VELDEN, net: marksNet });

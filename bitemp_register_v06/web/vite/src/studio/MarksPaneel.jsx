@@ -15,8 +15,8 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useMarksStore } from "./marksStore.js";
 import { paneelVoorElement, schermContext, zetEffect, bestaatIn } from "../marks/marksPaneel.js";
-import { wezen, doelSleutel } from "../marks/marks.js";
-import { getMarksoort } from "../marks/marksoorten.js";
+import { wezen, doelSleutel, projectSoortId } from "../marks/marks.js";
+import { getMarksoort, alleMarksoorten, naamruimteVan } from "../marks/marksoorten.js";
 import { getProfieltypen } from "./profieltypeRegistry.js";
 import { vraagNaam, vraagBevestiging } from "./naamDialog.jsx";
 
@@ -92,13 +92,15 @@ export default function MarksPaneel({ profielId, descriptorId, element }) {
   const marks = useMarksStore((s) => s.marks);
   const actieveContext = useMarksStore((s) => s.actieveContext);
   const gekozenWerklaag = useMarksStore((s) => s.werklaag);
+  const soorten = useMarksStore((s) => s.soorten); // eigen soorten van het project
   const [beheer, setBeheer] = useState(false);
   const ref = useRef(null);
 
   const st = useMemo(() => ({ lagen, contexten, marks }), [lagen, contexten, marks]);
   const context = useMemo(() => schermContext(st, actieveContext), [st, actieveContext]);
   const werklaag = werklaagVan(st, context, gekozenWerklaag);
-  const paneel = useMemo(() => paneelVoorElement({ st, context, profielId, descriptorId, element }), [st, context, profielId, descriptorId, element]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const paneel = useMemo(() => paneelVoorElement({ st, context, profielId, descriptorId, element }), [st, context, profielId, descriptorId, element, soorten]);
   const laagNaam = (id) => lagen.find((l) => l.id === id)?.naam || id;
 
   useEffect(() => {
@@ -230,6 +232,23 @@ export function MarksLagenDialoog({ onSluit }) {
     const ok = await vraagBevestiging({ titel: "Marks zonder doel weghalen", tekst: `${verweesd.length} mark${verweesd.length === 1 ? "" : "s"} weghalen waarvan het element of veld niet meer bestaat?`, bevestig: "Weghalen", gevaar: true });
     if (ok) store().patchMarks({ marks: { zet: [], wis: verweesd.map((m) => m.id) } });
   };
+  // Eigen marksoorten van het project (zoals koppelsoorten): naam, soort waarde, waarop hij mag.
+  const soorten = useMarksStore((s) => s.soorten);
+  const nieuweSoort = async () => {
+    const naam = await vraagNaam({ titel: "Nieuwe marksoort", label: "Naam", waarde: "", bevestig: "Maken" });
+    if (!naam) return;
+    store().zetSoort({ id: projectSoortId(naam, soorten), label: naam, datatype: "boolean", doelen: ["element"] });
+  };
+  const wisSoort = async (soort) => {
+    const n = marks.filter((m) => m.soort === soort.id).length;
+    const ok = !n || (await vraagBevestiging({ titel: "Marksoort weghalen", tekst: `Marksoort "${soort.label}" weghalen? Er staan ${n} mark${n === 1 ? "" : "s"} van deze soort; die blijven staan en zijn daarna alleen nog weg te halen.`, bevestig: "Weghalen", gevaar: true }));
+    if (ok) store().wisSoort(soort.id);
+  };
+  const wisselDoel = (soort, doel) => {
+    const heeft = soort.doelen.includes(doel);
+    const doelen = heeft ? soort.doelen.filter((d) => d !== doel) : [...soort.doelen, doel];
+    if (doelen.length) store().zetSoort({ ...soort, doelen });
+  };
   const bewaarContext = async () => {
     const naam = await vraagNaam({ titel: "Bewaar als context", label: "Naam van de context", waarde: "", bevestig: "Bewaren" });
     if (!naam) return;
@@ -241,14 +260,23 @@ export function MarksLagenDialoog({ onSluit }) {
     <div className="studio-beslistabel__achtergrond" role="dialog" aria-modal="true" data-testid="marks-lagen-dialoog" onClick={(e) => e.target === e.currentTarget && onSluit()}>
       <div className="studio-marks__dialoog">
         <div className="studio-beslistabel__kop">
-          <strong>Marks: lagen</strong>
+          <strong>Marks: lagen en eigen soorten</strong>
           <span style={{ flex: 1 }} />
           <button type="button" className="dc-mini-knop" onClick={onSluit}>Sluiten</button>
         </div>
         <div className="studio-marks__dialoog-inhoud">
+          <h4 className="studio-marks__tussenkop" style={{ marginTop: 0 }}>Lagen</h4>
           <p className="studio-marks__uitleg">
-            Vink aan welke lagen meedoen en zet ze in volgorde: een latere laag wint van een eerdere. Deze keuze is van
-            jou; de lagen zelf zijn van het project. Labels schrijf je als <code>gemeente=Waterstede; domein=parkeren</code>.
+            Een mark staat altijd in een laag: een stapel marks met een naam, bijvoorbeeld Algemeen of Waterstede. Zo kan
+            hetzelfde model voor verschillende situaties andere marks dragen.
+            {lagen.length > 1 ? (
+              <> Vink aan welke lagen nu meedoen en zet ze in volgorde: zetten twee lagen dezelfde mark anders, dan wint de
+              onderste. Die keuze is van jou; de lagen zelf zijn van het project. Labels (waar de laag voor is) schrijf je
+              als <code>gemeente=Waterstede; domein=parkeren</code>.</>
+            ) : (
+              <> Met één laag hoef je hier niets te doen. Een tweede laag maak je voor een tweede situatie; dan kies je
+              hier welke meedoen en welke wint.</>
+            )}
           </p>
           <table className="studio-marks__lagen">
             <thead>
@@ -274,6 +302,82 @@ export function MarksLagenDialoog({ onSluit }) {
               })}
             </tbody>
           </table>
+          <div className="studio-marks__acties">
+            <button type="button" className="dc-mini-knop" data-testid="marks-nieuwe-laag" onClick={nieuweLaag}>＋ laag</button>
+            <span style={{ flex: 1 }} />
+            <select value="" title="Een bewaarde context toepassen" onChange={(e) => { const c = contexten.find((x) => x.id === e.target.value); if (c) zetMee(c.lagen); }}>
+              <option value="">Context toepassen…</option>
+              {contexten.map((c) => (
+                <option key={c.id} value={c.id}>{c.naam}</option>
+              ))}
+            </select>
+            <button type="button" className="dc-mini-knop" onClick={bewaarContext}>Bewaar als context…</button>
+          </div>
+          <h4 className="studio-marks__tussenkop">Soorten van transformaties</h4>
+          <p className="studio-marks__uitleg">
+            Deze soorten brengt een transformatie mee: zij leest ze en bepaalt wat ze betekenen. Je kunt ze hier niet
+            wijzigen.
+          </p>
+          <table className="studio-marks__lagen" data-testid="marks-transformatiesoorten">
+            <thead>
+              <tr><th>soort</th><th>transformatie</th><th>waarde</th><th>op</th><th>wat het doet</th></tr>
+            </thead>
+            <tbody>
+              {alleMarksoorten().filter((s) => naamruimteVan(s.id) !== "project").map((s) => (
+                <tr key={s.id}>
+                  <td title={s.id}>{s.label || s.id}</td>
+                  <td>{naamruimteVan(s.id)}</td>
+                  <td>{s.datatype === "boolean" ? "ja/nee" : s.datatype}</td>
+                  <td>{(s.doelen || []).join(", ") || "alles"}</td>
+                  <td style={{ whiteSpace: "normal" }}>{s.uitleg || ""}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <h4 className="studio-marks__tussenkop">Eigen marksoorten van dit project</h4>
+          <p className="studio-marks__uitleg">
+            Naast de soorten die een transformatie meebrengt (zoals zoeksleutel) maak je hier je eigen soorten. Ze
+            gelden in elke taal, op wat je aanvinkt.
+          </p>
+          {soorten.length > 0 && (
+            <table className="studio-marks__lagen" data-testid="marks-soorten">
+              <thead>
+                <tr><th>soort</th><th>waarde</th><th>keuzes</th><th>element</th><th>veld</th><th>relatie</th><th /></tr>
+              </thead>
+              <tbody>
+                {soorten.map((s) => (
+                  <tr key={s.id} data-soort={s.id}>
+                    <td><input type="text" value={s.label} title={s.id} onChange={(e) => store().zetSoort({ ...s, label: e.target.value })} /></td>
+                    <td>
+                      <select value={s.datatype} onChange={(e) => store().zetSoort({ ...s, datatype: e.target.value })}>
+                        <option value="boolean">ja/nee</option>
+                        <option value="string">tekst</option>
+                        <option value="getal">getal</option>
+                        <option value="keuze">keuze</option>
+                      </select>
+                    </td>
+                    <td>
+                      {s.datatype === "keuze" && (
+                        <input
+                          type="text"
+                          defaultValue={(s.opties || []).map((o) => o.waarde).join("; ")}
+                          placeholder="laag; midden; hoog"
+                          onBlur={(e) => store().zetSoort({ ...s, opties: e.target.value.split(";").map((w) => w.trim()).filter(Boolean).map((waarde) => ({ waarde })) })}
+                        />
+                      )}
+                    </td>
+                    {["element", "veld", "relatie"].map((d) => (
+                      <td key={d}><input type="checkbox" checked={s.doelen.includes(d)} title={`Mag op een ${d}`} onChange={() => wisselDoel(s, d)} /></td>
+                    ))}
+                    <td><button type="button" className="dc-mini-knop is-gevaar" title="Marksoort weghalen" onClick={() => wisSoort(s)}>✕</button></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+          <div className="studio-marks__acties">
+            <button type="button" className="dc-mini-knop" data-testid="marks-nieuwe-soort" onClick={nieuweSoort}>＋ soort</button>
+          </div>
           {verweesd.length > 0 && (
             <div className="studio-marks__wezen" data-testid="marks-wezen">
               <strong>{verweesd.length} mark{verweesd.length === 1 ? "" : "s"} zonder doel</strong> (het element of veld bestaat niet meer):
@@ -286,17 +390,6 @@ export function MarksLagenDialoog({ onSluit }) {
               <button type="button" className="dc-mini-knop is-gevaar" data-testid="marks-wezen-weg" onClick={ruimOp}>Weghalen…</button>
             </div>
           )}
-          <div className="studio-marks__acties">
-            <button type="button" className="dc-mini-knop" data-testid="marks-nieuwe-laag" onClick={nieuweLaag}>＋ laag</button>
-            <span style={{ flex: 1 }} />
-            <select value="" title="Een bewaarde context toepassen" onChange={(e) => { const c = contexten.find((x) => x.id === e.target.value); if (c) zetMee(c.lagen); }}>
-              <option value="">Context toepassen…</option>
-              {contexten.map((c) => (
-                <option key={c.id} value={c.id}>{c.naam}</option>
-              ))}
-            </select>
-            <button type="button" className="dc-mini-knop" onClick={bewaarContext}>Bewaar als context…</button>
-          </div>
         </div>
       </div>
     </div>,

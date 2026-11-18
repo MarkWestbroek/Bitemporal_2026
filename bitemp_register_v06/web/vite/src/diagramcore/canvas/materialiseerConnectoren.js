@@ -362,6 +362,15 @@ export function materialiseerConnectoren(elements, diagram, elementTypesById, ma
         if (isAfgeleid(el.data, et)) delen.unshift({ tekst: "/", soort: "rolnaam" });
         kaalLabels.push({ zijde: "midden", delen: [...voor, ...delen, ...na] });
       }
+      // Marks op de verbinding zelf (afgeleid gegeven `data._marks`, studio): het teken achter de
+      // naam, of als eigen label midden op de lijn als die geen naam heeft.
+      const opLijn = el.data?._marks?.element?.length || 0;
+      if (opLijn) {
+        const deel = { tekst: opLijn > 1 ? `◆${opLijn}` : "◆", soort: "mark", elementId: el.id };
+        const midden = kaalLabels.findIndex((l) => l.zijde === "midden");
+        if (midden >= 0) kaalLabels[midden] = { ...kaalLabels[midden], delen: [...kaalLabels[midden].delen, deel] };
+        else kaalLabels.push({ zijde: "midden", delen: [deel] });
+      }
       // Zelf-lus (oortje): standaard hoekig en van boven naar rechts —
       // de kortste weg is bij één punt betekenisloos.
       const isLus = el.source === el.target;

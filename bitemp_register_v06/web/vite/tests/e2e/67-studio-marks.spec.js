@@ -152,3 +152,60 @@ test("een mark waarvan het veld verdwijnt blijft staan en is op te ruimen", asyn
   await expect(dlg.getByTestId("marks-wezen")).toHaveCount(0);
   expect((await marks(page)).marks.length).toBe(0);
 });
+
+test("een eigen marksoort maken en op een heel element zetten", async ({ page }) => {
+  await opzet(page);
+  const paneel = page.getByTestId("marks-paneel");
+  await paneel.getByTestId("marks-eerste-laag").click();
+  await paneel.getByTestId("marks-lagen").click();
+  const dlg = page.getByTestId("marks-lagen-dialoog");
+  await dlg.getByTestId("marks-nieuwe-soort").click();
+  await page.locator(".studio-dialoog input").fill("archiveren");
+  await page.locator(".studio-dialoog").getByRole("button", { name: "Maken" }).click();
+  await expect(dlg.locator('tr[data-soort="project.archiveren"]')).toBeVisible();
+  await dlg.getByRole("button", { name: "Sluiten" }).click();
+  // De soort staat nu als regel bij het element zelf; aanvinken zet de mark op het element.
+  await paneel.getByTestId("mark-project.archiveren").check();
+  const teken = node(page, "ge1").getByTestId("node-marks");
+  await expect(teken).toHaveText("◆");
+  await teken.hover();
+  await expect(page.getByTestId("marks-popup")).toContainText("archiveren");
+  const st = await page.evaluate(async () => {
+    const { marksVanProject } = await import(location.origin + "/viz/react/src/studio/marksStore.js");
+    return marksVanProject();
+  });
+  expect(st.soorten.map((s) => s.id)).toEqual(["project.archiveren"]);
+  expect(st.marks.map((m) => [m.soort, m.doel.soort, m.waarde])).toEqual([["project.archiveren", "element", true]]);
+});
+
+test("een mark op een relatie die als lijn getekend is: het ruitje in het label, met kaartje", async ({ page }) => {
+  await openStudio(page);
+  await zetModel(page, { profielId: "diagram05", diagramId: "d_rel", diagramNaam: "Relatie", elementen: [
+    { id: "np", naam: "NatuurlijkPersoon", type: "entiteit", pos: { x: 150, y: 420 } },
+    { id: "fi", naam: "FiscaalInkomen", type: "entiteit", pos: { x: 650, y: 420 } },
+    { id: "rel", naam: "inkomen", type: "relatie", source: "np", target: "fi" },
+  ] });
+  await page.evaluate(async () => {
+    const { useMarksStore } = await import(location.origin + "/viz/react/src/studio/marksStore.js");
+    const { doelVanElement } = await import(location.origin + "/viz/react/src/marks/marksPaneel.js");
+    const reg = await import(location.origin + "/viz/react/src/studio/profieltypeRegistry.js");
+    const s = useMarksStore.getState();
+    s.zetLaag({ id: "algemeen", naam: "Algemeen", labels: [] });
+    s.zetSoort({ id: "project.archiveren", label: "archiveren", datatype: "boolean", doelen: ["element", "relatie"] });
+    // De relatie zoals hij nu in het model staat (met de uuid die de Studio zelf aanvult).
+    const rel = reg.getProfieltype("diagram05").useStore.getState().elements.rel;
+    s.zetMark({ laag: "algemeen", soort: "project.archiveren", doel: doelVanElement("diagram05", rel), waarde: true });
+  });
+  const teken = page.locator('[data-mark-element="rel"]');
+  await expect(teken).toHaveText("◆");
+  await teken.hover();
+  await expect(page.getByTestId("marks-popup")).toContainText("archiveren");
+  // In het venster staan de soorten van transformaties, alleen-lezen.
+  await page.mouse.move(5, 5);
+  await teken.click();
+  await page.getByTestId("marks-paneel").getByTestId("marks-lagen").click();
+  const dlg = page.getByTestId("marks-lagen-dialoog");
+  await expect(dlg.getByTestId("marks-transformatiesoorten")).toContainText("zoeksleutel");
+  await expect(dlg.getByTestId("marks-transformatiesoorten")).toContainText("register");
+  await expect(dlg).toContainText("Met één laag hoef je hier niets te doen");
+});

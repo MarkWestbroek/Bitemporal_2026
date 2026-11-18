@@ -65,6 +65,7 @@ const SOORT_KLASSE = {
   constraint: "dc-edge-constraint",
   naam: "dc-edge-naam",
   staart: "dc-edge-staart",
+  mark: "dc-edge-mark",
 };
 
 /**
@@ -832,12 +833,22 @@ function ConnectorEdge({
               // terug aan zijn lijn voor de afbeeldings-export (exportFilter.js).
               data-edge-id={id}
               onPointerDown={(e) => {
-                klikStartRef.current = { x: e.clientX, y: e.clientY };
+                // Het teken van een mark onthouden bij het indrukken: het slepen van het label vangt
+                // de aanwijzer, waardoor de klik daarna op het hele label valt.
+                const teken = e.target instanceof Element ? e.target.closest("[data-mark-element]") : null;
+                klikStartRef.current = { x: e.clientX, y: e.clientY, mark: teken?.getAttribute("data-mark-element") || null };
                 startLabelSleep(e, i, label);
               }}
               // Klik (geen sleep) op het naamlabel = relatienaam inline
               // bewerken; andere labels (rolnaam, kardinaliteit) nog niet.
               onClick={(e) => {
+                // Het teken van een mark: de verbinding selecteren en de marks tonen, niet hernoemen.
+                const elementId = klikStartRef.current?.mark;
+                if (elementId) {
+                  e.stopPropagation();
+                  window.dispatchEvent(new CustomEvent("omnium:marks-toon", { detail: { elementId } }));
+                  return;
+                }
                 if (!inlineNaam.start || !label.delen?.some((d) => d.veld === "naam")) return;
                 const st = klikStartRef.current;
                 if (st && Math.hypot(e.clientX - st.x, e.clientY - st.y) > 4) return;
@@ -865,6 +876,8 @@ function ConnectorEdge({
                     key={j}
                     className={SOORT_KLASSE[deel.soort] || undefined}
                     data-dc-naam={deel.veld === "naam" ? "" : undefined}
+                    data-dc-mark={deel.soort === "mark" ? "element" : undefined}
+                    data-mark-element={deel.soort === "mark" ? deel.elementId : undefined}
                     style={deel.kleur ? { color: deel.kleur } : undefined}
                   >
                     {richting && (
