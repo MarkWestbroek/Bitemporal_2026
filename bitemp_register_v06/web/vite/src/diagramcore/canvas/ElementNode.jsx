@@ -250,6 +250,18 @@ function ElementNode({ id, data, selected }) {
             ⚠
           </span>
         )}
+        {element.data?._marks?.length > 0 && (
+          // Marks (MDA) op dit element of zijn velden: een klein teken; de tekst erbij zegt welke.
+          // Een klik selecteert het element (de gewone klik) en vraagt het paneel in beeld.
+          <span
+            className="dc-mark-badge"
+            data-testid="node-marks"
+            title={`Marks: ${element.data._marks.join(" · ")}`}
+            onClick={() => window.dispatchEvent(new CustomEvent("omnium:marks-toon", { detail: { elementId: element.id } }))}
+          >
+            ◆{element.data._marks.length}
+          </span>
+        )}
         {heeftGedrag && (
           <span className="dc-gedrag-badge" title="Dubbelklik: open het diagram waar dit element naar verwijst">
             ⧉

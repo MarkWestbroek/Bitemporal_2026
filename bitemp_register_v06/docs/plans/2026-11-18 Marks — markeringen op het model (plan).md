@@ -221,8 +221,20 @@ projectsync in, en de server speelt hem na (`sidecarImport.speelOpsNa`). Vergeli
 samenvoegen van een branch nemen lagen, contexten en marks mee, elk op id (verschilsoorten
 `marklaag`, `markcontext`, `mark`; groep *Marks* in de keuzeboom). De gekozen context
 (`actieveContext`) is van de gebruiker en van het apparaat en reist niet mee. Een oudere Studio
-slaat de onbekende store over. **Nog niet:** eigen lagen in de werkruimte die je daarna deelt
-(nu is elke laag meteen van het project), en het scherm.
+slaat de onbekende store over.
+
+Stap 6 en een eerste deel van 7 zijn gebouwd (18-11): in Eigenschappen staat de sectie **Marks**
+(`studio/MarksPaneel.jsx`, regels in `marks/marksPaneel.js`). Voor het element een regel per
+marksoort; voor zijn velden een tabel velden × soorten. Je schrijft in een **werklaag**; een
+vinkje uit een andere laag is gekleurd en noemt die laag; uitvinken in een latere laag zet de mark
+daar uit (`zetEffect`). *Lagen…* opent het beheer: lagen maken, hernoemen, labels, weghalen, en
+kiezen welke meedoen en in welke volgorde (jouw keuze, `actieveContext`); *Bewaar als context*
+maakt er een gedeelde, benoemde context van. Op het canvas staat een teken (◆ met het aantal) op
+elk element waar marks op gelden; de tekst erbij noemt ze en een klik brengt de sectie in beeld.
+Het teken staat niet in de SVG die de server tekent.
+
+**Nog niet:** eigen lagen in de werkruimte die je daarna deelt (nu is elke laag meteen van het
+project), filteren op labels in het beheer, wezen tonen, en de V3-bijlage (stap 5).
 
 Wat nu al in het model staat en eigenlijk een mark is, verhuizen we **niet** vooraf. Kandidaten om
 later te bekijken: de vorm van invoer in een formulier (inhoud en vorm scheiden we al), een

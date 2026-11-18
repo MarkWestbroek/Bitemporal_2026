@@ -79,6 +79,9 @@ import { useVreemdeSelectie, zetVreemdeSelectie, LosGetoondContext } from "../vr
 import { gebruikInHetProject } from "../gebruikInProject.js";
 import { metKoppelingen, isKoppelingId, isKoppelType, linkIdVan, refVanCanvasId } from "../../diagramcore/model/koppellijnen.js";
 import { afgeleideKoppelingen, isAfgeleideLink } from "../../diagramcore/model/afgeleideKoppelingen.js";
+import MarksPaneel from "../MarksPaneel.jsx";
+import { useMarksStore } from "../marksStore.js";
+import { markRegels, schermContext } from "../../marks/marksPaneel.js";
 import { useKruisStore, useKoppelsoorten } from "./koppelingenActivity.jsx";
 import { openVerwijzing, alleDiagrammen, naamVanVerwijzing, diagrammenViaType } from "../doorklik.js";
 import VerwezenDoorPaneel from "../VerwezenDoorPaneel.jsx";
@@ -2179,14 +2182,34 @@ export function maakDiagramActiviteit(opties) {
     const kruisLinks = useKruisStore((s) => s.links);
     // De soortenlijst van het project (bewerkbaar in Koppelingen): de lijntypen en hun stijl.
     const koppelsoorten = useKoppelsoorten();
+    // Marks van het project en de context van deze gebruiker (voor het teken op het canvas).
+    const markLagen = useMarksStore((s) => s.lagen);
+    const markContexten = useMarksStore((s) => s.contexten);
+    const markLijst = useMarksStore((s) => s.marks);
+    const markContext = useMarksStore((s) => s.actieveContext);
+    const markStand = useMemo(() => ({ lagen: markLagen, contexten: markContexten, marks: markLijst }), [markLagen, markContexten, markLijst]);
     const canvasModel = useMemo(() => {
       const v = metVreemdeElementen({ elements, descriptor, diagram, bron: vreemdeBron });
       // Plus de afgeleide koppelingen (15-11): een eigenschap met een koppelsoort (het type van
       // een BPMN-data-object «traceert naar» het cm-element) tekent als koppellijn.
       const links = [...kruisLinks, ...afgeleideKoppelingen({ profielId: id, elements, elementTypes: descriptor.elementTypes })];
-      return metKoppelingen({ elements: v.elements, descriptor: v.descriptor, diagram, eigenProfielId: id, links, soorten: koppelsoorten });
+      const model = metKoppelingen({ elements: v.elements, descriptor: v.descriptor, diagram, eigenProfielId: id, links, soorten: koppelsoorten });
+      // Marks (18-11): een teken op elk eigen element waar marks op gelden (op het element of
+      // op een veld ervan). Afgeleid gegeven `data._marks`, zoals `vreemd`; het wordt niet bewaard.
+      if (!markStand.marks.length) return model;
+      const context = schermContext(markStand, markContext);
+      let metMarks = null;
+      for (const n of diagram?.nodes || []) {
+        const el = elements[n.elementId];
+        if (!el || !model.elements[el.id]) continue;
+        const regels = markRegels({ st: markStand, context, profielId: id, descriptorId: descriptor.id, element: el });
+        if (!regels.length) continue;
+        metMarks = metMarks || { ...model.elements };
+        metMarks[el.id] = { ...model.elements[el.id], data: { ...model.elements[el.id].data, _marks: regels } };
+      }
+      return metMarks ? { ...model, elements: metMarks } : model;
       // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [elements, diagram, vreemdTik, kruisLinks, koppelsoorten]);
+    }, [elements, diagram, vreemdTik, kruisLinks, koppelsoorten, markStand, markContext]);
 
     // Tips na een toestandsovergang (hints.js): het eerste element op een diagram, en de
     // eerste relatie in dit profiel. Alleen bij een toename tijdens de sessie, niet bij laden.
@@ -4006,6 +4029,8 @@ export function maakDiagramActiviteit(opties) {
             }
           }}
         />
+        {/* Marks (18-11): aanwijzingen voor transformaties, los van het model. */}
+        <MarksPaneel profielId={id} descriptorId={descriptor.id} element={element} />
         {!elementType?.isConnector && (
           <RelatiesPaneel
             relaties={relatiesVan(element.id, elements, diagrams[actief], elementTypesById)}
