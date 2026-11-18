@@ -250,18 +250,28 @@ function ElementNode({ id, data, selected }) {
             ⚠
           </span>
         )}
-        {element.data?._marks?.length > 0 && (
-          // Marks (MDA) op dit element of zijn velden: een klein teken; de tekst erbij zegt welke.
-          // Een klik selecteert het element (de gewone klik) en vraagt het paneel in beeld.
-          <span
-            className="dc-mark-badge"
-            data-testid="node-marks"
-            title={`Marks: ${element.data._marks.join(" · ")}`}
-            onClick={() => window.dispatchEvent(new CustomEvent("omnium:marks-toon", { detail: { elementId: element.id } }))}
-          >
-            ◆{element.data._marks.length}
-          </span>
-        )}
+        {(() => {
+          // Marks (MDA): rechtsboven een teken voor de marks op het element zelf. Marks op een
+          // veld staan achter de veldnaam (tekenaar); zijn de velden verborgen, dan tellen ze
+          // hier mee. Eén mark: alleen het ruitje; meer: met het aantal.
+          const m = element.data?._marks;
+          if (!m) return null;
+          const opVelden = Object.entries(m.velden || {});
+          const mee = data.compartimentenVerborgen ? opVelden : [];
+          const n = m.element.length + mee.reduce((som, [, lijst]) => som + lijst.length, 0);
+          if (!n) return null;
+          const tekst = [...m.element, ...mee.map(([naam, lijst]) => `${naam}: ${lijst.join(", ")}`)].join(" · ");
+          return (
+            <span
+              className={"dc-mark-badge" + (data.fouten?.length ? " is-naast-fout" : "")}
+              data-testid="node-marks"
+              title={`Marks: ${tekst}`}
+              onClick={() => setTimeout(() => window.dispatchEvent(new CustomEvent("omnium:marks-toon", { detail: { elementId: element.id } })), 80)}
+            >
+              {n > 1 ? `◆${n}` : "◆"}
+            </span>
+          );
+        })()}
         {heeftGedrag && (
           <span className="dc-gedrag-badge" title="Dubbelklik: open het diagram waar dit element naar verwijst">
             ⧉

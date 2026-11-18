@@ -813,3 +813,19 @@
 }
 .studio-marks__lagen input[type="text"] { width: 100%; }
 .studio-marks__acties { display: flex; gap: 8px; align-items: center; margin-top: 10px; }
+.studio-marks__wezen { margin-top: 10px; padding: 8px 10px; font-size: 12px; border: 1px solid #f59e0b; border-radius: 6px; background: color-mix(in srgb, #fde68a 25%, transparent); }
+.studio-marks__wezen ul { margin: 4px 0 6px; padding-left: 18px; }
+
+/* Kaartje bij een mark-teken op het canvas (MarksPopup, 18-11). */
+.studio-marks-popup {
+  position: fixed; z-index: 9000; min-width: 170px; max-width: 250px;
+  padding: 7px 9px; font-size: 12px; pointer-events: none;
+  color: var(--s-fg, #1e293b); background: var(--s-panel, #fff);
+  border: 1px solid #f59e0b; border-radius: 7px;
+  box-shadow: 0 6px 20px rgba(15, 23, 42, 0.25);
+}
+.studio-marks-popup.is-vast { pointer-events: auto; }
+.studio-marks-popup__titel { font-weight: 600; margin-bottom: 4px; color: #b45309; }
+.studio-marks-popup__kop { margin-top: 4px; font-size: 11px; color: var(--s-fg-muted); }
+.studio-marks-popup__regel { display: flex; justify-content: space-between; gap: 10px; padding: 1px 0; }
+.studio-marks-popup__laag { font-size: 10px; color: var(--s-fg-muted); white-space: nowrap; }

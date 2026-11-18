@@ -99,6 +99,31 @@ test("POST /export/v3: rondreis V3 → Studio-profiel → V3 houdt de entiteiten
   assert.ok(Array.isArray(uit.meldingen));
 });
 
+test("POST /export/v3: marks als bijlage naast het model, voor de gevraagde lagen", async () => {
+  const { v3NaarProfiel } = await import("./dist/studio-profielen.mjs");
+  const profiel = v3NaarProfiel(model);
+  // Een veld met een uuid (de Studio vult die sinds projectformaat 4 zelf aan).
+  const heeftVeld = (c) => c.compartmentType === "velden" && (c.velden || []).some((v) => v.fieldType === "attribuut");
+  const el = Object.values(profiel.elements).find((e) => e.elementType === "gegevenselement" && (e.compartimenten || []).some(heeftVeld));
+  const veld = el.compartimenten.find(heeftVeld).velden.find((v) => v.fieldType === "attribuut");
+  veld.data = { ...(veld.data || {}), uuid: "99999999-9999-4999-8999-999999999999" };
+  const doel = { soort: "veld", uuid: veld.data.uuid };
+  const marks = {
+    lagen: [{ id: "algemeen", naam: "Algemeen", labels: [] }, { id: "ws", naam: "Waterstede", labels: [] }],
+    contexten: [],
+    marks: [{ laag: "algemeen", soort: "register.zoeksleutel", doel, waarde: true }],
+  };
+  // Een op ná de snapshot: Waterstede zet de mark uit.
+  const ops = [{ store: "marks", op: "patchMarks", args: [{ marks: { zet: [{ id: "ws|register.zoeksleutel|u:" + doel.uuid, laag: "ws", soort: "register.zoeksleutel", doel, waarde: null }], wis: [] } }] }];
+  const alleen = await (await post("/export/v3", { profiel, marks, ops, markContext: ["algemeen"] })).json();
+  assert.deepEqual(alleen.model.marks, { context: ["algemeen"], marks: [{ doel, soort: "register.zoeksleutel", waarde: true }] });
+  // Zonder markContext: alle lagen in volgorde; de mark is uitgezet, dus geen bijlage.
+  const alles = await (await post("/export/v3", { profiel, marks, ops })).json();
+  assert.equal(alles.model.marks, undefined);
+  // Zonder marks verandert er niets.
+  assert.equal((await (await post("/export/v3", { profiel })).json()).model.marks, undefined);
+});
+
 test("POST /export/v3: ops ná de snapshot worden nagespeeld; een oude overerving-edge geeft erft", async () => {
   const profiel = {
     elements: {

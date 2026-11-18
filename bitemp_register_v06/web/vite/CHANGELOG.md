@@ -11,8 +11,13 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 ### Toegevoegd
 - **Marks in Eigenschappen en op het canvas** (Mark 18-11): de sectie *Marks* toont per element en per veld welke
   marks gelden en laat je ze zetten in een laag; *Lagen…* beheert de lagen en welke meedoen, in welke volgorde.
-  Een element met marks draagt op het canvas een teken (◆ met het aantal). Eerste soorten: zoeksleutel,
-  sorteerbaar en tekstzoeken op een veld van het canonieke model (voor de indexen van het register).
+  Op het canvas: een ruitje rechtsboven voor een mark op het element zelf, en achter de veldnaam voor een mark op
+  een veld; vanaf twee marks met het aantal erbij. Eerste soorten: zoeksleutel, sorteerbaar en tekstzoeken op een
+  veld van het canonieke model (voor de indexen van het register).
+- **Marks in de V3-export** (18-11): *Exporteer V3* zet de marks die gelden als bijlage `marks` naast het model
+  (niet op het veld); de serverexport (`/export/v3`) kan dat ook, met `marks` en `markContext`.
+- **Marks zonder doel**: het lagenbeheer toont marks waarvan het element of veld niet meer bestaat en ruimt ze op
+  verzoek op.
 - **Marks, de onderlaag** (plan 2026-11-18, stap 2 en 3): marks (MDA) zijn aanwijzingen op een
   modelelement voor een transformatie, los van het model. Lagen met labels, contexten (een keuze van lagen in een
   volgorde), effectieve marks, marksoorten per transformatie (`register.zoeksleutel`, `register.sorteerbaar`). Ze
@@ -23,6 +28,10 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 - **Rondleiding: scenario's uit het project** (16-11): de stap over de Labs-activiteiten wijst nu naar de
   scenario's van het demo-project (*Scenario kiezen… → Uit het project*, map *9 Simulatie*) en naar *Alle
   scenario's toetsen*, in plaats van naar de ingebakken keuzelijst.
+
+### Opgelost
+- **E2e-tests 02 en 17** slaagden al langer niet: de rondleidingtest kende de vier nieuwe stappen niet, en de test
+  van de oude IDE zette zijn model voordat de IDE haar eigen begin had geladen. Alleen de tests zijn aangepast.
 
 ## [studio/v0.45.0] — 2026-11-16
 

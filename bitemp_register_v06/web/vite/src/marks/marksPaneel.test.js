@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { leegMarks, metLaag, zetMark, marksVoor, markId } from "./marks.js";
 import { registreerMarksoorten, REGISTER_MARKSOORTEN } from "./marksoorten.js";
-import { doelVanElement, doelVanVeld, paneelVoorElement, markRegels, zetEffect, schermContext } from "./marksPaneel.js";
+import { doelVanElement, doelVanVeld, paneelVoorElement, markRegels, markTeken, zetEffect, schermContext } from "./marksPaneel.js";
 
 registreerMarksoorten(REGISTER_MARKSOORTEN);
 registreerMarksoorten([{ id: "proef.rol", label: "rol", datatype: "string", doelen: ["element"], profielen: ["bpmn"] }]);
@@ -32,7 +32,9 @@ test("paneelVoorElement: velden maal soorten voor het canonieke model, met de he
   assert.equal(p.velden[1].cellen[2].eff, null);
   assert.equal(p.element.length, 0);
   assert.equal(p.aantal, 1);
-  assert.deepEqual(markRegels({ st, context: ["algemeen"], profielId: "diagram05", descriptorId: "canoniek-uml", element: GE }), ["kaartnummer: zoeksleutel"]);
+  assert.deepEqual(markRegels({ st, context: ["algemeen"], profielId: "diagram05", descriptorId: "canoniek-uml", element: GE }), { element: [], velden: { kaartnummer: ["zoeksleutel"] } });
+  assert.equal(markRegels({ st, context: ["ws"], profielId: "diagram05", descriptorId: "canoniek-uml", element: GE }), null);
+  assert.deepEqual([markTeken(0), markTeken(1), markTeken(3)], ["", "◆", "◆3"]);
   // Een BPMN-taak: geen veldsoorten, wel de soort voor het element.
   const b = paneelVoorElement({ st, context: ["algemeen"], profielId: "bpmnMotor05", descriptorId: "bpmn", element: TAAK });
   assert.deepEqual(b.element.map((r) => r.soort.id), ["proef.rol"]);
@@ -69,4 +71,21 @@ test("schermContext: de gekozen context, anders alle lagen", () => {
   assert.deepEqual(schermContext(st, null), ["algemeen", "ws"]);
   assert.deepEqual(schermContext(st, ["ws"]), ["ws"]);
   assert.deepEqual(schermContext(st, ["bestaat-niet"]), ["algemeen", "ws"]);
+});
+
+test("bestaatIn: uuid op element of veld, verwijzing op profiel en id; map bestaat altijd", async () => {
+  const { bestaatIn } = await import("./marksPaneel.js");
+  const { wezen } = await import("./marks.js");
+  const bestaat = bestaatIn([{ id: "diagram05", elements: { ge1: GE } }, { id: "bpmnMotor05", elements: { t1: TAAK } }]);
+  assert.equal(bestaat({ soort: "veld", uuid: "u-kn" }), true);
+  assert.equal(bestaat({ soort: "element", uuid: "u-ge" }), true);
+  assert.equal(bestaat({ soort: "veld", uuid: "weg" }), false);
+  assert.equal(bestaat({ soort: "element", profielId: "bpmnMotor05", elementId: "t1" }), true);
+  assert.equal(bestaat({ soort: "element", profielId: "bpmnMotor05", elementId: "t2" }), false);
+  assert.equal(bestaat({ soort: "veld", profielId: "diagram05", elementId: "ge1", veldNaam: "soort" }), true);
+  assert.equal(bestaat({ soort: "veld", profielId: "diagram05", elementId: "ge1", veldNaam: "weg" }), false);
+  assert.equal(bestaat({ soort: "map", mapId: "m" }), true);
+  let st = zetMark(lagen(), { laag: "algemeen", soort: "register.zoeksleutel", doel: { soort: "veld", uuid: "weg" }, waarde: true });
+  st = zetMark(st, { laag: "algemeen", soort: "register.zoeksleutel", doel: { soort: "veld", uuid: "u-kn" }, waarde: true });
+  assert.deepEqual(wezen(st, bestaat).map((m) => m.doel.uuid), ["weg"]);
 });

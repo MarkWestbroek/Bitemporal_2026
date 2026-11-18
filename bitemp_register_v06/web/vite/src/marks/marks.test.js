@@ -149,3 +149,22 @@ test("diffMarks en patchMarks: het verschil toepassen geeft de nieuwe stand", ()
   assert.equal(heeftMarks(leegMarks()), false);
   assert.equal(heeftMarks(voor), true);
 });
+
+test("V3-bijlage: alleen wat geldt en in het model staat; zonder marks blijft het bestand gelijk", async () => {
+  const { metMarksBijlage, uuidsIn } = await import("./v3Bijlage.js");
+  const v3 = { model: { naam: "m", entiteiten: [{ uuid: "u-ent", gegevenselementen: [{ uuid: "u-ge", velden: [{ naam: "kaartnummer", uuid: "u-kaartnummer" }] }] }] } };
+  assert.deepEqual([...uuidsIn(v3)].sort(), ["u-ent", "u-ge", "u-kaartnummer"]);
+  const st = basis(); // mark op VELD (u-kaartnummer) en op een BPMN-taak
+  const uit = metMarksBijlage(v3, st, ["algemeen", "test"]);
+  assert.deepEqual(uit.marks, { context: ["algemeen", "test"], marks: [
+    { doel: VELD, soort: "register.sorteerbaar", waarde: true },
+    { doel: VELD, soort: "register.zoeksleutel", waarde: true },
+  ] });
+  assert.equal(uit.model, v3.model);
+  // Zonder context: alle lagen in de volgorde van het project (Waterstede zet sorteerbaar uit).
+  assert.deepEqual(metMarksBijlage(v3, st).marks.marks.map((m) => m.soort), ["register.zoeksleutel"]);
+  assert.deepEqual(metMarksBijlage(v3, st).marks.context, ["algemeen", "ws", "test"]);
+  // Niets wat geldt of niets in dit model: geen sleutel `marks`.
+  assert.equal(metMarksBijlage(v3, leegMarks()), v3);
+  assert.equal(metMarksBijlage({ model: { entiteiten: [] } }, st).marks, undefined);
+});
