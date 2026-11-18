@@ -5,13 +5,14 @@
 
 import test from "node:test";
 import assert from "node:assert/strict";
+import fs from "node:fs";
 
 import { parseBeleid } from "./parser.js";
 import { renderBeleid } from "./renderer.js";
 import { VOORBEELD_BELEID } from "./voorbeeld.js";
 import { VOORBEELDEN, GBO_BELEID } from "./fixtures/voorbeelden.js";
 import { toegangsspraakNaarOdrl } from "./odrlExport.js";
-import { odrlNaarToegangsspraak, odrlBrongraaf, importMeldingen } from "./odrlImport.js";
+import { odrlNaarToegangsspraak, odrlBrongraaf, importMeldingen, verliesrapport } from "./odrlImport.js";
 import { ODRL_AP_NL_NAAR_TOEGANGSSPRAAK } from "./odrlNaarToegangsspraakRegels.js";
 import { leesVoorwaardeZin, leesVerwijzing, leesBegripZin } from "./odrlNaarBeleid.js";
 import { valideerRegelset, pasRegelsToe } from "../transformatie/regels.js";
@@ -166,8 +167,9 @@ test("ODRL met een aanvulling (realisatie) en met andere prefixen leest hetzelfd
   assert.equal(r.tekst, canoniek(GBO_BELEID));
   // De realisatie heeft geen regel: ze staat in het verliesrapport.
   assert.ok(verlies(r).some((s) => s.bronId === "b:module-1"));
-  assert.ok(verlies(r).some((s) => s.bronId === "b:anker-1"));
-  assert.match(importMeldingen(r).join(" "), /^2 onderdelen van de ODRL zijn niet overgenomen: b:anker-1, b:module-1.$/);
+  // Het anker naar de uitvoering is realisatie, geen norm: de regelset negeert het bewust.
+  assert.ok(r.trace.some((s) => s.bronId === "b:anker-1" && s.actie === "genegeerd"));
+  assert.deepEqual(importMeldingen(r), ["1 onderdeel van de ODRL is niet overgenomen: b:module-1."]);
 
   // Een ander bestand mag andere prefixen schrijven; de regelset denkt in die van de export.
   const anders = naarOdrl(VOORBEELD_BELEID).replace("@prefix odrl: ", "@prefix o: ").replace(/\bodrl:/g, "o:");
@@ -208,45 +210,114 @@ test("zinsneden lezen met de parser van de taal", () => {
   assert.equal(leesBegripZin("geen begrip"), null);
 });
 
-test("ODRL van elders: wat Toegangsspraak niet kent wordt gemeld, niet gegokt", () => {
-  const vreemd = `@prefix odrl: <http://www.w3.org/ns/odrl/2/> .
+// ── ODRL van anderen (regelset v2) ──────────────────────────────────────────
+// De fixture is een verzonnen beleid in de stijl van ODRL-AP-NL zoals anderen het schrijven.
+const ELDERS = fs.readFileSync(new URL("./fixtures/odrl-van-elders.ttl", import.meta.url), "utf8");
+const codes = (r) => r.diagnostics.filter((d) => !d.code.startsWith("TRF-")).map((d) => d.code);
+
+test("ODRL van elders: wat de taal kan zeggen komt over, als concept", () => {
+  const r = odrlNaarToegangsspraak(ELDERS);
+  assert.ok(r.ok);
+  assert.equal(r.eigen, false);
+  assert.equal(r.weg, "structuur");
+  assert.equal(r.verschil, null, "een vergelijking met een nieuwe export zegt alleen iets bij eigen ODRL");
+  // Twee beleiden in één bestand: het eerste mét regels is gelezen, het andere is te kiezen.
+  assert.deepEqual(r.beleiden, [
+    { sleutel: "b:set-stelsel", naam: "Stelselafspraken", regels: 0 },
+    { sleutel: "b:set-parkeren", naam: "Parkeervergunningen: bevragen van voertuigen", regels: 5 },
+  ]);
+  assert.equal(r.gekozen, "b:set-parkeren");
+  assert.deepEqual(r.telling, { regels: 5, overgenomen: 3, weggelaten: 2 });
+  assert.ok(parseBeleid(r.tekst).ok, "het concept is geldige Toegangsspraak");
+
+  // Nederlandse labels, de groep met haar kenmerk, het veld onder zijn verzameling, begrippen als
+  // waarde, een operand van elders als kenmerk van de aanvraag; het anker naar de uitvoering valt weg.
+  assert.match(r.tekst, /Een medewerkers Vergunningen is: iemand met afdeling "Vergunningen"\./);
+  assert.match(
+    r.tekst,
+    / {2}Regel "Kenteken opzoeken"\.\n {4}Een medewerkers Vergunningen mag het kenteken van een voertuiggegevens bekijken\n {4}als aan alle volgende voorwaarden is voldaan:\n {6}- het doel van de aanvraag is "Parkeervergunning verlenen";\n {6}- het zoektype van de aanvraag is "zoeken op kenteken"\./,
+  );
+  assert.ok(!/verwerkingsverzoek|conformsToPolicy/.test(r.tekst));
+  assert.ok(r.trace.some((s) => s.bronId === "b:anker" && s.actie === "genegeerd"));
+});
+
+test("ODRL van elders: het beleid wordt nooit ongemerkt ruimer dan de ODRL", () => {
+  const r = odrlNaarToegangsspraak(ELDERS);
+  const melding = (code, naam) => r.diagnostics.find((d) => d.code === code && d.message.includes(`"${naam}"`))?.message || "";
+  // Een toestemming met iets onvertaalbaars valt weg: strenger, en gemeld met de reden.
+  assert.ok(!r.tekst.includes("Voertuiggegevens inzien na opleiding"));
+  assert.match(melding("ODRL-REGEL-WEG", "Voertuiggegevens inzien na opleiding"), /de vergelijking "niet ouder dan", die Toegangsspraak niet kent\. Zonder dat onderdeel zou de toestemming ruimer zijn/);
+  // Een eigen handeling die onder odrl:distribute valt is een bijzondere vorm van "exporteren".
+  assert.ok(!r.tekst.includes("Verstrekken aan de gemeente"));
+  assert.match(melding("ODRL-REGEL-WEG", "Verstrekken aan de gemeente"), /"verstrekken op verzoek" is een bijzondere vorm van odrl:distribute/);
+  // Een verbod blijft staan. Zonder de onvertaalbare voorwaarde geldt het vaker (strenger) …
+  assert.match(r.tekst, / {2}Regel "Niet wissen"\.\n {4}Iedereen mag alle gegevens van een voertuiggegevens niet afvoeren\./);
+  assert.match(melding("ODRL-STRENGER", "Niet wissen"), /is strenger dan in de ODRL/);
+  // … maar een verbod op elk gebruik is in de taal maar deels te zeggen: dat is ruimer, en dat staat er.
+  assert.match(r.tekst, /Iedereen mag alle gegevens van een voertuiggegevens niet bekijken\./);
+  assert.match(melding("ODRL-RUIMER", "Geen ander gebruik"), /odrl:use omvat meer dan "bekijken"/);
+  // Overerving kent de taal niet.
+  assert.ok(codes(r).includes("ODRL-ERFT"));
+  assert.equal(codes(r).at(-1), "ODRL-RUIMER-DAN-BRON", "de slotwaarschuwing");
+
+  // Met "ruimer" blijven de toestemmingen staan, zonder het onvertaalbare en met een waarschuwing.
+  const ruim = odrlNaarToegangsspraak(ELDERS, { bijOnvertaalbaar: "ruimer" });
+  assert.deepEqual(ruim.telling, { regels: 5, overgenomen: 5, weggelaten: 0 });
+  assert.match(ruim.tekst, /Een medewerkers Vergunningen mag alle gegevens van een voertuiggegevens bekijken\./);
+  assert.match(ruim.tekst, /De Gemeente Waterstede is: iemand met organisatie "Gemeente Waterstede"\./);
+  assert.match(ruim.tekst, /De Gemeente Waterstede mag alle gegevens van een voertuiggegevens exporteren\./);
+  assert.equal(ruim.diagnostics.filter((d) => d.code === "ODRL-RUIMER").length, 3);
+  assert.ok(parseBeleid(ruim.tekst).ok);
+});
+
+test("ODRL van elders: een ander beleid kiezen, en de samenvatting voor het scherm", () => {
+  // Het stelselbeleid heeft alleen een plicht: geen regels, wel de melding dat ze niet overkomt.
+  const stelsel = odrlNaarToegangsspraak(ELDERS, { beleid: "b:set-stelsel" });
+  assert.equal(stelsel.gekozen, "b:set-stelsel");
+  assert.equal(stelsel.tekst, 'Beleid "Stelselafspraken".\n');
+  assert.ok(stelsel.diagnostics.some((d) => d.code === "ODRL-PLICHT-BELEID" && d.message.includes('"Bevraging vastleggen"')));
+  assert.ok(odrlNaarToegangsspraak(ELDERS, { beleid: "b:bestaat-niet" }).diagnostics.some((d) => d.code === "ODRL-BELEID-ONBEKEND"));
+
+  const m = importMeldingen(odrlNaarToegangsspraak(ELDERS));
+  assert.equal(m[0], "ODRL van elders: 3 van de 5 regels overgenomen. Het resultaat is een concept; loop het na.");
+  assert.ok(m.some((x) => x.startsWith('De ODRL bevat 2 beleiden; "Parkeervergunningen: bevragen van voertuigen" is gelezen.')));
+  assert.ok(m.some((x) => x === 'De operand "zoektype" komt uit een ander vocabulaire; hij is gelezen als "het zoektype van de aanvraag".'));
+  // Wat de regelset niet overnam, bij naam (weinig) of geteld per soort (veel); het anker telt niet mee.
+  assert.equal(m.at(-1), "1 onderdeel van de ODRL is niet overgenomen: odrl:assigner:b:set-parkeren>b:GemeenteWaterstede.");
+  assert.deepEqual(verliesrapport(odrlNaarToegangsspraak(ELDERS)).perSoort, [["odrl:assigner", 1]]);
+});
+
+test("ODRL van elders: kale handeling, partij op het beleid en meer handelingen per regel", () => {
+  const ttl = `@prefix odrl: <http://www.w3.org/ns/odrl/2/> .
 @prefix dct:  <http://purl.org/dc/terms/> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix ex:   <https://example.org/beleid/> .
 
-ex:beleid a odrl:Set ;
-    dct:title "Van elders"@nl ;
-    odrl:permission ex:afdrukken , ex:lezen ;
-    odrl:obligation ex:betalen .
+ex:overeenkomst a odrl:Agreement ;
+    dct:title "Overeenkomst"@nl ;
+    odrl:assignee ex:afnemer ;
+    odrl:permission ex:lezen , ex:afdrukken , [ a odrl:Permission ; odrl:action odrl:read , odrl:distribute , odrl:print ; odrl:target ex:document ] .
 
-ex:afdrukken a odrl:Permission ;
-    dct:title "afdrukken"@nl ;
-    odrl:action odrl:print ;
-    odrl:target ex:document .
+ex:afnemer a odrl:Party ; rdfs:label "Afnemer (BV)"@nl .
+ex:document a odrl:Asset ; rdfs:label "document"@nl .
 
-ex:lezen a odrl:Permission ;
-    dct:title "lezen"@nl ;
-    odrl:action ex:lees ;
-    odrl:target ex:document .
-
-ex:lees a odrl:Action ;
-    <http://www.w3.org/1999/02/22-rdf-syntax-ns#value> odrl:read .
-
-ex:document a odrl:Asset ;
-    dct:identifier "document" .
-
-ex:betalen a odrl:Duty ;
-    odrl:action odrl:compensate .
+ex:lezen a odrl:Permission ; dct:title "lezen"@nl ; odrl:action odrl:read ; odrl:target ex:document .
+ex:afdrukken a odrl:Permission ; dct:title "afdrukken"@nl ; odrl:action odrl:print ; odrl:target ex:document .
 `;
-  const r = odrlNaarToegangsspraak(vreemd);
+  const r = odrlNaarToegangsspraak(ttl);
   assert.ok(r.ok);
-  assert.equal(r.weg, "structuur");
-  // De regel met een handeling die de taal kent komt over; die met odrl:print niet.
-  assert.deepEqual(r.beleid.regels.map((x) => x.naam), ["lezen"]);
-  assert.match(r.tekst, /Regel "lezen"\.\n {4}Iedereen mag alle gegevens van een document bekijken\./);
-  assert.ok(r.diagnostics.some((d) => d.code === "ODRL-HANDELING" && /afdrukken/.test(d.message)));
-  // odrl:obligation heeft geen regel: verliesrapport.
-  assert.ok(verlies(r).some((s) => s.bronId.startsWith("odrl:obligation:")));
-  assert.ok(r.diagnostics.some((d) => d.code === "ODRL-VERSCHIL"), "het resultaat regelt minder dan de ODRL");
+  // De partij van het beleid geldt voor elke regel; leestekens in haar naam vallen weg.
+  assert.match(r.tekst, /De Afnemer BV is: iemand met organisatie "Afnemer \(BV\)"\./);
+  assert.match(r.tekst, / {2}Regel "lezen"\.\n {4}De Afnemer BV mag alle gegevens van een document bekijken\./);
+  // odrl:print kent de taal niet: die regel valt weg; in de regel met drie handelingen valt alleen die ene weg.
+  assert.ok(r.diagnostics.some((d) => d.code === "ODRL-REGEL-WEG" && /"afdrukken" is niet overgenomen: de handeling "odrl:print" kent Toegangsspraak niet/.test(d.message)));
+  assert.match(r.tekst, / {2}Regel "regel 3 \(bekijken\)"\.\n {4}De Afnemer BV mag alle gegevens van een document bekijken\./);
+  assert.match(r.tekst, / {2}Regel "regel 3 \(exporteren\)"\.\n {4}De Afnemer BV mag alle gegevens van een document exporteren\./);
+  assert.ok(r.diagnostics.some((d) => d.code === "ODRL-STRENGER" && /"regel 3" is strenger dan in de ODRL: de handeling "odrl:print" kent Toegangsspraak niet en is weggelaten/.test(d.message)));
+  assert.ok(r.diagnostics.some((d) => d.code === "ODRL-INTERPRETATIE" && d.message === 'De handeling odrl:distribute is gelezen als "exporteren".'));
+  assert.deepEqual(r.telling, { regels: 3, overgenomen: 2, weggelaten: 1 });
+  assert.ok(!codes(r).includes("ODRL-RUIMER-DAN-BRON"), "alles wat wegviel maakt het beleid strenger");
+  assert.ok(parseBeleid(r.tekst).ok);
 });
 
 test("randgevallen: een fout in de Turtle en ODRL zonder beleid komen als melding terug", () => {

@@ -486,10 +486,7 @@ zinsnede); een verwijzing als rechterterm; de kop van een begrip ("Het dossier i
 begrippen die geen regel gebruikt; `Standaard:` en `Bij conflict:` (de export schrijft
 vast `odrl:prohibit`).
 
-**ODRL van anderen** valt nu grotendeels in het verliesrapport: de regelset dekt wat de
-eigen export schrijft. Een regel met een handeling of operand die Toegangsspraak niet
-kent wordt weggelaten met een melding, nooit gegokt. Uitbreiden (meer handelingen,
-JSON-LD als bron, een eigen rapport) is een vervolgstap.
+**ODRL van anderen** leest de import sinds regelset v2 ook, als concept: zie §8.2.
 
 **In de Studio:** *Toegangverlening → Beleid → Exporteer ODRL (Turtle, ODRL-AP-NL)…* en
 *Importeer ODRL (Turtle)…* (vervangt de tekst, Ctrl+Z kan; meldingen onder de editor).
@@ -497,7 +494,89 @@ De regelset staat in *Transformaties* onder Import en is proef te draaien op gep
 Turtle; daar zie je het beleid zoals de bouwer het uit de structuur maakt.
 
 Tests: `toegangsspraak/odrlImport.test.js` (rondreis op vijf beleiden via beide wegen,
-bewerkte ODRL, model erbij, andere prefixen, ODRL van elders) en e2e 68 en 69.
+bewerkte ODRL, model erbij, andere prefixen, ODRL van elders: §8.2) en e2e 68 en 69.
+
+### 8.2 ODRL van anderen lezen (2026-11-18)
+
+De import leest ook ODRL die een ander volgens ODRL-AP-NL schreef (regelset v2 van
+`odrl-ap-nl-naar-toegangsspraak`). Het resultaat is een **concept**: iemand loopt het na.
+Proefmateriaal waren de twee voorbeelden van de werkgroep FTV (Vlierdam en Breda); die
+staan niet in de repo. De fixture `toegangsspraak/fixtures/odrl-van-elders.ttl` is een
+eigen, verzonnen beleid in dezelfde stijl.
+
+**Eén regel gaat voor alles: het beleid in klare taal wordt nooit ongemerkt ruimer dan de
+ODRL.** Wat de taal niet kan zeggen leidt tot een van deze uitkomsten:
+
+| In de ODRL | Uitkomst | Melding |
+|---|---|---|
+| toestemming met een voorwaarde, plicht of kenmerk dat niet te vertalen is | de toestemming valt weg (het beleid wordt strenger) | `ODRL-REGEL-WEG`, met de reden |
+| hetzelfde, met `bijOnvertaalbaar: "ruimer"` | de toestemming blijft, zonder dat onderdeel | `ODRL-RUIMER` |
+| verbod met een onvertaalbare voorwaarde | het verbod blijft zonder die voorwaarde (het geldt vaker) | `ODRL-STRENGER` |
+| verbod op een handeling die meer omvat dan het woord van de taal (`odrl:use`) | het verbod blijft voor dat woord | `ODRL-RUIMER` |
+| regel waarvan de handeling of de gegevens niet te lezen zijn | de regel valt weg | `ODRL-REGEL-WEG`, of `ODRL-VERBOD-WEG` (ruimer) |
+| plicht op het beleid (`odrl:obligation`), overerving (`odrl:inheritFrom`) | niet overgenomen | `ODRL-PLICHT-BELEID`, `ODRL-ERFT` |
+
+Is er iets ruimer geworden, dan sluit de import af met `ODRL-RUIMER-DAN-BRON`. In een
+of-groep valt bij één onvertaalbaar lid de hele groep weg, in een en-groep alleen dat lid:
+zo blijft de richting (strenger of ruimer) eenduidig.
+
+**Wat de regelset en de bouwer erbij lezen:**
+
+| In de ODRL | In Toegangsspraak | |
+|---|---|---|
+| `odrl:Agreement`, `odrl:Offer`, `odrl:Request` | een beleid | |
+| meer beleiden in één bestand | één tegelijk: `beleiden` somt ze op, `opties.beleid` kiest; standaard het eerste met regels | `ODRL-MEER-BELEID` |
+| een handeling of voorwaarde als lege knoop zonder `rdf:type` | gewoon gelezen | |
+| `odrl:action odrl:read` zonder eigen knoop; meer handelingen op één regel | per woord van de taal een regel | |
+| `odrl:display`, `odrl:present` → bekijken; `odrl:distribute`, `odrl:extract`, `odrl:reproduce` → exporteren | het naaste woord | `ODRL-INTERPRETATIE` |
+| `odrl:use` → bekijken | het woord omvat minder: strenger bij een toestemming, ruimer bij een verbod | `ODRL-STRENGER` / `ODRL-RUIMER` |
+| een eigen handeling met `odrl:includedIn` naar een bekende | een bijzondere vorm van dat woord: het woord is breder | weg, of `ODRL-RUIMER` |
+| een operand uit een ander vocabulaire (`vlierdam:zoektype`) | kenmerk van de **aanvrager** als hij een groep bepaalt, anders van de **aanvraag** | `ODRL-INTERPRETATIE` |
+| een vergelijking uit een ander vocabulaire | niet te vertalen (alleen die van ODRL en van `ts:` zijn dezelfde als die van de taal) | zie boven |
+| een begrip of partij als rechterterm (ook een lijst) | de naam als tekst | |
+| `odrl:Party` als assignee | een begrip: iemand met organisatie "…" | `ODRL-INTERPRETATIE` |
+| `odrl:assignee` op het beleid | geldt voor elke regel zonder eigen assignee | |
+| een asset zonder pad in een register | gelezen naar zijn naam en zijn `odrl:partOf`-keten ("het kenteken van een voertuiggegevens") | `ODRL-INTERPRETATIE` |
+| het anker naar de uitvoering (`apnl:verwerkingsverzoek`) | bewust genegeerd: realisatie, geen norm | |
+| tekst in meer talen | de Nederlandse (graaflaag, optie `taal`) | |
+
+Namen van elders worden woorden die de parser als naam leest: leestekens vallen weg, en in
+een gegeven of operand ook de structuurwoorden van de taal (*van*, *is*, *mag* …). Als
+vangnet parseert de import zijn eigen resultaat; lukt dat niet, dan volgt `ODRL-TEKST`.
+
+Bij ODRL van elders is er geen vergelijking met een nieuwe export (`verschil` is leeg): de
+namen van de knopen zijn dan niet dezelfde, dus het getal zou niets zeggen. Of ODRL "eigen"
+is, leest de import af aan het profiel `ts:profiel` op het beleid. Het verliesrapport
+(`verliesrapport`, `importMeldingen`) telt wat geen regel had per soort als het veel is.
+
+Meting op de FTV-voorbeelden (18-11), aantal regels dat overkomt:
+
+| Bestand | beleiden | regels | standaard | met "ruimer" |
+|---|---|---|---|---|
+| Vlierdam | 5 | 5 | 4 | 5 |
+| Breda (BRP-autorisaties) | 24 | 152 | 12 | 118 |
+
+Elke opgebouwde tekst is geldige Toegangsspraak. Bij Breda valt standaard bijna alles weg
+omdat de regels eigen handelingen gebruiken (ad hoc verstrekking, spontane verstrekking)
+die onder `odrl:distribute` vallen; de rest gebruikt handelingen zonder zo'n verwijzing.
+
+**In de Studio** vraagt *Importeer ODRL (Turtle)…* bij meer beleiden welk je wilt, en bij
+weggelaten regels of je ze toch (ruimer) wilt overnemen.
+
+**Niet gedaan:** JSON-LD als bron; een toets op de ODRL zelf (SHACL van ODRL-AP-NL); het
+terugschrijven van de oorspronkelijke IRI's bij een nieuwe export (een operand van elders
+wordt dan `ts:aanvraag.zoektype`).
+
+**Waar het heengaat (werkgroep ODRL NL, Mark 18-11).** Het profiel is in beweging; de
+import leest nu wat er vandaag in de voorbeelden staat. Vier punten waar hij op moet
+aansluiten zodra het profiel ze vastlegt:
+
+| Punt in het profiel | Wat het voor de import betekent | Nu |
+|---|---|---|
+| Een `odrl:Party` krijgt een **soort** volgens DCAT.NL: natuurlijk persoon, niet-natuurlijk persoon, vestiging (HR), maatschappelijke activiteit of onderneming (HR), overheidsinstelling met een OIN. Sluit aan op DiDo en op het logisch model Partij | het kenmerk waaraan de taal de partij herkent volgt uit die soort (bsn, kvk-nummer, vestigingsnummer, OIN) in plaats van het verzonnen kenmerk `organisatie` | elke benoemde partij is "iemand met organisatie …" |
+| Een partij kan ook een **interne actor** zijn: een medewerker, een afdeling of een geautomatiseerde medewerker | een afdeling is een kenmerk van de aanvrager; een geautomatiseerde medewerker een eigen soort aanvrager | niet onderscheiden |
+| Een **asset** is een gegevenstype of een gegeven; een **asset collection** een populatie of een dataset. Open vraag (Mark): een verzameling en een type kunnen over hetzelfde gaan | een gegevenstype is een deel van het register (entiteit, gegevenselement, veld); een populatie is "alle gegevens van … waarvan …", dus een begrip met `waarvan` | naar naam en `odrl:partOf`-keten, zonder onderscheid tussen type en populatie |
+| Het profiel gaat **vergelijkingen** benoemen (niet uitputtend). Staat er een in het profiel, gebruik die; heb je een andere nodig, gebruik die en stel hem eventueel voor | de import herkent de vergelijkingen van het profiel naast die van ODRL; de export schrijft de naam van het profiel waar die er is, en houdt `ts:` voor de rest (kandidaten voor een voorstel: begint met, eindigt op, bevat, ligt tussen, is bekend, bestaat) | alleen `odrl:` en `ts:` zijn bekend; een vergelijking uit een ander vocabulaire is niet te vertalen |
 
 ## 9. Viewer, editor en de Transformatie-entiteit (ontwerp, 2026-10-06)
 

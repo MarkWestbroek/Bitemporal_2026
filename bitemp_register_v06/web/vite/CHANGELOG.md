@@ -22,6 +22,12 @@ De single source of truth voor het nummer is `package.json` `"version"`.
   het beleid uit de ODRL zelf en meldt dat onder de editor; woordkeus en volgorde kunnen dan afwijken. Wat
   Toegangsspraak niet kent (een andere handeling, een plicht met gevolgen) wordt gemeld en weggelaten. De regelset
   staat in *Transformaties* onder Import en is proef te draaien op geplakte Turtle.
+- **ODRL van anderen importeren** (Mark 18-11): *Importeer ODRL (Turtle)…* leest nu ook beleid dat een ander
+  volgens ODRL-AP-NL schreef, zoals de voorbeelden van de werkgroep FTV. Staan er meer beleiden in het bestand, dan
+  kies je er één. Je krijgt een concept in klare taal met onder de editor wat er is overgenomen, hoe een eigen
+  operand, handeling of partij is gelezen, en wat is weggelaten. Het concept wordt nooit ongemerkt ruimer dan de
+  ODRL: een toestemming met iets dat Toegangsspraak niet kan zeggen valt weg, tenzij je kiest haar toch over te
+  nemen; dan staat erbij dat ze ruimer is. Een verbod blijft staan.
 - **Instellingen van een schrijver als paneel** (Mark 18-11): *BPMN voor GZAC* is geen lijst regels maar de stand
   van de BPMN-schrijver. Die toont de activiteit nu als paneel in groepen (engine, wachtpunten, taken, berichten,
   proceskoppeling), met uitleg per instelling, schakelaars voor ja/nee en gekleurde placeholders. Alleen-lezen.
