@@ -156,7 +156,9 @@ dat, en forceert `git branch -D` het (met opzet).
   **`studio/v0.14.0`** (2026-10-07: project op de server, operatielaag, projectboom-fixes) en
   **`studio/v0.13.0`** (2026-10-07: canvas-bediening — inline hernoemen, verbind-modus, kaders,
   taakbalken op een rij); zie `web/vite/CHANGELOG.md`.
-- Backend: **`api/v0.29.0`** (2026-11-18: sorteren van lijsten in GraphQL, REST-lijsten met vaste volgorde,
+- Backend: **`api/v0.30.0`** (2026-11-18: zoekprestaties — unieke index niet partieel, GraphQL laadt alleen de
+  geselecteerde groepen, omgekeerde relaties per lijst gebundeld, sorteren via een join op de waarde;
+  devloop-image 0.33.0). Daarvoor **`api/v0.29.0`** (2026-11-18: sorteren van lijsten in GraphQL, REST-lijsten met vaste volgorde,
   marks zoeksleutel/sorteerbaar naar een index, façade fase 1 en de Lader-naad; devloop-image 0.32.0). Daarvoor **`api/v0.28.0`** (2026-11-18: indexen uit het model, codegen-fix gedeelde enum, validatiefout
   bij type tegenover gegevenstype, melding bij afwijkend kolomtype; devloop-image 0.31.0). Daarvoor **`api/v0.27.0`** (2026-11-14: `keuze` op `POST …/samenvoegen`, 409 `samenhang`;
   devloop-image 0.30.0). Daarvoor **`api/v0.26.0`** (2026-11-14: `POST …/samenvoegen` — branch naar main in één

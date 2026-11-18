@@ -8,6 +8,65 @@
 
 ---
 
+## api 0.30.0 / devloop 0.33.0 (2026-11-18)
+
+Akkoord Mark 18-11 (op punt 2, 3 en 4: "ja, als 3 punt 1 overbodig maakt: beter 3 doen"; daarna
+"C&m en wil je punt 5 dan ook bouwen? Daarna releasen"). Devloop 0.33.0 is api 0.30.0 met
+studio 0.46.0 en render 0.5.0. Aanleiding: de meting van FUNDAMENT op het register met zaken
+(102.000 zaken, 16 gelijktijdige gebruikers): zoeken op zaakidentificatie en gesorteerde lijsten
+waren traag en de database stond op 2,0 van 2 CPU.
+
+- **De index bij `uniek` is niet meer partieel** (`dbsetup/indexen.go`, `docs/INDEXEN.md`).
+  Hij was `WHERE afvoer IS NULL`, en het filter van een lijst vraagt "actief op het leesmoment";
+  PostgreSQL mocht de index daar niet voor gebruiken en las bij elke zoekvraag de hele tabel.
+  Een uniek veld is nu vanzelf een zoeksleutel; een mark is er niet voor nodig. Proef (102.000
+  rijen): 3,5 ms wordt 0,06 ms.
+- **GraphQL laadt alleen wat de query vraagt** (`dynql/selectie.go`). Een full-query laadde
+  altijd alle onderliggende gegevenselementen en relaties (voor Zaak 14 groepen, ongeveer 25
+  tot 30 SQL-vragen per verzoek). Alles laden gebeurt nog bij een afgeleid veld (ook
+  `weergavenaam`), een afgeleide relatie, een actief toegangsbeleid en `geldigOp`.
+- **Omgekeerde relaties per lijst in één keer.** `gerelateerde_<bron>` werd per ouder opgelost;
+  nu één vraag voor alle rijen van de lijst en één lading van de bronnen. De volgorde binnen
+  één ouder is nu vast (oplopend op id); die was onbepaald.
+- **Sorteren op de waarde zelf** (`dynql/sortering.go`, `docs/INDEXEN.md` §Sorteren op de waarde
+  zelf). Een lijst met één sorteersleutel op een enkelvoudig, niet-materieel gegevenselement
+  haalt eerst de id's van de pagina op via een join, gesorteerd op de kolom zelf; PostgreSQL
+  loopt dan de index af en stopt na de pagina. Proef: 351 ms wordt 0,4 ms met index, 40 ms
+  zonder. Entiteiten zonder waarde staan nog steeds achteraan. Een ja/nee-veld is in deze vorm
+  sorteerbaar; dat gaf eerder een fout.
+- **Noodrem:** `GRAPHQL_KLASSIEK_LADEN=1` zet het laden op selectie, het bundelen en de nieuwe
+  sorteervorm uit (het gedrag van api 0.29.0). De index valt er niet onder.
+
+Het GraphQL-schema en de REST-routes zijn niet gewijzigd.
+
+Getest: `go test ./...` (alleen de bekende node-test van de EA-import faalt in de worktree); de
+regressiesuite met tag `integration` groen, met twee nieuwe vergelijkingstests die elke vraag
+in de oude en de nieuwe vorm draaien: `TestLadenOpSelectie` (346 deelselecties, 0 verschillen,
+2225 tegen 693 SQL-vragen) en `TestSorterenOpWaarde` (382 sorteervragen, 0 verschillen). De
+karakteriseringstest van de Lader (210 queries) is ongewijzigd groen. De queryplannen zijn
+bekeken op nagebouwde tabellen met 102.000 zaken. Niet getest: het register met zaken onder
+gelijktijdige belasting (FUNDAMENT meet opnieuw na de uitrol), en het bundelen met een actief
+toegangsbeleid (dan laadt de lader alles, zoals voorheen).
+
+Bekende grenzen:
+- Sorteren met meer sleutels, op een meervoudig of materieel gegevenselement of op een eigen
+  kolom van de entiteit houdt de subquery-vorm.
+- Forward-relaties (`zaak_zaaktypen { zaaktype { … } }`) laden nog per voorkomen.
+- Omgekeerde relaties lezen de actuele stand, ook met een peiltijdstip (bestaand gebrek).
+- Filteren en sorteren op een GE-veld kan alleen in GraphQL, niet in REST.
+
+Uitrol:
+- **Schemawijziging: ja, automatisch.** Bij de start maakt de API per uniek veld de index
+  `ix_<tabel>_<kolom>_zoek` aan en haalt daarna de oude `ix_<tabel>_<kolom>_uniek` weg. Op een
+  grote tabel duurt de eerste start daardoor iets langer (de index wordt zonder `CONCURRENTLY`
+  gebouwd). Mislukt het aanmaken, dan blijft de oude index staan en start de API gewoon.
+- **Rebuild uit het Studio-project: nee.**
+- **Andere stap: nee.**
+- App: `bitemp-go-api:0.30.0` via `update.sh`. pf: niet uitgerold (keuze Mark, 18-11).
+  Fundament: `bitemp-devloop:0.33.0`, door FUNDAMENT.
+
+---
+
 ## api 0.29.0 / devloop 0.32.0 (2026-11-18)
 
 Akkoord Mark 18-11 ("ja" op de release met de sortering; "alvast akkoord voor push en images";
