@@ -2625,6 +2625,12 @@ in taal B of in een extern formaat uitkomt. De activiteit is een **lezer** over 
 catalogus (`transformatie/regelsetCatalogus.js`); bewerken en bewaren komen later (backlog TRANS-1,
 `TRANSFORMATIES.md` §9.5 en §9.6).
 
+**Een transformatie als modelelement (18-11).** In het *Profiel-ontwerp* is een regelset een
+element «transformatie», met zijn regels in volgorde als velden. *Ontwerp → Bekijk de
+transformaties als ontwerp* zet ze op een diagram; *Ontwerp → Meld de transformaties van dit
+diagram aan* geeft de getekende versie aan de catalogus (vindplaats `ontwerp`), zodat je haar hier
+ziet en proefdraait. Bewaren volgt met het profielenproject (PROF-1). Zie `TRANSFORMATIES.md` §9.8.
+
 - **Links** de regelsets, ingedeeld op richting: *Import* (extern formaat → model), *Export*
   (model → extern formaat) en *Inrichting* (model → artefact voor een component). Per regelset het
   aantal regels (of "instellingen"), de versie en de vindplaats.
