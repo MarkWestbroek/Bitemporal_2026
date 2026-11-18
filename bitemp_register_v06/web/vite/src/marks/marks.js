@@ -27,7 +27,9 @@
  */
 
 /** @typedef {{soort: string, waarde: string}} Label */
-/** @typedef {{id: string, naam: string, labels: Label[]}} Laag */
+/** @typedef {{id: string, naam: string, labels: Label[], eigen?: boolean}} Laag
+ * `eigen`: de laag is van deze gebruiker (werkruimte), niet van het project. Hij doet lokaal
+ * gewoon mee, maar gaat niet naar de server, de sync of het werkbestand, tot hij gedeeld wordt. */
 /** @typedef {{id: string, naam: string, lagen: string[]}} Context */
 /** @typedef {{soort: string, uuid?: string, profielId?: string, elementId?: string, veldNaam?: string, mapId?: string}} Doel */
 /** @typedef {{id: string, laag: string, soort: string, doel: Doel, waarde: any}} Mark */
@@ -95,6 +97,7 @@ export function normaliseerMarks(ruw) {
       id: l.id,
       naam: String(l.naam || l.id),
       labels: (Array.isArray(l.labels) ? l.labels : []).filter((x) => x?.soort).map((x) => ({ soort: String(x.soort), waarde: String(x.waarde ?? "") })),
+      ...(l.eigen ? { eigen: true } : {}),
     }));
   const laagIds = new Set(lagen.map((l) => l.id));
   const contexten = (Array.isArray(ruw?.contexten) ? ruw.contexten : [])
@@ -116,7 +119,7 @@ export function normaliseerMarks(ruw) {
 
 /** Voeg een laag toe of werk hem bij (op id). */
 export function metLaag(st, laag) {
-  const nieuw = { id: laag.id, naam: laag.naam || laag.id, labels: laag.labels || [] };
+  const nieuw = { id: laag.id, naam: laag.naam || laag.id, labels: laag.labels || [], ...(laag.eigen ? { eigen: true } : {}) };
   const bestaat = st.lagen.some((l) => l.id === laag.id);
   return { ...st, lagen: bestaat ? st.lagen.map((l) => (l.id === laag.id ? nieuw : l)) : [...st.lagen, nieuw] };
 }
@@ -305,3 +308,63 @@ export function patchMarks(st, patch) {
 
 /** Staat er iets in? Een leeg onderdeel hoeft niet in het werkbestand. */
 export const heeftMarks = (st) => !!(st?.lagen?.length || st?.contexten?.length || st?.marks?.length || st?.soorten?.length);
+
+// ── Eigen lagen (werkruimte) naast die van het project ────────────────────────
+// Besluit Mark 18-11: een laag begint bij jezelf en is daarna te delen, zoals een bundel.
+
+/** De ids van de eigen lagen. */
+const eigenIds = (st) => new Set((st?.lagen || []).filter((l) => l.eigen).map((l) => l.id));
+
+/**
+ * Wat van het project is: zonder de eigen lagen en hun marks, en zonder verwijzingen ernaar in
+ * een context. Dit gaat naar het werkbestand, de sync en de server. Dezelfde stand terug als er
+ * geen eigen lagen zijn.
+ * @param {Marks} st @returns {Marks}
+ */
+export function zonderEigen(st) {
+  const eigen = eigenIds(st);
+  if (!eigen.size) return st;
+  return {
+    ...st,
+    lagen: st.lagen.filter((l) => !eigen.has(l.id)),
+    contexten: st.contexten.map((c) => (c.lagen.some((id) => eigen.has(id)) ? { ...c, lagen: c.lagen.filter((id) => !eigen.has(id)) } : c)),
+    marks: st.marks.filter((m) => !eigen.has(m.laag)),
+  };
+}
+
+/** Wat van jou is (voor de werkruimte): de eigen lagen met hun marks. */
+export function alleenEigen(st) {
+  const eigen = eigenIds(st);
+  return { lagen: st.lagen.filter((l) => eigen.has(l.id)), marks: st.marks.filter((m) => eigen.has(m.laag)) };
+}
+
+/**
+ * Zet de eigen lagen (uit de werkruimte) bij de stand van het project; wat er al aan eigen lagen
+ * stond wordt vervangen. Een eigen laag met het id van een projectlaag valt weg (de laag is
+ * intussen gedeeld).
+ * @param {Marks} st @param {{lagen?: any[], marks?: any[]} | null | undefined} eigen @returns {Marks}
+ */
+export function metEigen(st, eigen) {
+  const project = zonderEigen(st);
+  const bezet = new Set(project.lagen.map((l) => l.id));
+  const lagen = (Array.isArray(eigen?.lagen) ? eigen.lagen : []).filter((l) => l?.id && !bezet.has(l.id)).map((l) => ({ ...l, eigen: true }));
+  if (!lagen.length) return project;
+  const ids = new Set(lagen.map((l) => l.id));
+  return normaliseerMarks({
+    ...project,
+    lagen: [...project.lagen, ...lagen],
+    marks: [...project.marks, ...(Array.isArray(eigen?.marks) ? eigen.marks : []).filter((m) => ids.has(m?.laag))],
+  });
+}
+
+/** Deel een eigen laag met het project: hij is daarna van het project, met zijn marks. */
+export function deelLaag(st, laagId) {
+  return { ...st, lagen: st.lagen.map((l) => (l.id === laagId && l.eigen ? { id: l.id, naam: l.naam, labels: l.labels } : l)) };
+}
+
+/** De labels die op de lagen voorkomen, als unieke `{soort, waarde}`, gesorteerd. */
+export function alleLabels(lagen) {
+  const uit = new Map();
+  for (const l of lagen || []) for (const x of l.labels || []) uit.set(`${x.soort}=${x.waarde}`, x);
+  return [...uit.entries()].sort(([a], [b]) => a.localeCompare(b, "nl")).map(([, x]) => x);
+}

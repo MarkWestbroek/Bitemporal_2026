@@ -22,7 +22,7 @@
  *
  * Geen DOM-afhankelijkheden: testbaar met `node --test`.
  */
-import { diffMarks } from "../../marks/marks.js";
+import { diffMarks, zonderEigen } from "../../marks/marks.js";
 
 /** @typedef {{store: string, op: string, args: any[]}} Operatie */
 
@@ -430,6 +430,7 @@ export function kruisNet(voor, na) {
 export const MARKS_VELDEN = ["lagen", "contexten", "marks", "soorten"];
 
 export function marksNet(voor, na) {
-  const patch = diffMarks(voor, na);
+  // Eigen lagen (van de gebruiker) reizen niet mee: alleen wat van het project is.
+  const patch = diffMarks(zonderEigen(voor), zonderEigen(na));
   return patch ? [{ store: "marks", op: "patchMarks", args: [patch] }] : [];
 }

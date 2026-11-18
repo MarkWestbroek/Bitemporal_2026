@@ -21,7 +21,7 @@ import { menuBus } from "../menuBus";
 import { registreerMeldContext } from "../meldContext.js";
 import { zetUuidContext, planUuidAanvulling } from "../uuidAanvulling.js";
 import { useBeheerZicht, zetBeheerZicht, zichtbareProfielen } from "../beheerZicht.js";
-import { useMarksStore, marksVanProject } from "../marksStore.js";
+import { useMarksStore, marksVanProject, marksVoorWerkruimte, laadMarksUitWerkruimte, opEigenWijziging } from "../marksStore.js";
 import { heeftMarks } from "../../marks/marks.js";
 import { veldCompartimenten } from "../assistent/assistentKern.js";
 import { vraagNaam, vraagBevestiging, vraagKeuze, toonMelding } from "../naamDialog.jsx";
@@ -180,7 +180,9 @@ function schrijfOpslag(state) {
       })
     );
     if (state.project?.id) {
-      const inhoud = { tabs: state.tabs, actieveTab: state.actieveTab, mapOpen: state.mapOpen, bundels: state.mijnBundels || [] };
+      // `marks`: wat van de gebruiker is (eigen lagen, welke lagen meedoen); alleen als er iets is.
+      const eigenMarks = marksVoorWerkruimte();
+      const inhoud = { tabs: state.tabs, actieveTab: state.actieveTab, mapOpen: state.mapOpen, bundels: state.mijnBundels || [], ...(eigenMarks ? { marks: eigenMarks } : {}) };
       const tekst = JSON.stringify(inhoud);
       const sleutel = werkruimteSleutel(state.project.id);
       if (tekst !== _werkruimteLaatst) {
@@ -214,15 +216,22 @@ async function haalWerkruimteBinnen() {
   const actieveTab = tabs.some((t) => t.id === inhoud.actieveTab) ? inhoud.actieveTab : tabs[0]?.id || null;
   // Overnemen zonder nieuwe PUT: wat we schrijven is precies wat de server heeft.
   const mijnBundels = Array.isArray(inhoud.bundels) ? inhoud.bundels : [];
-  _werkruimteLaatst = JSON.stringify({ tabs, actieveTab, mapOpen: inhoud.mapOpen || {}, bundels: mijnBundels });
+  // De eigen marks van de server overnemen (vóór het vastleggen van "laatst", zodat het geen PUT geeft).
+  laadMarksUitWerkruimte(inhoud.marks || null);
+  const eigenMarks = marksVoorWerkruimte();
+  const overgenomen = { tabs, actieveTab, mapOpen: inhoud.mapOpen || {}, bundels: mijnBundels, ...(eigenMarks ? { marks: eigenMarks } : {}) };
+  _werkruimteLaatst = JSON.stringify(overgenomen);
   try {
-    localStorage.setItem(werkruimteSleutel(projectId), JSON.stringify({ tabs, actieveTab, mapOpen: inhoud.mapOpen || {}, bundels: mijnBundels, bijgewerkt: server.bijgewerkt }));
+    localStorage.setItem(werkruimteSleutel(projectId), JSON.stringify({ ...overgenomen, bijgewerkt: server.bijgewerkt }));
   } catch { /* ignore */ }
   useModellerenStore.setState({ tabs, actieveTab, mapOpen: inhoud.mapOpen || {}, mijnBundels });
   if (actieveTab) useModellerenStore.getState().activeer(actieveTab);
   menuBus.emit("menu:ververs");
   return true;
 }
+
+// Een wijziging in de eigen marks (eigen laag, welke lagen meedoen) schrijft de werkruimte weg.
+opEigenWijziging(() => schrijfOpslag(useModellerenStore.getState()));
 
 const tabId = (profielId, diagramId) => `${profielId}::${diagramId}`;
 
@@ -4538,6 +4547,8 @@ function menus(ctx) {
       { type: "separator" },
       { id: "proj-push", label: "Naar server sturen (snapshot)", uitleg: "Zet het project op de server, zodat anderen erin kunnen meewerken.", onClick: stuurNaarServer },
       { id: "proj-pull", label: "Van server ophalen…", uitleg: "Open een project van de server; daar regel je ook wie toegang heeft.", onClick: haalVanServer },
+      // Marks (18-11): het beheer is ook bereikbaar zonder dat er al een laag of mark is.
+      { id: "proj-marks", label: "Marks: lagen en soorten…", uitleg: "Lagen maken en kiezen, en eigen marksoorten van dit project.", onClick: () => window.dispatchEvent(new CustomEvent("omnium:marks-beheer")) },
       // Branch (afgeleid project, 09-11, stap 1): het verschil met MAIN; mergen nog met de hand.
       ...(branch
         ? [{

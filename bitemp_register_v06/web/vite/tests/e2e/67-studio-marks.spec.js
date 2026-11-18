@@ -209,3 +209,52 @@ test("een mark op een relatie die als lijn getekend is: het ruitje in het label,
   await expect(dlg.getByTestId("marks-transformatiesoorten")).toContainText("register");
   await expect(dlg).toContainText("Met één laag hoef je hier niets te doen");
 });
+
+test("een eigen laag is alleen van jou, tot je hem deelt; kiezen op label", async ({ page }) => {
+  await opzet(page);
+  const paneel = page.getByTestId("marks-paneel");
+  await paneel.getByTestId("marks-eerste-laag").click();
+  await paneel.getByTestId("marks-lagen").click();
+  const dlg = page.getByTestId("marks-lagen-dialoog");
+  await dlg.getByTestId("marks-nieuwe-eigen-laag").click();
+  await page.locator(".studio-dialoog input").fill("Proef");
+  await page.locator(".studio-dialoog").getByRole("button", { name: "Maken" }).click();
+  const rij = dlg.locator('tr[data-laag^="mijn-proef"]');
+  await expect(rij).toContainText("jou");
+  await rij.locator('input[placeholder^="soort="]').fill("gemeente=Waterstede");
+  await rij.locator('input[placeholder^="soort="]').blur();
+  await dlg.getByRole("button", { name: "Sluiten" }).click();
+  // Schrijven in de eigen laag: de mark geldt hier, maar staat niet in het project.
+  const werklaag = paneel.getByTestId("marks-werklaag");
+  await werklaag.selectOption({ label: "Proef (van jou)" });
+  await paneel.locator('tr[data-veld="kaartnummer"]').getByTestId("mark-register.zoeksleutel").check();
+  await expect(node(page, "ge1").locator("[data-dc-mark]")).toHaveText("◆");
+  const project = () => page.evaluate(async () => {
+    const { marksVanProject } = await import(location.origin + "/viz/react/src/studio/marksStore.js");
+    const p = marksVanProject();
+    return { lagen: p.lagen.map((l) => l.naam), marks: p.marks.length };
+  });
+  expect(await project()).toEqual({ lagen: ["Algemeen"], marks: 0 });
+  // Kiezen op label: de laag met dat label en de lagen zonder label doen mee.
+  await paneel.getByTestId("marks-lagen").click();
+  await rij.locator('input[type="checkbox"]').uncheck();
+  await dlg.getByTestId("marks-op-label").selectOption("gemeente=Waterstede");
+  await expect(rij.locator('input[type="checkbox"]')).toBeChecked();
+  // Delen: nu is hij van het project, met zijn mark.
+  await rij.getByTestId("marks-laag-delen").click();
+  await page.locator(".studio-dialoog").getByRole("button", { name: "Delen" }).click();
+  await expect(rij).toContainText("project");
+  expect(await project()).toEqual({ lagen: ["Algemeen", "Proef"], marks: 1 });
+});
+
+test("het beheer opent vanuit het menu Project, ook zonder lagen of marks", async ({ page }) => {
+  await openStudio(page);
+  await page.locator('[data-tour="menu-project"]').click();
+  await page.getByText("Marks: lagen en soorten…").click();
+  const dlg = page.getByTestId("marks-lagen-dialoog");
+  await expect(dlg).toContainText("Soorten van transformaties");
+  await dlg.getByTestId("marks-nieuwe-laag").click();
+  await page.locator(".studio-dialoog input").fill("Algemeen");
+  await page.locator(".studio-dialoog").getByRole("button", { name: "Maken" }).click();
+  await expect(dlg.locator('tr[data-laag="algemeen"]')).toBeVisible();
+});

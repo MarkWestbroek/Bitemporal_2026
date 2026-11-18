@@ -197,3 +197,38 @@ test("eigen marksoorten van het project: maken, bijwerken, weghalen; mee in diff
   zetProjectsoorten([]);
   assert.equal(getMarksoort("project.archief"), null);
 });
+
+test("eigen lagen: lokaal doen ze mee, voor het project bestaan ze niet tot je ze deelt", async () => {
+  const { zonderEigen, alleenEigen, metEigen, deelLaag, alleLabels } = await import("./marks.js");
+  let st = basis();
+  st = metLaag(st, { id: "mijn-proef", naam: "Proef", eigen: true });
+  st = zetMark(st, { laag: "mijn-proef", soort: "register.tekstzoeken", doel: VELD, waarde: true });
+  st = metContext(st, { id: "c", lagen: ["algemeen", "mijn-proef"] });
+  // Lokaal geldt de mark.
+  assert.equal(marksVoor(st, VELD, ["algemeen", "mijn-proef"])["register.tekstzoeken"], true);
+  // Voor het project: laag, mark en de verwijzing in de context zijn er niet.
+  const project = zonderEigen(st);
+  assert.equal(project.lagen.some((l) => l.id === "mijn-proef"), false);
+  assert.equal(project.marks.some((m) => m.laag === "mijn-proef"), false);
+  assert.deepEqual(project.contexten[0].lagen, ["algemeen"]);
+  const zonder = basis();
+  assert.equal(zonderEigen(zonder), zonder, "zonder eigen lagen dezelfde stand");
+  // De sync ziet een eigen laag niet, en na delen wel.
+  assert.equal(diffMarks(zonderEigen(basis()), zonderEigen(metLaag(basis(), { id: "mijn-x", eigen: true }))), null);
+  const gedeeld = deelLaag(st, "mijn-proef");
+  const patch = diffMarks(zonderEigen(st), zonderEigen(gedeeld));
+  assert.deepEqual(patch.lagen.zet.map((l) => l.id), ["mijn-proef"]);
+  assert.deepEqual(patch.marks.zet.map((m) => m.soort), ["register.tekstzoeken"]);
+  assert.equal("eigen" in gedeeld.lagen.find((l) => l.id === "mijn-proef"), false);
+  // De werkruimte draagt alleen het eigen deel; laden zet het terug bij een verse projectstand.
+  const eigen = alleenEigen(st);
+  assert.deepEqual(eigen.lagen.map((l) => l.id), ["mijn-proef"]);
+  assert.equal(eigen.marks.length, 1);
+  const terug = metEigen(zonderEigen(st), JSON.parse(JSON.stringify(eigen)));
+  assert.deepEqual(terug.lagen.map((l) => [l.id, !!l.eigen]).slice(-1), [["mijn-proef", true]]);
+  assert.equal(terug.marks.filter((m) => m.laag === "mijn-proef").length, 1);
+  // Is de laag intussen gedeeld (zelfde id in het project), dan valt de eigen kopie weg.
+  assert.equal(metEigen(gedeeld, eigen).lagen.filter((l) => l.id === "mijn-proef").length, 1);
+  assert.equal(metEigen(gedeeld, eigen).lagen.some((l) => l.eigen), false);
+  assert.deepEqual(alleLabels(st.lagen).map((l) => `${l.soort}=${l.waarde}`), ["gemeente=Waterstede", "omgeving=cg-test"]);
+});

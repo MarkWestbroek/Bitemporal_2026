@@ -284,8 +284,21 @@ en wat het doet) en de eigen marksoorten van het project.
 Bekende grens: een mark op een element zonder uuid verwijst met profiel en element-id. Krijgt dat
 element later een uuid (projectformaat 5, alle talen), dan moeten die marks mee worden omgezet.
 
-**Nog niet:** eigen lagen in de werkruimte die je daarna deelt (nu is elke laag meteen van het
-project) en filteren op labels in het beheer.
+**Eigen lagen (18-11, na de release 0.46.0).** Een laag is van het project of van jou
+(`eigen: true` op de laag). Een eigen laag doet lokaal gewoon mee, maar bestaat voor het project
+niet: `zonderEigen` haalt hem met zijn marks uit wat naar het werkbestand, de sync en de server
+gaat (`marksVanProject`, `marksNet`). Hij staat in je **werkruimte** (`inhoud.marks`, met ook
+`actieveContext` en `werklaag`), dus hij reist mee naar een ander apparaat; een werkbestand laden
+laat hem staan. *Deel* maakt hem van het project (`deelLaag`): de sync stuurt dan de laag met zijn
+marks. Terugnemen kan niet. Een eigen laag komt **niet** in de export van de server; wel in
+*Exporteer V3* van de Studio, want dat is jouw export. De eerste laag (*Eerste laag maken*) is van
+het project; daarna kies je *＋ projectlaag* of *＋ eigen laag*.
+
+**Kiezen op label (18-11).** *Kies op label…* in het lagenbeheer laat de lagen met dat label
+meedoen, plus de lagen zonder label (die zijn algemeen); de volgorde blijft.
+
+**Nog niet:** uuid's voor de elementen van alle talen (projectformaat 5), met omzetting van de
+marks die nu op profiel en element-id verwijzen.
 
 Wat nu al in het model staat en eigenlijk een mark is, verhuizen we **niet** vooraf. Kandidaten om
 later te bekijken: de vorm van invoer in een formulier (inhoud en vorm scheiden we al), een
