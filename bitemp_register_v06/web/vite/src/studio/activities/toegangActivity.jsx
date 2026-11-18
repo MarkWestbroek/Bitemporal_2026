@@ -271,9 +271,28 @@ function ToegangProvider({ children }) {
           const bestand = kiezer.files?.[0];
           if (!bestand) return;
           const { veldIndex } = ref.current;
-          const r = odrlNaarToegangsspraak(await bestand.text(), {
-            bereidVoor: veldIndex ? (beleid) => resolveerBeleid(beleid, veldIndex).beleid : undefined,
-          });
+          const turtle = await bestand.text();
+          const opties = { bereidVoor: veldIndex ? (beleid) => resolveerBeleid(beleid, veldIndex).beleid : undefined };
+          let r = odrlNaarToegangsspraak(turtle, opties);
+          // ODRL van elders bevat vaak meer beleiden in één bestand; de editor houdt er één.
+          if (r.beleiden.length > 1) {
+            const lijst = r.beleiden.map((b, i) => `${i + 1}. ${b.naam} (${b.regels} ${b.regels === 1 ? "regel" : "regels"})`).join("\n");
+            const keuze = window.prompt(`Dit bestand bevat ${r.beleiden.length} beleiden. Welk wil je importeren? Geef het nummer.\n\n${lijst}`, String(r.beleiden.findIndex((b) => b.sleutel === r.gekozen) + 1));
+            if (keuze === null) return;
+            const gekozen = r.beleiden[Number(keuze) - 1];
+            if (!gekozen) { window.alert(`"${keuze}" is geen nummer uit de lijst.`); return; }
+            if (gekozen.sleutel !== r.gekozen) r = odrlNaarToegangsspraak(turtle, { ...opties, beleid: gekozen.sleutel });
+            opties.beleid = gekozen.sleutel;
+          }
+          // Standaard valt een toestemming met iets onvertaalbaars weg (het beleid wordt nooit ongemerkt
+          // ruimer dan de ODRL). Wie een concept wil nalopen kan ze toch laten staan, met waarschuwing.
+          if (!r.eigen && r.telling?.weggelaten) {
+            const toch = window.confirm(
+              `${r.telling.weggelaten} van de ${r.telling.regels} regels zijn weggelaten, omdat ze iets bevatten dat Toegangsspraak niet kan zeggen.\n\n` +
+                "Wil je ze waar dat kan toch overnemen, zonder dat onderdeel? Ze zijn dan ruimer dan in de ODRL; dat staat per regel in de meldingen.",
+            );
+            if (toch) r = odrlNaarToegangsspraak(turtle, { ...opties, bijOnvertaalbaar: "ruimer" });
+          }
           if (r.tekst) {
             const ta = vindTextarea();
             if (ta) invoegOpCursor(r.tekst, 0, { van: 0, tot: ta.value.length });

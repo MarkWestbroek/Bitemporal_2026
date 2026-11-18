@@ -145,11 +145,16 @@ function vergelijkMetExport(beleid, invoer, opties) {
  * @param {(beleid: any) => any} [opties.bereidVoor]         het beleid zoals de export het kreeg, bv. met de
  *        paden uit het metamodel erin (`resolveerBeleid`); alleen voor de vergelijking
  * @param {boolean} [opties.negeerBrontekst]                 altijd uit de structuur bouwen
- * @returns {{ok: boolean, tekst: string, beleid: any, weg: "brontekst"|"structuur"|null, graaf: any, plan: any,
- *            trace: any[], verschil: any, diagnostics: any[]}}
+ * @param {string} [opties.beleid]                           sleutel van het beleid, als de ODRL er meer bevat (zie `beleiden`)
+ * @param {"weglaten"|"ruimer"} [opties.bijOnvertaalbaar]    een toestemming met iets onvertaalbaars: weglaten
+ *        (standaard, het beleid wordt strenger) of zonder dat onderdeel overnemen (ruimer, met waarschuwing)
+ * @returns {{ok: boolean, tekst: string, beleid: any, weg: "brontekst"|"structuur"|null, eigen: boolean,
+ *            beleiden: {sleutel: string, naam: string, regels: number}[], gekozen: string|null,
+ *            telling: {regels: number, overgenomen: number, weggelaten: number}|null,
+ *            graaf: any, plan: any, trace: any[], verschil: any, diagnostics: any[]}}
  */
 export function odrlNaarToegangsspraak(turtle, opties = {}) {
-  const leeg = { ok: false, tekst: "", beleid: null, weg: null, graaf: null, plan: null, trace: [], verschil: null };
+  const leeg = { ok: false, tekst: "", beleid: null, weg: null, eigen: false, beleiden: [], gekozen: null, telling: null, graaf: null, plan: null, trace: [], verschil: null };
   let gelezen;
   try {
     gelezen = leesTurtle(turtle);
@@ -159,57 +164,80 @@ export function odrlNaarToegangsspraak(turtle, opties = {}) {
   }
   const { graaf, ns } = odrlBrongraaf(gelezen);
   const plan = pasRegelsToe(graaf, ODRL_AP_NL_NAAR_TOEGANGSSPRAAK);
-  const gebouwd = planNaarBeleid(plan, { resolveerPad: opties.resolveerPad });
+  const gebouwd = planNaarBeleid(plan, { resolveerPad: opties.resolveerPad, beleid: opties.beleid, bijOnvertaalbaar: opties.bijOnvertaalbaar });
   const diagnostics = [...plan.diagnostics, ...gebouwd.diagnostics];
-  if (!gebouwd.beleid) return { ...leeg, graaf, plan, trace: plan.trace, diagnostics };
+  const kop = { beleiden: gebouwd.beleiden, gekozen: gebouwd.gekozen, telling: gebouwd.telling, graaf, plan, trace: plan.trace };
+  if (!gebouwd.beleid) return { ...leeg, ...kop, diagnostics };
 
-  const beleidEl = plan.elementen.find((e) => e.type === "beleid");
-  const uitgegeven = beleidEl?.data.uitgegeven?.datum || "";
-  const invoer = vergelijkbaar(gelezen.triples, ns);
-  // Waar de regelset geen regel voor had: dat verlies staat in de trace en telt niet nog eens als verschil.
-  const perId = new Map(graaf.knopen.map((k) => [k.id, k.iri]));
-  const buiten = new Set(plan.trace.filter((s) => s.soort === "knoop" && s.actie === "geen-regel").map((s) => perId.get(s.bronId)));
-  const vergelijk = (beleid) => vergelijkMetExport(beleid, invoer, { ...opties, uitgegeven, buiten });
+  const beleidEl = plan.elementen.find((e) => e.sleutel === gebouwd.gekozen);
+  // Eigen ODRL: geschreven door de export van Toegangsspraak (ze noemt haar woordenschat als profiel).
+  // Alleen daar zegt een vergelijking met een nieuwe export iets: de namen van de knopen zijn dan dezelfde.
+  const eigen = [beleidEl?.data.profiel].flat().includes("ts:profiel");
 
-  // Weg 1: de meegegeven klare taal, als ze hetzelfde zegt als de ODRL.
-  let beleid = null;
+  let beleid = gebouwd.beleid;
   let weg = /** @type {"brontekst"|"structuur"} */ ("structuur");
   let verschil = null;
-  const brontekst = opties.negeerBrontekst ? "" : String(beleidEl?.data.brontekst || "");
-  if (brontekst) {
-    const r = parseBeleid(brontekst);
-    const v = r.ok ? vergelijk(r.beleid) : null;
-    if (v && !v.structuur && !v.woorden) {
-      beleid = r.beleid;
-      weg = "brontekst";
-      verschil = v;
-    } else {
-      diagnostics.push({
-        severity: "info",
-        code: "ODRL-BRONTEKST",
-        message: r.ok
-          ? "De meegegeven klare taal (ts:brontekst) zegt niet hetzelfde als de ODRL; het beleid is uit de structuur opgebouwd."
-          : "De meegegeven klare taal (ts:brontekst) is geen geldige Toegangsspraak; het beleid is uit de structuur opgebouwd.",
-        sourceId: beleidEl?.sleutel || null,
-        path: null,
-      });
+  if (eigen) {
+    const uitgegeven = beleidEl?.data.uitgegeven?.datum || "";
+    const invoer = vergelijkbaar(gelezen.triples, ns);
+    // Waar de regelset geen regel voor had of wat hij bewust negeerde: dat staat in de trace en telt
+    // niet nog eens als verschil.
+    const perId = new Map(graaf.knopen.map((k) => [k.id, k.iri]));
+    const buiten = new Set(plan.trace.filter((s) => s.soort === "knoop" && (s.actie === "geen-regel" || s.actie === "genegeerd")).map((s) => perId.get(s.bronId)));
+    const vergelijk = (kandidaat) => vergelijkMetExport(kandidaat, invoer, { ...opties, uitgegeven, buiten });
+
+    // Weg 1: de meegegeven klare taal, als ze hetzelfde zegt als de ODRL.
+    const brontekst = opties.negeerBrontekst ? "" : String(beleidEl?.data.brontekst || "");
+    if (brontekst) {
+      const r = parseBeleid(brontekst);
+      const v = r.ok ? vergelijk(r.beleid) : null;
+      if (v && !v.structuur && !v.woorden) {
+        beleid = r.beleid;
+        weg = "brontekst";
+        verschil = v;
+      } else {
+        diagnostics.push({
+          severity: "info",
+          code: "ODRL-BRONTEKST",
+          message: r.ok
+            ? "De meegegeven klare taal (ts:brontekst) zegt niet hetzelfde als de ODRL; het beleid is uit de structuur opgebouwd."
+            : "De meegegeven klare taal (ts:brontekst) is geen geldige Toegangsspraak; het beleid is uit de structuur opgebouwd.",
+          sourceId: beleidEl?.sleutel || null,
+          path: null,
+        });
+      }
+    }
+    // Weg 2: uit de structuur.
+    if (weg === "structuur") {
+      verschil = vergelijk(beleid);
+      if (verschil.structuur) {
+        diagnostics.push({
+          severity: "warning",
+          code: "ODRL-VERSCHIL",
+          message: `Het beleid in klare taal regelt niet precies hetzelfde als de ODRL: ${verschil.structuur} verschil(len) in een nieuwe export. Loop het beleid na.`,
+          sourceId: null,
+          path: null,
+        });
+      }
     }
   }
-  // Weg 2: uit de structuur.
-  if (!beleid) {
-    beleid = gebouwd.beleid;
-    verschil = vergelijk(beleid);
-    if (verschil.structuur) {
+
+  // Vangnet: wat de bouwer uit namen van elders maakt moet de parser weer kunnen lezen.
+  const tekst = renderBeleid(beleid);
+  if (weg === "structuur") {
+    const terug = parseBeleid(tekst);
+    if (!terug.beleid) {
+      const fout = terug.fouten[0];
       diagnostics.push({
-        severity: "warning",
-        code: "ODRL-VERSCHIL",
-        message: `Het beleid in klare taal regelt niet precies hetzelfde als de ODRL: ${verschil.structuur} verschil(len) in een nieuwe export. Loop het beleid na.`,
+        severity: "error",
+        code: "ODRL-TEKST",
+        message: `De opgebouwde tekst is geen geldige Toegangsspraak (${fout?.bericht || "onbekende fout"}). Pas de tekst met de hand aan.`,
         sourceId: null,
-        path: null,
+        path: fout?.regel ? `regel ${fout.regel}, kolom ${fout.kolom}` : null,
       });
     }
   }
-  return { ok: !diagnostics.some((d) => d.severity === "error"), tekst: renderBeleid(beleid), beleid, weg, graaf, plan, trace: plan.trace, verschil, diagnostics };
+  return { ok: !diagnostics.some((d) => d.severity === "error"), tekst, beleid, weg, eigen, ...kop, verschil, diagnostics };
 }
 
 /**
@@ -225,30 +253,57 @@ export function odrlBrongraaf(gelezen) {
 }
 
 /**
+ * Wat de regelset niet overnam, geteld per soort: per klasse (knopen) en per
+ * predicaat (verbindingen). Een verbinding van of naar iets dat zelf al niet
+ * overkwam is geen eigen verlies.
+ * @param {{trace: any[], graaf: any}} r
+ * @returns {{knopen: string[], verbindingen: string[], perSoort: [string, number][]}}
+ */
+export function verliesrapport(r) {
+  const alle = r.trace.filter((s) => s.actie === "geen-regel" || s.actie === "overgeslagen");
+  const knopen = alle.filter((s) => s.soort !== "verbinding").map((s) => s.bronId);
+  // Ook wat bewust genegeerd is (het anker naar de uitvoering) neemt zijn verbindingen mee.
+  const weg = new Set([...knopen, ...r.trace.filter((s) => s.soort !== "verbinding" && s.actie === "genegeerd").map((s) => s.bronId)]);
+  const perVerbinding = new Map((r.graaf?.verbindingen || []).map((v) => [v.id, v]));
+  const verbindingen = alle.filter((s) => s.soort === "verbinding" && !weg.has(perVerbinding.get(s.bronId)?.bron) && !weg.has(perVerbinding.get(s.bronId)?.doel)).map((s) => s.bronId);
+  const perKnoop = new Map((r.graaf?.knopen || []).map((k) => [k.id, k]));
+  const tel = new Map();
+  const plus = (soort) => tel.set(soort, (tel.get(soort) || 0) + 1);
+  for (const id of knopen) plus(perKnoop.get(id)?.klassen?.[0] || "knoop zonder type");
+  for (const id of verbindingen) plus(perVerbinding.get(id)?.aard || "verbinding");
+  return { knopen, verbindingen, perSoort: [...tel].sort((a, b) => b[1] - a[1]) };
+}
+
+/**
  * Het resultaat van een import in een paar zinnen, voor het scherm: welke weg,
- * wat er niet overkwam (het verliesrapport) en wat de bouwer meldde.
+ * hoeveel er overkwam, wat de bouwer meldde en wat de regelset niet overnam.
  * @param {ReturnType<typeof odrlNaarToegangsspraak>} r
  * @returns {string[]}
  */
 export function importMeldingen(r) {
   const uit = [];
   const fouten = r.diagnostics.filter((d) => d.severity === "error");
-  if (fouten.length) return fouten.map((d) => `${d.message}${d.path ? ` (${d.path})` : ""}`);
-  if (r.weg === "structuur") {
+  if (fouten.length && !r.tekst) return fouten.map((d) => `${d.message}${d.path ? ` (${d.path})` : ""}`);
+  for (const d of fouten) uit.push(`${d.message}${d.path ? ` (${d.path})` : ""}`);
+  if (r.weg === "structuur" && r.eigen) {
     const reden = r.diagnostics.find((d) => d.code === "ODRL-BRONTEKST");
     uit.push(reden ? reden.message : "De ODRL draagt geen klare taal (ts:brontekst); het beleid is uit de structuur opgebouwd. Woordkeus en volgorde kunnen afwijken van het origineel.");
   }
-  // Een verbinding van of naar iets dat zelf al niet overkwam is geen eigen verlies.
-  const alle = r.trace.filter((s) => s.actie === "geen-regel" || s.actie === "overgeslagen");
-  const knopen = alle.filter((s) => s.soort !== "verbinding").map((s) => s.bronId);
-  const los = alle.filter((s) => s.soort === "verbinding" && !knopen.some((id) => s.bronId.endsWith(`>${id}`) || s.bronId.includes(`:${id}>`))).map((s) => s.bronId);
-  const verlies = [...knopen, ...los];
-  if (verlies.length) {
-    const namen = verlies.slice(0, 5).join(", ");
-    uit.push(`${verlies.length === 1 ? "1 onderdeel van de ODRL is" : `${verlies.length} onderdelen van de ODRL zijn`} niet overgenomen: ${namen}${verlies.length > 5 ? ", …" : ""}.`);
+  if (r.weg === "structuur" && !r.eigen && r.telling) {
+    uit.push(`ODRL van elders: ${r.telling.overgenomen} van de ${r.telling.regels} regels overgenomen. Het resultaat is een concept; loop het na.`);
   }
-  for (const d of r.diagnostics) {
-    if (d.severity === "warning" && d.code !== "TRF-GEEN-REGEL" && d.code !== "TRF-UITEINDE") uit.push(d.message);
+  // Eerst wat het beleid verandert, dan hoe er gelezen is.
+  const eigenCodes = (d) => d.code !== "TRF-GEEN-REGEL" && d.code !== "TRF-UITEINDE" && d.code !== "TRF-INTERPRETATIE";
+  for (const d of r.diagnostics) if (d.severity === "warning" && eigenCodes(d)) uit.push(d.message);
+  for (const d of r.diagnostics) if (d.severity === "info" && ["ODRL-STRENGER", "ODRL-INTERPRETATIE", "ODRL-MEER-BELEID"].includes(d.code)) uit.push(d.message);
+
+  const verlies = verliesrapport(r);
+  const aantal = verlies.knopen.length + verlies.verbindingen.length;
+  if (aantal) {
+    const kop = aantal === 1 ? "1 onderdeel van de ODRL is" : `${aantal} onderdelen van de ODRL zijn`;
+    // Weinig: bij naam. Veel: geteld per soort.
+    const wat = aantal <= 5 ? [...verlies.knopen, ...verlies.verbindingen].join(", ") : `${verlies.perSoort.slice(0, 8).map(([soort, n]) => `${n} × ${soort}`).join(", ")}${verlies.perSoort.length > 8 ? ", …" : ""}`;
+    uit.push(`${kop} niet overgenomen: ${wat}.`);
   }
   return uit;
 }
