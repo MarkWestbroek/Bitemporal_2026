@@ -56,10 +56,34 @@ In tegenstelling tot gqlgen (dat een `.graphqls` schema-file en code generation 
 
 > **Enum handling**: enum-velden gebruiken GraphQL enum-types met gesanitizede namen.
 > Zie [graphql-enum-handling.md](graphql-enum-handling.md) voor de volledige analyse van de enum cache-bug en het underscore-serialisatiegedrag.
-| `query_resolvers.go`    | ~315 | Full-entity, lijst en registratie resolvers met directe Bun queries                  |
+| `query_resolvers.go`    | ~315 | Full-entity, lijst en registratie resolvers; het laden gaat via de Lader (`lader.go`) |
+| `lader.go`              | ~190 | De naad naar de opslag: interface `Lader` + `dbLader` (bun op hub + `_Data`), zie hieronder |
 | `mutation_resolvers.go` | ~125 | Registreer/corrigeer/maakOngedaan via REST round-trip naar eigen server               |
 | `schema_builder.go`     | ~160 | `BuildSchema()` — assembleert alles vanuit MetaRegistry                               |
 | `handler.go`            | ~95  | Gin HTTP handler (`graphql.Do()`) + GraphiQL UI                                       |
+
+### De Lader: laden los van opslaan (18-11-2026)
+
+Een leesresolver doet drie dingen:
+1. **laden**: een gegenereerde struct vullen, met alle GE's en relaties;
+2. **platslaan**: `entityToMap` en `flattenEntityMap`;
+3. **verrijken en snoeien**: weergavenamen, afgeleide velden en relaties, en de PEP.
+
+Alleen stap 1 zit achter de interface `Lader`: `LaadEen`, `LaadIDs`, `LaadLijst` en `BronIDs`.
+Het gewone register gebruikt de `dbLader`; dat is de bestaande bun-code, verhuisd en niet
+gewijzigd. De façade op Common Ground-registers geeft per type een eigen lader, die uit de
+register-API leest en dezelfde struct vult. Stap 2 en 3 blijven zo voor beide gelijk. Zie
+`docs/plans/2026-11-18 Façade fase 1 — technisch ontwerp.md` §3.
+
+- Een lader die een filter of tijdas niet aankan, **weigert** met een fout en negeert het nooit.
+- `LijstVraag.Sortering` is er voor het sorteren op een GE-veld. Tot dat gebouwd is, sorteert de
+  `dbLader` op id.
+- De omgekeerde en de forward-resolver lezen, zoals voorheen, de actuele stand, ook bij een
+  peiltijdstip. `BronIDs` krijgt het peil wel mee, maar de `dbLader` gebruikt het nog niet.
+- **Vangnet:** `regressie_lader_karakterisering_test.go` (tag `integration`) bouwt uit de
+  introspectie 210 queries op geseede np-loc-data en vergelijkt het antwoord met
+  `testdata/lader_karakterisering.golden.json`. Werk het golden bestand alleen bewust bij, met
+  `LADER_GOLDEN_BIJWERKEN=1`.
 
 ### Gewijzigde bestanden
 
