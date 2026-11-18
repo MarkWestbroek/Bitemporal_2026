@@ -35,7 +35,7 @@ const kernVoorwaarde = (naam, als, links) => ({
   naam,
   bij: "knoop",
   als: { aard: "voorwaarde", ...als },
-  maak: { type: "odrl:Constraint", data: { "odrl:leftOperand": iri(links), "odrl:operator": "odrl:{operator}", "odrl:rightOperand": "{waarde}" } },
+  maak: { type: "odrl:Constraint", data: { "odrl:leftOperand": iri(links), "odrl:operator": "odrl:{operator}", "odrl:rightOperand": "{waarde}", "odrl:rightOperandReference": "{waardeVerwijzing}" } },
 });
 
 /** Handeling die ODRL zelf kent. */
@@ -48,7 +48,7 @@ const kernHandeling = (woord, odrl) => ({
 
 export const TOEGANGSSPRAAK_NAAR_ODRL_AP_NL = {
   id: "toegangsspraak-naar-odrl-ap-nl",
-  versie: 2,
+  versie: 3,
   titel: "Toegangsspraak → ODRL (ODRL-AP-NL)",
   bron: "toegangsspraak",
   doel: "odrl-ap-nl",
@@ -67,7 +67,8 @@ export const TOEGANGSSPRAAK_NAAR_ODRL_AP_NL = {
           "dct:issued": "{uitgegeven}",
           "schema:validFrom": "{geldigVanaf}",
           "schema:validThrough": "{geldigTot}",
-          "odrl:conflict": iri("odrl:prohibit"),
+          "odrl:conflict": "{conflict}",
+          "ts:standaard": "{standaard}",
           // De klare taal waaruit dit beleid komt; de import leest haar terug (odrlImport.js).
           "ts:brontekst": "{brontekst}",
         },
@@ -108,13 +109,14 @@ export const TOEGANGSSPRAAK_NAAR_ODRL_AP_NL = {
       naam: "Voorwaarde (ODRL-vergelijking)",
       bij: "knoop",
       als: { aard: "voorwaarde", kern: true },
-      maak: { type: "odrl:Constraint", data: { "odrl:leftOperand": "ts:{anker}.{subpad}", "odrl:operator": "odrl:{operator}", "odrl:rightOperand": "{waarde}" } },
+      maak: { type: "odrl:Constraint", data: { "odrl:leftOperand": "ts:{anker}.{subpad}", "odrl:operator": "odrl:{operator}", "odrl:rightOperand": "{waarde}", "odrl:rightOperandReference": "{waardeVerwijzing}" } },
     },
     {
       naam: "Voorwaarde (eigen vergelijking)",
       bij: "knoop",
       als: { aard: "voorwaarde" },
-      maak: { type: "odrl:Constraint", data: { "odrl:leftOperand": "ts:{anker}.{subpad}", "odrl:operator": "ts:{operator}", "odrl:rightOperand": "{waarde}" } },
+      // `ts:voor`: bij een bestaansvraag voor wie het moet bestaan.
+      maak: { type: "odrl:Constraint", data: { "odrl:leftOperand": "ts:{anker}.{subpad}", "odrl:operator": "ts:{operator}", "odrl:rightOperand": "{waarde}", "odrl:rightOperandReference": "{waardeVerwijzing}", "ts:voor": "{voor}" } },
     },
     { naam: "Voorwaardegroep", bij: "knoop", als: { aard: "voorwaardegroep" }, maak: { type: "odrl:LogicalConstraint" } },
 
@@ -133,6 +135,7 @@ export const TOEGANGSSPRAAK_NAAR_ODRL_AP_NL = {
     { naam: "Term: handeling", bij: "knoop", als: { aard: "term", termsoort: "handeling" }, maak: { type: "odrl:Action", data: { "rdf:type": iri("skos:Concept"), "odrl:includedIn": iri("odrl:use") } } },
     { naam: "Term: plichthandeling", bij: "knoop", als: { aard: "term", termsoort: "plichthandeling" }, maak: { type: "odrl:Action", data: { "rdf:type": iri("skos:Concept") } } },
     { naam: "Term: niveau in het register", bij: "knoop", als: { aard: "term", termsoort: "niveau" }, maak: { type: "rdfs:Class", data: { "rdf:type": iri("skos:Concept") } } },
+    { naam: "Term: conflictregel", bij: "knoop", als: { aard: "term", termsoort: "conflictregel" }, maak: { type: "odrl:ConflictTerm", data: { "rdf:type": iri("skos:Concept") } } },
 
     // ── Verbindingen ────────────────────────────────────────────────────────
     { naam: "Het beleid staat toe", bij: "verbinding", als: { aard: "regel", modaliteit: "mag" }, maak: { type: "odrl:permission" } },
@@ -144,6 +147,8 @@ export const TOEGANGSSPRAAK_NAAR_ODRL_AP_NL = {
     { naam: "Wat", bij: "verbinding", als: { aard: "wat" }, maak: { type: "odrl:target" } },
     // Een groep is bepaald door haar kenmerken: verfijning op de PartyCollection.
     { naam: "Kenmerk dat de groep bepaalt", bij: "verbinding", als: { aard: "kenmerk" }, maak: { type: "odrl:refinement" } },
+    // "waarvan …" bij een begrip: verfijning op de gegevensverzameling (de populatie).
+    { naam: "Afbakening van de gegevens", bij: "verbinding", als: { aard: "afbakening" }, maak: { type: "odrl:refinement" } },
     // Over het verzoek: verfijning op de handeling. Over de gegevens:
     // voorwaarde op de regel. De lezer heeft de voorwaarde daar al gehangen.
     { naam: "Verfijning op de handeling", bij: "verbinding", als: { aard: "als", bron: { aard: "handeling" } }, maak: { type: "odrl:refinement" } },
