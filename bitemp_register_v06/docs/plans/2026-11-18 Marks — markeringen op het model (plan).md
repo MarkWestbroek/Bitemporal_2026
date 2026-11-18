@@ -1,4 +1,4 @@
-# MARKs — markeringen op het model (plan, 18-11-2026)
+# Marks — markeringen op het model (plan, 18-11-2026)
 
 *Sessie OMNIUM-UI (Claude), op vraag van Mark (18-11). Status: **besloten door Mark op 18-11**
 (§9); de kern (stap 2) is in aanbouw. Aanleiding: BACKEND heeft voor "indexen uit het
@@ -7,7 +7,7 @@ afstemming die niet in het canonieke model thuishoort.*
 
 ## 1. Kern in vijf zinnen
 
-1. Een **MARK** is een aanwijzing op een modelelement die zegt **hoe een transformatie dat
+1. Een **mark** is een aanwijzing op een modelelement die zegt **hoe een transformatie dat
    element moet behandelen**. Hij verandert de betekenis van het model niet.
 2. Marks staan **los van het model, in een eigen laag erbovenop** (MDA: een doorzichtig vel over
    het model). Ze zitten wel in het project, gaan mee in sync, branches en export.
@@ -202,13 +202,27 @@ Stap 2 tot en met 5 zijn genoeg voor BACKEND's stap 4; het scherm (6 en 7) kan d
 klaar is kan BACKEND de tijdelijke veldeigenschap `fysiek: {…}` gebruiken; die verhuist dan in één
 omzetting naar `register.*`-marks in de laag *algemeen*.
 
+**Afstemming met BACKEND (18-11).** Akkoord op `register.zoeksleutel` en `register.sorteerbaar`
+(boolean, op een veld) en op de bijlage; er komt geen tijdelijke veldeigenschap.
+`register.tekstzoeken` is gereserveerd (zoeken op een deel van een tekst; ander soort index).
+`uniek` blijft een eigenschap van het veld: het is een regel van het model, geen afstemming. De
+doelkant van een relatie krijgt altijd een index, dus een mark op een relatie is daarvoor niet
+nodig. Eis aan de export: elk veld met een mark heeft een uuid in de V3; een mark waarvan de
+codegen het doel niet vindt geeft een waarschuwing en de bouw gaat door.
+
+**Stand (18-11).** Stap 2 is gebouwd: `web/vite/src/marks/marks.js` (lagen, contexten,
+`effectieveMarks`, `marksVoor`, `wezen`, `marksBijlage`) en `marksoorten.js` (soorten per
+transformatie, toets op doel en datatype, de eerste set `register.*`), met tests. Nog nergens
+aangesloten: geen opslag, geen scherm, geen export.
+
 Wat nu al in het model staat en eigenlijk een mark is, verhuizen we **niet** vooraf. Kandidaten om
 later te bekijken: de vorm van invoer in een formulier (inhoud en vorm scheiden we al), een
 afwijkende tabelnaam, en GZAC-specifieke keuzes in een BPMN-model.
 
 ## 9. Besluiten van Mark (18-11)
 
-1. **Naam: MARK**, de MDA-naam, ook in de Studio. Wie dit gebruikt kent de term. (En Mark heet
+1. **Naam: mark**, de MDA-naam, ook in de Studio (aan het begin van een zin en als kopje: Mark,
+   Marks). Geen hoofdletters: het is geen afkorting. Wie dit gebruikt kent de term. (En Mark heet
    zelf ook zo.)
 2. **Een mark komt vanuit de vraag, het doel.** De marksoort hoort dus bij de transformatie
    (regelset), met een naamruimte; niet bij het profiel of het M3.
