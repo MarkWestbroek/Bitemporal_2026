@@ -17,7 +17,7 @@ import { create } from "zustand";
 import { koppelStore, marksNet, MARKS_VELDEN } from "./sync/operaties.js";
 import { sleutelIn } from "../diagramcore/model/opslagRuimte.js";
 import { registreerMarksoorten, zetProjectsoorten, REGISTER_MARKSOORTEN } from "../marks/marksoorten.js";
-import { leegMarks, normaliseerMarks, patchMarks, metLaag, zonderLaag, metContext, zonderContext, zetMark, wisMark, metSoort, zonderSoort } from "../marks/marks.js";
+import { leegMarks, normaliseerMarks, patchMarks, metLaag, zonderLaag, metContext, zonderContext, zetMark, wisMark, metSoort, zonderSoort, zonderEigen, alleenEigen, metEigen, deelLaag } from "../marks/marks.js";
 
 export const LS_MARKS = "studio-marks";
 
@@ -71,8 +71,12 @@ export const useMarksStore = create((set) => {
 
     /** Operatie van een ander (projectsync) of van het samenvoegen. */
     patchMarks: (patch) => naar((st) => patchMarks(st, patch)),
-    /** Werkbestand laden: vervangt alles. */
-    laadMarks: (ruw) => naar(() => normaliseerMarks(ruw)),
+    /** Werkbestand laden: vervangt wat van het project is; de eigen lagen blijven. */
+    laadMarks: (ruw) => naar((st) => metEigen(normaliseerMarks(ruw), alleenEigen(st))),
+    /** Werkruimte laden (ander apparaat): vervangt de eigen lagen. */
+    laadEigen: (eigen) => naar((st) => metEigen(st, eigen)),
+    /** Een eigen laag delen met het project. */
+    deelLaag: (id) => naar((st) => deelLaag(st, id)),
 
     zetActieveContext: (actieveContext) =>
       set((s) => {
@@ -100,5 +104,36 @@ useMarksStore.subscribe((s, vorig) => {
 // Projectsync: de netto wijziging is de operatie (zoals bij de kruisverbanden).
 koppelStore("marks", useMarksStore, { velden: MARKS_VELDEN, net: marksNet });
 
-/** De marks van het project in de vorm van het werkbestand. */
-export const marksVanProject = () => stand(useMarksStore.getState());
+/** De marks van het project in de vorm van het werkbestand (zonder de eigen lagen). */
+export const marksVanProject = () => zonderEigen(stand(useMarksStore.getState()));
+
+/**
+ * Wat van de gebruiker is, voor de werkruimte (reist mee naar een ander apparaat): de eigen lagen
+ * met hun marks, en welke lagen hij toepast en waarin hij schrijft. `null` als er niets is.
+ */
+export function marksVoorWerkruimte() {
+  const s = useMarksStore.getState();
+  const eigen = alleenEigen(stand(s));
+  if (!eigen.lagen.length && !s.actieveContext && !s.werklaag) return null;
+  return { ...eigen, actieveContext: s.actieveContext ?? null, werklaag: s.werklaag ?? null };
+}
+
+/** De werkruimte van een ander apparaat overnemen. */
+export function laadMarksUitWerkruimte(w) {
+  const s = useMarksStore.getState();
+  s.laadEigen(w || null);
+  if (w && "actieveContext" in w) s.zetActieveContext(w.actieveContext ?? null);
+  if (w && "werklaag" in w) s.zetWerklaag(w.werklaag ?? null);
+}
+
+/** Meld wijzigingen in wat van de gebruiker is (de werkruimte schrijft dan weg). */
+export function opEigenWijziging(fn) {
+  let vorig = JSON.stringify(marksVoorWerkruimte());
+  return useMarksStore.subscribe(() => {
+    const nu = JSON.stringify(marksVoorWerkruimte());
+    if (nu !== vorig) {
+      vorig = nu;
+      fn();
+    }
+  });
+}

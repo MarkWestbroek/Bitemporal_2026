@@ -8,6 +8,12 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
 
+### Toegevoegd
+- **Marks: eigen lagen** (Mark 18-11): een laag kan alleen van jou zijn (*＋ eigen laag*), om iets te proberen. Hij
+  staat in je werkruimte en reist mee naar een ander apparaat, maar niet naar het project of de export van de
+  server. Met *Deel* wordt hij van het project, met zijn marks.
+- **Marks: kiezen op label**: *Kies op label…* laat de lagen met dat label meedoen, plus de lagen zonder label.
+
 ## [studio/v0.46.0] — 2026-11-18
 
 Samen met render 0.5.0. De api (0.29.0: sorteren en indexen uit marks) en de devloop volgen van BACKEND.

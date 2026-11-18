@@ -15,7 +15,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useMarksStore } from "./marksStore.js";
 import { paneelVoorElement, schermContext, zetEffect, bestaatIn } from "../marks/marksPaneel.js";
-import { wezen, doelSleutel, projectSoortId } from "../marks/marks.js";
+import { wezen, doelSleutel, projectSoortId, alleLabels, lagenVoorFilter } from "../marks/marks.js";
 import { getMarksoort, alleMarksoorten, naamruimteVan } from "../marks/marksoorten.js";
 import { getProfieltypen } from "./profieltypeRegistry.js";
 import { vraagNaam, vraagBevestiging } from "./naamDialog.jsx";
@@ -132,7 +132,8 @@ export default function MarksPaneel({ profielId, descriptorId, element }) {
       </div>
       {lagen.length === 0 ? (
         <p className="studio-marks__leeg">
-          Een mark is een aanwijzing voor een transformatie, los van het model. Marks staan in lagen.{" "}
+          Een mark is een aanwijzing voor een transformatie, los van het model. Marks staan in lagen; de eerste laag
+          is van het project.{" "}
           <button type="button" className="dc-mini-knop" data-testid="marks-eerste-laag" onClick={eersteLaag}>Eerste laag maken</button>
         </p>
       ) : (
@@ -141,7 +142,7 @@ export default function MarksPaneel({ profielId, descriptorId, element }) {
             schrijft in{" "}
             <select value={werklaag || ""} data-testid="marks-werklaag" onChange={(e) => useMarksStore.getState().zetWerklaag(e.target.value)}>
               {context.map((id) => (
-                <option key={id} value={id}>{laagNaam(id)}</option>
+                <option key={id} value={id}>{laagNaam(id)}{lagen.find((l) => l.id === id)?.eigen ? " (van jou)" : ""}</option>
               ))}
             </select>
           </label>
@@ -209,12 +210,31 @@ export function MarksLagenDialoog({ onSluit }) {
     [nieuw[i], nieuw[j]] = [nieuw[j], nieuw[i]];
     zetMee(nieuw);
   };
-  const nieuweLaag = async () => {
-    const naam = await vraagNaam({ titel: "Nieuwe laag", label: "Naam", waarde: "", bevestig: "Maken" });
+  // Een laag is van jou (alleen in jouw werkruimte) of van het project (iedereen ziet hem, en de
+  // server neemt hem mee in de export). Een eigen laag krijgt een id dat niet kan botsen met een
+  // projectlaag van een ander.
+  const nieuweLaag = async (eigen) => {
+    const naam = await vraagNaam({ titel: eigen ? "Nieuwe eigen laag" : "Nieuwe projectlaag", label: "Naam", waarde: "", bevestig: "Maken" });
     if (!naam) return;
-    const id = nieuwId(naam, new Set(lagen.map((l) => l.id)));
-    store().zetLaag({ id, naam, labels: [] });
+    const stam = eigen ? `mijn-${naam}-${Math.random().toString(36).slice(2, 6)}` : naam;
+    const id = nieuwId(stam, new Set(lagen.map((l) => l.id)));
+    store().zetLaag({ id, naam, labels: [], ...(eigen ? { eigen: true } : {}) });
     zetMee([...mee, id]);
+  };
+  const deel = async (laag) => {
+    const n = marks.filter((m) => m.laag === laag.id).length;
+    const ok = await vraagBevestiging({ titel: "Laag delen met het project", tekst: `Laag "${laag.naam}" met ${n} mark${n === 1 ? "" : "s"} delen? Iedereen in het project ziet hem dan, en de server neemt hem mee in de export. Terugnemen kan niet.`, bevestig: "Delen" });
+    if (ok) store().deelLaag(laag.id);
+  };
+  const labels = alleLabels(lagen);
+  const kiesOpLabel = (tekst) => {
+    const i = tekst.indexOf("=");
+    if (i < 0) return;
+    const gekozen = new Set(lagenVoorFilter(lagen, [{ soort: tekst.slice(0, i), waarde: tekst.slice(i + 1) }]).map((l) => l.id));
+    // Lagen zonder labels zijn algemeen en blijven meedoen; de volgorde van nu blijft.
+    const algemeen = new Set(lagen.filter((l) => !l.labels.length).map((l) => l.id));
+    const volgorde = [...mee, ...lagen.map((l) => l.id).filter((id) => !mee.includes(id))];
+    zetMee(volgorde.filter((id) => gekozen.has(id) || algemeen.has(id)));
   };
   const wis = async (laag) => {
     const n = marks.filter((m) => m.laag === laag.id).length;
@@ -276,11 +296,12 @@ export function MarksLagenDialoog({ onSluit }) {
             ) : (
               <> Met één laag hoef je hier niets te doen. Een tweede laag maak je voor een tweede situatie; dan kies je
               hier welke meedoen en welke wint.</>
-            )}
+            )}{" "}
+            Een <b>eigen laag</b> is alleen van jou, om iets te proberen; met <i>Deel</i> wordt hij van het project.
           </p>
           <table className="studio-marks__lagen">
             <thead>
-              <tr><th>doet mee</th><th>laag</th><th>labels</th><th>marks</th><th /></tr>
+              <tr><th>doet mee</th><th>laag</th><th>van</th><th>labels</th><th>marks</th><th /></tr>
             </thead>
             <tbody>
               {rij.map((id) => {
@@ -294,6 +315,16 @@ export function MarksLagenDialoog({ onSluit }) {
                       <button type="button" className="dc-mini-knop" disabled={!doetMee || mee.indexOf(id) === mee.length - 1} title="Later (sterker)" onClick={() => schuif(id, 1)}>↓</button>
                     </td>
                     <td><input type="text" value={laag.naam} onChange={(e) => store().zetLaag({ ...laag, naam: e.target.value })} /></td>
+                    <td>
+                      {laag.eigen ? (
+                        <>
+                          <span title="Alleen in jouw werkruimte; niet in de export van de server">jou</span>{" "}
+                          <button type="button" className="dc-mini-knop" data-testid="marks-laag-delen" title="Deel deze laag met het project" onClick={() => deel(laag)}>Deel</button>
+                        </>
+                      ) : (
+                        <span title="Van het project: iedereen ziet hem">project</span>
+                      )}
+                    </td>
                     <td><input type="text" defaultValue={labelsTekst(laag.labels)} placeholder="soort=waarde; …" onBlur={(e) => store().zetLaag({ ...laag, labels: labelsUit(e.target.value) })} /></td>
                     <td>{marks.filter((m) => m.laag === id).length}</td>
                     <td><button type="button" className="dc-mini-knop is-gevaar" title="Laag weghalen" onClick={() => wis(laag)}>✕</button></td>
@@ -303,8 +334,17 @@ export function MarksLagenDialoog({ onSluit }) {
             </tbody>
           </table>
           <div className="studio-marks__acties">
-            <button type="button" className="dc-mini-knop" data-testid="marks-nieuwe-laag" onClick={nieuweLaag}>＋ laag</button>
+            <button type="button" className="dc-mini-knop" data-testid="marks-nieuwe-laag" title="Een laag van het project: iedereen ziet hem" onClick={() => nieuweLaag(false)}>＋ projectlaag</button>
+            <button type="button" className="dc-mini-knop" data-testid="marks-nieuwe-eigen-laag" title="Een laag alleen voor jou; later te delen" onClick={() => nieuweLaag(true)}>＋ eigen laag</button>
             <span style={{ flex: 1 }} />
+            {labels.length > 0 && (
+              <select value="" data-testid="marks-op-label" title="Laat de lagen met dit label meedoen (en de lagen zonder label)" onChange={(e) => kiesOpLabel(e.target.value)}>
+                <option value="">Kies op label…</option>
+                {labels.map((l) => (
+                  <option key={`${l.soort}=${l.waarde}`} value={`${l.soort}=${l.waarde}`}>{l.soort} = {l.waarde}</option>
+                ))}
+              </select>
+            )}
             <select value="" title="Een bewaarde context toepassen" onChange={(e) => { const c = contexten.find((x) => x.id === e.target.value); if (c) zetMee(c.lagen); }}>
               <option value="">Context toepassen…</option>
               {contexten.map((c) => (
@@ -399,3 +439,18 @@ export function MarksLagenDialoog({ onSluit }) {
 
 /** De stand uit de store, voor wie hem buiten React nodig heeft (canvas-teken). */
 export const marksStand = () => stand(useMarksStore.getState());
+
+/**
+ * Het beheer van lagen en soorten, te openen vanuit het menu (Project → Marks: lagen en
+ * soorten…), ook als er nog geen laag of mark is en geen element geselecteerd. Eén keer in de
+ * StudioShell; luistert naar `omnium:marks-beheer`.
+ */
+export function MarksBeheerHost() {
+  const [open, setOpen] = useState(false);
+  useEffect(() => {
+    const toon = () => setOpen(true);
+    window.addEventListener("omnium:marks-beheer", toon);
+    return () => window.removeEventListener("omnium:marks-beheer", toon);
+  }, []);
+  return open ? <MarksLagenDialoog onSluit={() => setOpen(false)} /> : null;
+}

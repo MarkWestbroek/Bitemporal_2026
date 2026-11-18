@@ -28,6 +28,7 @@ import { menuBus } from "./menuBus";
 import { startFieldRefBinding } from "./fieldRefBinding.js";
 import { OmniumMark } from "./icons";
 import { NaamDialogHost } from "./naamDialog";
+import { MarksBeheerHost } from "./MarksPaneel.jsx";
 import { DocumentVoorbeeldHost } from "./activities/documentVoorbeeld.jsx";
 import HelpHost from "./HelpHost.jsx";
 
@@ -158,6 +159,7 @@ export default function StudioShell() {
         {menubar}
         {palette}
         <NaamDialogHost />
+        <MarksBeheerHost />
         <DocumentVoorbeeldHost />
         <HelpHost />
         <div className="studio-shell-row">
@@ -181,6 +183,7 @@ export default function StudioShell() {
       {menubar}
       {palette}
       <NaamDialogHost />
+      <MarksBeheerHost />
       <DocumentVoorbeeldHost />
       <HelpHost />
       <div className="studio-shell-row">
