@@ -29,8 +29,8 @@ package dbsetup
 //	zoek     een veld met de mark register.zoeksleutel of register.sorteerbaar (schema-tag
 //	         zoeksleutel / sorteerbaar, door de codegen gezet uit de marks-bijlage): (kolom)
 //	         op de _Data-tabel. Niet partieel, zodat ook een vraag op een peiltijdstip hem
-//	         gebruikt. Dient het filter (eq, in, bereik). Het sorteren van lijsten gebruikt
-//	         hem in de huidige vorm nog niet (dynql/sortering.go).
+//	         gebruikt. Dient het filter (eq, in, bereik) en het sorteren van een lijst op
+//	         één sleutel van een enkelvoudig, niet-materieel GE (dynql/sortering.go).
 //
 // Uitleg: docs/INDEXEN.md.
 

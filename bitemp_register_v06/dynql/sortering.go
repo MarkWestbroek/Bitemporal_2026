@@ -24,12 +24,17 @@ package dynql
 // typenaam in deze code. Een veld waarop het subject volgens het toegangsbeleid niet mag
 // kijken, is ook geen sorteersleutel: de volgorde zou de waarde verraden.
 //
-// Prestatie: de sorteerwaarde is een gecorreleerde subquery per entiteit. PostgreSQL moet die
-// voor alle entiteiten die aan het filter voldoen uitrekenen voordat het de eerste pagina kan
-// geven; een index op de waardekolom versnelt dat niet. Zie docs/INDEXEN.md, stap 3.
+// Prestatie: in de algemene vorm is de sorteerwaarde een gecorreleerde subquery per entiteit.
+// PostgreSQL moet die voor alle entiteiten die aan het filter voldoen uitrekenen voordat het
+// de eerste pagina kan geven; een index op de waardekolom versnelt dat niet. Het eenvoudige
+// geval (één sleutel op een enkelvoudig, niet-materieel GE) gaat daarom via een join op de
+// waarde zelf: zie onderaan dit bestand en docs/INDEXEN.md.
 
 import (
+	"context"
 	"fmt"
+	"reflect"
+	"sort"
 	"strings"
 	"time"
 
@@ -180,4 +185,220 @@ func (b *filterBouwer) sorteerToegang(pad string) error {
 		return fmt.Errorf("sorteer: geen toegang tot %s volgens het toegangsbeleid", pad)
 	}
 	return nil
+}
+
+// --- Sorteren op de waarde zelf (18-11-2026) --------------------------------
+//
+// Ontwerp: docs/plans/2026-11-18 Sorteren via de index — ontwerp.md.
+//
+// In het eenvoudige geval is de sorteerwaarde geen subquery per entiteit maar een kolom van
+// een gejoinde tabel. PostgreSQL kan dan de index op die kolom in volgorde aflopen en stoppen
+// na de pagina, of (zonder index) één keer sorteren in plaats van per entiteit een subquery
+// uit te rekenen.
+//
+// Het eenvoudige geval: precies één sleutel van de vorm <GE of relatie>.<veld>, en dat GE is
+// enkelvoudig en niet materieel. Dan is er per entiteit hooguit één actief record en is de
+// join gelijk aan MIN/MAX. Een meervoudig GE geeft meerdere rijen per entiteit; een
+// enkelvoudig materieel GE kan meerdere formeel actieve voorkomens hebben (opvolging).
+//
+// Entiteiten zonder waarde komen niet uit de join. Zij vormen een tweede deel, op id, dat de
+// pagina aanvult als het eerste deel op is. Zo blijft de regel "zonder waarde achteraan, in
+// beide richtingen" gelijk aan de subquery-vorm.
+
+// waardeSortering beschrijft de join waarmee op de waarde zelf gesorteerd kan worden.
+type waardeSortering struct {
+	def      *filterDef
+	kind     *filterKind
+	veld     filterVeld
+	aflopend bool
+	pad      string // registerpad voor het toegangsbeleid
+}
+
+const (
+	sorteerHubAlias  = "sw"
+	sorteerDataAlias = "swd"
+)
+
+// waardeSorteringVoor geeft de join-vorm als de sortering het eenvoudige geval is, anders nil.
+func waardeSorteringVoor(meta model.TypeMeta, sortering []Sortering) *waardeSortering {
+	if len(sortering) != 1 || meta.IDKolom == "" {
+		return nil
+	}
+	delen := strings.Split(sortering[0].Veldpad, ".")
+	if len(delen) != 2 {
+		return nil
+	}
+	def := filterDefVoor(meta)
+	if def == nil {
+		return nil
+	}
+	kind := def.kinderen[delen[0]]
+	if kind == nil || kind.hubMeta.IsMaterieel || kind.hubMeta.EntiteitIDKolom == "" {
+		return nil
+	}
+	enkelvoudig := false
+	for _, child := range meta.OnderliggendeGegevenselementen {
+		if child.JSONRolnaam == delen[0] {
+			enkelvoudig = child.Momentvoorkomen == model.Enkelvoudig
+			break
+		}
+	}
+	if !enkelvoudig {
+		return nil
+	}
+	veld, ok := kind.velden[delen[1]]
+	if !ok || (veld.opData && kind.dataMeta == nil) {
+		return nil
+	}
+	return &waardeSortering{def: def, kind: kind, veld: veld, aflopend: sortering[0].Aflopend,
+		pad: meta.Typenaam + "." + sortering[0].Veldpad}
+}
+
+// waardeAlias: de tabel waarin de sorteerkolom staat.
+func (w *waardeSortering) waardeAlias() string {
+	if w.veld.opData {
+		return sorteerDataAlias
+	}
+	return sorteerHubAlias
+}
+
+// bron bouwt "<hub> AS sw [JOIN <data> AS swd ON <sleutels gelijk> AND <data actief>]", met
+// dezelfde tabellen en voorwaarden als sorteerExpressie.
+func (w *waardeSortering) bron(b *filterBouwer) string {
+	var sql strings.Builder
+	sql.WriteString(b.arg(bun.Ident(w.kind.hubMeta.Tabelnaam)) + " AS " + b.arg(bun.Ident(sorteerHubAlias)))
+	if w.kind.dataMeta != nil {
+		ent := w.kind.hubMeta.EntiteitIDKolom
+		sleutel := w.kind.hubMeta.IDKolom
+		fmt.Fprintf(&sql, " JOIN %s AS %s ON %s = %s AND %s = %s AND %s",
+			b.arg(bun.Ident(w.kind.dataMeta.Tabelnaam)), b.arg(bun.Ident(sorteerDataAlias)),
+			b.kol(sorteerDataAlias, ent), b.kol(sorteerHubAlias, ent),
+			b.kol(sorteerDataAlias, sleutel), b.kol(sorteerHubAlias, sleutel),
+			b.actief(sorteerDataAlias))
+	}
+	return sql.String()
+}
+
+// bijEntiteit: het actieve record hoort bij de entiteit van de buitenste query en heeft een waarde.
+func (w *waardeSortering) bijEntiteit(b *filterBouwer) string {
+	return fmt.Sprintf("%s = %s AND %s AND %s IS NOT NULL",
+		b.kol(sorteerHubAlias, w.kind.hubMeta.EntiteitIDKolom), b.kol(w.def.alias, w.def.meta.IDKolom),
+		b.actief(sorteerHubAlias), b.kol(w.waardeAlias(), w.veld.kolom))
+}
+
+// laadIDsOpWaarde geeft de id's van één pagina in de gevraagde volgorde: eerst de entiteiten
+// met een waarde (deel 1), dan die zonder (deel 2, op id).
+func laadIDsOpWaarde(ctx context.Context, meta model.TypeMeta, v LijstVraag, w *waardeSortering, mag func(string) bool) ([]int64, error) {
+	moment := v.Peil
+	toegang := &filterBouwer{peil: &moment, mag: mag}
+	if err := toegang.sorteerToegang(w.pad); err != nil {
+		return nil, err
+	}
+	// basis: de entiteiten die actief zijn en aan het filter voldoen; alleen de id.
+	basis := func() (*bun.SelectQuery, error) {
+		q := db.NewSelect().Model(meta.SliceFactory()).
+			ColumnExpr("?TableAlias.?", bun.Ident(meta.IDKolom)).
+			Where("?TableAlias.opvoer <= ?", moment).
+			Where("(?TableAlias.afvoer IS NULL OR ?TableAlias.afvoer > ?)", moment)
+		return pasFilterToeMetToegang(q, meta, v.Filter, &moment, mag)
+	}
+	// Een hub met data staat als geneste join: "JOIN (hub JOIN data ON …) ON …".
+	metWaarde := func() (*bun.SelectQuery, error) {
+		q, err := basis()
+		if err != nil {
+			return nil, err
+		}
+		b := &filterBouwer{peil: &moment}
+		bron := w.bron(b)
+		if w.kind.dataMeta != nil {
+			bron = "(" + bron + ")" // alleen een join mag tussen haakjes
+		}
+		join := "JOIN " + bron + " ON " + w.bijEntiteit(b)
+		return q.Join(join, b.args...), nil
+	}
+
+	q1, err := metWaarde()
+	if err != nil {
+		return nil, err
+	}
+	richting := "ASC"
+	if w.aflopend {
+		richting = "DESC"
+	}
+	var ids []int64
+	err = q1.OrderExpr("?.? "+richting, bun.Ident(w.waardeAlias()), bun.Ident(w.veld.kolom)).
+		OrderExpr("?TableAlias.? ASC", bun.Ident(meta.IDKolom)).
+		Limit(v.Limit).Offset(v.Offset).Scan(ctx, &ids)
+	if err != nil {
+		return nil, err
+	}
+	if len(ids) >= v.Limit {
+		return ids, nil
+	}
+
+	// Deel 1 is op. Hoeveel entiteiten had het? Met treffers volgt dat uit de offset; zonder
+	// treffers en met een offset is één telling nodig.
+	aantalMetWaarde := v.Offset + len(ids)
+	if len(ids) == 0 && v.Offset > 0 {
+		qn, err := metWaarde()
+		if err != nil {
+			return nil, err
+		}
+		if aantalMetWaarde, err = qn.Count(ctx); err != nil {
+			return nil, err
+		}
+	}
+	offset2 := v.Offset - aantalMetWaarde
+	if offset2 < 0 {
+		offset2 = 0
+	}
+	q2, err := basis()
+	if err != nil {
+		return nil, err
+	}
+	b := &filterBouwer{peil: &moment}
+	geenWaarde := "NOT EXISTS (SELECT 1 FROM " + w.bron(b) + " WHERE " + w.bijEntiteit(b) + ")"
+	var rest []int64
+	err = q2.Where(geenWaarde, b.args...).
+		OrderExpr("?TableAlias.? ASC", bun.Ident(meta.IDKolom)).
+		Limit(v.Limit-len(ids)).Offset(offset2).Scan(ctx, &rest)
+	if err != nil {
+		return nil, err
+	}
+	return append(ids, rest...), nil
+}
+
+// zetOpVolgorde zet een geladen slice (pointer naar []T) in de volgorde van ids.
+func zetOpVolgorde(entities any, idKolom string, ids []int64) {
+	sv := reflect.ValueOf(entities)
+	if sv.Kind() == reflect.Ptr {
+		sv = sv.Elem()
+	}
+	if sv.Kind() != reflect.Slice {
+		return
+	}
+	plek := make(map[int64]int, len(ids))
+	for i, id := range ids {
+		plek[id] = i
+	}
+	kopie := reflect.MakeSlice(sv.Type(), sv.Len(), sv.Len())
+	reflect.Copy(kopie, sv)
+	volgorde := make([]int, sv.Len())
+	for i := range volgorde {
+		volgorde[i] = i
+	}
+	sleutel := func(i int) int {
+		id, err := haalIntID(kopie.Index(i), idKolom)
+		if err != nil {
+			return len(ids)
+		}
+		if p, ok := plek[int64(id)]; ok {
+			return p
+		}
+		return len(ids)
+	}
+	sort.SliceStable(volgorde, func(a, b int) bool { return sleutel(volgorde[a]) < sleutel(volgorde[b]) })
+	for i, bron := range volgorde {
+		sv.Index(i).Set(kopie.Index(bron))
+	}
 }

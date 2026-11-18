@@ -216,15 +216,32 @@ func (dbLader) LaadLijst(ctx context.Context, meta model.TypeMeta, v LijstVraag)
 	if bundel := pep.Actief(); bundel != nil {
 		mag = func(pad string) bool { return pep.MagPadCtx(ctx, bundel, pad) }
 	}
-	query, err := pasFilterToeMetToegang(query, meta, v.Filter, &moment, mag)
-	if err != nil {
-		return nil, err
+	// Het eenvoudige sorteergeval: eerst de id's van de pagina via een join op de waarde
+	// (sortering.go), daarna die entiteiten laden. De noodrem zet dit uit.
+	var paginaIDs []int64
+	opWaarde := false
+	if w := waardeSorteringVoor(meta, v.Sortering); w != nil && !klassiekLaden {
+		ids, err := laadIDsOpWaarde(ctx, meta, v, w, mag)
+		if err != nil {
+			return nil, fmt.Errorf("lijst query fout voor %s: %v", meta.Typenaam, err)
+		}
+		if len(ids) == 0 {
+			return entities, nil
+		}
+		paginaIDs, opWaarde = ids, true
+		query = query.Where("?TableAlias.? IN (?)", bun.Ident(meta.IDKolom), bun.In(ids))
+	} else {
+		var err error
+		query, err = pasFilterToeMetToegang(query, meta, v.Filter, &moment, mag)
+		if err != nil {
+			return nil, err
+		}
+		query, err = pasSorteringToe(query, meta, v.Sortering, &moment, mag)
+		if err != nil {
+			return nil, err
+		}
+		query = query.Limit(v.Limit).Offset(v.Offset)
 	}
-	query, err = pasSorteringToe(query, meta, v.Sortering, &moment, mag)
-	if err != nil {
-		return nil, err
-	}
-	query = query.Limit(v.Limit).Offset(v.Offset)
 	kies := groepKiezer(ctx, meta)
 	if v.Volledig {
 		query = addOnderliggendeRelations(query, meta, &moment, kies)
@@ -234,6 +251,9 @@ func (dbLader) LaadLijst(ctx context.Context, meta model.TypeMeta, v LijstVraag)
 			return nil, fmt.Errorf("full lijst query fout voor %s: %v", meta.Typenaam, err)
 		}
 		return nil, fmt.Errorf("lijst query fout voor %s: %v", meta.Typenaam, err)
+	}
+	if opWaarde {
+		zetOpVolgorde(entities, meta.IDKolom, paginaIDs)
 	}
 	if v.Volledig {
 		if err := laadHubKinderenNaQuery(ctx, entities, meta, &moment, kies); err != nil {

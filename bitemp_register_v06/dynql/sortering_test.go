@@ -240,3 +240,45 @@ func TestSorteringPG_Volgorde(t *testing.T) {
 		t.Errorf("onbekend veld hoort een sorteer-fout te geven, kreeg %v", fouten)
 	}
 }
+
+// De join-vorm (sorteren op de waarde zelf) geldt alleen voor één sleutel op een enkelvoudig,
+// niet-materieel GE. De volgorde zelf bewijst TestSorterenOpWaarde (tag integration).
+func TestWaardeSortering_AlleenHetEenvoudigeGeval(t *testing.T) {
+	meta := initiatiefMeta(t)
+	gevallen := map[string][]Sortering{
+		"geen sleutels":    nil,
+		"eigen kolom":      {{Veldpad: "id"}},
+		"meervoudig GE":    {{Veldpad: "initiatief_gemeenten.rol"}},
+		"twee sleutels":    {{Veldpad: "initiatief_gemeenten.rol"}, {Veldpad: "id"}},
+		"onbekend GE":      {{Veldpad: "bestaatniet.veld"}},
+		"te veel paddelen": {{Veldpad: "a.b.c"}},
+	}
+	for naam, s := range gevallen {
+		if w := waardeSorteringVoor(meta, s); w != nil {
+			t.Errorf("%s: verwacht de subquery-vorm, kreeg de join-vorm", naam)
+		}
+	}
+	// Zoek in het hele model een enkelvoudig, niet-materieel GE: daar hoort de join-vorm.
+	gevonden := false
+	for _, m := range model.MetaRegistry {
+		for _, child := range m.OnderliggendeGegevenselementen {
+			hub, ok := model.MetaRegistry.GetTypeMeta(child.Doeltype)
+			if !ok || child.JSONRolnaam == "" || child.Momentvoorkomen != model.Enkelvoudig || hub.IsMaterieel {
+				continue
+			}
+			kind := filterKindVoor(child.Doeltype)
+			if kind == nil || filterDefVoor(m) == nil {
+				continue
+			}
+			for veld := range kind.velden {
+				if waardeSorteringVoor(m, []Sortering{{Veldpad: child.JSONRolnaam + "." + veld}}) == nil {
+					t.Fatalf("%s.%s.%s: verwacht de join-vorm", m.Typenaam, child.JSONRolnaam, veld)
+				}
+				gevonden = true
+			}
+		}
+	}
+	if !gevonden {
+		t.Skip("geen enkelvoudig, niet-materieel GE in het model")
+	}
+}

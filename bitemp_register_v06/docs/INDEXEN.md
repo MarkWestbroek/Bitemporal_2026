@@ -85,8 +85,8 @@ De weg van mark naar index:
 
 - Beide marksoorten geven dezelfde index. Hij is niet partieel, zodat ook een vraag op een
   peiltijdstip hem gebruikt.
-- De index dient het **filter** (`eq`, `in`, bereik). Het sorteren van lijsten gebruikt hem in
-  de huidige vorm niet (zie Vervolg).
+- De index dient het **filter** (`eq`, `in`, bereik) en, sinds 18-11-2026, het **sorteren** in
+  het eenvoudige geval (zie §Sorteren op de waarde zelf).
 - Een mark waarvan de uuid niet in het model staat, op iets anders dan een veld, of zonder
   ja/nee-waarde: een waarschuwing in de uitvoer van de codegen, en de bouw gaat door.
 - `register.tekstzoeken` is gereserveerd en wordt nog niet gelezen. Andere naamruimten gaan
@@ -185,25 +185,58 @@ deelselecties op np-loc twee keer, klassiek en nieuw: 0 verschillen, 2225 tegen 
 `TestLaderKarakterisering` (volledige selectie, 210 queries) is ongewijzigd groen. Niet gemeten:
 het effect op het register met zaken onder belasting; dat meet FUNDAMENT na de uitrol.
 
+## Sorteren op de waarde zelf (18-11-2026)
+
+Ontwerp en proefmeting: `docs/plans/2026-11-18 Sorteren via de index — ontwerp.md`. Code:
+`dynql/sortering.go` (onderaan) en `dbLader.LaadLijst`.
+
+- **Wanneer.** De lijst heeft precies één sorteersleutel `<GE of relatie>.<veld>`, en dat GE is
+  enkelvoudig en niet materieel. Per entiteit is er dan hooguit één actief record.
+- **Hoe.** Eerst één vraag voor de id's van de pagina: de entiteit gejoind met het actieve
+  record, gesorteerd op de kolom zelf en dan de id. Daarna laadt de lader die entiteiten op id.
+  Met een index op de kolom (`uniek`, mark `register.zoeksleutel` of `register.sorteerbaar`)
+  loopt PostgreSQL de index in volgorde af en stopt na de pagina.
+- **Zonder waarde achteraan.** Entiteiten zonder actief record of met een lege waarde komen
+  niet uit de join. Zij vormen een tweede deel, op id, dat de pagina aanvult als het eerste
+  deel op is. De regel is dus dezelfde als in de subquery-vorm, in beide richtingen.
+- **Ook zonder index.** De join-vorm geldt ook voor een veld zonder index: PostgreSQL sorteert
+  dan één keer in plaats van per entiteit een subquery uit te rekenen. Het ontwerp eiste een
+  index; de proef liet zien dat dat niet nodig is.
+- **Ja/nee-velden.** De subquery-vorm kan niet op een ja/nee-veld sorteren (`MIN`/`MAX` bestaat
+  daar niet voor in PostgreSQL; de vraag gaf een fout). De join-vorm kan het wel.
+- **Noodrem:** `GRAPHQL_KLASSIEK_LADEN=1` zet ook deze vorm uit.
+
+Proefmeting (nagebouwde tabellen, 102.000 zaken, één gebruiker; geen meting op het register):
+
+| Vraag | Subquery-vorm | Join-vorm |
+|---|---|---|
+| alle zaken op startdatum, eerste 50, met index | 351 ms | 0,4 ms |
+| idem, zonder index | 351 ms | 40 ms |
+| zaken van één zaaktype (5%) op startdatum, eerste 50 | 13,7 ms | 3,6 ms |
+
+Bewijs dat de volgorde gelijk blijft: `TestSorterenOpWaarde` (tag `integration`) draait op
+np-loc 382 sorteervragen twee keer, met de noodrem en zonder: oplopend, aflopend, pagina's over
+de grens tussen de twee delen, een offset voorbij het eerste deel, een filter, een
+peiltijdstip en de full-lijst. 0 verschillen; 220 vragen gingen via de join-vorm. Np-loc is
+klein (zes personen): de test bewijst de volgorde, niet de snelheid.
+
 ## Vervolg
 
 - **Stap 3.**
   - *GraphQL, gebouwd:* het argument `sorteer` op de lijst-queries (`dynql/sortering.go`,
     uitleg in `docs/dynamische-graphql-laag.md` §Sorteren). Exact filteren kon GraphQL al
-    (`eq`, `in`, ook op de doel-id van een eigen relatie). De sorteerwaarde is een subquery per
-    entiteit; een index op de waardekolom versnelt het sorteren in deze vorm niet. Sorteren dat
-    wél een index gebruikt, vraagt een query die bij de `_Data`-tabel begint; dat hoort bij de
-    MARK `register.sorteerbaar` (stap 4) en is nog niet ontworpen.
+    (`eq`, `in`, ook op de doel-id van een eigen relatie). In de algemene vorm is de
+    sorteerwaarde een subquery per entiteit; een index op de waardekolom versnelt dat niet. Het
+    eenvoudige geval gaat sinds 18-11-2026 via een join en gebruikt de index wel (§Sorteren op
+    de waarde zelf).
   - *REST, gedeeltelijk:* de lijst en de `/full`-lijst van een entiteit hadden geen `ORDER BY`,
     zodat paginering niet stabiel was. Ze sorteren nu altijd op id (na een eventuele `?sort=`).
   - *REST, open:* filteren en sorteren op een GE-veld. De code daarvoor zit in `dynql`, en
     `dynql` gebruikt `handlers`; andersom kan dus niet zonder het filter en de sortering naar een
     gedeeld pakket te verhuizen. Ook de vorm in de URL is een keuze. Tot dan is "alle zaken van
     zaaktype X, gesorteerd op startdatum" alleen via GraphQL te vragen.
-- **Sorteren met een index.** De sortering van een lijst rekent de waarde per entiteit uit en
-  sorteert dan; de index op de kolom helpt daar niet bij. Een vorm die bij de `_Data`-tabel
-  begint en de index in volgorde afloopt, is voor het eenvoudige geval (één sleutel op een
-  enkelvoudig GE) mogelijk. Het ontwerp met een proefmeting (351 ms wordt 0,4 ms) staat in
-  `docs/plans/2026-11-18 Sorteren via de index — ontwerp.md`; nog niet gebouwd.
+- **Sorteren met een index: de andere gevallen.** Het eenvoudige geval is gebouwd (§Sorteren
+  op de waarde zelf). Meer sleutels, een meervoudig of materieel GE en een eigen kolom van de
+  entiteit houden de subquery-vorm. Pas uitbreiden als een meting het vraagt.
 - **Stap 5.** Een script dat `ModelIndexDefinities` afloopt met `CONCURRENTLY`, voor registers
   met veel data waar de start niet mag blokkeren.
