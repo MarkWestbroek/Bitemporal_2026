@@ -45,6 +45,12 @@ De single source of truth voor het nummer is `package.json` `"version"`.
   Ook de *GZAC-dossierbundel* (ingedeeld per onderdeel van de bundel) en het *zaaktype* (afleidingen en
   volgnummers) tonen hun instellingen zo.
 
+### Gewijzigd
+- **ArchiMate 1.1.0: de relaties staan op een abstract basistype** (Mark 19-11). Wat je mag verbinden is niet
+  veranderd. In het *Profiel-ontwerp* zie je nu elf verbindingsregels naar *ArchiMate-element* in plaats van ruim
+  veertigduizend lijnen (één per paar typen). Een project dat je met deze
+  versie bewaart, meldt in een oudere Studio dat het profiel nieuwer is.
+
 ## [studio/v0.47.0] — 2026-11-18
 
 Samen met render 0.5.1, in dezelfde ronde als api 0.30.0 (devloop 0.33.0, van BACKEND).

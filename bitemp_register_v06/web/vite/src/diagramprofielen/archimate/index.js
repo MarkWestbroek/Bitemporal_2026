@@ -51,7 +51,16 @@ const AARD_RELATIE = {
   associatie: "associatie",
 };
 
-const ALLE_IDS = [...ELEMENTEN.map(([id]) => id), "junction"];
+/**
+ * Het abstracte basistype van alles wat een relatie kan dragen (Mark 19-11). De elf relaties
+ * noemen dit ene type als bron en doel; de motor schrijft dat bij registratie uit naar alle
+ * concrete afstammelingen (types/erfenis.js). Zo staat "elke relatie mag tussen alle elementen"
+ * er één keer per relatie, en niet als 62 × 62 paren: in het Profiel-ontwerp en in het
+ * sidecar-project zijn het elf verbindingsregels in plaats van ruim veertigduizend. De
+ * geldigheidsmatrix van de specificatie (bijlage B) komt later op dezelfde manier: regels op
+ * abstracte tussentypen.
+ */
+const BASIS_ID = "archimate-element";
 
 /**
  * De drie interfaces kennen de cirkel-notatie ("lollipop"). ArchiMate ziet
@@ -66,8 +75,17 @@ const INTERFACE_IDS = new Set(["business-interface", "app-interface", "tech-inte
 
 /** @type {import("../../diagramcore/types/schema.js").ElementType[]} */
 const elementTypes = [
+  {
+    id: BASIS_ID,
+    label: "ArchiMate-element",
+    omschrijving: "Abstract: elk element en de junction. Bereik van de relaties.",
+    isAbstract: true,
+    // Verplicht in het M3; elk kind zet zijn eigen vorm.
+    shape: "archimate-box",
+  },
   ...ELEMENTEN.map(([id, label, kleur, icoon, rond, omschrijving, kort]) => ({
     id,
+    erft: BASIS_ID,
     label,
     omschrijving,
     kort:
@@ -107,6 +125,7 @@ const elementTypes = [
   })),
   {
     id: "junction",
+    erft: BASIS_ID,
     taakbalkGroep: "overig",
     label: "Junction",
     omschrijving: "Splitst/verbindt relaties van hetzelfde type (en = dicht, of = open).",
@@ -174,8 +193,8 @@ const elementTypes = [
     kort: label.split(" ")[0],
     shape: "edge",
     isConnector: true,
-    bron: { elementTypes: ALLE_IDS },
-    doel: { elementTypes: ALLE_IDS },
+    bron: { elementTypes: [BASIS_ID] },
+    doel: { elementTypes: [BASIS_ID] },
     edgePresentatie,
     ...(id === "toegang"
       ? {
@@ -212,6 +231,9 @@ const elementTypes = [
 export const archimateDiagramType = {
   id: ARCHIMATE_ID,
   label: "ArchiMate",
+  // 1.1.0 (19-11): abstract basistype "archimate-element" als bereik van de relaties. Voor een
+  // model verandert er niets: dezelfde concrete typen, dezelfde toegestane verbindingen.
+  versie: "1.1.0",
   style: "uml-klassiek",
   // Connectoren hechten aan de omtrek i.p.v. aan vier handles: dozen
   // dragen vaak veel lijnen, en die moeten kunnen uitwaaieren.
