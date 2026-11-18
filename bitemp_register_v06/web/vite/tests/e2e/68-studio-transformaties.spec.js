@@ -16,8 +16,8 @@ async function open(page) {
 
 test("de lijst toont de ingebouwde regelsets en een regelset toont zijn regels", async ({ page }) => {
   await open(page);
-  await expect(page.getByTestId("regelset-lijst").locator("button")).toHaveCount(10);
-  await expect(page.locator('[data-richting="import"] button')).toHaveCount(3);
+  await expect(page.getByTestId("regelset-lijst").locator("button")).toHaveCount(11);
+  await expect(page.locator('[data-richting="import"] button')).toHaveCount(4);
   await expect(page.locator('[data-richting="export"] button')).toHaveCount(2);
   await expect(page.locator('[data-richting="inrichting"] button')).toHaveCount(5);
   await page.locator('[data-regelset="mermaid-flowchart-naar-usecase"]').first().click();
@@ -92,4 +92,21 @@ test("een regelset met instellingen is te bekijken, niet proef te draaien", asyn
   await page.locator('[data-regelset="canoniek-naar-objecttype"]').first().click();
   await expect(main.getByTestId("regels-tabel").locator("tbody tr")).toHaveCount(14);
   await expect(main.getByTestId("proef-geen")).toContainText("samengesteld");
+});
+
+test("proefdraaien op geplakte ODRL (Turtle) geeft het beleid in klare taal", async ({ page }) => {
+  await open(page);
+  await page.locator('[data-regelset="odrl-ap-nl-naar-toegangsspraak"]').first().click();
+  const proef = page.getByTestId("proef");
+  await expect(proef.getByTestId("proef-tekst")).toHaveValue(/a odrl:Set/);
+  await proef.getByTestId("proef-draai").click();
+  await expect(proef.getByTestId("proef-telling")).toContainText("0 zonder regel");
+  const perRegel = proef.getByTestId("proef-per-regel");
+  await expect(perRegel.locator('tr[data-regel="Toestemming"]').getByTestId("treffers")).toHaveText("1");
+  await expect(perRegel.locator('tr[data-regel="Verbod"]').getByTestId("treffers")).toHaveText("1");
+  // De bouwer maakt van het plan weer een beleid; de rol en de doelbinding staan niet nog eens in de regel.
+  const tekst = proef.getByTestId("proef-doeltekst");
+  await expect(tekst).toContainText('Beleid "Inzage inkomen bij schuldhulp".');
+  await expect(tekst).toContainText("Een schuldhulpverlener mag de inkomensgegevens niet exporteren.");
+  await expect(tekst).toContainText('als de achternaam van de naam van de betrokkene met "A" begint');
 });

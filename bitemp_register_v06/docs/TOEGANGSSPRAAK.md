@@ -91,7 +91,8 @@ Beleid "Inzage inkomen bij schuldhulp".
   statusregel; tab "Canonieke vorm" toont de geherformatteerde tekst (met
   dezelfde ontleding); tab "Diagram" toont de regels als read-only
   regelkaarten (toegangsregel-profiel, zelfde kleuren);
-  menu Beleid: voorbeeld laden, herformatteren, ODRL-export.
+  menu Beleid: voorbeeld laden, herformatteren, ODRL-export (JSON-LD en Turtle
+  volgens ODRL-AP-NL) en ODRL-import (Turtle).
 - **Zinsontleding** (schakelaar): zinsdelen krijgen kleur — subject groen,
   gegevens geel, waarde blauw, vergelijking paars, handeling oranje, plicht
   zeegroen, mag/niet vet.
@@ -144,6 +145,7 @@ projecties van dezelfde AST. Round-trip is een geteste wet:
 | `renderer.js` | AST → canonieke tekst; bijzinsvorm na als/waarvan, stellingsvorm in opsommingen |
 | `odrl.js` | AST → ODRL JSON-LD (Permission/Prohibition/Duty, LogicalConstraint, Party-/AssetCollection, `conflict: prohibit`); gebruikt geresolvede paden waar aanwezig |
 | `graaf.js` · `odrlApNlRegels.js` · `odrlExport.js` | AST → ODRL in **Turtle volgens ODRL-AP-NL** en de ODRL Visualisation Note, in de transformatievorm graafbeeld → regelset → schrijver (zie `TRANSFORMATIES.md` §8). Verschil met `odrl.js`: elke regel, voorwaarde en plicht heeft een eigen IRI en een naam; elk label is de zinsnede uit de klare taal; rol en doel zijn verfijningen op de handeling (`apnl:rolAanvrager`, `odrl:purpose`); het register is een `partOf`-hiërarchie (een pad met delen eronder is `odrl:AssetCollection`, een blad `odrl:Asset`); geldigheid met `schema:validFrom`. De trace is het verliesrapport. Voorbeelden voor de ODRL-viewer van de werkgroep FTV: `authz/odrl-viewer-voorbeelden/` |
+| `odrlNaarToegangsspraakRegels.js` · `odrlNaarBeleid.js` · `odrlImport.js` | De terugweg: **ODRL in Turtle (ODRL-AP-NL) → beleid in klare taal** (zie `TRANSFORMATIES.md` §8.1). Lezer, graaflaag en regelset geven een plan; de bouwer maakt daar de AST van. De export geeft de klare taal mee (`ts:brontekst`); de import neemt die over als ze hetzelfde zegt als de ODRL, en bouwt anders uit de structuur. Wat niet overkomt staat in het verliesrapport |
 | `bundel.js` | AST (geresolved) → **uitvoerbare beleidsbundel** (`omnium-toegangsbundel/1`) voor de PDP in de Go-API (`toegang/`): regels als data, gedekte registerpaden, voorwaarden als boom, betrokkene-paden volledig opgelost binnen de entiteit van de regel. Contract met de PDP: `testdata/toegang/*.bundel.json` + `vectoren.json`. Zie hieronder *Uitvoeren* |
 | `metamodel.js` | veldindex over de schema-API-velden; keten-resolutie (verkorting, dubbelzinnigheids-fouten, metamodel-casing); typebewaking; `suggereerVanVormen`/`suggereerBases` |
 | `editorSuggesties.js` | autocomplete-context: binnen-keten (span-vervanging), achterstevoren, vooruit (met lidwoord-meevervanging) |
@@ -226,6 +228,7 @@ toegang-activity zet 2, zowel voor de veldindex als voor de `ModelPicker`.
 
 - Unit tests naast de code (`*.test.js`, Node test runner):
   `toegangsspraak.test.js` (grammatica, round-trip, ODRL),
+  `odrlExport.test.js` en `odrlImport.test.js` (ODRL-AP-NL in Turtle, heen en terug),
   `metamodel.test.js` (resolutie, typebewaking, suggesties),
   `editorSuggesties.test.js` (contexten, span-vervanging, dubbele-de),
   `studio/activities/toegangDemoModel.test.js` (de FTV-demo-beleidstekst tegen

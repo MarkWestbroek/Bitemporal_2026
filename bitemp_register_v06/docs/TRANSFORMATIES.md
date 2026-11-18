@@ -79,7 +79,8 @@ bron- en doelelement.
 - Codegen (canoniek model → code en API-schema's): eigen pijplijn, zie
   [CODEGEN.md](CODEGEN.md).
 - **Toegangsspraak → ODRL (ODRL-AP-NL)**, een export in de vorm van §3 mét
-  schrijver (§8). Nog niet in de registry: een beleid leeft in de
+  schrijver (§8), en de terugweg **ODRL → Toegangsspraak** als import met een
+  bouwer (§8.1). Nog niet in de registry: een beleid leeft in de
   Toegangverlening-activiteit, niet in een Modelleren-map.
 - **Canoniek model + e-dienst → objecttype (JSON Schema)**, een artefact voor
   de inrichting van e-diensten op Fundament (§11): samengestelde bron, regelset,
@@ -424,6 +425,80 @@ Voorbeelden, de runner en hoe je ze in de viewer bekijkt:
 (`toegangsspraak/odrl.js`) blijft ernaast bestaan; het verschil staat in
 [TOEGANGSSPRAAK.md](TOEGANGSSPRAAK.md).
 
+### 8.1 De terugweg: ODRL → Toegangsspraak (2026-11-18)
+
+De import, in dezelfde vorm, met de export als spiegel. Bron is de **Turtle volgens
+ODRL-AP-NL** (niet de oudere JSON-LD): daarin heeft elke regel en voorwaarde een eigen
+naam en draagt elk onderdeel de zinsnede uit de klare taal.
+
+| Deel | Waar | Wat |
+|---|---|---|
+| lezer | `transformatie/turtleLezer.js` | Turtle → triples (dezelfde als bij SHACL) |
+| graaflaag | `transformatie/rdfBrongraaf.js` | triples → brongraaf: elk subject een knoop met `klassen` (rdf:type), per predicaat de waarde (plat om op te toetsen, getypeerd voor een sjabloon), een RDF-lijst als leden met `positie`; elk triple naar een andere knoop een verbinding. Kent geen vocabulaire |
+| regelset | `toegangsspraak/odrlNaarToegangsspraakRegels.js` | het spiegelbeeld van `odrlApNlRegels.js`: het doel-`type` is de `aard` uit het graafbeeld (regel, handeling, partij, voorwaarde …); `odrl:read` wordt weer bekijken, `odrl:purpose` het doel van de aanvraag |
+| toepasser | `transformatie/regels.js` | ongewijzigd, op het filter `lokaal` na (`"{rdf.value\|lokaal}"`: `ts:exporteren` → exporteren) |
+| bouwer | `toegangsspraak/odrlNaarBeleid.js` | plan → beleid (de AST van de parser). Nieuw in deze vorm: het doel is een boom met zinnen, geen graaf |
+| aansluiting | `toegangsspraak/odrlImport.js` | `odrlNaarToegangsspraak(turtle)` → tekst, beleid, weg, trace, verschil, meldingen |
+
+**De bouwer** is het omgekeerde van het graafbeeld en kent dus de keuzes van `graaf.js`:
+de kenmerken van een groep staan ook als verfijning op de handeling (die horen bij
+"wie"), de doelbinding van het beleid staat op elke toestemming (die hoort bij
+`Doel:`), en verfijningen op de handeling en voorwaarden op de regel zijn samen de
+voorwaarden van de regel.
+
+**Structuur is leidend, tekst geeft de woorden.** De ODRL draagt op veel plekken een
+zinsnede (het label van een voorwaarde, een operand, een registerdeel; de omschrijving
+van een begrip). De bouwer leest zo'n zinsnede met de parser van de taal en neemt haar
+over als ze hetzelfde zegt als de structuur; dat toetst hij met `beleidNaarGraaf` zelf,
+zodat de export de enige plek blijft die weet hoe een zin een knoop wordt. Anders bouwt
+hij de woorden uit de structuur (lidwoorden uit `lidwoordVoor`: een benadering).
+
+**Twee wegen.** De export geeft sinds regelset v2 drie dingen extra mee:
+
+| In de ODRL | Waarom |
+|---|---|
+| `ts:brontekst` op het beleid | de canonieke klare taal, als `"""…"""` |
+| `ts:volgorde` op elke regel | RDF kent geen volgorde tussen toestemmingen en verboden |
+| `dpv:hasPurpose` op het beleid | de kopregel `Doel:`, los van de voorwaarde die eruit volgt |
+
+De import gebruikt de brontekst **alleen als ze aantoonbaar hetzelfde zegt als de ODRL**:
+hij exporteert de tekst opnieuw en vergelijkt de triples met het bestand. Klopt dat, dan
+is het resultaat de brontekst (`weg: "brontekst"`) en is de rondreis letterlijk. Klopt
+het niet (de ODRL is elders bewerkt, of er is geen brontekst), dan komt het beleid uit de
+structuur (`weg: "structuur"`) met een melding. Bij de vergelijking tellen `b:` en
+`reg:` los van de plek waar het beleid staat, telt van een voorwaarde de inhoud en niet
+haar naam (die is afgeleid van de zin), en telt niet mee wat het bestand zegt over
+dingen buiten het beleid (een realisatie, velden uit het model).
+
+Is de ODRL geëxporteerd met paden uit een model (`resolveerPad`, of in de Studio het
+metamodel), geef de import dan dezelfde resolver (of `bereidVoor`); anders wijst de
+tekst een ander pad aan dan de ODRL en wint de structuur.
+
+**Verliesrapport**, in twee lagen: de trace van de regelset (wat `geen-regel` of
+`overgeslagen` is, zit niet in het beleid), en `verschil`: de triples van het bestand
+naast die van een nieuwe export van het resultaat, gesplitst in `structuur` (het beleid
+regelt iets anders of mist iets) en `woorden` (alleen anders geschreven).
+
+**Wat alleen via de tekst terugkomt** (de structuur draagt het niet): de volgorde van
+voorwaarden over verzoek en gegevens door elkaar; een doelbinding die ook nog eens in de
+regel stond; `waarvan` bij een begrip en "voor …" bij een bestaansvraag (wel via een
+zinsnede); een verwijzing als rechterterm; de kop van een begrip ("Het dossier is");
+begrippen die geen regel gebruikt; `Standaard:` en `Bij conflict:` (de export schrijft
+vast `odrl:prohibit`).
+
+**ODRL van anderen** valt nu grotendeels in het verliesrapport: de regelset dekt wat de
+eigen export schrijft. Een regel met een handeling of operand die Toegangsspraak niet
+kent wordt weggelaten met een melding, nooit gegokt. Uitbreiden (meer handelingen,
+JSON-LD als bron, een eigen rapport) is een vervolgstap.
+
+**In de Studio:** *Toegangverlening → Beleid → Exporteer ODRL (Turtle, ODRL-AP-NL)…* en
+*Importeer ODRL (Turtle)…* (vervangt de tekst, Ctrl+Z kan; meldingen onder de editor).
+De regelset staat in *Transformaties* onder Import en is proef te draaien op geplakte
+Turtle; daar zie je het beleid zoals de bouwer het uit de structuur maakt.
+
+Tests: `toegangsspraak/odrlImport.test.js` (rondreis op vijf beleiden via beide wegen,
+bewerkte ODRL, model erbij, andere prefixen, ODRL van elders) en e2e 68 en 69.
+
 ## 9. Viewer, editor en de Transformatie-entiteit (ontwerp, 2026-10-06)
 
 Regelsets zijn nu `.js`-bestanden in de broncode. Dit is het ontwerp om ze te
@@ -574,17 +649,17 @@ regelset zijn dan de ingebouwde.
 
 | Richting | Betekenis | Regelsets |
 |---|---|---|
-| import | extern formaat → model | Mermaid flowchart, BPMN 2.0 XML, DMN XML |
+| import | extern formaat → model | Mermaid flowchart, BPMN 2.0 XML, DMN XML, ODRL (ODRL-AP-NL) → Toegangsspraak |
 | export | model → extern formaat | use case → Mermaid, Toegangsspraak → ODRL (ODRL-AP-NL) |
 | inrichting | model → artefact voor een component | objecttype, formulier, zaaktype, GZAC-dossierbundel, BPMN voor GZAC |
 
 Toegangsspraak → ODRL is een export: het beleid is het model, ODRL het formaat. De omgekeerde
-richting bestaat niet (vraag aan TRANSFORMATIES, 18-11). Naast deze Turtle-export bestaat de
+richting is er sinds 18-11 als import (§8.1). Naast deze Turtle-export bestaat de
 oudere export naar ODRL JSON-LD (`toegangsspraak/odrl.js`): gewone code zonder regelset, en
 daarom niet in de catalogus.
 
-**Twee vormen.** Van de tien regelsets hebben er zeven **regels** voor de generieke toepasser
-(Mermaid ↔ use case, BPMN-XML, DMN-XML, objecttype, formulier, ODRL). Drie bestaan uit
+**Twee vormen.** Van de elf regelsets hebben er acht **regels** voor de generieke toepasser
+(Mermaid ↔ use case, BPMN-XML, DMN-XML, objecttype, formulier, ODRL heen en terug). Drie bestaan uit
 **instellingen** die een schrijver leest: BPMN voor GZAC, de dossierbundel en het zaaktype. Die
 toont de view zoals ze zijn (JSON); ze hebben geen validator en geen proefdraai. Of die drie naar
 de regelvorm moeten, of een eigen vorm met een eigen validator krijgen, is een open vraag voor
@@ -600,10 +675,11 @@ landden. Er wordt niets in het model geschreven. De proefbron is:
 | BPMN 2.0 XML → BPMN | geplakte tekst | lijst |
 | DMN XML → DRD | geplakte tekst | lijst |
 | Use case → Mermaid flowchart | een map met een use case-model, of het hele model van het profiel | de Mermaid-tekst |
-| objecttype, formulier, ODRL | nog geen | — |
+| ODRL (ODRL-AP-NL) → Toegangsspraak | geplakte Turtle | het beleid in klare taal, uit de structuur |
+| objecttype, formulier, Toegangsspraak → ODRL | nog geen | — |
 
 **Nog niet in stap 1:** een proefbron voor de regelsets met een samengestelde bron (canoniek model
-+ e-dienst + referentielijst) en voor ODRL (de bron is een beleid uit Toegangverlening); een
++ e-dienst + referentielijst) en voor Toegangsspraak → ODRL (de bron is een beleid uit Toegangverlening); een
 bestand als proefbron; een voorvertoning als diagram (nu een lijst); en alles van stap 2 en 3
 (regelset als JSON-bestand, bewerken, bewaren).
 

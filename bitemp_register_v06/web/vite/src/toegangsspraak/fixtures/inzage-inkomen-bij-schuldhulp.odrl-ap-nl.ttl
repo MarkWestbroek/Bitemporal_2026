@@ -1,4 +1,4 @@
-# Inzage inkomen bij schuldhulp — Toegangsspraak → ODRL (ODRL-AP-NL), regelset toegangsspraak-naar-odrl-ap-nl v1.
+# Inzage inkomen bij schuldhulp — Toegangsspraak → ODRL (ODRL-AP-NL), regelset toegangsspraak-naar-odrl-ap-nl v2.
 # Gegenereerd; niet met de hand wijzigen. Bron in klare taal: beleid/schuldhulp.toegangsspraak
 #
 #   Beleid "Inzage inkomen bij schuldhulp".
@@ -44,7 +44,27 @@ b:beleid a odrl:Set ;
     dct:issued "2026-10-05"^^xsd:date ;
     schema:validFrom "2026-05-01"^^xsd:date ;
     odrl:conflict odrl:prohibit ;
+    ts:brontekst """Beleid "Inzage inkomen bij schuldhulp".
+  Geldig vanaf 1 mei 2026.
+  Grondslag: de Wet gemeentelijke schuldhulpverlening.
+  Doel: "schuldhulpverlening".
+
+  Begrippen.
+    Een schuldhulpverlener is: iemand met rol "schuldhulpverlener".
+    Inkomensgegevens zijn: alle gegevens van het inkomen van een natuurlijk persoon.
+
+  Regel "inzage bij lopend dossier".
+    Een schuldhulpverlener mag de inkomensgegevens bekijken
+    als aan alle volgende voorwaarden is voldaan:
+      - het doel van de aanvraag is "schuldhulpverlening";
+      - de achternaam van de naam van de betrokkene begint met "A";
+    waarbij: elke raadpleging wordt vastgelegd in het logboek.
+
+  Regel "geen export".
+    Een schuldhulpverlener mag de inkomensgegevens niet exporteren.
+""" ;
     dpv:hasLegalBasis b:grondslag ;
+    dpv:hasPurpose b:doel-schuldhulpverlening ;
     odrl:permission b:regel-inzage-bij-lopend-dossier ;
     odrl:prohibition b:regel-geen-export .
 
@@ -54,6 +74,7 @@ b:regel-inzage-bij-lopend-dossier a odrl:Permission ;
     dct:title "inzage bij lopend dossier"@nl ;
     odrl:uid b:regel-inzage-bij-lopend-dossier ;
     dct:description "Een schuldhulpverlener mag de inkomensgegevens bekijken als aan alle volgende voorwaarden is voldaan: - het doel van de aanvraag is \"schuldhulpverlening\"; - de achternaam van de naam van de betrokkene begint met \"A\"; waarbij: elke raadpleging wordt vastgelegd in het logboek."@nl ;
+    ts:volgorde 1 ;
     odrl:action b:handeling-inzage-bij-lopend-dossier ;
     odrl:assignee b:groep-schuldhulpverlener ;
     odrl:target b:gegevens-inkomensgegevens ;
@@ -73,6 +94,7 @@ b:regel-geen-export a odrl:Prohibition ;
     dct:title "geen export"@nl ;
     odrl:uid b:regel-geen-export ;
     dct:description "Een schuldhulpverlener mag de inkomensgegevens niet exporteren."@nl ;
+    ts:volgorde 2 ;
     odrl:action b:handeling-geen-export ;
     odrl:assignee b:groep-schuldhulpverlener ;
     odrl:target b:gegevens-inkomensgegevens .

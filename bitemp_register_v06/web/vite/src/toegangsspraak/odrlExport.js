@@ -69,6 +69,7 @@ export function odrlContext({ beleidSlug, modelNaam = "model", basisUrl = "https
       "skos:definition": TEKST,
       "skos:note": TEKST,
       "rdfs:comment": TEKST,
+      "ts:brontekst": { soort: "langetekst" },
       "dct:issued": DATUM,
       "schema:validFrom": DATUM,
       "schema:validThrough": DATUM,

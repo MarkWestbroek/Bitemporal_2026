@@ -28,8 +28,8 @@
  *     secties: [ { titel: "Regels", types: ["odrl:Permission", …], iri?: "^b:handeling-" } ] }
  *
  * Een kale string in `data` krijgt zijn vorm uit de context: `tekst` (met de
- * taal), `iri` (CURIE of <absoluut>; meer waarden met komma's), `datum`
- * (xsd:date) of, zonder vermelding, een kale string. Waar één predicaat per
+ * taal), `langetekst` (meerregelig, als `"""…"""`), `iri` (CURIE of <absoluut>;
+ * meer waarden met komma's), `datum` (xsd:date) of, zonder vermelding, een kale string. Waar één predicaat per
  * keer een ander soort waarde draagt (odrl:rightOperand) levert de lezer een
  * **getypeerde waarde**: een getal, een boolean, of een object
  * `{ iri }`, `{ tekst, taal? }`, `{ letterlijk }`, `{ datum }`, `{ zelf: true }`
@@ -108,6 +108,8 @@ export function planNaarTriples(plan, context) {
     }
     const soort = predicaten[predicaat]?.soort;
     if (soort === "tekst") return { soort: "literal", waarde, taal };
+    // Meerregelige tekst zonder taal, leesbaar als """…""" (bv. een brontekst).
+    if (soort === "langetekst") return { soort: "literal", waarde, lang: true };
     if (soort === "datum") return { soort: "literal", waarde: waarde.trim(), datatype: "xsd:date" };
     if (soort === "iri") return { soort: "iri", waarde: verwijzing(waarde) ?? iriVan(waarde.trim()) };
     return { soort: "literal", waarde };
@@ -156,6 +158,7 @@ export function planNaarTriples(plan, context) {
 function objectTekst(o) {
   if (o.soort === "iri" || o.soort === "kaal") return o.waarde;
   if (o.soort === "lijst") return `( ${o.leden.join(" ")} )`;
+  if (o.lang && !/"""|"$/.test(o.waarde)) return `"""${o.waarde.replace(/\\/g, "\\\\")}"""`;
   const tekst = JSON.stringify(o.waarde);
   if (o.taal) return `${tekst}@${o.taal}`;
   return o.datatype ? `${tekst}^^${o.datatype}` : tekst;
