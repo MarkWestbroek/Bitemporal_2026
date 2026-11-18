@@ -74,12 +74,16 @@ func main() {
 		os.Exit(1)
 	}
 
+	// Vóór het afleiden: spreekt type/format het gegevenstype tegen, dan is het model fout.
+	typeFouten := typeGegevenstypeFouten(v3, *domein)
+
 	// Velden zonder goType (extern geleverd V3 met alleen type/format/datatype): afleiden.
 	if meldingen := vulGoTypesAan(&v3); len(meldingen) > 0 {
 		fmt.Printf("  %d veld(en) zonder goType; afgeleid uit type/format/verplicht/enum (eerste: %s)\n", len(meldingen), meldingen[0])
 	}
 
 	validationErrors := validateV3Model(v3, *domein)
+	validationErrors = append(validationErrors, typeFouten...)
 	validationErrors = append(validationErrors, padnaamBotsingen(v3, *domein)...)
 	validationErrors = append(validationErrors, typenaamBotsingen(v3, *domein)...)
 	validationErrors = append(validationErrors, tabelnaamTeLang(v3, *domein)...)

@@ -74,6 +74,69 @@ func vulGoTypesAan(v3 *model.V3Model) []string {
 	return meldingen
 }
 
+// typeGegevenstypeFouten meldt velden zonder goType waarvan type/format het gegevenstype
+// tegenspreken (18-11-2026, gevonden door AI-INRICHTEN in het zaakmodel). goTypeUitOAS kijkt
+// alleen naar type en format: een veld met "type": "string" en datatype Geheel, JaNee of Datum
+// werd zonder melding een tekstveld, en dus een tekstkolom. Dat is een fout in het model; de
+// codegen stopt erop in plaats van het gegevenstype stil te laten winnen, want dat zou bij een
+// bestaand register ongemerkt het kolomtype veranderen.
+//
+// Alleen velden zonder goType: een Studio-export heeft goType en bepaalt het type daarmee zelf.
+// Een leeg type telt als "string". Met een domein alleen de velden van dat domein, zodat een
+// fout in een ander domein deze run niet tegenhoudt. Aanroepen vóór vulGoTypesAan.
+func typeGegevenstypeFouten(v3 model.V3Model, domein string) []string {
+	var fouten []string
+	vindDatatype := func(naam string) (model.V3Datatype, bool) {
+		for _, dt := range v3.Datatypes {
+			if dt.Naam == naam {
+				return dt, true
+			}
+		}
+		if dt, ok := model.FindDatatype(naam); ok {
+			return *dt, true
+		}
+		return model.V3Datatype{}, false
+	}
+	controleer := func(ctx string, velden []model.V3Veld) {
+		for _, v := range velden {
+			if strings.TrimSpace(v.GoType) != "" || strings.TrimSpace(v.Enum) != "" || strings.TrimSpace(v.Datatype) == "" {
+				continue
+			}
+			dt, ok := vindDatatype(v.Datatype)
+			if !ok {
+				continue // onbekend gegevenstype meldt validateV3Model
+			}
+			veldType := strings.ToLower(strings.TrimSpace(v.Type))
+			if veldType == "" {
+				veldType = "string"
+			}
+			basis := strings.ToLower(strings.TrimSpace(dt.Basistype))
+			if basis != "" && veldType != basis {
+				fouten = append(fouten, fmt.Sprintf("%s.%s: type %q past niet bij gegevenstype %s (basistype %q); zet \"type\": %q",
+					ctx, v.Naam, veldType, dt.Naam, basis, basis))
+				continue
+			}
+			dtFormat := strings.ToLower(strings.TrimSpace(dt.Format))
+			if (dtFormat == "date" || dtFormat == "date-time") && strings.ToLower(strings.TrimSpace(v.Format)) != dtFormat {
+				fouten = append(fouten, fmt.Sprintf("%s.%s: gegevenstype %s vraagt \"format\": %q (nu %q); zonder format wordt het een tekstveld",
+					ctx, v.Naam, dt.Naam, dtFormat, v.Format))
+			}
+		}
+	}
+	for _, ent := range v3.Entiteiten {
+		if domein != "" && model.EffectiefDomein(ent.Domein, v3.Naam, domein) != domein {
+			continue
+		}
+		for _, ge := range ent.Gegevenselementen {
+			controleer(ent.Typenaam+"."+ge.Naam, ge.Velden)
+		}
+		for _, rel := range ent.Relaties {
+			controleer(ent.Typenaam+"."+rel.Naam, rel.Velden)
+		}
+	}
+	return fouten
+}
+
 // datatypeBekend meldt of een datatype-naam bestaat: in het model zelf of in het register
 // (model.DatatypeRegistry, gevuld door de init van package model).
 func datatypeBekend(v3 model.V3Model, naam string) bool {

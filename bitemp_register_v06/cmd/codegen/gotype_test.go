@@ -57,3 +57,34 @@ func TestVulGoTypesAan_EnOnbekendDatatype(t *testing.T) {
 		t.Fatalf("AN40 en KorteTekst bestaan in het register en horen geen fout te geven:\n%s", errs)
 	}
 }
+
+func TestTypeGegevenstypeFouten(t *testing.T) {
+	v3 := model.V3Model{Entiteiten: []model.V3Entiteit{
+		{Typenaam: "Zaak", Domein: "zaken", Gegevenselementen: []model.V3Gegevenselement{{Naam: "ZaakGegevens", Velden: []model.V3Veld{
+			{Naam: "volgnummer", Type: "string", Datatype: "Geheel"},               // fout: integer
+			{Naam: "actief", Datatype: "JaNee"},                                    // fout: leeg type = string
+			{Naam: "startdatum", Type: "string", Datatype: "Datum"},                // fout: format ontbreekt
+			{Naam: "einddatum", Type: "string", Format: "date", Datatype: "Datum"}, // goed
+			{Naam: "aantal", Type: "integer", Datatype: "Geheel"},                  // goed
+			{Naam: "bsn", Type: "string", Datatype: "BSN"},                         // goed
+			{Naam: "oud", GoType: "*string", Type: "string", Datatype: "Geheel"},   // goType gegeven: niet onze zaak
+			{Naam: "soort", Type: "string", Enum: "Soort", Datatype: "Geheel"},     // enum bepaalt het type
+			{Naam: "vreemd", Type: "string", Datatype: "BestaatNiet"},              // meldt validateV3Model
+		}}}},
+		{Typenaam: "Document", Domein: "documenten", Gegevenselementen: []model.V3Gegevenselement{{Naam: "G", Velden: []model.V3Veld{
+			{Naam: "versie", Type: "string", Datatype: "Geheel"}, // ander domein
+		}}}},
+	}}
+	fouten := typeGegevenstypeFouten(v3, "zaken")
+	if len(fouten) != 3 {
+		t.Fatalf("verwacht 3 fouten, kreeg %d: %v", len(fouten), fouten)
+	}
+	for i, deel := range []string{"ZaakGegevens.volgnummer", "ZaakGegevens.actief", "ZaakGegevens.startdatum"} {
+		if !strings.Contains(fouten[i], deel) {
+			t.Errorf("fout %d noemt %s niet: %s", i, deel, fouten[i])
+		}
+	}
+	if alle := typeGegevenstypeFouten(v3, ""); len(alle) != 4 {
+		t.Errorf("zonder domein verwacht 4 fouten, kreeg %d: %v", len(alle), alle)
+	}
+}

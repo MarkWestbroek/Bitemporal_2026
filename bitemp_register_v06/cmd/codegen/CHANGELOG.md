@@ -7,6 +7,10 @@ Formaat: [Keep a Changelog](https://keepachangelog.com); versionering volgens
 [`docs/versiebeheer.md`](../../docs/versiebeheer.md) (prefix `codegen/`).
 
 ## [Unreleased]
+- **Nieuw: validatiefout als type/format het gegevenstype tegenspreken** (18-11-2026; gevonden door
+  AI-INRICHTEN). Een veld zonder goType met `"type": "string"` en datatype Geheel, JaNee, Datum
+  of DatumTijd werd zonder melding een tekstveld. De codegen stopt er nu op en noemt het veld.
+  Let op: een model dat dit bevat bouwde tot nu toe wél; zie `docs/CODEGEN.md` §4.
 - **Fix: een enum die meerdere domeinen gebruiken wordt nog maar in één domein gegenereerd**
   (18-11-2026; gevonden met het zaakmodel door FACADE en AI-INRICHTEN). Voorheen kwam het type
   met zijn constanten in elk domein dat hem gebruikte en compileerde `model` niet meer. Regel en
