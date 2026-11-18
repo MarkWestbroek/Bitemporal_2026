@@ -607,6 +607,48 @@ landden. Er wordt niets in het model geschreven. De proefbron is:
 bestand als proefbron; een voorvertoning als diagram (nu een lijst); en alles van stap 2 en 3
 (regelset als JSON-bestand, bewerken, bewaren).
 
+### 9.7 Een schrijver is een motor met instellingen (2026-11-18)
+
+Mark, 18-11: "BPMN voor GZAC vraagt eigenlijk een instellingenpaneel voor de schrijver. Het ziet
+eruit alsof de schrijver een motor is met allerlei parameters, die je met knopjes moet instellen",
+met de modules van MusicBrain als vergelijking. Dat klopt met wat er in de code staat: de drie
+"regelsets" zonder regels zijn geen afbeelding van bron op doel, maar de **stand van een schrijver**.
+De bron is het model in de map waarop je de transformatie draait.
+
+Uitgangspunten, overgenomen uit de antwoorden van MODULES (MusicBrain) en FORMULIER-WIDGET:
+
+- **Eén beschrijving per schrijver**: een JSON Schema van zijn instellingen. Het schema hoort bij
+  de motor, niet bij een engine. `BPMN_SCHRIJVER_SCHEMA`
+  (`diagramprofielen/bpmn/bpmnSchrijverSchema.js`) beschrijft de BPMN-schrijver.
+- **De waarden apart**: `BPMN_NAAR_GZAC` is een stand (een preset) van die schrijver. Een andere
+  engine is een andere stand van dezelfde schrijver.
+- **De vorm in een eigen laag**: het schema zegt de soort (ja/nee, keuze, getal, tekst, sjabloon,
+  tabel, lijst, groep); `x-vorm` kiest hooguit een andere bediening. Zelfde scheiding als
+  *Invoersoort en vorm* (plan 2026-09-26). Groep is een echt veld (`x-groep`), geen tekening.
+- **Eén paneel, generiek**: `vormen/schemaPaneel.js` (puur: schema + waarde → boom) en
+  `vormen/SchemaPaneel.jsx` (tekenaar, met de bestaande vormen SwitchKeuze en ButtonGroupKeuze).
+  Ook bedoeld voor de vormConfig in de formuliereditor.
+- **Geen FormulierDefinitie**: die werkt op een entiteit in het register (M0); deze instellingen
+  horen bij het profiel (M2). Met het schema als bron blijft de weg naar het register open.
+
+Wat het schema extra kent: `x-titel`, `x-omschrijving`, `x-groep`, `x-vorm` en `x-placeholders`
+(de namen die in een **sjabloonwaarde** mogen staan, `{naam}` of `{naam|filter}`; `${…}` is een
+expressie voor de engine en geen placeholder). `controleer` houdt een stand tegen het schema en
+meldt een onbekende placeholder. Een instelling die niet in het schema staat, toont het paneel
+als *onbeschreven*; de test `schemaPaneel.test.js` eist dat de GZAC-stand geldig en volledig
+beschreven is, zodat een nieuwe instelling in de code niet ongemerkt buiten de beschrijving valt.
+
+**Stand 18-11:** het paneel is **alleen-lezen** en alleen de BPMN-schrijver heeft een schema. De
+dossierbundel en het zaaktype tonen nog JSON. Nog te doen: bewerken (één schrijfpad, een stand als
+gedeeltelijke set waarden bovenop de standaard van de schrijver), de vorm "sjabloon" als invoer,
+een schema voor de andere twee, en het paneel in de formuliereditor (`VormEditor.jsx`, met JSON
+als terugval; afspraak met FORMULIER-WIDGET).
+
+**Brongedreven en doelgedreven.** Het zaaktype en grotendeels de dossierbundel zijn geen regels
+over de bron, maar een doel met gaten die uit de bron gevuld worden (Mark: "van achter naar
+voor"). Dat is een derde soort naast regels en schrijverinstellingen: een **sjabloon**. Kandidaat
+voor de gaten is JSONata (JSON → JSON, draait in de browser); nog niet geprobeerd.
+
 ## 10. BPMN 2.0 XML en DMN XML → eigen model (2026-10-10)
 
 Opdracht Mark (via EA-SYNC): de native uitwisselformaten van BPMN en DMN naar

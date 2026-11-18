@@ -2609,8 +2609,10 @@ catalogus (`transformatie/regelsetCatalogus.js`); bewerken en bewaren komen late
 - **Proefdraaien**: plak een bron (Mermaid, BPMN-XML, DMN-XML) of kies een map of het hele model
   (use case). De uitkomst toont de telling, de bron-items zonder regel, per regel de treffers, de
   meldingen, en wat er gemaakt zou worden. Er wordt niets in het model geschreven.
-- Een regelset met **instellingen** (BPMN voor GZAC, dossierbundel, zaaktype) is te lezen als JSON;
-  proefdraaien kan daar niet. Voor objecttype, formulier en ODRL zijn de regels te lezen; hun
+- Een regelset met **instellingen** is de stand van een schrijver. *BPMN voor GZAC* toont die als
+  **paneel** (`vormen/SchemaPaneel.jsx`): in groepen, met een schakelaar voor ja/nee, tabellen voor
+  attributen en gekleurde placeholders in sjabloonwaarden; alleen-lezen. De dossierbundel en het
+  zaaktype hebben nog geen beschrijving en tonen JSON. Proefdraaien kan bij instellingen niet. Voor objecttype, formulier en ODRL zijn de regels te lezen; hun
   proefbron volgt.
 
 Een regelset toevoegen aan de view: meld hem aan in `studio/activities/regelsetsIngebouwd.js`

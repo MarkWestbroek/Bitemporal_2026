@@ -17,6 +17,8 @@
  * Puur en store-loos; de Studio-kant staat in `studio/activities/transformatiesActivity.jsx`.
  */
 import { pasRegelsToe, valideerRegelset } from "./regels.js";
+import { valideerSchema } from "../vormen/schemaValidatie.js";
+import { onbekendePlaceholders } from "../vormen/schemaPaneel.js";
 
 /**
  * @typedef {Object} Proef
@@ -36,6 +38,8 @@ import { pasRegelsToe, valideerRegelset } from "./regels.js";
  * @property {"import"|"export"|"inrichting"} richting - import: extern formaat → model; export: model → extern formaat; inrichting: model → artefact voor een component
  * @property {string|null} bestand           - waar hij in de code staat (voor de ingebouwde)
  * @property {Proef|null} proef
+ * @property {any|null} schema               - bij instellingen: het schema van de schrijver waarvoor dit een stand is
+ * @property {string|null} schrijver         - bij instellingen: de naam van die schrijver (de motor)
  */
 
 /** @type {Map<string, Vermelding>} */
@@ -51,10 +55,18 @@ export const heeftRegels = (regelset) => Array.isArray(regelset?.regels);
  * @param {any} regelset
  * @param {{vindplaats?: string, bestand?: string|null, proef?: Proef|null, richting?: string}} [opties]
  */
-export function registreerRegelset(regelset, { vindplaats = "ingebouwd", bestand = null, proef = null, richting = "export" } = {}) {
+export function registreerRegelset(regelset, { vindplaats = "ingebouwd", bestand = null, proef = null, richting = "export", schema = null, schrijver = null } = {}) {
   if (!regelset?.id) throw new Error("Regelset zonder id kan niet in de catalogus.");
   if (!RICHTINGEN.some((r) => r.id === richting)) throw new Error(`Regelset ${regelset.id}: onbekende richting "${richting}".`);
-  _vermeldingen.set(regelset.id, { regelset, vorm: heeftRegels(regelset) ? "regels" : "instellingen", vindplaats, bestand, proef, richting });
+  _vermeldingen.set(regelset.id, { regelset, vorm: heeftRegels(regelset) ? "regels" : "instellingen", vindplaats, bestand, proef, richting, schema, schrijver });
+}
+
+/** De kop van elke regelset; de rest is bij instellingen de stand van de schrijver. */
+export const KOP_SLEUTELS = ["id", "versie", "titel", "bron", "doel", "regels"];
+
+/** De stand van een instellingen-regelset: alles behalve de kop. */
+export function standVan(regelset) {
+  return Object.fromEntries(Object.entries(regelset || {}).filter(([sleutel]) => !KOP_SLEUTELS.includes(sleutel)));
 }
 
 /**
@@ -144,9 +156,18 @@ export function regelRijen(regelset) {
   }));
 }
 
-/** Controle van een vermelding: de validator voor regels; een instellingen-regelset heeft er geen. */
-export function controleer(regelset) {
-  return heeftRegels(regelset) ? valideerRegelset(regelset) : [];
+/**
+ * Controle van een vermelding: de validator voor regels; een instellingen-regelset wordt tegen
+ * het schema van zijn schrijver gehouden, als dat er is (ook op onbekende placeholders).
+ */
+export function controleer(regelset, schema = null) {
+  if (heeftRegels(regelset)) return valideerRegelset(regelset);
+  if (!schema) return [];
+  const stand = standVan(regelset);
+  return [
+    ...valideerSchema(stand, schema),
+    ...onbekendePlaceholders(schema, stand).map((p) => `${p.pad}: onbekende placeholder {${p.naam}}`),
+  ];
 }
 
 const omschrijf = (soort, item) => {

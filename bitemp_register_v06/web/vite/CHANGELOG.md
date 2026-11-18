@@ -15,6 +15,9 @@ De single source of truth voor het nummer is `package.json` `"version"`.
   DMN-XML) of op een map uit je project (use case-model) en laat per regel zien welke bron-items hij pakte, welke
   regels niets raakten en welke items bij geen regel landden. Er wordt niets in je model geschreven. Bewerken
   kan nog niet. De lijst is ingedeeld in *Import*, *Export* en *Inrichting*.
+- **Instellingen van een schrijver als paneel** (Mark 18-11): *BPMN voor GZAC* is geen lijst regels maar de stand
+  van de BPMN-schrijver. Die toont de activiteit nu als paneel in groepen (engine, wachtpunten, taken, berichten,
+  proceskoppeling), met uitleg per instelling, schakelaars voor ja/nee en gekleurde placeholders. Alleen-lezen.
 
 ## [studio/v0.47.0] — 2026-11-18
 
