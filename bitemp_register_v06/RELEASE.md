@@ -37,7 +37,7 @@ Uitrol:
 
 Akkoord Mark 18-11 (op punt 2, 3 en 4: "ja, als 3 punt 1 overbodig maakt: beter 3 doen"; daarna
 "C&m en wil je punt 5 dan ook bouwen? Daarna releasen"). Devloop 0.33.0 is api 0.30.0 met
-studio 0.46.0 en render 0.5.0. Aanleiding: de meting van FUNDAMENT op het register met zaken
+studio 0.47.0 en render 0.5.1 (de release van OMNIUM-UI hierboven). Aanleiding: de meting van FUNDAMENT op het register met zaken
 (102.000 zaken, 16 gelijktijdige gebruikers): zoeken op zaakidentificatie en gesorteerde lijsten
 waren traag en de database stond op 2,0 van 2 CPU.
 
