@@ -75,6 +75,8 @@
 const SOORTEN = ["knoop", "groep", "verbinding"];
 const FILTERS = {
   eenregel: (waarde) => String(waarde ?? "").replace(/\s+/g, " ").trim(),
+  // De lokale naam van een CURIE of IRI: "ts:exporteren" → "exporteren".
+  lokaal: (waarde) => String(waarde ?? "").replace(/^<|>$/g, "").replace(/^.*[:/#]/, ""),
 };
 
 const lijst = (waarde) => (Array.isArray(waarde) ? waarde : [waarde]);

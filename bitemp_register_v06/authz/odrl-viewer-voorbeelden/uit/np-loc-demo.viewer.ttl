@@ -1,4 +1,4 @@
-# Persoonsgegevens np-loc demo — Toegangsspraak → ODRL (ODRL-AP-NL), regelset toegangsspraak-naar-odrl-ap-nl v1.
+# Persoonsgegevens np-loc demo — Toegangsspraak → ODRL (ODRL-AP-NL), regelset toegangsspraak-naar-odrl-ap-nl v2.
 # Gegenereerd; niet met de hand wijzigen. Bron in klare taal: beleid/np-loc-demo.toegangsspraak
 #
 #   Beleid "Persoonsgegevens np-loc demo".
@@ -51,7 +51,34 @@ b:beleid a odrl:Set ;
     dct:issued "2026-10-05"^^xsd:date ;
     schema:validFrom "2026-09-15"^^xsd:date ;
     odrl:conflict odrl:prohibit ;
+    ts:brontekst """Beleid "Persoonsgegevens np-loc demo".
+  Geldig vanaf 15 september 2026.
+  Grondslag: de Gemeentewet.
+  Doel: "dienstverlening".
+
+  Begrippen.
+    Een medewerker is: iemand met rol "medewerker".
+    Een medewerker West is: iemand met rol "medewerker" en afdeling "West".
+    Een telefoonmedewerker is: iemand met rol "medewerker" en kanaal "telefoon".
+    De persoonsgegevens zijn: alle gegevens van een natuurlijk persoon.
+
+  Regel "inzage eigen stadsdeel".
+    Een medewerker West mag de persoonsgegevens bekijken
+    als de wijk van de woonlocatie van de betrokkene "Stadsdeel West" is.
+
+  Regel "avonddienst gemeentebreed".
+    Een medewerker mag de persoonsgegevens bekijken
+    als de dienst van de aanvrager "avond" is.
+
+  Regel "geen geslacht aan de telefoon".
+    Een telefoonmedewerker mag het geslacht van een natuurlijk persoon niet bekijken.
+
+  Regel "aanspreken zonder geslacht".
+    Een telefoonmedewerker mag de aanspreektitel van de aanspraak van een natuurlijk persoon bekijken
+    als de aanspreektitel van de aanspraak van de betrokkene bekend is.
+""" ;
     dpv:hasLegalBasis b:grondslag ;
+    dpv:hasPurpose b:doel-dienstverlening ;
     odrl:permission b:regel-inzage-eigen-stadsdeel , b:regel-avonddienst-gemeentebreed , b:regel-aanspreken-zonder-geslacht ;
     odrl:prohibition b:regel-geen-geslacht-aan-de-telefoon .
 
@@ -61,6 +88,7 @@ b:regel-inzage-eigen-stadsdeel a odrl:Permission ;
     dct:title "inzage eigen stadsdeel"@nl ;
     odrl:uid b:regel-inzage-eigen-stadsdeel ;
     dct:description "Een medewerker West mag de persoonsgegevens bekijken als de wijk van de woonlocatie van de betrokkene \"Stadsdeel West\" is."@nl ;
+    ts:volgorde 1 ;
     odrl:action b:handeling-inzage-eigen-stadsdeel ;
     odrl:assignee b:groep-medewerker-west ;
     odrl:target b:gegevens-persoonsgegevens ;
@@ -74,6 +102,7 @@ b:regel-avonddienst-gemeentebreed a odrl:Permission ;
     dct:title "avonddienst gemeentebreed"@nl ;
     odrl:uid b:regel-avonddienst-gemeentebreed ;
     dct:description "Een medewerker mag de persoonsgegevens bekijken als de dienst van de aanvrager \"avond\" is."@nl ;
+    ts:volgorde 2 ;
     odrl:action b:handeling-avonddienst-gemeentebreed ;
     odrl:assignee b:groep-medewerker ;
     odrl:target b:gegevens-persoonsgegevens .
@@ -86,6 +115,7 @@ b:regel-geen-geslacht-aan-de-telefoon a odrl:Prohibition ;
     dct:title "geen geslacht aan de telefoon"@nl ;
     odrl:uid b:regel-geen-geslacht-aan-de-telefoon ;
     dct:description "Een telefoonmedewerker mag het geslacht van een natuurlijk persoon niet bekijken."@nl ;
+    ts:volgorde 3 ;
     odrl:action b:handeling-geen-geslacht-aan-de-telefoon ;
     odrl:assignee b:groep-telefoonmedewerker ;
     odrl:target reg:NatuurlijkPersoon.geslacht .
@@ -98,6 +128,7 @@ b:regel-aanspreken-zonder-geslacht a odrl:Permission ;
     dct:title "aanspreken zonder geslacht"@nl ;
     odrl:uid b:regel-aanspreken-zonder-geslacht ;
     dct:description "Een telefoonmedewerker mag de aanspreektitel van de aanspraak van een natuurlijk persoon bekijken als de aanspreektitel van de aanspraak van de betrokkene bekend is."@nl ;
+    ts:volgorde 4 ;
     odrl:action b:handeling-aanspreken-zonder-geslacht ;
     odrl:assignee b:groep-telefoonmedewerker ;
     odrl:target reg:NatuurlijkPersoon.Aanspraak.aanspreektitel ;

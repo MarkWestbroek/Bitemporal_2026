@@ -4,7 +4,7 @@
  * (`transformatie/regelsetCatalogus.js`), met per regelset waar hij staat en, waar dat kan, een
  * **proef**: hoe je een proefbron leest en het plan als tekst schrijft (TRANS-1 stap 1).
  *
- * Proefdraaien kan nu voor regelsets met één bron: geplakte tekst (Mermaid, BPMN-XML, DMN-XML) of
+ * Proefdraaien kan nu voor regelsets met één bron: geplakte tekst (Mermaid, BPMN-XML, DMN-XML, ODRL in Turtle) of
  * een map uit het project (use case-model). De regelsets met een samengestelde bron (canoniek
  * model + e-dienst + referentielijst) en Toegangsspraak → ODRL zijn te bekijken; hun proefbron
  * vraagt het bereik van TRANSFORMATIES.md §4 en volgt later.
@@ -27,6 +27,13 @@ import { CANONIEK_NAAR_FORMULIER } from "../../diagramprofielen/canoniek-uml/for
 import { CANONIEK_NAAR_ZAAKTYPE } from "../../diagramprofielen/canoniek-uml/zaaktypeRegels.js";
 import { CANONIEK_NAAR_DOSSIER } from "../../diagramprofielen/canoniek-uml/dossierRegels.js";
 import { TOEGANGSSPRAAK_NAAR_ODRL_AP_NL } from "../../toegangsspraak/odrlApNlRegels.js";
+import { ODRL_AP_NL_NAAR_TOEGANGSSPRAAK } from "../../toegangsspraak/odrlNaarToegangsspraakRegels.js";
+import { toegangsspraakNaarOdrl } from "../../toegangsspraak/odrlExport.js";
+import { odrlBrongraaf } from "../../toegangsspraak/odrlImport.js";
+import { planNaarBeleid } from "../../toegangsspraak/odrlNaarBeleid.js";
+import { renderBeleid } from "../../toegangsspraak/renderer.js";
+import { VOORBEELD_BELEID } from "../../toegangsspraak/voorbeeld.js";
+import { leesTurtle } from "../../transformatie/turtleLezer.js";
 
 const MERMAID_VOORBEELD = `flowchart LR
   klant((Klant))
@@ -83,6 +90,24 @@ registreerRegelset(DMN_XML_NAAR_DRD, {
 registreerRegelset(TOEGANGSSPRAAK_NAAR_ODRL_AP_NL, {
   bestand: "toegangsspraak/odrlApNlRegels.js",
   proef: null,
+});
+// De terugweg. Het plan wordt hier uit de structuur een beleid in klare taal (de bouwer); de
+// import zelf (toegangsspraak/odrlImport.js) neemt daarnaast de meegegeven brontekst over als die klopt.
+registreerRegelset(ODRL_AP_NL_NAAR_TOEGANGSSPRAAK, {
+  richting: "import",
+  bestand: "toegangsspraak/odrlNaarToegangsspraakRegels.js",
+  proef: {
+    soort: "tekst",
+    lees: (tekst) => [odrlBrongraaf(leesTurtle(tekst)).graaf],
+    schrijf: (plan) => {
+      const { beleid } = planNaarBeleid(plan);
+      return beleid ? renderBeleid(beleid) : "";
+    },
+    get voorbeeld() {
+      return toegangsspraakNaarOdrl(VOORBEELD_BELEID).turtle;
+    },
+    uitleg: "Plak ODRL in Turtle (ODRL-AP-NL).",
+  },
 });
 registreerRegelset(CANONIEK_NAAR_OBJECTTYPE, { richting: "inrichting", bestand: "diagramprofielen/canoniek-uml/objecttypeRegels.js" });
 registreerRegelset(CANONIEK_NAAR_FORMULIER, { richting: "inrichting", bestand: "diagramprofielen/canoniek-uml/formulierRegels.js" });

@@ -9,74 +9,12 @@ import { fileURLToPath } from "node:url";
 
 import { parseBeleid } from "./parser.js";
 import { VOORBEELD_BELEID } from "./voorbeeld.js";
+import { VOORBEELDEN, DEMO_BELEID, GBO_BELEID, RIJK_BELEID } from "./fixtures/voorbeelden.js";
 import { beleidNaarGraaf } from "./graaf.js";
 import { TOEGANGSSPRAAK_NAAR_ODRL_AP_NL } from "./odrlApNlRegels.js";
 import { toegangsspraakNaarOdrl } from "./odrlExport.js";
 import { valideerRegelset, pasRegelsToe } from "../transformatie/regels.js";
 
-// De FTV-demo (15 september 2026): relatieketen, eigen vergelijking, verbod.
-const DEMO_BELEID = `Beleid "Persoonsgegevens np-loc demo".
-  Geldig vanaf 15 september 2026.
-  Grondslag: de Gemeentewet.
-  Doel: "dienstverlening".
-
-  Begrippen.
-    Een medewerker is: iemand met rol "medewerker".
-    Een medewerker West is: iemand met rol "medewerker" en afdeling "West".
-    Een telefoonmedewerker is: iemand met rol "medewerker" en kanaal "telefoon".
-    De persoonsgegevens zijn: alle gegevens van een natuurlijk persoon.
-
-  Regel "inzage eigen stadsdeel".
-    Een medewerker West mag de persoonsgegevens bekijken
-    als de wijk van de woonlocatie van de betrokkene "Stadsdeel West" is.
-
-  Regel "avonddienst gemeentebreed".
-    Een medewerker mag de persoonsgegevens bekijken
-    als de dienst van de aanvrager "avond" is.
-
-  Regel "geen geslacht aan de telefoon".
-    Een telefoonmedewerker mag het geslacht van een natuurlijk persoon niet bekijken.
-
-  Regel "aanspreken zonder geslacht".
-    Een telefoonmedewerker mag de aanspreektitel van de aanspraak van een natuurlijk persoon bekijken
-    als de aanspreektitel van de aanspraak van de betrokkene bekend is.
-`;
-
-// Het GBO-voorbeeld: bestaansvraag, argument-voorwaarde, begrip voor gegevens.
-const GBO_BELEID = `Beleid "GBO persoon".
-  Doel: "inkomensverstrekking".
-
-  Begrippen.
-    Een afnemer is: iemand met rol "afnemer".
-    Een geautoriseerde afnemer is: iemand met autorisatie "naam-en-adres".
-    Inkomensgegevens zijn: alle gegevens van het inkomen van een persoon.
-
-  Regel "persoon op bsn".
-    Een afnemer mag alle gegevens van een persoon bekijken
-    als er een toestemming voor de betrokkene is.
-
-  Regel "inkomens tot en met 2024".
-    Een afnemer mag de inkomens van een persoon bekijken
-    als het jaar van de aanvraag ten hoogste 2024 is.
-
-  Regel "inkomen velden".
-    Een geautoriseerde afnemer mag de inkomensgegevens bekijken.
-`;
-
-// Geneste voorwaarden, lijst, datum, plicht, inline-wie.
-const RIJK_BELEID = `Beleid "Rijk".
-
-  Regel "genest".
-    Iemand met rol "beheerder" mag de naam van een natuurlijk persoon veranderen
-    als aan alle volgende voorwaarden is voldaan:
-      - het kanaal van de aanvraag is een van ("balie", "post");
-      - aan ten minste één van de volgende voorwaarden is voldaan:
-        - de geboortedatum van de betrokkene is kleiner dan 1 januari 2000;
-        - de leeftijd van de betrokkene is ten minste 67;
-    waarbij: de reden van de wijziging wordt vastgelegd bij de registratie.
-`;
-
-const VOORBEELDEN = { schuldhulp: VOORBEELD_BELEID, demo: DEMO_BELEID, gbo: GBO_BELEID, rijk: RIJK_BELEID };
 const OPTIES = { uitgegeven: "2026-10-05", modelNaam: "voorbeeld", bron: "beleid/schuldhulp.toegangsspraak" };
 const GOUDEN = fileURLToPath(new URL("./fixtures/inzage-inkomen-bij-schuldhulp.odrl-ap-nl.ttl", import.meta.url));
 
@@ -144,11 +82,13 @@ test("ODRL: toestemming, verbod, plicht en de keuzes van ODRL-AP-NL", () => {
   assert.match(blok(turtle, "ts:betrokkene.naam.achternaam"), /rdfs:label "de achternaam van de naam van de betrokkene"@nl/);
   assert.ok(!turtle.includes("ts:bekijken") && !turtle.includes("ts:aanvrager.rol"), "wat ODRL al kent krijgt geen eigen term");
   // Beleid: geldigheid, grondslag, conflictregel.
-  const set = blok(turtle, "b:beleid");
+  // De brontekst (ts:brontekst) heeft zelf witregels; het blok loopt tot de volgende kop.
+  const set = turtle.slice(turtle.indexOf("b:beleid a odrl:Set"), turtle.indexOf("# ── Regels en plichten"));
+  assert.match(set, /ts:brontekst """Beleid "Inzage inkomen bij schuldhulp"\.\n {2}Geldig vanaf 1 mei 2026\./, "de klare taal reist mee");
   assert.match(set, /schema:validFrom "2026-05-01"\^\^xsd:date/);
   assert.match(set, /dct:issued "2026-10-05"\^\^xsd:date/);
   assert.match(set, /odrl:profile apnl:profiel , ts:profiel/);
-  assert.match(set, /dpv:hasLegalBasis b:grondslag ;\n {4}odrl:permission b:regel-inzage-bij-lopend-dossier ;\n {4}odrl:prohibition b:regel-geen-export \./);
+  assert.match(set, /dpv:hasLegalBasis b:grondslag ;\n {4}dpv:hasPurpose b:doel-schuldhulpverlening ;\n {4}odrl:permission b:regel-inzage-bij-lopend-dossier ;\n {4}odrl:prohibition b:regel-geen-export \./);
   assert.ok(!set.includes("validThrough"), "geen einddatum, geen triple");
 });
 

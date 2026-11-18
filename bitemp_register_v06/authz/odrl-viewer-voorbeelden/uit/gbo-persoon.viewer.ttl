@@ -1,4 +1,4 @@
-# GBO persoon — Toegangsspraak → ODRL (ODRL-AP-NL), regelset toegangsspraak-naar-odrl-ap-nl v1.
+# GBO persoon — Toegangsspraak → ODRL (ODRL-AP-NL), regelset toegangsspraak-naar-odrl-ap-nl v2.
 # Gegenereerd; niet met de hand wijzigen. Bron in klare taal: beleid/gbo-persoon.toegangsspraak
 #
 #   Beleid "GBO persoon".
@@ -49,6 +49,32 @@ b:beleid a odrl:Set ;
     dct:description "Geschreven in Toegangsspraak (klare taal) en daaruit vertaald naar ODRL. Elke regel draagt zijn oorspronkelijke zin als beschrijving. Doel: inkomensverstrekking."@nl ;
     dct:issued "2026-10-05"^^xsd:date ;
     odrl:conflict odrl:prohibit ;
+    ts:brontekst """Beleid "GBO persoon".
+  Doel: "inkomensverstrekking".
+
+  Begrippen.
+    Een afnemer is: iemand met rol "afnemer".
+    Een geautoriseerde afnemer is: iemand met autorisatie "naam-en-adres".
+    Inkomensgegevens zijn: alle gegevens van het inkomen van een persoon.
+
+  Regel "persoon op bsn".
+    Een afnemer mag alle gegevens van een persoon bekijken
+    als er een toestemming voor de betrokkene is.
+
+  Regel "naam en adres".
+    Een geautoriseerde afnemer mag de naam van een persoon bekijken.
+
+  Regel "adres".
+    Een geautoriseerde afnemer mag het adres van een persoon bekijken.
+
+  Regel "inkomens tot en met 2024".
+    Een afnemer mag de inkomens van een persoon bekijken
+    als het jaar van de aanvraag ten hoogste 2024 is.
+
+  Regel "inkomen velden".
+    Een geautoriseerde afnemer mag de inkomensgegevens bekijken.
+""" ;
+    dpv:hasPurpose b:doel-inkomensverstrekking ;
     odrl:permission b:regel-persoon-op-bsn , b:regel-naam-en-adres , b:regel-adres , b:regel-inkomens-tot-en-met-2024 , b:regel-inkomen-velden .
 
 # ── Regels en plichten ────────────────────────────────────────────────────────
@@ -57,6 +83,7 @@ b:regel-persoon-op-bsn a odrl:Permission ;
     dct:title "persoon op bsn"@nl ;
     odrl:uid b:regel-persoon-op-bsn ;
     dct:description "Een afnemer mag alle gegevens van een persoon bekijken als er een toestemming voor de betrokkene is."@nl ;
+    ts:volgorde 1 ;
     odrl:action b:handeling-persoon-op-bsn ;
     odrl:assignee b:groep-afnemer ;
     odrl:target reg:Persoon ;
@@ -70,6 +97,7 @@ b:regel-naam-en-adres a odrl:Permission ;
     dct:title "naam en adres"@nl ;
     odrl:uid b:regel-naam-en-adres ;
     dct:description "Een geautoriseerde afnemer mag de naam van een persoon bekijken."@nl ;
+    ts:volgorde 2 ;
     odrl:action b:handeling-naam-en-adres ;
     odrl:assignee b:groep-geautoriseerde-afnemer ;
     odrl:target reg:Persoon.Naam .
@@ -82,6 +110,7 @@ b:regel-adres a odrl:Permission ;
     dct:title "adres"@nl ;
     odrl:uid b:regel-adres ;
     dct:description "Een geautoriseerde afnemer mag het adres van een persoon bekijken."@nl ;
+    ts:volgorde 3 ;
     odrl:action b:handeling-adres ;
     odrl:assignee b:groep-geautoriseerde-afnemer ;
     odrl:target reg:Persoon.Adres .
@@ -94,6 +123,7 @@ b:regel-inkomens-tot-en-met-2024 a odrl:Permission ;
     dct:title "inkomens tot en met 2024"@nl ;
     odrl:uid b:regel-inkomens-tot-en-met-2024 ;
     dct:description "Een afnemer mag de inkomens van een persoon bekijken als het jaar van de aanvraag ten hoogste 2024 is."@nl ;
+    ts:volgorde 4 ;
     odrl:action b:handeling-inkomens-tot-en-met-2024 ;
     odrl:assignee b:groep-afnemer ;
     odrl:target reg:Persoon.Inkomen .
@@ -106,6 +136,7 @@ b:regel-inkomen-velden a odrl:Permission ;
     dct:title "inkomen velden"@nl ;
     odrl:uid b:regel-inkomen-velden ;
     dct:description "Een geautoriseerde afnemer mag de inkomensgegevens bekijken."@nl ;
+    ts:volgorde 5 ;
     odrl:action b:handeling-inkomen-velden ;
     odrl:assignee b:groep-geautoriseerde-afnemer ;
     odrl:target b:gegevens-inkomensgegevens .
