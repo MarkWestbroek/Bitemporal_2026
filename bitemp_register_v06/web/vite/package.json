@@ -11,6 +11,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "test": "node --import ./test/register-aliases.mjs --test 'src/**/*.test.js'",
+    "metamodellen": "node --import ./test/register-aliases.mjs scripts/genereer-metamodellen.mjs",
     "importeer-qea": "node --import ./test/register-aliases.mjs scripts/importeer-qea.mjs",
     "test:e2e": "playwright test",
     "test:e2e:studio": "playwright test tests/e2e/[12]*-studio-*.spec.js",
