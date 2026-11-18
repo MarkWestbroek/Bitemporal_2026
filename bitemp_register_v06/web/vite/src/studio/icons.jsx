@@ -313,13 +313,16 @@ export const IconProfielOntwerp05 = (p) => (
   </svg>
 );
 
-/** Transformaties: twee modellen met een pijl ertussen (regelsets bekijken en proefdraaien). */
+/**
+ * Transformaties: een ronde helft gaat erin, een hoekige komt eruit; de pijl springt door de naad
+ * (van taal A naar taal B, van model naar code, van tool X naar Omnium). Ontwerp DESIGN (18-11),
+ * variant H; bewust geen twee dozen (Koppelingen, modeliconen).
+ */
 export const IconTransformatie = (p) => (
   <svg {...base} {...p}>
-    <rect x="3" y="4" width="7" height="6" rx="1" />
-    <rect x="14" y="14" width="7" height="6" rx="1" />
-    <path d="M10 7h4.5a2 2 0 0 1 2 2v5" />
-    <path d="M14 11.5l2.5 2.5 2.5-2.5" />
+    <path d="M10 5H9a7 7 0 0 0 0 14h1" />
+    <path d="M14 5h4.5A1.5 1.5 0 0 1 20 6.5v11a1.5 1.5 0 0 1-1.5 1.5H14" fill="currentColor" fillOpacity="0.2" />
+    <path d="M6.5 12h10M14 9.5 16.5 12 14 14.5" />
   </svg>
 );
 

@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { alleRegelsets, getRegelsetVermelding, regelRijen, controleer, proefdraai, alsTekst, actieTekst, toetsTekst, heeftRegels } from "./regelsetCatalogus.js";
+import { alleRegelsets, regelsetsPerRichting, getRegelsetVermelding, regelRijen, controleer, proefdraai, alsTekst, actieTekst, toetsTekst, heeftRegels } from "./regelsetCatalogus.js";
 import "../studio/activities/regelsetsIngebouwd.js";
 import { geenProefUitleg } from "../studio/activities/regelsetsIngebouwd.js";
 
@@ -14,6 +14,12 @@ test("de catalogus kent de tien ingebouwde regelsets, in twee vormen, alle geldi
     assert.deepEqual(controleer(v.regelset), [], v.regelset.id);
     if (!v.proef) assert.ok(geenProefUitleg(v));
   }
+});
+
+test("de lijst is ingedeeld op richting: import, export, inrichting", () => {
+  const groepen = regelsetsPerRichting();
+  assert.deepEqual(groepen.map((g) => [g.id, g.vermeldingen.length]), [["import", 3], ["export", 2], ["inrichting", 5]]);
+  assert.deepEqual(groepen[1].vermeldingen.map((v) => v.regelset.id).sort(), ["toegangsspraak-naar-odrl-ap-nl", "usecase-naar-mermaid-flowchart"]);
 });
 
 test("een regel in woorden: voorwaarden en actie", () => {

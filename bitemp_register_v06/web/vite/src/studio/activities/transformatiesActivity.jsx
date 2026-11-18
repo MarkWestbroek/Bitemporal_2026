@@ -15,7 +15,7 @@
 import React, { useMemo, useState } from "react";
 import { create } from "zustand";
 import { IconTransformatie } from "../icons";
-import { alleRegelsets, getRegelsetVermelding, regelRijen, controleer, proefdraai } from "../../transformatie/regelsetCatalogus.js";
+import { alleRegelsets, regelsetsPerRichting, getRegelsetVermelding, regelRijen, controleer, proefdraai } from "../../transformatie/regelsetCatalogus.js";
 import { modelNaarGraaf } from "../../transformatie/modelNaarGraaf.js";
 import { geenProefUitleg } from "./regelsetsIngebouwd.js";
 import { getProfieltype } from "../profieltypeRegistry.js";
@@ -38,7 +38,12 @@ function Sidebar() {
   const actief = gekozen || alle[0]?.regelset.id;
   return (
     <div data-testid="regelset-lijst" style={{ padding: 6, fontSize: 13, overflow: "auto" }}>
-      {alle.map((v) => (
+      {regelsetsPerRichting().map((groep) => (
+        <div key={groep.id} data-richting={groep.id} style={{ marginBottom: 10 }}>
+          <div style={{ padding: "4px 8px 2px", fontSize: 11, textTransform: "uppercase", letterSpacing: "0.04em", ...gedempt }} title={groep.uitleg}>
+            {groep.label} <span style={{ textTransform: "none", letterSpacing: 0 }}>· {groep.uitleg}</span>
+          </div>
+      {groep.vermeldingen.map((v) => (
         <button
           key={v.regelset.id}
           type="button"
@@ -54,6 +59,8 @@ function Sidebar() {
             {v.vorm === "regels" ? `${v.regelset.regels.length} regels` : "instellingen"} · versie {String(v.regelset.versie ?? "–")} · {v.vindplaats}
           </div>
         </button>
+      ))}
+        </div>
       ))}
     </div>
   );

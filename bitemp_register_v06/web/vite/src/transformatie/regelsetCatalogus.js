@@ -33,6 +33,7 @@ import { pasRegelsToe, valideerRegelset } from "./regels.js";
  * @property {any} regelset
  * @property {"regels"|"instellingen"} vorm
  * @property {string} vindplaats
+ * @property {"import"|"export"|"inrichting"} richting - import: extern formaat → model; export: model → extern formaat; inrichting: model → artefact voor een component
  * @property {string|null} bestand           - waar hij in de code staat (voor de ingebouwde)
  * @property {Proef|null} proef
  */
@@ -48,11 +49,29 @@ export const heeftRegels = (regelset) => Array.isArray(regelset?.regels);
  * dat is hoe een bestand of het register later een ingebouwde regelset overschrijft.
  *
  * @param {any} regelset
- * @param {{vindplaats?: string, bestand?: string|null, proef?: Proef|null}} [opties]
+ * @param {{vindplaats?: string, bestand?: string|null, proef?: Proef|null, richting?: string}} [opties]
  */
-export function registreerRegelset(regelset, { vindplaats = "ingebouwd", bestand = null, proef = null } = {}) {
+export function registreerRegelset(regelset, { vindplaats = "ingebouwd", bestand = null, proef = null, richting = "export" } = {}) {
   if (!regelset?.id) throw new Error("Regelset zonder id kan niet in de catalogus.");
-  _vermeldingen.set(regelset.id, { regelset, vorm: heeftRegels(regelset) ? "regels" : "instellingen", vindplaats, bestand, proef });
+  if (!RICHTINGEN.some((r) => r.id === richting)) throw new Error(`Regelset ${regelset.id}: onbekende richting "${richting}".`);
+  _vermeldingen.set(regelset.id, { regelset, vorm: heeftRegels(regelset) ? "regels" : "instellingen", vindplaats, bestand, proef, richting });
+}
+
+/**
+ * De richtingen, in de volgorde van de lijst. Het model staat in het midden: een import komt van
+ * buiten het model in, een export gaat eruit naar een formaat dat je deelt, en een
+ * inrichtingsartefact gaat eruit naar een component die het uitvoert.
+ */
+export const RICHTINGEN = [
+  { id: "import", label: "Import", uitleg: "extern formaat → model" },
+  { id: "export", label: "Export", uitleg: "model → extern formaat" },
+  { id: "inrichting", label: "Inrichting", uitleg: "model → artefact voor een component" },
+];
+
+/** De vermeldingen per richting, lege richtingen weggelaten. */
+export function regelsetsPerRichting() {
+  const alle = alleRegelsets();
+  return RICHTINGEN.map((richting) => ({ ...richting, vermeldingen: alle.filter((v) => v.richting === richting.id) })).filter((g) => g.vermeldingen.length);
 }
 
 /** Alle vermeldingen, op titel. */

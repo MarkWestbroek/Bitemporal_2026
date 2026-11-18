@@ -569,6 +569,20 @@ later een ingebouwde regelset (stap 2). De transformaties zelf importeren hun re
 rechtstreeks; ze via de catalogus laten lopen hoort bij stap 2, want pas dan kan er een andere
 regelset zijn dan de ingebouwde.
 
+**Drie richtingen** (Mark 18-11: "kan dat duidelijker of ingedeeld?"). De lijst is ingedeeld op
+`richting`, een veld van de vermelding. Het model staat in het midden:
+
+| Richting | Betekenis | Regelsets |
+|---|---|---|
+| import | extern formaat → model | Mermaid flowchart, BPMN 2.0 XML, DMN XML |
+| export | model → extern formaat | use case → Mermaid, Toegangsspraak → ODRL (ODRL-AP-NL) |
+| inrichting | model → artefact voor een component | objecttype, formulier, zaaktype, GZAC-dossierbundel, BPMN voor GZAC |
+
+Toegangsspraak → ODRL is een export: het beleid is het model, ODRL het formaat. De omgekeerde
+richting bestaat niet (vraag aan TRANSFORMATIES, 18-11). Naast deze Turtle-export bestaat de
+oudere export naar ODRL JSON-LD (`toegangsspraak/odrl.js`): gewone code zonder regelset, en
+daarom niet in de catalogus.
+
 **Twee vormen.** Van de tien regelsets hebben er zeven **regels** voor de generieke toepasser
 (Mermaid ↔ use case, BPMN-XML, DMN-XML, objecttype, formulier, ODRL). Drie bestaan uit
 **instellingen** die een schrijver leest: BPMN voor GZAC, de dossierbundel en het zaaktype. Die

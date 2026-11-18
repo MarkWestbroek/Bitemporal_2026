@@ -61,6 +61,7 @@ const DMN_VOORBEELD = `<?xml version="1.0" encoding="UTF-8"?>
 const SAMENGESTELD = "De bron is samengesteld (canoniek model, e-dienst en soms een referentielijst); proefdraaien hier volgt met het bereik van een transformatie.";
 
 registreerRegelset(MERMAID_NAAR_USECASE, {
+  richting: "import",
   bestand: "diagramprofielen/usecase/mermaidRegels.js",
   proef: { soort: "tekst", lees: (tekst) => leesMermaidFlowcharts(tekst), voorbeeld: MERMAID_VOORBEELD, uitleg: "Plak een Mermaid flowchart." },
 });
@@ -69,10 +70,12 @@ registreerRegelset(USECASE_NAAR_MERMAID, {
   proef: { soort: "map", profielId: "usecase05", schrijf: (plan) => planNaarMermaid(plan, { titel: "proef" }), uitleg: "Kies een map met een use case-model, of het hele model." },
 });
 registreerRegelset(BPMN_XML_NAAR_BPMN, {
+  richting: "import",
   bestand: "diagramprofielen/bpmn/bpmnXmlRegels.js",
   proef: { soort: "tekst", lees: (tekst, opties) => [leesBpmn(tekst, opties)], voorbeeld: BPMN_VOORBEELD, uitleg: "Plak BPMN 2.0 XML." },
 });
 registreerRegelset(DMN_XML_NAAR_DRD, {
+  richting: "import",
   bestand: "diagramprofielen/dmn-drd/dmnXmlRegels.js",
   proef: { soort: "tekst", lees: (tekst, opties) => [leesDmn(tekst, opties)], voorbeeld: DMN_VOORBEELD, uitleg: "Plak DMN XML." },
 });
@@ -80,11 +83,11 @@ registreerRegelset(TOEGANGSSPRAAK_NAAR_ODRL_AP_NL, {
   bestand: "toegangsspraak/odrlApNlRegels.js",
   proef: null,
 });
-registreerRegelset(CANONIEK_NAAR_OBJECTTYPE, { bestand: "diagramprofielen/canoniek-uml/objecttypeRegels.js" });
-registreerRegelset(CANONIEK_NAAR_FORMULIER, { bestand: "diagramprofielen/canoniek-uml/formulierRegels.js" });
-registreerRegelset(CANONIEK_NAAR_ZAAKTYPE, { bestand: "diagramprofielen/canoniek-uml/zaaktypeRegels.js" });
-registreerRegelset(CANONIEK_NAAR_DOSSIER, { bestand: "diagramprofielen/canoniek-uml/dossierRegels.js" });
-registreerRegelset(BPMN_NAAR_GZAC, { bestand: "diagramprofielen/bpmn/bpmnGzacRegels.js" });
+registreerRegelset(CANONIEK_NAAR_OBJECTTYPE, { richting: "inrichting", bestand: "diagramprofielen/canoniek-uml/objecttypeRegels.js" });
+registreerRegelset(CANONIEK_NAAR_FORMULIER, { richting: "inrichting", bestand: "diagramprofielen/canoniek-uml/formulierRegels.js" });
+registreerRegelset(CANONIEK_NAAR_ZAAKTYPE, { richting: "inrichting", bestand: "diagramprofielen/canoniek-uml/zaaktypeRegels.js" });
+registreerRegelset(CANONIEK_NAAR_DOSSIER, { richting: "inrichting", bestand: "diagramprofielen/canoniek-uml/dossierRegels.js" });
+registreerRegelset(BPMN_NAAR_GZAC, { richting: "inrichting", bestand: "diagramprofielen/bpmn/bpmnGzacRegels.js" });
 
 /** Waarom een regelset (nog) geen proefbron heeft, voor het scherm. */
 export function geenProefUitleg(vermelding) {
