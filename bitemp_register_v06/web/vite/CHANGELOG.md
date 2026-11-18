@@ -8,6 +8,13 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
 
+### Toegevoegd
+- **Marks, de onderlaag** (plan 2026-11-18, stap 2 en 3; nog zonder scherm): marks (MDA) zijn aanwijzingen op een
+  modelelement voor een transformatie, los van het model. Lagen met labels, contexten (een keuze van lagen in een
+  volgorde), effectieve marks, marksoorten per transformatie (`register.zoeksleutel`, `register.sorteerbaar`). Ze
+  staan in het werkbestand (`marks`), lopen mee in de projectsync (`marks/patchMarks`) en in het vergelijken en
+  samenvoegen van een branch.
+
 ### Gewijzigd
 - **Rondleiding: scenario's uit het project** (16-11): de stap over de Labs-activiteiten wijst nu naar de
   scenario's van het demo-project (*Scenario kiezen… → Uit het project*, map *9 Simulatie*) en naar *Alle

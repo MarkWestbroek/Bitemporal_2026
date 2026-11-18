@@ -206,3 +206,51 @@ export function marksBijlage(st, context, { bestaat } = {}) {
   }
   return { context: contextLagen(st, context), marks };
 }
+
+// ── Wijzigingen als patch (projectsync, samenvoegen) ──────────────────────────
+
+const perId = (lijst) => new Map((lijst || []).map((x) => [x.id, x]));
+const zelfde = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+
+/**
+ * Het verschil tussen twee standen, per onderdeel als `{zet, wis}` op id. `null` als er niets
+ * verschilt. Inhoudelijk vergeleken, zodat twee los opgebouwde standen ook werken.
+ * @param {Marks} voor @param {Marks} na
+ * @returns {{lagen?: {zet: any[], wis: string[]}, contexten?: {zet: any[], wis: string[]}, marks?: {zet: any[], wis: string[]}} | null}
+ */
+export function diffMarks(voor, na) {
+  const uit = {};
+  for (const deel of /** @type {const} */ (["lagen", "contexten", "marks"])) {
+    const v = perId(voor?.[deel]);
+    const n = perId(na?.[deel]);
+    const zet = [...n.values()].filter((x) => !v.has(x.id) || (v.get(x.id) !== x && !zelfde(v.get(x.id), x)));
+    const wis = [...v.keys()].filter((id) => !n.has(id));
+    if (zet.length || wis.length) uit[deel] = { zet, wis };
+  }
+  return Object.keys(uit).length ? uit : null;
+}
+
+/**
+ * Pas een patch toe (de operatie `marks/patchMarks`). Volgorde: lagen erbij, dan contexten en
+ * marks, dan lagen weg (met hun marks). Wat naar een onbekende laag wijst valt weg.
+ * @param {Marks} st
+ * @param {ReturnType<typeof diffMarks>} patch
+ * @returns {Marks}
+ */
+export function patchMarks(st, patch) {
+  const pas = (lijst, p) => {
+    if (!p) return lijst;
+    const m = perId(lijst);
+    for (const id of p.wis || []) m.delete(id);
+    for (const x of p.zet || []) if (x?.id) m.set(x.id, x);
+    return [...m.values()];
+  };
+  return normaliseerMarks({
+    lagen: pas(st.lagen, patch?.lagen),
+    contexten: pas(st.contexten, patch?.contexten),
+    marks: pas(st.marks, patch?.marks),
+  });
+}
+
+/** Staat er iets in? Een leeg onderdeel hoeft niet in het werkbestand. */
+export const heeftMarks = (st) => !!(st?.lagen?.length || st?.contexten?.length || st?.marks?.length);

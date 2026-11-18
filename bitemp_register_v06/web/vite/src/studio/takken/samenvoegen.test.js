@@ -473,3 +473,30 @@ test("compartimentvelden: hernoemen én een ander type op die plek is geen herno
   const v = verschilMetMain({ basis, tak, main: kopie(basis) }).verschillen.find((x) => x.id === "C");
   assert.deepEqual(v.veldDetails.map((d) => [d.veld, d.status]), [["compartiment.velden/naam:a", "weg"], ["compartiment.velden/naam:x", "nieuw"]]);
 });
+
+// Marks (18-11): lagen, contexten en marks gaan mee bij samenvoegen, elk op id.
+test("marks: een mark van de tak komt in MAIN, een mark van MAIN in de tak; ops met patchMarks", async () => {
+  const { voegSamen, opsVoorVerschil } = await import("./samenvoegen.js");
+  const { verschilMetMain } = await import("./verschilMetMain.js");
+  const VELD = { soort: "veld", uuid: "u-1" };
+  const laag = { id: "algemeen", naam: "Algemeen", labels: [] };
+  const mark = (soort, waarde) => ({ id: `algemeen|${soort}|u:u-1`, laag: "algemeen", soort, doel: VELD, waarde });
+  const stand = (marks) => ({ profielen: {}, structuur: { mappen: {}, plaatsing: {} }, kruisverbanden: [], marks: { lagen: [laag], contexten: [], marks } });
+  const basis = stand([mark("register.zoeksleutel", true)]);
+  const tak = stand([mark("register.zoeksleutel", true), mark("register.sorteerbaar", true)]);
+  const main = stand([mark("register.zoeksleutel", true), mark("register.tekstzoeken", true)]);
+  const { samengevoegd, nieuwTak, conflicten } = voegSamen({ basis, tak, main });
+  assert.deepEqual(conflicten, []);
+  assert.deepEqual(samengevoegd.marks.marks.map((m) => m.soort).sort(), ["register.sorteerbaar", "register.tekstzoeken", "register.zoeksleutel"]);
+  assert.deepEqual(nieuwTak.marks.marks.map((m) => m.soort).sort(), ["register.sorteerbaar", "register.tekstzoeken", "register.zoeksleutel"]);
+  const ops = opsVoorVerschil(main, samengevoegd);
+  assert.deepEqual(ops.map((o) => [o.store, o.op]), [["marks", "patchMarks"]]);
+  assert.equal(ops[0].args[0].marks.zet[0].soort, "register.sorteerbaar");
+  // In het verschil: één regel per mark, soort "mark".
+  const v = verschilMetMain({ basis, tak, main }).verschillen.filter((x) => x.soort === "mark");
+  assert.deepEqual(v.map((x) => x.naam).sort(), ["register.sorteerbaar", "register.tekstzoeken"]);
+  // Conflict: beide kanten een andere waarde; zonder keuze houdt MAIN de zijne.
+  const c = voegSamen({ basis, tak: stand([mark("register.zoeksleutel", false)]), main: stand([mark("register.zoeksleutel", null)]) });
+  assert.deepEqual(c.conflicten.map((x) => x.soort), ["mark"]);
+  assert.equal(c.samengevoegd.marks.marks[0].waarde, null);
+});

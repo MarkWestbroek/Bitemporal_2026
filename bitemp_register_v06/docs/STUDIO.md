@@ -2126,6 +2126,17 @@ fase 2 een **bewerkbare sandbox**:
   "Herlaad uit UML-model" — anders missen de `bron`-bijlagen die de export
   verliesvrij maken.
 
+**Marks (2026-11-18).** Marks (MDA: aanwijzingen op een modelelement voor een transformatie) staan
+los van het model in het werkbestand, als `marks: {lagen, contexten, marks}` naast
+`kruisverbanden`; alleen aanwezig als er iets is. Kern: `web/vite/src/marks/` (puur: lagen met
+labels, contexten, `effectieveMarks`, `marksBijlage`, marksoorten per transformatie). Store:
+`studio/marksStore.js`, gekoppeld als store `marks`; de netto wijziging is één operatie
+`marks/patchMarks` (`{lagen?, contexten?, marks?}` elk `{zet, wis}` op id). De sidecar speelt hem
+na (`sidecarImport.speelOpsNa`); vergelijken en samenvoegen van een branch nemen de drie
+onderdelen mee (`marklaag`, `markcontext`, `mark`). `actieveContext` is van de gebruiker en zit
+niet in het werkbestand. Nog zonder scherm; plan en stand:
+`docs/plans/2026-11-18 Marks — markeringen op het model (plan).md`.
+
 ### OpenAPI → canoniek model (transformatie)
 
 Naast het `oas31`-profiel (dat een OAS als *eigen notatie* toont) is er een
