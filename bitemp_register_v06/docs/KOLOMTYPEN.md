@@ -21,8 +21,9 @@ tekstkolom staan onder code die een ander type verwacht.
 - De waarden staan als tekst opgeslagen. Vergelijken, sorteren en filteren werken dan op tekst
   (`"10"` komt vóór `"9"`), en een index op zo'n kolom is een index op tekst.
 - Nieuwe waarden kunnen in een andere tekstvorm landen dan de oude. Een tijdstip dat eerst als
-  `2026-11-05T00:14:51Z` is ingevoerd, kan na de typewijziging als `2026-11-05 00:14:51+00`
-  worden weggeschreven. Dat laatste is afgeleid uit de code en niet gemeten.
+  `2026-11-05T00:14:51Z` is ingevoerd, wordt na de typewijziging als `2026-11-08 14:40:33+00:00`
+  weggeschreven (gezien op cg-test, 18-11). Als tekst sorteert de tweede vorm vóór de eerste,
+  ook als het moment later is.
 
 Gevonden op cg-test (FUNDAMENT, 18-11-2026): vijf kolommen in de domeinen inrichting en parkeren
 waren `varchar`, terwijl het model uit het Studio-project `time.Time`, `*bool` en `*int` zegt.
@@ -64,8 +65,11 @@ Werkwijze, in lijn met `CLAUDE.md` (SQL in één transactie, controles vooraf en
 De formele historie (`registratie`, `wijziging`) verandert niet: alleen de opslagvorm van de
 waarde wordt anders, niet wanneer of door welke registratie hij is vastgelegd.
 
-Voorbeeld: `docs/migraties/2026-11-18-cg-test-kolomtypen.sql` zet de vijf kolommen van cg-test
-om. Het is getest op nagebouwde tabellen met dezelfde kolommen en aantallen (58 en 392 rijen):
+Voorbeeld: `docs/migraties/2026-11-18-cg-test-kolomtypen.sql` zet zes kolommen van cg-test om
+(versie 2: vijf uit de eerste opgave plus één die de controle bij de start van api 0.28.0 meldde).
+De eerste versie brak op het cluster af op haar eigen controle vooraf: 14 tijdstippen hadden de
+vorm `2026-11-08 14:40:33+00:00`. Dat bevestigt wat hierboven staat: de API schreef een
+`time.Time` in een andere tekstvorm naar de tekstkolom dan de oudere rijen hadden. Het is getest op nagebouwde tabellen met dezelfde kolommen en aantallen (58 en 392 rijen):
 een goede run, een tweede run op al omgezette kolommen (breekt af) en een run met één waarde die
 niet past (breekt af, niets gewijzigd). Het is niet op het cluster gedraaid.
 
