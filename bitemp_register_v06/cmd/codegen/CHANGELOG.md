@@ -7,6 +7,8 @@ Formaat: [Keep a Changelog](https://keepachangelog.com); versionering volgens
 [`docs/versiebeheer.md`](../../docs/versiebeheer.md) (prefix `codegen/`).
 
 ## [Unreleased]
+
+## Met api 0.29.0 — 2026-11-18
 - **Nieuw: de marks-bijlage** (18-11-2026). De codegen leest `marks` naast het V3-model en zet
   `register.zoeksleutel` en `register.sorteerbaar` als `zoeksleutel` / `sorteerbaar` in de
   schema-tag van het `_Data`-veld (`model/v3_marks.go`); `dbsetup` maakt er een index van. Zie

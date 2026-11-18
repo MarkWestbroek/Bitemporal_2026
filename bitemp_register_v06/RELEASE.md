@@ -8,6 +8,57 @@
 
 ---
 
+## api 0.29.0 / devloop 0.32.0 (2026-11-18)
+
+Akkoord Mark 18-11 ("ja" op de release met de sortering; "alvast akkoord voor push en images";
+"uitrol op app is okee, op pf niet"). Hoort bij studio 0.46.0 / render 0.5.0 hieronder; devloop
+0.32.0 is api 0.29.0 met studio 0.46.0 en render 0.5.0. Aanleiding: de performancetest met het
+zaakmodel (Omnium als derde stack naast OneGround en Open Zaak).
+
+- **Sorteren van lijsten in GraphQL** (`dynql/sortering.go`, `docs/dynamische-graphql-laag.md`
+  §Sorteren): argument `sorteer: [{ veld, aflopend }]` op `<padnaam>` en `full_<padnaam>_list`,
+  hooguit drie sleutels. `veld` is een kolom van de entiteit of `<GE of relatie>.<veld>`. De
+  waarde is die van het actieve record (op het peiltijdstip); zonder waarde achteraan; daarna
+  altijd de id. Een veld dat het toegangsbeleid verbergt is geen sorteersleutel.
+- **REST-lijsten met een vaste volgorde:** de lijst en de `/full`-lijst van een entiteit hadden
+  geen `ORDER BY`, zodat een record bij bladeren op twee pagina's kon staan of ontbreken. Ze
+  sorteren nu altijd op id (na een eventuele `?sort=`).
+- **Marks naar een index** (indexwerk stap 4, `docs/INDEXEN.md` §Marks): de marks
+  `register.zoeksleutel` en `register.sorteerbaar` uit de bijlage `marks` naast het V3-model
+  geven een index `ix_<tabel>_<kolom>_zoek`. De rebuild uit een Studio-project stuurt de marks
+  van het project mee naar `/export/v3` (render 0.5.0); de codegen zoekt het veld op zijn uuid.
+  Een mark die niet te plaatsen is geeft een waarschuwing, de bouw gaat door.
+- **Façade fase 1** (FACADE): `cmd/facade`, lezen op Open Zaak en Open Object met de voorkant
+  van een Omnium-register, en de Lader-naad in `dynql` (laden los van opslaan). Voor een gewoon
+  register verandert er niets: de karakteriseringstest geeft 0 van 210 queries verschil.
+- Migratiescript `docs/migraties/2026-11-18-cg-test-kolomtypen.sql` versie 2 (beide tijdvormen,
+  zes kolommen); op cg-test uitgevoerd op 18-11.
+
+Getest: `go test ./...` groen op main; dynql met PostgreSQL (sortering: oplopend, aflopend,
+meervoudig, peiltijdstip, twee sleutels, met filter en paginering); regressiesuite np-loc,
+afgeleide relaties en de karakteriseringstest van de Lader groen; het zaakmodel met de twee
+marks van AI-INRICHTEN in een proefkopie: codegen voor vier domeinen, de schema-tags, de twee
+indexdefinities en de build. Niet getest: de keten van een mark in een Studio-project tot een
+index op een draaiend register, sorteren op een grote tabel, en gelijktijdige belasting.
+
+Bekende grenzen:
+- Het sorteren van een lijst gebruikt de index van `register.sorteerbaar` nog niet: de
+  sorteerwaarde is een subquery per entiteit. De index dient het filter (waarde of bereik).
+- Filteren en sorteren op een GE-veld kan alleen in GraphQL, niet in REST.
+- Een mark weghalen haalt de index niet weg.
+
+Uitrol:
+- **Schemawijziging: nee voor een bestaand register.** Indexen uit marks komen er pas na een
+  rebuild met een model dat marks draagt. De indexen van 0.28.0 staan er al.
+- **Rebuild uit het Studio-project: niet nodig.** Wel nodig om marks uit de Studio in het
+  register te krijgen; dat vraagt render 0.5.0 naast api 0.29.0 (een oudere sidecar kent het
+  veld `marks` op `/export/v3` niet).
+- **Andere stap: nee.**
+- App: `bitemp-go-api:0.29.0` via `update.sh`. pf: niet uitgerold (keuze Mark).
+  Fundament: `bitemp-devloop:0.32.0`, door FUNDAMENT.
+
+---
+
 ## studio 0.46.0 / render 0.5.0 (2026-11-18)
 
 Akkoord Mark 18-11 ("ja, graag"). De api-release die hierop volgt (0.29.0, sorteren en indexen uit
