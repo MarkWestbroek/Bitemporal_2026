@@ -214,37 +214,39 @@ func TestApiLaderLijstEnEen(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	zaken := *(lijst.(*[]model.Zaak))
+	// Generiek via JSON (de json-namen van de gegenereerde structs): de test noemt geen
+	// modeltypen, zodat hij ook compileert als het zaakmodel niet gegenereerd is.
+	zaken := alsMaps(t, lijst)
 	if len(zaken) != 2 {
 		t.Fatalf("verwacht 2 zaken, kreeg %d", len(zaken))
 	}
 	z := zaken[0]
-	if len(z.ZaakIdentificaties) != 1 || z.ZaakIdentificaties[0].Data[0].Zaakidentificatie != "ZAAK-1" {
-		t.Fatalf("identificatie: %+v", z.ZaakIdentificaties)
+	if got := pad(z, "zaak_identificaties.0.data.0.zaakidentificatie"); got != "ZAAK-1" {
+		t.Fatalf("identificatie: %v", got)
 	}
-	if len(z.ZaakRollen) != 2 || len(z.ZaakStatussen) != 2 || len(z.ZaakobjectVerwijzingen) != 1 {
-		t.Fatalf("rollen %d, statussen %d, verwijzingen %d", len(z.ZaakRollen), len(z.ZaakStatussen), len(z.ZaakobjectVerwijzingen))
+	rollen, statussen, verw := lijstVan(z, "zaak_rollen"), lijstVan(z, "zaak_statussen"), lijstVan(z, "zaakobject_verwijzingen")
+	if len(rollen) != 2 || len(statussen) != 2 || len(verw) != 1 {
+		t.Fatalf("rollen %d, statussen %d, verwijzingen %d", len(rollen), len(statussen), len(verw))
 	}
-	if got := z.ZaakobjectVerwijzingen[0].Data[0].ObjectIri; got != "https://gemeente.example/id/object/"+uObject {
-		t.Errorf("objectIri = %q", got)
+	if got := pad(z, "zaakobject_verwijzingen.0.data.0.objectIri"); got != "https://gemeente.example/id/object/"+uObject {
+		t.Errorf("objectIri = %v", got)
 	}
 	// Opvolging: de eerste status eindigt waar de tweede begint.
-	st := z.ZaakStatussen
-	if len(st[0].Einde) != 1 || len(st[1].Einde) != 0 || len(st[1].Aanvang) != 1 {
-		t.Errorf("aanvang/einde van de statussen klopt niet: %+v", st)
+	if len(lijstVan(statussen[0], "einde")) != 1 || len(lijstVan(statussen[1], "einde")) != 0 || len(lijstVan(statussen[1], "aanvang")) != 1 {
+		t.Errorf("aanvang/einde van de statussen klopt niet: %v", statussen)
 	}
 	// Elk voorkomen heeft een eigen id (rol en status: uit de uuid van het subrecord).
-	if st[0].Rel_ID == st[1].Rel_ID || z.ZaakRollen[0].Rel_ID == z.ZaakRollen[1].Rel_ID {
+	if statussen[0]["rel_id"] == statussen[1]["rel_id"] || rollen[0]["rel_id"] == rollen[1]["rel_id"] {
 		t.Error("voorkomens delen een id")
 	}
 
 	// Eén zaak op id, opnieuw uit het register.
-	ent, err := l.LaadEen(ctx, meta, z.ID, time.Now())
+	ent, err := l.LaadEen(ctx, meta, int(z["id"].(float64)), time.Now())
 	if err != nil || ent == nil {
 		t.Fatalf("LaadEen: %v, %v", ent, err)
 	}
-	if o := ent.(*model.Zaak).ZaakOmschrijvingen[0].Data[0].Omschrijving; o == nil || *o != "Zaak 1" {
-		t.Error("LaadEen gaf een andere zaak")
+	if got := pad(alsMaps(t, []any{ent})[0], "zaak_omschrijvingen.0.data.0.omschrijving"); got != "Zaak 1" {
+		t.Errorf("LaadEen gaf een andere zaak: %v", got)
 	}
 	// Onbekend id: niet gevonden, geen fout.
 	if ent, err := l.LaadEen(ctx, meta, 999, time.Now()); ent != nil || err != nil {
@@ -264,7 +266,7 @@ func TestApiLaderFilterEnWeigeringen(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if n := len(*(lijst.(*[]model.Zaak))); n != 1 {
+	if n := len(alsMaps(t, lijst)); n != 1 {
 		t.Fatalf("filter: verwacht 1 zaak, kreeg %d", n)
 	}
 	for naam, f := range map[string]any{
@@ -278,6 +280,51 @@ func TestApiLaderFilterEnWeigeringen(t *testing.T) {
 			t.Errorf("%s: verwacht NietOndersteund, kreeg %v", naam, err)
 		}
 	}
+}
+
+// alsMaps zet een gevulde struct-slice (of een slice van structs) om naar JSON-maps.
+func alsMaps(t *testing.T, v any) []map[string]any {
+	t.Helper()
+	ruw, err := json.Marshal(v)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var uit []map[string]any
+	if err := json.Unmarshal(ruw, &uit); err != nil {
+		t.Fatal(err)
+	}
+	return uit
+}
+
+// lijstVan geeft een lijst-veld als maps.
+func lijstVan(m map[string]any, veld string) []map[string]any {
+	ruw, _ := m[veld].([]any)
+	uit := make([]map[string]any, 0, len(ruw))
+	for _, r := range ruw {
+		if mm, ok := r.(map[string]any); ok {
+			uit = append(uit, mm)
+		}
+	}
+	return uit
+}
+
+// pad volgt "a.0.b" door maps en lijsten.
+func pad(v any, p string) any {
+	for _, deel := range strings.Split(p, ".") {
+		switch x := v.(type) {
+		case map[string]any:
+			v = x[deel]
+		case []any:
+			i, err := strconv.Atoi(deel)
+			if err != nil || i >= len(x) {
+				return nil
+			}
+			v = x[i]
+		default:
+			return nil
+		}
+	}
+	return v
 }
 
 func asNietOndersteund(err error, doel *dynql.NietOndersteund) bool {
