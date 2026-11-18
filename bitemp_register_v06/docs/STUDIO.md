@@ -2420,3 +2420,27 @@ De tests vonden gaten die nu in `schema.js` beschreven staan: `DiagramType.hooks
 
 **Nieuwe M3-eigenschap?** Zet hem in de typedef in `schema.js` én in `m3.js`; de tests wijzen aan
 wat ontbreekt.
+
+**Het M3 als model (stap 3, 16-11).** `npm run metamodellen` (web/vite) maakt van `m3.js` het
+werkbestand `docs/metamodel/omnium-m3.studio-project.json` in puur-uml: per pakket een package
+met een diagram eronder; een eigenschap tussen twee klassen wordt een associatie (compositie bij
+samenstelling), de rest een attribuut, code een operatie; de uitleg uit `schema.js` staat als
+beschrijving op elementen en velden. Klassen uit een ander pakket staan als kop op het diagram;
+lijnen tussen twee koppen zijn daar verborgen (`verborgenConnectoren`). Eerste layout gelaagd
+(eigenaar boven zijn delen), daaronder datatypes en enumeraties; daarna blijft elke positie en
+breedte staan en krijgen alleen nieuwe klassen een plek. Code: `studio/metamodellen/`
+(`metamodelWerkbestand.js` generiek, `m3Metamodel.js`, `genereer.js` met de maat uit de tekenaar);
+tests `metamodellen.test.js` (o.a. "actueel") en e2e `65-studio-metamodel-m3.spec.js`. Zie
+`docs/metamodel/README.md`.
+
+**Het projectmetamodel (stap 2, 16-11).** `studio/projectMetamodel.js` beschrijft het werkbestand in
+dezelfde vorm: pakket Werkbestand (project, structuur met mappen, plaatsing en bundels,
+kruisverbanden, koppelsoorten, profielVersies), Model (profielinhoud: element met `data`,
+compartiment, veld, diagram, voorkomen, edge, lijn) en, apart, Werkruimte (tabs, open mappen,
+eigen bundels, viewports: niet in het werkbestand). `versie = PROJECT_FORMAAT_VERSIE` (4); de eis
+van formaat 4 staat bij `ElementData.uuid` en `VeldData.uuid`, met de enumeratie UuidSoort uit
+`UUID_SOORTEN`. Test `projectMetamodel.test.js`: versie en formaat uit de code; elke sleutel in
+echte werkbestanden (het voorbeeld van formaat 4 van OMNIUM-UI in
+`studio/metamodellen/fixtures/`, de architectuur en de metamodellen zelf) is beschreven; elke
+beschreven sleutel staat in de code; het voorbeeld houdt zich aan de uuid-eis. Het model:
+`docs/metamodel/omnium-projectmetamodel.studio-project.json` (e2e 65 opent beide modellen).

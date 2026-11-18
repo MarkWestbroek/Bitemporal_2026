@@ -626,7 +626,7 @@ export const M3_KLASSEN = [
   {
     naam: "Serialisatie",
     pakket: "Implementatie",
-    soort: "datatype",
+    soort: "klasse",
     typedef: false,
     uitleg: "Eigen lezen en schrijven van een profiel (DiagramType.serialisatie), bv. V3 voor canoniek-uml.",
     eigenschappen: [op("exporteer", "staat", "any", "1", { optioneel: true }), op("importeer", "bestand", "any", "1", { optioneel: true })],

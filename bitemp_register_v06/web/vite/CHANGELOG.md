@@ -23,6 +23,12 @@ De single source of truth voor het nummer is `package.json` `"version"`.
   tegen `schema.js` (`m3.test.js`) en tegen alle profielen (`render-svc/m3Dekking.test.mjs`). In `schema.js`
   zijn de gaten beschreven die de tests vonden (o.a. `DiagramType.hooks`, `shapeSets`, `PropertyType.aard`);
   vier hooks erbij in `handlerCatalogus.js`.
+- **M3 als model** (plan 2026-11-15, stap 3): `npm run metamodellen` maakt
+  `docs/metamodel/omnium-m3.studio-project.json` (puur-uml, drie pakketten met elk een diagram) uit `m3.js`;
+  de layout in het bestand blijft bij opnieuw genereren staan. Test "actueel" en e2e 65.
+- **Projectmetamodel** (plan 2026-11-15, stap 2): `studio/projectMetamodel.js` beschrijft het werkbestand
+  (formaat 4, met de uuid-eis) en apart de werkruimte; model in `docs/metamodel/omnium-projectmetamodel.studio-project.json`;
+  controletest tegen de code en echte werkbestanden.
 
 ## [studio/v0.44.0] — 2026-11-15
 
