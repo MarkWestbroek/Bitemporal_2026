@@ -276,7 +276,7 @@ registratie-API, REST-routes en GraphQL.
 | Gegevenselement | Velden | |
 |---|---|---|
 | `ZoekdefinitieNaam` | `naam`, `beschrijving` | voor beheer en het log |
-| `ZoekdefinitiePad` | `binnen`, `sorteerveld` | `Zaak.zaak_zaaktypen` en `Zaak.zaaklooptijd.startdatum`, in de namen van het GraphQL-schema |
+| `ZoekdefinitiePad` | `binnen`, `sorteerveld` | `Zaak.zaak_zaaktypen` en `Zaak.zaak_looptijden.startdatum`, in de namen van het GraphQL-schema |
 | `ZoekdefinitieStatus` | `status` (`concept`, `actief`, `inactief`), `reden` | materieel: "actief vanaf …" kan vooruit |
 
 ```json
@@ -284,7 +284,7 @@ registratie-API, REST-routes en GraphQL.
   { "opvoer": { "zoekdefinitie": { "id": 1, "aanvang": "2026-11-19" } } },
   { "opvoer": { "zoekdefinitienaam": { "zoekdefinitie_id": 1, "naam": "zaken-per-zaaktype-op-startdatum" } } },
   { "opvoer": { "zoekdefinitiepad": { "zoekdefinitie_id": 1,
-      "binnen": "Zaak.zaak_zaaktypen", "sorteerveld": "Zaak.zaaklooptijd.startdatum" } } },
+      "binnen": "Zaak.zaak_zaaktypen", "sorteerveld": "Zaak.zaak_looptijden.startdatum" } } },
   { "opvoer": { "zoekdefinitiestatus": { "zoekdefinitie_id": 1, "status": "actief", "aanvang": "2026-11-19" } } } ] }
 ```
 
@@ -298,10 +298,11 @@ registratiecode kent de zoektabellen niet.
 
 1. Neem de namen uit de GraphQL-vraag die je wilt versnellen. Uit
    `zaken(filter: { zaak_zaaktypen: { zaaktype_id: { eq: 9 } } }, sorteer: [{ veld:
-   "zaaklooptijd.startdatum" }])` volgt `binnen` = `Zaak.zaak_zaaktypen` en `sorteerveld` =
-   `Zaak.zaaklooptijd.startdatum`. `Zaak` is de typenaam van de entiteit, niet de naam van de
+   "zaak_looptijden.startdatum" }])` volgt `binnen` = `Zaak.zaak_zaaktypen` en `sorteerveld` =
+   `Zaak.zaak_looptijden.startdatum`. `Zaak` is de typenaam van de entiteit, niet de naam van de
    lijst.
-2. Registreer de zoekdefinitie (het voorbeeld hierboven), als beheerder. Kies een `id` die nog
+2. Registreer de zoekdefinitie (het voorbeeld hierboven), als beheerder. De twee
+   `aanvang`-velden zijn een datum (`JJJJ-MM-DD`); een tijdstip geeft 422. Kies een `id` die nog
    niet bestaat.
 3. Kijk in het log van de API. Direct na de registratie staat er een regel
    `zoektabellen: zk_… (naam): … — vullen`, of `zoekdefinitie … overgeslagen: <reden>` als een
@@ -381,9 +382,28 @@ register):
 | zaken van één zaaktype op startdatum, eerste 50 | 23 ms, 34.000 pagina's | 0,05 ms, 34 pagina's |
 | idem, tiende pagina | (als boven) | 0,3 ms, 500 pagina's |
 
-Daar komt in beide gevallen het laden van de 50 entiteiten bij. De zoektabel was 30 MB. Niet
-gemeten: het register onder gelijktijdige belasting, de kosten per registratie, en het vullen
-op een groot register terwijl er geschreven wordt.
+Daar komt in beide gevallen het laden van de 50 entiteiten bij. De zoektabel was 30 MB.
+
+Meting op het register met zaken (FUNDAMENT, 19-11-2026; devloop 0.34.0, 16 gelijktijdige
+gebruikers, runs van 3 minuten, 100 zaaktypen; het register groeide tijdens de meting van
+333.000 naar 730.000 zaken):
+
+| | Zonder zoektabel | Met zoektabel |
+|---|---|---|
+| zaaktype op startdatum, p50 | 801 en 998 ms | 16,3 en 16,5 ms (p95 30, p99 37) |
+| idem, verzoeken per seconde | 16 tot 20 | 890 |
+| zaak aanmaken, p50 | 79 ms, 311 per seconde | 87,5 ms (p95 93), 273 per seconde |
+
+De controles op de uitkomst waren in alle runs 100%. Het vullen van 482.540 rijen (73 MB) was
+binnen 15 seconden na de registratie van de definitie klaar. Uit `pg_stat_statements`: lezen uit
+de zoektabel gemiddeld 0,04 ms; bijhouden per registratie een `INSERT` van gemiddeld 0,18 ms en
+een `DELETE` van 0,04 ms; geen enkele melding "bijhouden mislukt". Na 250.000 nieuwe zaken was
+het aantal rijen in de zoektabel gelijk aan het aantal zaken. Het aanmaken was ongeveer 10%
+trager; het register was bij de nameting ook groter, dus dat verschil is niet alleen de
+zoektabel.
+
+Niet gemeten: het vullen terwijl er geschreven wordt, de wachtgrens van 200 ms op een slot,
+twee API-processen naast elkaar, en een vooruit geregistreerde status.
 
 ## Vervolg
 
