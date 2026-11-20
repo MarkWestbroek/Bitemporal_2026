@@ -8,6 +8,10 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
 
+### Gewijzigd
+- **Simulatie: de Waterstede-scenario's staan in het demo-project** (16-11): ze zijn uit de ingebakken keuzelijst;
+  in het demo-project *Omnium demo — gemeente Waterstede* staan ze onder *Uit het project*.
+
 ## [studio/v0.45.0] — 2026-11-16
 
 Samen met render 0.4.9 (api blijft 0.27.0; devloop door FUNDAMENT).
