@@ -68,3 +68,64 @@ test("het sidecar-project exporteren, importeren en een profiel eruit activeren"
   });
   expect(geregistreerd).toEqual(["bevat", "domein", "entiteit", "relatie", "subtype"]);
 });
+
+test("de profielen uit het project in de tool laden: een wijziging in het model verandert het profiel", async ({ page }) => {
+  test.setTimeout(120_000);
+  await openStudio(page);
+  // Het project maken zoals de export het doet, in de pagina zelf.
+  const buffer = Buffer.from(
+    await page.evaluate(async () => {
+      const base = location.origin + "/viz/react/src/";
+      await import(base + "studio/activities/m3ProfielActivity.jsx");
+      await import(base + "studio/activities/regelsetsIngebouwd.js");
+      const { alleDiagramTypes } = await import(base + "diagramcore/types/typeRegistry.js");
+      const { sidecarProject } = await import(base + "studio/sidecarProject.js");
+      const descriptors = alleDiagramTypes().filter((d) => d.id === "erd" || d.id === "usecase");
+      return JSON.stringify(sidecarProject({ descriptors }));
+    }),
+    "utf8"
+  );
+  await page.locator('[data-tour="menu-project"]').first().click();
+  const chooser = page.waitForEvent("filechooser");
+  await page.getByText("Importeer project…").first().click();
+  await (await chooser).setFiles({ name: "sidecar.studio-project.json", mimeType: "application/json", buffer });
+  await page.getByRole("button", { name: "Importeer", exact: true }).click();
+  await expect(page.getByText("Profielen", { exact: true }).first()).toBeVisible();
+
+  // In het model: de entiteit van ERD krijgt een andere kleur en korte code.
+  const diagramId = await page.evaluate(async () => {
+    const { getProfieltype } = await import(location.origin + "/viz/react/src/studio/profieltypeRegistry.js");
+    const store = getProfieltype("m3Profiel05").useStore;
+    const st = store.getState();
+    const entiteit = Object.values(st.elements).find((e) => e.elementType === "elementDef" && e.data?.["m3:id"] === "entiteit");
+    store.getState().updateElement(entiteit.id, { data: { "m3:kleur": "#123456", "m3:kort": "ENX" } });
+    return Object.values(st.diagrams).find((d) => d.naam === "ERD").id;
+  });
+  await page.evaluate(async ({ diagramId }) => {
+    const { menuBus } = await import(location.origin + "/viz/react/src/studio/menuBus.js");
+    menuBus.emit("studio:open-diagram", { profielId: "m3Profiel05", diagramId });
+  }, { diagramId });
+
+  const erdVoor = await page.evaluate(async () => {
+    const { getDiagramType } = await import(location.origin + "/viz/react/src/diagramcore/types/typeRegistry.js");
+    window.__erdObject = getDiagramType("erd");
+    return getDiagramType("erd").elementTypes.find((e) => e.id === "entiteit").kleur;
+  });
+  expect(erdVoor).toBe("#fef9c3");
+
+  await page.locator(".studio-menubar").getByText("Profiel (M3)", { exact: true }).click();
+  await page.getByRole("menuitem", { name: "Laad de profielen uit dit project in de tool", exact: true }).click();
+  await page.getByRole("button", { name: "Laad", exact: true }).click();
+  const melding = page.locator(".studio-dialoog");
+  await expect(melding).toContainText("Vervangen: 2");
+  await expect(melding).toContainText("Nieuw: 0");
+  await melding.getByRole("button", { name: "OK" }).click();
+
+  const erdNa = await page.evaluate(async () => {
+    const { getDiagramType } = await import(location.origin + "/viz/react/src/diagramcore/types/typeRegistry.js");
+    const dt = getDiagramType("erd");
+    const et = dt.elementTypes.find((e) => e.id === "entiteit");
+    return { zelfde: dt === window.__erdObject, kleur: et.kleur, kort: et.kort, superprofiel: dt.elementTypes.some((e) => e.id === "notitie" && e._superprofiel) };
+  });
+  expect(erdNa).toEqual({ zelfde: true, kleur: "#123456", kort: "ENX", superprofiel: true });
+});

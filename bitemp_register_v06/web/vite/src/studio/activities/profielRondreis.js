@@ -112,11 +112,16 @@ export function verschillenMetKern(descriptor, kern) {
     if (!terug) uit.push(`${klasse} — type weg`);
     else sleutels(klasse, et, terug);
   }
+  // Wat er bij kwam, en de volgorde (het palet; waar een notitielijn heen mag).
+  for (const et of etNa) if (!etVoor.some((x) => x.id === et.id)) uit.push(`${et.isConnector ? "ConnectorType" : "ElementType"} — type erbij`);
+  if (!gelijk(etVoor.map((et) => et.id), etNa.map((et) => et.id))) uit.push("DiagramType.elementTypes — volgorde");
   for (const ft of ftVoor) {
     const terug = ftNa.find((x) => x.id === ft.id);
     if (!terug) uit.push("FieldType — type weg");
     else sleutels("FieldType", ft, terug);
   }
+  for (const ft of ftNa) if (!ftVoor.some((x) => x.id === ft.id)) uit.push("FieldType — type erbij");
+  if (!gelijk(ftVoor.map((ft) => ft.id), ftNa.map((ft) => ft.id))) uit.push("DiagramType.fieldTypes — volgorde");
   return uit;
 }
 

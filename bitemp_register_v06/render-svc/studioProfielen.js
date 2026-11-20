@@ -43,6 +43,7 @@ import { alleRegelsets } from "../web/vite/src/transformatie/regelsetCatalogus.j
 import { sidecarProject } from "../web/vite/src/studio/sidecarProject.js";
 import { bouwProfielUitOntwerp } from "../web/vite/src/studio/activities/profielOntwerp.js";
 import { verschillenMetKern } from "../web/vite/src/studio/activities/profielRondreis.js";
+import { kernenUitProject, laadKernen } from "../web/vite/src/studio/profielenUitProject.js";
 import { registreerUseCase, USECASE_ID } from "../web/vite/src/diagramprofielen/usecase/index.js";
 import { registreerWsdl, wsdlDiagramType } from "../web/vite/src/diagramprofielen/wsdl/index.js";
 import { registreerXsd, xsdDiagramType } from "../web/vite/src/diagramprofielen/xsd/index.js";
@@ -140,6 +141,14 @@ export function sidecarVerschillen(project = sidecarVanAlles()) {
     uit[pid] = verschillenMetKern(descriptor, kern);
   }
   return uit;
+}
+
+/**
+ * Laad de profielen uit een sidecar-project in deze bundel (profielenUitProject.js): elk bekend
+ * profiel wordt op zijn plek vervangen. Voor de test dat de tool zich uit het project kan opbouwen.
+ */
+export function laadSidecarInDeTool(project) {
+  return laadKernen(kernenUitProject(project.profielen.m3Profiel05));
 }
 
 /** De descriptor van een profiel-id uit een project, of undefined. */
