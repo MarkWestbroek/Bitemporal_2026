@@ -539,42 +539,109 @@ export function bewaarScenarioInProject(gegeven = null) {
     for (const e of w.toevoegen) st.addElement(e);
     for (const [id, patch] of Object.entries(w.bijwerken)) st.updateElement(id, patch);
 
-    // De nieuwe elementen op een diagram zetten.
+    // De nieuwe elementen op een diagram zetten, als boom (Mark 20-11, naar zijn opstelling van GPK 4
+    // en 5): de ouder bovenaan, gecentreerd boven zijn kinderen, de «heeft»-lijnen in boomstijl (van
+    // de onderkant van de ouder naar de bovenkant van het kind). Tot vier kinderen staan in één rij;
+    // meer kinderen verspringen over twee rijen, zodat het diagram niet te breed wordt. De instantie
+    // (de startgegevens) hoort niet in de boom: die staat links naast het scenario, met een gewone
+    // «start met»-lijn. Op een bestaand diagram komen nieuwe kinderen rechts erbij; wat de gebruiker
+    // verplaatste, blijft staan.
     const nieuw = new Map(w.toevoegen.filter((e) => !e.source).map((e) => [e.id, e]));
     const diagrammen = () => Object.values(simulatiemodel().diagrams || {});
     const diagramMet = (elementId, behalve = null) => diagrammen().find((d) => d.id !== behalve && (d.nodes || []).some((k) => k.elementId === elementId)) || null;
-    const onder = (diagram) => Math.max(0, ...(diagram?.nodes || []).map((k) => (k.position?.y || 0) + 140));
+    const OUDER_Y = 40;
+    const RIJ_Y = 260;
+    const RIJ2_Y = 510; // de tweede rij bij verspringen
+    const TUSSEN = 440; // overzicht: ruimte voor de startvariabelen van een scenario
+    const STUB_TUSSEN = 560; // scenario: ruimte voor de json-regels van een stub
+    const IN_EEN_RIJ = 4; // meer kinderen: verspringen over twee rijen
+    const INSTANTIE_LINKS = 620; // de instantie staat zo ver links van het scenario
+    /** Het midden boven de rij: daar staat de ouder. */
+    const midden = (rij) => (rij.length ? Math.round((Math.min(...rij.map((k) => k.position.x)) + Math.max(...rij.map((k) => k.position.x))) / 2) : 60);
+    /**
+     * Zet kinderen rechts in de rij erbij. De ouder schuift mee naar het midden boven de rij, zolang
+     * hij daar stond (een nieuw diagram, of nog op zijn berekende plek); heeft de gebruiker hem
+     * verplaatst, dan blijft hij staan.
+     */
+    const zetRij = (diagramId, ouderId, kinderen, nieuwDiagram, tussen = TUSSEN, verspring = false) => {
+      const nodes = () => simulatiemodel().diagrams[diagramId]?.nodes || [];
+      const ouder = () => nodes().find((k) => k.elementId === ouderId);
+      // De kinderen: alles in de rijen onder de ouder (de instantie staat ernaast, niet eronder).
+      const kinderenNu = () => nodes().filter((k) => k.elementId !== ouderId && (k.position?.y || 0) >= RIJ_Y - 20);
+      const opZijnPlek = nieuwDiagram || (ouder()?.position?.y === OUDER_Y && ouder()?.position?.x === midden(kinderenNu()));
+      const erbij = kinderen.filter((id) => !nodes().some((k) => k.elementId === id));
+      const bestaand = kinderenNu();
+      if (verspring && !bestaand.length && erbij.length > IN_EEN_RIJ) {
+        // Verspringen: om en om boven en onder, een halve stap opzij.
+        erbij.forEach((id, i) => st.addElementToDiagram(diagramId, id, { x: 60 + i * (tussen / 2), y: i % 2 ? RIJ2_Y : RIJ_Y }));
+      } else {
+        let x = bestaand.length ? Math.max(...bestaand.map((k) => k.position?.x || 0)) + tussen : 60;
+        for (const id of erbij) {
+          st.addElementToDiagram(diagramId, id, { x, y: RIJ_Y });
+          x += tussen;
+        }
+      }
+      if (opZijnPlek && kinderenNu().length) st.updateNodePosition(diagramId, ouderId, { x: midden(kinderenNu()), y: OUDER_Y });
+    };
+    /** Boomlijnen voor de verbindingen op dit diagram die nog geen eigen lijnvorm hebben. */
+    const boomLijnen = (diagramId) => {
+      const d = simulatiemodel().diagrams[diagramId];
+      const op = new Set((d?.nodes || []).map((k) => k.elementId));
+      const patches = {};
+      for (const c of Object.values(simulatiemodel().elements)) {
+        if (!c.source || !op.has(c.source) || !op.has(c.target) || d.lijnen?.[c.id]) continue;
+        // «heeft» is de boom; «start met» naar de instantie links ernaast is recht, de kortste weg
+        // (van de linkerkant van het scenario naar de rechterkant van de instantie; Mark 20-11).
+        // Eén kind: een rechte lijn (een boomlijn zou een knikje maken bij verschillende breedtes).
+        const enig = Object.values(simulatiemodel().elements).filter((x) => x.elementType === "heeft" && x.source === c.source && op.has(x.target)).length === 1;
+        if (c.elementType === "heeft") patches[c.id] = { vorm: enig ? "recht" : "boom", knikken: [], ...(enig ? {} : { boomOuder: null }), sourceHandle: "source-bottom", targetHandle: "target-top" };
+        else if (c.elementType === "start-met") patches[c.id] = { vorm: "recht", knikken: [], sourceHandle: "source-left", targetHandle: "target-right" };
+      }
+      if (Object.keys(patches).length) st.zetLijnen(diagramId, patches);
+    };
     // Nieuwe diagrammen komen in de map van de simulatie in de projectboom (16-11): het overzicht in
     // een map met de naam van de simulatie, elk scenario-diagram in de map waar het overzicht staat.
     // Wat de gebruiker daarna verplaatst, blijft waar hij het zet.
     const boom = () => useModellerenStore.getState();
     const boomSleutel = (diagramId) => `${SIMULATIEMODEL_PROFIEL}::${diagramId}`;
     let overzicht = diagramMet(w.simulatieId);
+    const nieuwOverzicht = !overzicht;
     if (!overzicht) {
       const id = nieuwId();
       const naam = st.elements[w.simulatieId]?.naam || w.toevoegen.find((e) => e.id === w.simulatieId)?.naam || "Simulatie";
       st.addDiagram({ id, naam });
       const map = Object.values(boom().mappen || {}).find((m) => m.naam === naam && !m.ouderId)?.id || boom().nieuweMap(naam);
       boom().plaatsDiagram(boomSleutel(id), map);
-      st.addElementToDiagram(id, w.simulatieId, { x: 60, y: 40 });
-      [...nieuw.values()].filter((e) => e.elementType === "subject").forEach((e, i) => st.addElementToDiagram(id, e.id, { x: 60 + i * 290, y: 200 }));
+      st.addElementToDiagram(id, w.simulatieId, { x: 60, y: OUDER_Y });
       overzicht = simulatiemodel().diagrams[id];
     }
-    if (w.nieuw.scenario) {
-      const aantal = (overzicht.nodes || []).filter((k) => simulatiemodel().elements[k.elementId]?.elementType === "scenario").length;
-      st.addElementToDiagram(overzicht.id, w.scenarioId, { x: 60 + aantal * 290, y: 380 });
-    }
+    // Het overzicht: de simulatie bovenaan, de subjecten en scenario's in één rij eronder.
+    zetRij(overzicht.id, w.simulatieId, [...[...nieuw.values()].filter((e) => e.elementType === "subject").map((e) => e.id), ...(w.nieuw.scenario ? [w.scenarioId] : [])], nieuwOverzicht);
+    boomLijnen(overzicht.id);
     let eigen = diagramMet(w.scenarioId, overzicht.id);
+    const nieuwEigen = !eigen;
     if (!eigen) {
       const id = nieuwId();
       st.addDiagram({ id, naam: scenario.naam });
       const map = boom().plaatsing?.[boomSleutel(overzicht.id)] || null;
       if (map) boom().plaatsDiagram(boomSleutel(id), map);
-      st.addElementToDiagram(id, w.scenarioId, { x: 60, y: 40 });
+      st.addElementToDiagram(id, w.scenarioId, { x: 60, y: OUDER_Y });
       eigen = simulatiemodel().diagrams[id];
     }
-    const y0 = Math.max(240, onder(eigen));
-    w.kinderen.filter((id) => nieuw.has(id)).forEach((id, i) => st.addElementToDiagram(eigen.id, id, { x: 60 + (i % 4) * 290, y: y0 + Math.floor(i / 4) * 190 }));
+    // Het scenario: bovenaan, met de stubs en de verwachting als boom eronder; de instantie links
+    // ernaast, met een rechte «start met»-lijn. Staat de instantie nog op haar berekende plek, dan schuift ze mee met het scenario.
+    const typeVan = (id) => simulatiemodel().elements[id]?.elementType;
+    const plekVan = (id) => simulatiemodel().diagrams[eigen.id]?.nodes.find((k) => k.elementId === id)?.position || null;
+    const scenarioVoor = plekVan(w.scenarioId);
+    const instanties = w.kinderen.filter((id) => typeVan(id) === "instantie");
+    const naastVoor = new Set(instanties.filter((id) => { const p = plekVan(id); return p && scenarioVoor && p.y === OUDER_Y && p.x === scenarioVoor.x - INSTANTIE_LINKS; }));
+    zetRij(eigen.id, w.scenarioId, w.kinderen.filter((id) => nieuw.has(id) && typeVan(id) !== "instantie").sort((a, b) => (typeVan(a) === "verwachting") - (typeVan(b) === "verwachting")), nieuwEigen, STUB_TUSSEN, true);
+    const scenarioNa = plekVan(w.scenarioId);
+    for (const id of instanties) {
+      if (!plekVan(id)) st.addElementToDiagram(eigen.id, id, { x: scenarioNa.x - INSTANTIE_LINKS, y: OUDER_Y });
+      else if (naastVoor.has(id)) st.updateNodePosition(eigen.id, id, { x: scenarioNa.x - INSTANTIE_LINKS, y: OUDER_Y });
+    }
+    boomLijnen(eigen.id);
     if (voor && simulatiemodel().diagrams[voor]) st.setActiefDiagram(voor);
     uit = { naam: scenario.naam, nieuw: w.nieuw.scenario };
   });
