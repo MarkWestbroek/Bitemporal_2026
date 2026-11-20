@@ -2391,11 +2391,10 @@ dag vervangen).
   proces van de laatste stap in beeld.
 - **Scenario's** hebben een `naam` en een `beschrijving`; de keuzelijst toont de naam, onder de lijst staat de
   beschrijving van het scenario in de tekst.
-- **Ingebakken scenario's** (16-11): de keuzelijst heeft twee groepen. De **GPK**-scenario's brengen de
-  beslistabel en het e-dienstmodel van het GPK-voorbeeld mee. De **Waterstede**-scenario's (buurtfeest,
-  jaarmarkt, festival) horen bij het demo-project *Omnium demo — gemeente Waterstede* en draaien op het BPMN en
-  DMN van het project zelf, zonder e-dienstmodel; kiezen zet het GPK-voorbeeld dus uit. Tijdelijk: zodra
-  scenario's in het project kunnen staan, verhuizen ze daarheen (`VOORBEELDEN` in `simulatieRun.js`).
+- **Ingebakken scenario's:** de vijf **GPK**-scenario's; ze brengen de beslistabel en het e-dienstmodel van het
+  GPK-voorbeeld mee (`VOORBEELDEN` in `simulatieRun.js`). De Waterstede-scenario's (buurtfeest, jaarmarkt,
+  festival) stonden hier op 16-11 ook; ze staan nu als model in het demo-project *Omnium demo — gemeente
+  Waterstede* (map "9 Simulatie") en verschijnen daar onder *Uit het project*.
 - **Scenario's in het project: het profiel Simulatiemodel** (16-11, ontwerp §12). Een simulatie is een model
   (M1) in de modeltaal `simulatie` (M2, `diagramprofielen/simulatie/`, in het project profiel
   `simulatiemodel05`). Het staat in het project, gaat mee in bewaren en synchroniseren, en is te tekenen.
@@ -2432,8 +2431,7 @@ dag vervangen).
     een einde en toetst de afloop aan zijn verwachting. Per scenario ✓, ✗ met wat afwijkt, of – (geen
     verwachting); een klik kiest het scenario. De run in beeld verandert niet (`draaiTestset`).
   - **Nog niet:** een scenario laten starten met een getekend object uit het object-profiel; formele en
-    materiële tijd in de serialisatie; de Waterstede-scenario's naar het demo-project verhuizen (wacht op een
-    release met dit profiel).
+    materiële tijd in de serialisatie.
   - Tests: `simulatie/scenarioModel.test.js` (rondgang van alle acht ingebakken scenario's), e2e
     `65-studio-simulatiemodel`.
 - **GPK-voorbeeld** (13-11): vier processen, Aanvraag oppakken → signaal *zaak in de werkbak* → Kies zaak om te

@@ -56,6 +56,8 @@ De single source of truth voor het nummer is `package.json` `"version"`.
   volgnummers) tonen hun instellingen zo.
 
 ### Gewijzigd
+- **Simulatie: de Waterstede-scenario's staan in het demo-project** (16-11): ze zijn uit de ingebakken keuzelijst;
+  in het demo-project *Omnium demo — gemeente Waterstede* staan ze onder *Uit het project*.
 - **ArchiMate 1.1.0: de relaties staan op een abstract basistype** (Mark 19-11). Wat je mag verbinden is niet
   veranderd. In het *Profiel-ontwerp* zie je nu elf verbindingsregels naar *ArchiMate-element* in plaats van ruim
   veertigduizend lijnen (één per paar typen). Een project dat je met deze

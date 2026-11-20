@@ -1180,7 +1180,7 @@ canvas, als instanties in een objectdiagram) valt samen met "instanties tekenen"
 2. Het scenario laten wijzen naar een getekend object (aard `instantie`) in een andere taal; instanties in een
    map per scenario.
 3. Een subject dat geen diagram is (use case-realisatie), en een lezer per taal voor activity en sequence.
-4. De Waterstede-scenario's uit de ingebakken lijst naar het demo-project (wacht op een release met het profiel).
+4. (Gedaan 16-11: de Waterstede-scenario's staan in het demo-project op app en zijn uit de ingebakken lijst.)
 5. Zonder e-dienstmodel: hoe een relatie in het object is ingebed (nu onbekend).
 6. Operatoren in de Verwachting (`leges > 100`), naar de run state van EA.
 7. Afgeleide velden (`/weergavenaam`) in de objectweergave: de simulatie rekent ze nog niet uit.
