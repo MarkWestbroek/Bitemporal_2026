@@ -15,6 +15,7 @@
  * geeft elk profiel een standaard element-fabriek.
  */
 import { startNaam } from "../../diagramcore/types/startNaam.js";
+import { codeVan, codeIdVan } from "../../diagramcore/types/codeRegister.js";
 
 /** Catalogus van benoembare hooks (uitbreidbaar; ids zijn het contract). */
 export const HOOK_CATALOGUS = {
@@ -45,8 +46,45 @@ export const HOOK_CATALOGUS = {
 };
 
 /**
- * Vertaal hook-id's (strings) in een descriptor-kern naar echte functies uit
- * de catalogus. Geeft een nieuwe descriptor terug; onbekende id's → Error.
+ * De id van een hook-functie: eerst de catalogus van die soort (`kardinaliteiten`), anders de
+ * code-id uit het register (`erd:relatie.hooks.edgePresentatie`). Een onbekende functie: undefined.
+ * @param {string} soort
+ * @param {any} fn
+ */
+export function hookIdVan(soort, fn) {
+  if (typeof fn === "string") return fn;
+  const inCatalogus = Object.entries(HOOK_CATALOGUS[soort] || {}).find(([, f]) => f === fn)?.[0];
+  return inCatalogus ?? codeIdVan(fn);
+}
+
+/** De code bij een hook-verwijzing; een onbekende id is een fout, nooit een stille gok. */
+function hookCode(soort, ref, wie) {
+  if (typeof ref === "function") return ref;
+  if (typeof ref !== "string") throw new Error(`${wie}: hook "${soort}" moet een catalogus-id (string) zijn`);
+  const fn = HOOK_CATALOGUS[soort]?.[ref] ?? codeVan(ref);
+  if (!fn) {
+    const bekend = Object.keys(HOOK_CATALOGUS[soort] || {}).join(", ") || "(geen)";
+    throw new Error(`${wie}: onbekende ${soort}-hook "${ref}" — beschikbaar: ${bekend}, of een code-id van een geregistreerd profiel`);
+  }
+  return fn;
+}
+
+/** De code bij een code-id (resolver, layout); een onbekende id is een fout. */
+function code(ref, wie) {
+  if (typeof ref !== "string") return ref;
+  const c = codeVan(ref);
+  if (!c) throw new Error(`${wie}: onbekende code-id "${ref}" (geen geregistreerd profiel heeft hem)`);
+  return c;
+}
+
+/**
+ * Vertaal de verwijzingen naar code in een descriptor-kern naar de code zelf. Geeft een nieuwe
+ * descriptor terug; onbekende id's → Error.
+ *
+ * - hooks (op een elementtype en op het profiel): een id uit HOOK_CATALOGUS, of een code-id
+ *   (`diagramcore/types/codeRegister.js`, code op id: PROF-1);
+ * - referenceResolvers en eigen layouts: een code-id.
+ * Een functie of object dat er al staat, blijft staan.
  *
  * @param {Object} kern - JSON-descriptor (elementTypes[].hooks: Record<string,string>)
  * @returns {Object} descriptor met functie-hooks
@@ -55,24 +93,19 @@ export function vertaalHooks(kern) {
   const elementTypes = (kern.elementTypes || []).map((et) => {
     if (!et?.hooks) return et;
     const hooks = {};
-    for (const [hookNaam, hookId] of Object.entries(et.hooks)) {
-      if (typeof hookId !== "string") {
-        throw new Error(
-          `ElementType "${et.id}": hook "${hookNaam}" moet een catalogus-id (string) zijn`
-        );
-      }
-      const fn = HOOK_CATALOGUS[hookNaam]?.[hookId];
-      if (!fn) {
-        const bekend = Object.keys(HOOK_CATALOGUS[hookNaam] || {}).join(", ") || "(geen)";
-        throw new Error(
-          `ElementType "${et.id}": onbekende ${hookNaam}-hook "${hookId}" — beschikbaar: ${bekend}`
-        );
-      }
-      hooks[hookNaam] = fn;
-    }
+    for (const [soort, ref] of Object.entries(et.hooks)) hooks[soort] = hookCode(soort, ref, `ElementType "${et.id}"`);
     return { ...et, hooks };
   });
-  return { ...kern, elementTypes };
+  const uit = { ...kern, elementTypes };
+  if (kern.hooks) {
+    uit.hooks = {};
+    for (const [soort, ref] of Object.entries(kern.hooks)) uit.hooks[soort] = hookCode(soort, ref, `DiagramType "${kern.id}"`);
+  }
+  if (kern.referenceResolvers) {
+    uit.referenceResolvers = Object.fromEntries(Object.entries(kern.referenceResolvers).map(([type, ref]) => [type, code(ref, `DiagramType "${kern.id}", resolver ${type}`)]));
+  }
+  if (Array.isArray(kern.layouts)) uit.layouts = kern.layouts.map((ref) => code(ref, `DiagramType "${kern.id}", layout`));
+  return uit;
 }
 
 /**

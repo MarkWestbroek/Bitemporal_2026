@@ -26,12 +26,14 @@ import { normaliseerErfenis, kopieVoorNormalisatie } from "../../diagramcore/typ
 import { vulSuperprofielAan } from "../../diagramcore/types/superprofiel.js";
 import { vulLayoutsAan } from "../../diagramcore/types/typeRegistry.js";
 import { STANDAARD_PROFIELVERSIE } from "../../diagramcore/types/profielVersie.js";
+import { codeIdVan } from "../../diagramcore/types/codeRegister.js";
 
 const CODE = "«code»";
 
 /** Vergelijkbare vorm: code wordt een merkteken, afgeleide (`_`) sleutels vervallen, sleutels op volgorde. */
 function vergelijkbaar(waarde) {
-  if (typeof waarde === "function") return CODE;
+  // Code vergelijken op id (codeRegister.js): een andere functie op dezelfde plek telt als verschil.
+  if (typeof waarde === "function") return `${CODE}${codeIdVan(waarde) || "?"}`;
   if (Array.isArray(waarde)) return waarde.map(vergelijkbaar);
   if (waarde && typeof waarde === "object") {
     return Object.fromEntries(

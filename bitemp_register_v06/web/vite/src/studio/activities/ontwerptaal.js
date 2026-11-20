@@ -36,6 +36,8 @@
  */
 import { M3_KLASSEN, M3_ENUMERATIES } from "../../diagramcore/types/m3.js";
 import { indelingVan, typeSoortVan } from "../metamodellen/indeling.js";
+import { codeIdVan, isEigenLayout } from "../../diagramcore/types/codeRegister.js";
+import { hookIdVan } from "./profielGereedschap.js";
 
 export const M3 = "m3:";
 const M3_MODEL = { klassen: M3_KLASSEN, enumeraties: M3_ENUMERATIES };
@@ -111,12 +113,34 @@ const BEDIENING = {
   "ElementType.omschrijving": "tekst",
 };
 
-/** Hook-id's (tekst, uit de handler-catalogus) zijn gegevens; een functie is code. */
-const HOOKS = new Set(["DiagramType.hooks", "ElementType.hooks"]);
+/**
+ * Code op id (codeRegister.js): deze eigenschappen zijn code, maar het ontwerp draagt een
+ * **verwijzing** ernaar (een hook-id uit de catalogus of een code-id), zodat een profiel volledig uit
+ * een model terug te bouwen is. De code zelf blijft in de tool.
+ */
+const CODE_OP_ID = {
+  "DiagramType.hooks": (waarde) => alsMap(waarde, (fn, soort) => hookIdVan(soort, fn)),
+  "ElementType.hooks": (waarde) => alsMap(waarde, (fn, soort) => hookIdVan(soort, fn)),
+  "DiagramType.referenceResolvers": (waarde) => alsMap(waarde, (r) => (typeof r === "string" ? r : codeIdVan(r))),
+  // Alleen eigen layouts; afgeleide (uit de layoutstijlen) maakt de registratie opnieuw.
+  "DiagramType.layouts": (waarde) => {
+    const ids = (Array.isArray(waarde) ? waarde : []).filter((l) => typeof l === "string" || isEigenLayout(l)).map((l) => (typeof l === "string" ? l : codeIdVan(l))).filter(Boolean);
+    return ids.length ? ids : undefined;
+  },
+};
+/** Een map met code → dezelfde map met id's; wat geen id heeft, valt weg. */
+function alsMap(waarde, naarId) {
+  const uit = {};
+  for (const [k, w] of Object.entries(waarde || {})) {
+    const id = naarId(w, k);
+    if (id) uit[k] = id;
+  }
+  return Object.keys(uit).length ? uit : undefined;
+}
 
-/** Is deze eigenschap code (niet tekenbaar, op id aangewezen)? */
+/** Is deze eigenschap code (niet tekenbaar en geen verwijzing ernaar)? */
 export function isCode(klasse, e) {
-  if (HOOKS.has(`${klasse.naam}.${e.naam}`)) return false;
+  if (`${klasse.naam}.${e.naam}` in CODE_OP_ID) return false;
   if (e.operatie) return true;
   const type = klasseVan(e.type);
   return !!type && type.pakket === "Implementatie" && type.soort === "klasse";
@@ -198,9 +222,10 @@ function zonderCode(waarde) {
  */
 export function naarData(soort, obj, behalve = new Set()) {
   const data = {};
-  for (const { e } of m3Eigenschappen(soort)) {
+  for (const { klasse, e } of m3Eigenschappen(soort)) {
     if (obj?.[e.naam] === undefined || behalve.has(e.naam)) continue;
-    const waarde = zonderCode(obj[e.naam]);
+    const opId = CODE_OP_ID[`${klasse.naam}.${e.naam}`];
+    const waarde = opId ? opId(obj[e.naam]) : zonderCode(obj[e.naam]);
     if (waarde !== undefined) data[`${M3}${e.naam}`] = waarde;
   }
   return data;

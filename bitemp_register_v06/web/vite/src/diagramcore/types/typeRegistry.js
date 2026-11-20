@@ -18,6 +18,7 @@ import { vulSuperprofielAan } from "./superprofiel.js";
 import { lidConnectoren } from "./containerVoor.js";
 import { valideerShapeType, registreerShapeType } from "./shapeType.js";
 import { isProfielVersie, STANDAARD_PROFIELVERSIE } from "./profielVersie.js";
+import { meldCodeAan } from "./codeRegister.js";
 
 /**
  * Profiel zonder eigen layouts: de algemene gelaagde layout volgens zijn LayoutStijlen (M3,
@@ -189,6 +190,9 @@ export function registreerDiagramType(descriptor) {
     throw new Error(`DiagramType "${descriptor.id}" is al geregistreerd`);
   }
   // In place: de activiteiten houden ditzelfde object vast (descriptor-prop).
+  // Code op id (codeRegister.js): hooks, resolvers en eigen layouts krijgen een vaste id, vóór
+  // het uitvlakken, zodat een geërfde hook de id van zijn eigenaar houdt.
+  meldCodeAan(descriptor);
   normaliseerErfenis(descriptor);
   vulSuperprofielAan(descriptor);
   vulLayoutsAan(descriptor);
@@ -209,6 +213,9 @@ export function vervangDiagramType(descriptor) {
   if (fouten.length > 0) {
     throw new Error(`Ongeldig DiagramType:\n- ${fouten.join("\n- ")}`);
   }
+  // Code op id (codeRegister.js): hooks, resolvers en eigen layouts krijgen een vaste id, vóór
+  // het uitvlakken, zodat een geërfde hook de id van zijn eigenaar houdt.
+  meldCodeAan(descriptor);
   normaliseerErfenis(descriptor);
   vulSuperprofielAan(descriptor);
   vulLayoutsAan(descriptor);
