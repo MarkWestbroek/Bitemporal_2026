@@ -64,6 +64,7 @@ import formulierDiagramActivity from "./formulierDiagramActivity";
 import toegangActivity from "./toegangActivity";
 import toegangsregelsActivity from "./toegangsregelsActivity";
 import transformatiesActivity from "./transformatiesActivity";
+import transformatieProfielActivity from "./transformatieProfielActivity";
 
 // ── Nog te bouwen functies: uniforme placeholder met de drie-slot-structuur ──
 const apiActivity = maakPlaceholderActiviteit({
@@ -125,6 +126,7 @@ registreerActiviteiten([
   bpmnMotorActivity, // "BPMN" — eigen motor: events/gateways/boundary (preview)
   archimateActivity, // "ArchiMate" — vier lagen, elf relaties (preview)
   sequenceActivity, // "Sequence" — levenslijnen op het rand-primitief (preview)
+  transformatieProfielActivity, // "Transformatie" — het profiel (M2) waarin je een regelset schrijft (TRANS-1)
   erdActivity, // "ERD" — kraaienpoten, kardinaliteit per uiteinde (preview)
   sysmlActivity, // "SysML" — bdd + ibd (poorten op de rand) + requirements (preview)
   cmmnActivity, // "CMMN" — casusmodel; sentries op het rand-primitief (preview)

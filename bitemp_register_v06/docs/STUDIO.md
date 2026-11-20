@@ -2635,11 +2635,12 @@ in taal B of in een extern formaat uitkomt. De activiteit is een **lezer** over 
 catalogus (`transformatie/regelsetCatalogus.js`); bewerken en bewaren komen later (backlog TRANS-1,
 `TRANSFORMATIES.md` §9.5 en §9.6).
 
-**Een transformatie als modelelement (18-11).** In het *Profiel-ontwerp* is een regelset een
-element «transformatie», met zijn regels in volgorde als velden. *Ontwerp → Bekijk de
-transformaties als ontwerp* zet ze op een diagram; *Ontwerp → Meld de transformaties van dit
-diagram aan* geeft de getekende versie aan de catalogus (vindplaats `ontwerp`), zodat je haar hier
-ziet en proefdraait. Bewaren volgt met het profielenproject (PROF-1). Zie `TRANSFORMATIES.md` §9.8.
+**Een regelset als model (18/19-11).** Het profiel *Transformatie* (in Modelleren; een M2 zoals
+elk ander) is de taal waarin je een regelset schrijft: een element «transformatie» met zijn regels
+in volgorde, tussen een bron en een doel («taal» voor een profiel, «formaat» voor een extern
+formaat). *Transformatie → Laad de ingebouwde regelsets* zet ze op een diagram; *Transformatie →
+Meld de transformaties van dit diagram aan* geeft de getekende versie aan de catalogus (vindplaats
+`model`), zodat je haar hier ziet en proefdraait. Zie `TRANSFORMATIES.md` §9.0 en §9.8.
 
 - **Links** de regelsets, ingedeeld op richting: *Import* (extern formaat → model), *Export*
   (model → extern formaat) en *Inrichting* (model → artefact voor een component). Per regelset het

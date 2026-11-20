@@ -2234,13 +2234,19 @@
    },
    "layoutTypen": [
     {
+     "id": "archimate-element",
+     "isAbstract": true
+    },
+    {
      "id": "resource",
+     "erft": "archimate-element",
      "facetten": {
       "laag": "strategie"
      }
     },
     {
      "id": "capability",
+     "erft": "archimate-element",
      "facetten": {
       "laag": "strategie",
       "aspect": "gedrag"
@@ -2248,6 +2254,7 @@
     },
     {
      "id": "koers",
+     "erft": "archimate-element",
      "facetten": {
       "laag": "strategie",
       "aspect": "gedrag"
@@ -2255,6 +2262,7 @@
     },
     {
      "id": "waardestroom",
+     "erft": "archimate-element",
      "facetten": {
       "laag": "strategie",
       "aspect": "gedrag"
@@ -2262,6 +2270,7 @@
     },
     {
      "id": "business-actor",
+     "erft": "archimate-element",
      "facetten": {
       "laag": "business",
       "aspect": "actief"
@@ -2269,6 +2278,7 @@
     },
     {
      "id": "business-rol",
+     "erft": "archimate-element",
      "facetten": {
       "laag": "business",
       "aspect": "actief"
@@ -2276,6 +2286,7 @@
     },
     {
      "id": "business-collaboratie",
+     "erft": "archimate-element",
      "facetten": {
       "laag": "business",
       "aspect": "actief"
@@ -2283,6 +2294,7 @@
     },
     {
      "id": "business-interface",
+     "erft": "archimate-element",
      "facetten": {
       "laag": "business",
       "aspect": "actief"
@@ -2290,6 +2302,7 @@
     },
     {
      "id": "business-proces",
+     "erft": "archimate-element",
      "facetten": {
       "laag": "business",
       "aspect": "gedrag"
@@ -2297,6 +2310,7 @@
     },
     {
      "id": "business-functie",
+     "erft": "archimate-element",
      "facetten": {
       "laag": "business",
       "aspect": "gedrag"
@@ -2304,6 +2318,7 @@
     },
     {
      "id": "business-interactie",
+     "erft": "archimate-element",
      "facetten": {
       "laag": "business",
       "aspect": "gedrag"
@@ -2311,6 +2326,7 @@
     },
     {
      "id": "business-service",
+     "erft": "archimate-element",
      "facetten": {
       "laag": "business",
       "aspect": "gedrag"
@@ -2318,6 +2334,7 @@
     },
     {
      "id": "business-event",
+     "erft": "archimate-element",
      "facetten": {
       "laag": "business",
       "aspect": "gedrag"
@@ -2325,6 +2342,7 @@
     },
     {
      "id": "business-object",
+     "erft": "archimate-element",
      "facetten": {
       "laag": "business",
       "aspect": "passief"
@@ -2332,6 +2350,7 @@
     },
     {
      "id": "contract",
+     "erft": "archimate-element",
      "facetten": {
       "laag": "business",
       "aspect": "passief"
@@ -2339,6 +2358,7 @@
     },
     {
      "id": "representatie",
+     "erft": "archimate-element",
      "facetten": {
       "laag": "business",
       "aspect": "passief"
@@ -2346,6 +2366,7 @@
     },
     {
      "id": "product",
+     "erft": "archimate-element",
      "facetten": {
       "laag": "business",
       "aspect": "samengesteld"
@@ -2353,6 +2374,7 @@
     },
     {
      "id": "app-component",
+     "erft": "archimate-element",
      "facetten": {
       "laag": "applicatie",
       "aspect": "actief"
@@ -2360,6 +2382,7 @@
     },
     {
      "id": "app-collaboratie",
+     "erft": "archimate-element",
      "facetten": {
       "laag": "applicatie",
       "aspect": "actief"
@@ -2367,6 +2390,7 @@
     },
     {
      "id": "app-interface",
+     "erft": "archimate-element",
      "facetten": {
       "laag": "applicatie",
       "aspect": "actief"
@@ -2374,6 +2398,7 @@
     },
     {
      "id": "app-functie",
+     "erft": "archimate-element",
      "facetten": {
       "laag": "applicatie",
       "aspect": "gedrag"
@@ -2381,6 +2406,7 @@
     },
     {
      "id": "app-interactie",
+     "erft": "archimate-element",
      "facetten": {
       "laag": "applicatie",
       "aspect": "gedrag"
@@ -2388,6 +2414,7 @@
     },
     {
      "id": "app-proces",
+     "erft": "archimate-element",
      "facetten": {
       "laag": "applicatie",
       "aspect": "gedrag"
@@ -2395,6 +2422,7 @@
     },
     {
      "id": "app-event",
+     "erft": "archimate-element",
      "facetten": {
       "laag": "applicatie",
       "aspect": "gedrag"
@@ -2402,6 +2430,7 @@
     },
     {
      "id": "app-service",
+     "erft": "archimate-element",
      "facetten": {
       "laag": "applicatie",
       "aspect": "gedrag"
@@ -2409,6 +2438,7 @@
     },
     {
      "id": "data-object",
+     "erft": "archimate-element",
      "facetten": {
       "laag": "applicatie",
       "aspect": "passief"
@@ -2416,6 +2446,7 @@
     },
     {
      "id": "node",
+     "erft": "archimate-element",
      "facetten": {
       "laag": "technologie",
       "aspect": "actief"
@@ -2423,6 +2454,7 @@
     },
     {
      "id": "device",
+     "erft": "archimate-element",
      "facetten": {
       "laag": "technologie",
       "aspect": "actief"
@@ -2430,6 +2462,7 @@
     },
     {
      "id": "systeemsoftware",
+     "erft": "archimate-element",
      "facetten": {
       "laag": "technologie",
       "aspect": "actief"
@@ -2437,6 +2470,7 @@
     },
     {
      "id": "tech-collaboratie",
+     "erft": "archimate-element",
      "facetten": {
       "laag": "technologie",
       "aspect": "actief"
@@ -2444,6 +2478,7 @@
     },
     {
      "id": "tech-interface",
+     "erft": "archimate-element",
      "facetten": {
       "laag": "technologie",
       "aspect": "actief"
@@ -2451,6 +2486,7 @@
     },
     {
      "id": "pad",
+     "erft": "archimate-element",
      "facetten": {
       "laag": "technologie",
       "aspect": "actief"
@@ -2458,6 +2494,7 @@
     },
     {
      "id": "communicatienetwerk",
+     "erft": "archimate-element",
      "facetten": {
       "laag": "technologie",
       "aspect": "actief"
@@ -2465,6 +2502,7 @@
     },
     {
      "id": "tech-functie",
+     "erft": "archimate-element",
      "facetten": {
       "laag": "technologie",
       "aspect": "gedrag"
@@ -2472,6 +2510,7 @@
     },
     {
      "id": "tech-proces",
+     "erft": "archimate-element",
      "facetten": {
       "laag": "technologie",
       "aspect": "gedrag"
@@ -2479,6 +2518,7 @@
     },
     {
      "id": "tech-interactie",
+     "erft": "archimate-element",
      "facetten": {
       "laag": "technologie",
       "aspect": "gedrag"
@@ -2486,6 +2526,7 @@
     },
     {
      "id": "tech-event",
+     "erft": "archimate-element",
      "facetten": {
       "laag": "technologie",
       "aspect": "gedrag"
@@ -2493,6 +2534,7 @@
     },
     {
      "id": "tech-service",
+     "erft": "archimate-element",
      "facetten": {
       "laag": "technologie",
       "aspect": "gedrag"
@@ -2500,6 +2542,7 @@
     },
     {
      "id": "artifact",
+     "erft": "archimate-element",
      "facetten": {
       "laag": "technologie",
       "aspect": "passief"
@@ -2507,6 +2550,7 @@
     },
     {
      "id": "equipment",
+     "erft": "archimate-element",
      "facetten": {
       "laag": "fysiek",
       "aspect": "actief"
@@ -2514,6 +2558,7 @@
     },
     {
      "id": "facility",
+     "erft": "archimate-element",
      "facetten": {
       "laag": "fysiek",
       "aspect": "actief"
@@ -2521,6 +2566,7 @@
     },
     {
      "id": "distributienetwerk",
+     "erft": "archimate-element",
      "facetten": {
       "laag": "fysiek",
       "aspect": "actief"
@@ -2528,6 +2574,7 @@
     },
     {
      "id": "materiaal",
+     "erft": "archimate-element",
      "facetten": {
       "laag": "fysiek",
       "aspect": "passief"
@@ -2535,66 +2582,77 @@
     },
     {
      "id": "stakeholder",
+     "erft": "archimate-element",
      "facetten": {
       "laag": "motivatie"
      }
     },
     {
      "id": "driver",
+     "erft": "archimate-element",
      "facetten": {
       "laag": "motivatie"
      }
     },
     {
      "id": "assessment",
+     "erft": "archimate-element",
      "facetten": {
       "laag": "motivatie"
      }
     },
     {
      "id": "goal",
+     "erft": "archimate-element",
      "facetten": {
       "laag": "motivatie"
      }
     },
     {
      "id": "outcome",
+     "erft": "archimate-element",
      "facetten": {
       "laag": "motivatie"
      }
     },
     {
      "id": "principle",
+     "erft": "archimate-element",
      "facetten": {
       "laag": "motivatie"
      }
     },
     {
      "id": "requirement",
+     "erft": "archimate-element",
      "facetten": {
       "laag": "motivatie"
      }
     },
     {
      "id": "constraint",
+     "erft": "archimate-element",
      "facetten": {
       "laag": "motivatie"
      }
     },
     {
      "id": "betekenis",
+     "erft": "archimate-element",
      "facetten": {
       "laag": "motivatie"
      }
     },
     {
      "id": "waarde",
+     "erft": "archimate-element",
      "facetten": {
       "laag": "motivatie"
      }
     },
     {
      "id": "werkpakket",
+     "erft": "archimate-element",
      "facetten": {
       "laag": "implementatie",
       "aspect": "gedrag"
@@ -2602,6 +2660,7 @@
     },
     {
      "id": "deliverable",
+     "erft": "archimate-element",
      "facetten": {
       "laag": "implementatie",
       "aspect": "passief"
@@ -2609,6 +2668,7 @@
     },
     {
      "id": "implementatie-event",
+     "erft": "archimate-element",
      "facetten": {
       "laag": "implementatie",
       "aspect": "gedrag"
@@ -2616,6 +2676,7 @@
     },
     {
      "id": "plateau",
+     "erft": "archimate-element",
      "facetten": {
       "laag": "implementatie",
       "aspect": "samengesteld"
@@ -2623,12 +2684,14 @@
     },
     {
      "id": "gap",
+     "erft": "archimate-element",
      "facetten": {
       "laag": "implementatie"
      }
     },
     {
      "id": "locatie",
+     "erft": "archimate-element",
      "facetten": {
       "aspect": "samengesteld"
      },
@@ -2639,6 +2702,7 @@
     },
     {
      "id": "grouping",
+     "erft": "archimate-element",
      "facetten": {
       "aspect": "samengesteld"
      },
@@ -2650,7 +2714,8 @@
      "minHoogte": 90
     },
     {
-     "id": "junction"
+     "id": "junction",
+     "erft": "archimate-element"
     },
     {
      "id": "kader"
@@ -5371,12 +5436,16 @@
      "id": "decision",
      "label": "Beslissing",
      "eigenschappen": [
-      "vraag"
+      "vraag",
+      "beslistabel"
      ]
     },
     {
      "id": "inputData",
-     "label": "Invoergegeven"
+     "label": "Invoergegeven",
+     "eigenschappen": [
+      "gegeven"
+     ]
     },
     {
      "id": "bkm",
@@ -9432,6 +9501,171 @@
     },
     {
      "id": "verwijst-naar",
+     "isConnector": true
+    },
+    {
+     "id": "notitie",
+     "minBreedte": 100,
+     "minHoogte": 44
+    },
+    {
+     "id": "constraint",
+     "minBreedte": 100,
+     "minHoogte": 44
+    },
+    {
+     "id": "notitielijn",
+     "isConnector": true,
+     "aard": "annotatie"
+    },
+    {
+     "id": "diagramverwijzing",
+     "minBreedte": 120,
+     "minHoogte": 44
+    }
+   ]
+  },
+  {
+   "id": "transformatie05",
+   "naam": "Transformatie",
+   "diagramTypeId": "transformatie",
+   "elementen": [
+    {
+     "id": "transformatie",
+     "label": "Transformatie",
+     "omschrijving": "Een regelset: hoe een model in de ene taal of het ene formaat in het andere uitkomt. De regels staan in volgorde; de eerste die past wint.",
+     "eigenschappen": [
+      "code",
+      "versie",
+      "versieIsGetal",
+      "richting",
+      "schrijver"
+     ],
+     "velden": [
+      {
+       "id": "regels",
+       "soort": "attribuut",
+       "fieldType": "regel"
+      },
+      {
+       "id": "instellingen",
+       "soort": "attribuut",
+       "fieldType": "instelling"
+      }
+     ]
+    },
+    {
+     "id": "taal",
+     "label": "Taal",
+     "omschrijving": "Een profiel als bron of doel van een transformatie. De naam is het id van het profiel."
+    },
+    {
+     "id": "formaat",
+     "label": "Formaat",
+     "omschrijving": "Een extern formaat als bron of doel (Mermaid, XML, Turtle, JSON). Een lezer of schrijver in de code leest of schrijft het."
+    },
+    {
+     "id": "constraint",
+     "label": "Constraint",
+     "omschrijving": "Regel die het standaardarsenaal niet kan uitdrukken (UML Constraint), tussen {…}; koppel hem met annotatie-lijnen aan wat hij beperkt (bv. {xor} tussen twee relaties).",
+     "eigenschappen": [
+      "specificatie",
+      "taal"
+     ]
+    },
+    {
+     "id": "diagramverwijzing",
+     "label": "Diagramverwijzing",
+     "omschrijving": "Verwijst naar een ander diagram (ook in een andere taal); dubbelklik opent het."
+    }
+   ],
+   "connectoren": [
+    {
+     "id": "van",
+     "label": "Van (bron)",
+     "omschrijving": "De bron van een transformatie: een taal of een formaat.",
+     "regels": [
+      {
+       "bron": [
+        "taal",
+        "formaat"
+       ],
+       "doel": [
+        "transformatie"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "naar",
+     "label": "Naar (doel)",
+     "omschrijving": "Het doel van een transformatie: een taal of een formaat.",
+     "regels": [
+      {
+       "bron": [
+        "transformatie"
+       ],
+       "doel": [
+        "taal",
+        "formaat"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "notitielijn",
+     "label": "Annotatie-lijn",
+     "omschrijving": "Van een notitie of constraint naar het element waar hij over gaat (UML annotatedElement / constrainedElement).",
+     "regels": [
+      {
+       "bron": [
+        "constraint"
+       ],
+       "doel": [
+        "transformatie",
+        "taal",
+        "formaat",
+        "constraint",
+        "diagramverwijzing"
+       ]
+      }
+     ]
+    }
+   ],
+   "layouts": [
+    {
+     "id": "leesvolgorde-tb",
+     "label": "Leesvolgorde, van boven naar beneden (standaard)"
+    },
+    {
+     "id": "leesvolgorde-lr",
+     "label": "Leesvolgorde, van links naar rechts"
+    },
+    {
+     "id": "leesvolgorde-bt",
+     "label": "Leesvolgorde, van onder naar boven"
+    },
+    {
+     "id": "leesvolgorde-rl",
+     "label": "Leesvolgorde, van rechts naar links"
+    }
+   ],
+   "layoutTypen": [
+    {
+     "id": "transformatie"
+    },
+    {
+     "id": "taal"
+    },
+    {
+     "id": "formaat"
+    },
+    {
+     "id": "van",
+     "isConnector": true
+    },
+    {
+     "id": "naar",
      "isConnector": true
     },
     {
