@@ -904,7 +904,7 @@ function naarFout(e) {
 /**
  * Semantische controle na het parsen. Onbekende wat-begrippen zijn fout (we
  * kunnen niet raden om welke gegevens het gaat); onbekende wie-begrippen zijn
- * toegestaan en gelden als impliciete rol (zie odrl.js).
+ * toegestaan en gelden als impliciete rol (zie graaf.js).
  */
 export function valideerBeleid(beleid) {
   const fouten = [];

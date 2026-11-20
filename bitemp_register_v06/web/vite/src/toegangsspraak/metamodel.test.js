@@ -2,7 +2,11 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import { parseBeleid } from "./parser.js";
-import { naarOdrl } from "./odrl.js";
+import { toegangsspraakNaarOdrl } from "./odrlExport.js";
+
+/** De knopen van de ODRL-export (ODRL-AP-NL) op naam; `lijst` maakt van één of meer waarden een lijst van namen. */
+const odrlKnopen = (beleid) => Object.fromEntries(toegangsspraakNaarOdrl(beleid).jsonld["@graph"].map((k) => [k["@id"], k]));
+const lijst = (w) => [w ?? []].flat().map((x) => x?.["@id"] ?? x);
 import { maakVeldIndex, resolveerVerwijzing, resolveerBeleid, suggereerVanVormen, suggereerBases } from "./metamodel.js";
 import { padNaarVerwijzing } from "./parser.js";
 
@@ -95,10 +99,10 @@ test("resolveerBeleid verrijkt paden; ODRL gebruikt de metamodel-casing", () => 
   const { beleid: verrijkt, fouten } = resolveerBeleid(beleid, INDEX);
   assert.deepEqual(fouten, []);
 
-  const odrl = naarOdrl(verrijkt);
-  assert.equal(odrl.permission[0].target.uid, "nlgov:register:NatuurlijkPersoon.inkomen.bedrag");
-  assert.deepEqual(odrl.permission[0].constraint[0].leftOperand, {
-    "@id": "nlgov:veldwaarde:NatuurlijkPersoon.naam.achternaam",
+  const g = odrlKnopen(verrijkt);
+  assert.deepEqual(g["b:regel-inzage"]["odrl:target"], { "@id": "reg:NatuurlijkPersoon.inkomen.bedrag" });
+  assert.deepEqual(g[lijst(g["b:regel-inzage"]["odrl:constraint"])[0]]["odrl:leftOperand"], {
+    "@id": "ts:veldwaarde.NatuurlijkPersoon.naam.achternaam",
   });
   // Het origineel is niet gemuteerd.
   assert.equal(beleid.regels[0].wat.pad, undefined);
@@ -153,6 +157,5 @@ test("gegevensgroepen resolven ook: entiteit en GE-rol", () => {
   const { beleid } = parseBeleid(tekst);
   const { beleid: verrijkt, fouten } = resolveerBeleid(beleid, INDEX);
   assert.deepEqual(fouten, []);
-  const odrl = naarOdrl(verrijkt);
-  assert.equal(odrl.permission[0].target.uid, "nlgov:register:NatuurlijkPersoon.inkomen");
+  assert.deepEqual(odrlKnopen(verrijkt)["b:regel-alles"]["odrl:target"], { "@id": "reg:NatuurlijkPersoon.inkomen" });
 });

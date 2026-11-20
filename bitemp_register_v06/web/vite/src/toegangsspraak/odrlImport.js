@@ -248,7 +248,7 @@ export function odrlNaarToegangsspraak(turtle, opties = {}) {
  */
 export function odrlBrongraaf(gelezen) {
   const ns = namespaces(gelezen.triples, gelezen.prefixen);
-  // nlgov: de termen van het NLGov-profiel (de JSON-LD-export, odrl.js); de vergelijkingen heten er als in de taal.
+  // nlgov: de termen van het NLGov-profiel (de vroegere JSON-LD-export); de vergelijkingen heten er als in de taal.
   const prefixen = { ...odrlContext({ beleidSlug: "x" }).prefixes, nlgov: "https://standaarden.overheid.nl/odrl/terms/", b: ns.b, reg: ns.reg };
   return { graaf: rdfNaarBrongraaf(gelezen.triples, { prefixen }), ns };
 }

@@ -1,90 +1,375 @@
 {
-  "@context": [
-    "http://www.w3.org/ns/odrl.jsonld",
+  "@context": {
+    "odrl": "http://www.w3.org/ns/odrl/2/",
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "xsd": "http://www.w3.org/2001/XMLSchema#",
+    "skos": "http://www.w3.org/2004/02/skos/core#",
+    "dct": "http://purl.org/dc/terms/",
+    "prov": "http://www.w3.org/ns/prov#",
+    "dpv": "https://w3id.org/dpv#",
+    "schema": "https://schema.org/",
+    "apnl": "https://standaarden.overheid.nl/odrl-ap-nl/",
+    "ts": "https://omnium.example/toegangsspraak/",
+    "reg": "https://omnium.example/register/voorbeeld/",
+    "b": "https://omnium.example/toegangsbeleid/inzage-inkomen-bij-schuldhulp/"
+  },
+  "@graph": [
     {
-      "nlgov": "https://standaarden.overheid.nl/odrl/terms/"
-    }
-  ],
-  "@type": "Set",
-  "uid": "urn:nlgov:beleid:inzage-inkomen-bij-schuldhulp",
-  "profile": "https://standaarden.overheid.nl/odrl/profile/toegangsbeleid",
-  "conflict": "prohibit",
-  "dc:description": "Inzage inkomen bij schuldhulp",
-  "nlgov:geldigVanaf": "2026-05-01",
-  "nlgov:grondslag": "de Wet gemeentelijke schuldhulpverlening",
-  "nlgov:doelbinding": "schuldhulpverlening",
-  "permission": [
-    {
-      "nlgov:regelnaam": "inzage bij lopend dossier",
-      "target": {
-        "@type": "AssetCollection",
-        "uid": "urn:nlgov:gegevens:inkomensgegevens",
-        "source": "nlgov:register:NatuurlijkPersoon.Inkomen"
+      "@id": "b:beleid",
+      "@type": "odrl:Set",
+      "dct:title": {
+        "@value": "Inzage inkomen bij schuldhulp",
+        "@language": "nl"
       },
-      "assignee": {
-        "@type": "PartyCollection",
-        "uid": "urn:nlgov:rolgroep:schuldhulpverlener",
-        "refinement": [
-          {
-            "leftOperand": {
-              "@id": "nlgov:rol"
-            },
-            "operator": "eq",
-            "rightOperand": "schuldhulpverlener"
-          }
-        ]
+      "odrl:uid": {
+        "@id": "b:beleid"
       },
-      "action": {
-        "@id": "nlgov:view"
-      },
-      "constraint": [
+      "odrl:profile": [
         {
-          "leftOperand": {
-            "@id": "nlgov:doelbinding"
-          },
-          "operator": "eq",
-          "rightOperand": "schuldhulpverlening"
+          "@id": "apnl:profiel"
         },
         {
-          "leftOperand": {
-            "@id": "nlgov:betrokkene:naam.achternaam"
-          },
-          "operator": "nlgov:begintMet",
-          "rightOperand": "A"
+          "@id": "ts:profiel"
         }
       ],
-      "duty": [
+      "dct:description": {
+        "@value": "Geschreven in Toegangsspraak (klare taal) en daaruit vertaald naar ODRL. Elke regel draagt zijn oorspronkelijke zin als beschrijving. Doel: schuldhulpverlening. Grondslag: de Wet gemeentelijke schuldhulpverlening.",
+        "@language": "nl"
+      },
+      "dct:issued": {
+        "@value": "2026-10-05",
+        "@type": "xsd:date"
+      },
+      "schema:validFrom": {
+        "@value": "2026-05-01",
+        "@type": "xsd:date"
+      },
+      "odrl:conflict": {
+        "@id": "odrl:prohibit"
+      },
+      "ts:brontekst": "Beleid \"Inzage inkomen bij schuldhulp\".\n  Geldig vanaf 1 mei 2026.\n  Grondslag: de Wet gemeentelijke schuldhulpverlening.\n  Doel: \"schuldhulpverlening\".\n\n  Begrippen.\n    Een schuldhulpverlener is: iemand met rol \"schuldhulpverlener\".\n    Inkomensgegevens zijn: alle gegevens van het inkomen van een natuurlijk persoon.\n\n  Regel \"inzage bij lopend dossier\".\n    Een schuldhulpverlener mag de inkomensgegevens bekijken\n    als aan alle volgende voorwaarden is voldaan:\n      - het doel van de aanvraag is \"schuldhulpverlening\";\n      - de achternaam van de naam van de betrokkene begint met \"A\";\n    waarbij: elke raadpleging wordt vastgelegd in het logboek.\n\n  Regel \"geen export\".\n    Een schuldhulpverlener mag de inkomensgegevens niet exporteren.\n",
+      "dpv:hasLegalBasis": {
+        "@id": "b:grondslag"
+      },
+      "dpv:hasPurpose": {
+        "@id": "b:doel-schuldhulpverlening"
+      },
+      "odrl:permission": {
+        "@id": "b:regel-inzage-bij-lopend-dossier"
+      },
+      "odrl:prohibition": {
+        "@id": "b:regel-geen-export"
+      }
+    },
+    {
+      "@id": "b:grondslag",
+      "@type": "dct:LegalResource",
+      "rdfs:label": {
+        "@value": "de Wet gemeentelijke schuldhulpverlening",
+        "@language": "nl"
+      },
+      "skos:note": {
+        "@value": "Grondslag zoals in de beleidstekst genoemd; nog geen verwijzing naar wetten.overheid.nl.",
+        "@language": "nl"
+      }
+    },
+    {
+      "@id": "b:vw-doel-schuldhulpverlening",
+      "@type": "odrl:Constraint",
+      "rdfs:label": {
+        "@value": "het doel van de aanvraag is \"schuldhulpverlening\"",
+        "@language": "nl"
+      },
+      "odrl:leftOperand": {
+        "@id": "odrl:purpose"
+      },
+      "odrl:operator": {
+        "@id": "odrl:eq"
+      },
+      "odrl:rightOperand": {
+        "@id": "b:doel-schuldhulpverlening"
+      }
+    },
+    {
+      "@id": "b:doel-schuldhulpverlening",
+      "@type": "skos:Concept",
+      "rdfs:label": {
+        "@value": "schuldhulpverlening",
+        "@language": "nl"
+      },
+      "skos:definition": {
+        "@value": "Doelbinding \"schuldhulpverlening\" zoals genoemd in het beleid.",
+        "@language": "nl"
+      }
+    },
+    {
+      "@id": "b:regel-inzage-bij-lopend-dossier",
+      "@type": "odrl:Permission",
+      "dct:title": {
+        "@value": "inzage bij lopend dossier",
+        "@language": "nl"
+      },
+      "odrl:uid": {
+        "@id": "b:regel-inzage-bij-lopend-dossier"
+      },
+      "dct:description": {
+        "@value": "Een schuldhulpverlener mag de inkomensgegevens bekijken als aan alle volgende voorwaarden is voldaan: - het doel van de aanvraag is \"schuldhulpverlening\"; - de achternaam van de naam van de betrokkene begint met \"A\"; waarbij: elke raadpleging wordt vastgelegd in het logboek.",
+        "@language": "nl"
+      },
+      "ts:volgorde": 1,
+      "odrl:action": {
+        "@id": "b:handeling-inzage-bij-lopend-dossier"
+      },
+      "odrl:assignee": {
+        "@id": "b:groep-schuldhulpverlener"
+      },
+      "odrl:target": {
+        "@id": "b:gegevens-inkomensgegevens"
+      },
+      "odrl:constraint": {
+        "@id": "b:vw-de-achternaam-van-de-naam-van-de-betrokkene-begint-met-a"
+      },
+      "odrl:duty": {
+        "@id": "b:plicht-elke-raadpleging-wordt-vastgelegd-in-het-logboek"
+      }
+    },
+    {
+      "@id": "b:handeling-inzage-bij-lopend-dossier",
+      "@type": "odrl:Action",
+      "rdf:value": {
+        "@id": "odrl:read"
+      },
+      "odrl:refinement": [
         {
-          "action": {
-            "@id": "nlgov:log"
-          }
+          "@id": "b:vw-aanvrager-rol-schuldhulpverlener"
+        },
+        {
+          "@id": "b:vw-doel-schuldhulpverlening"
         }
       ]
-    }
-  ],
-  "prohibition": [
+    },
     {
-      "nlgov:regelnaam": "geen export",
-      "target": {
-        "@type": "AssetCollection",
-        "uid": "urn:nlgov:gegevens:inkomensgegevens",
-        "source": "nlgov:register:NatuurlijkPersoon.Inkomen"
+      "@id": "b:groep-schuldhulpverlener",
+      "@type": "odrl:PartyCollection",
+      "rdfs:label": {
+        "@value": "schuldhulpverlener",
+        "@language": "nl"
       },
-      "assignee": {
-        "@type": "PartyCollection",
-        "uid": "urn:nlgov:rolgroep:schuldhulpverlener",
-        "refinement": [
-          {
-            "leftOperand": {
-              "@id": "nlgov:rol"
-            },
-            "operator": "eq",
-            "rightOperand": "schuldhulpverlener"
-          }
-        ]
+      "skos:definition": {
+        "@value": "iemand met rol \"schuldhulpverlener\"",
+        "@language": "nl"
       },
-      "action": {
-        "@id": "nlgov:export"
+      "odrl:refinement": {
+        "@id": "b:vw-aanvrager-rol-schuldhulpverlener"
+      }
+    },
+    {
+      "@id": "b:vw-aanvrager-rol-schuldhulpverlener",
+      "@type": "odrl:Constraint",
+      "rdfs:label": {
+        "@value": "de rol van de aanvrager is \"schuldhulpverlener\"",
+        "@language": "nl"
+      },
+      "odrl:leftOperand": {
+        "@id": "apnl:rolAanvrager"
+      },
+      "odrl:operator": {
+        "@id": "odrl:eq"
+      },
+      "odrl:rightOperand": "schuldhulpverlener"
+    },
+    {
+      "@id": "b:gegevens-inkomensgegevens",
+      "@type": "odrl:AssetCollection",
+      "rdfs:label": {
+        "@value": "inkomensgegevens",
+        "@language": "nl"
+      },
+      "skos:definition": {
+        "@value": "alle gegevens van het inkomen van een natuurlijk persoon",
+        "@language": "nl"
+      }
+    },
+    {
+      "@id": "ts:Entiteit",
+      "@type": [
+        "rdfs:Class",
+        "skos:Concept"
+      ],
+      "rdfs:label": {
+        "@value": "entiteit",
+        "@language": "nl"
+      }
+    },
+    {
+      "@id": "reg:NatuurlijkPersoon",
+      "@type": [
+        "odrl:AssetCollection",
+        "ts:Entiteit"
+      ],
+      "rdfs:label": {
+        "@value": "natuurlijk persoon",
+        "@language": "nl"
+      },
+      "dct:identifier": "NatuurlijkPersoon"
+    },
+    {
+      "@id": "ts:Gegevenselement",
+      "@type": [
+        "rdfs:Class",
+        "skos:Concept"
+      ],
+      "rdfs:label": {
+        "@value": "gegevenselement",
+        "@language": "nl"
+      }
+    },
+    {
+      "@id": "reg:NatuurlijkPersoon.Inkomen",
+      "@type": [
+        "odrl:Asset",
+        "ts:Gegevenselement"
+      ],
+      "rdfs:label": {
+        "@value": "het inkomen van een natuurlijk persoon",
+        "@language": "nl"
+      },
+      "dct:identifier": "NatuurlijkPersoon.Inkomen",
+      "odrl:partOf": [
+        {
+          "@id": "reg:NatuurlijkPersoon"
+        },
+        {
+          "@id": "b:gegevens-inkomensgegevens"
+        }
+      ]
+    },
+    {
+      "@id": "ts:betrokkene.naam.achternaam",
+      "@type": [
+        "odrl:LeftOperand",
+        "skos:Concept"
+      ],
+      "rdfs:label": {
+        "@value": "de achternaam van de naam van de betrokkene",
+        "@language": "nl"
+      },
+      "skos:definition": {
+        "@value": "Gegeven van de persoon over wie de gegevens gaan; pas te toetsen met de gegevens in handen.",
+        "@language": "nl"
+      }
+    },
+    {
+      "@id": "ts:begintMet",
+      "@type": [
+        "odrl:Operator",
+        "skos:Concept"
+      ],
+      "rdfs:label": {
+        "@value": "begint met",
+        "@language": "nl"
+      }
+    },
+    {
+      "@id": "b:vw-de-achternaam-van-de-naam-van-de-betrokkene-begint-met-a",
+      "@type": "odrl:Constraint",
+      "rdfs:label": {
+        "@value": "de achternaam van de naam van de betrokkene begint met \"A\"",
+        "@language": "nl"
+      },
+      "odrl:leftOperand": {
+        "@id": "ts:betrokkene.naam.achternaam"
+      },
+      "odrl:operator": {
+        "@id": "ts:begintMet"
+      },
+      "odrl:rightOperand": "A"
+    },
+    {
+      "@id": "ts:log",
+      "@type": [
+        "odrl:Action",
+        "skos:Concept"
+      ],
+      "rdfs:label": {
+        "@value": "elke raadpleging wordt vastgelegd in het logboek",
+        "@language": "nl"
+      }
+    },
+    {
+      "@id": "b:plicht-elke-raadpleging-wordt-vastgelegd-in-het-logboek",
+      "@type": "odrl:Duty",
+      "dct:title": {
+        "@value": "elke raadpleging wordt vastgelegd in het logboek",
+        "@language": "nl"
+      },
+      "odrl:uid": {
+        "@id": "b:plicht-elke-raadpleging-wordt-vastgelegd-in-het-logboek"
+      },
+      "odrl:action": {
+        "@id": "ts:log"
+      }
+    },
+    {
+      "@id": "b:regel-geen-export",
+      "@type": "odrl:Prohibition",
+      "dct:title": {
+        "@value": "geen export",
+        "@language": "nl"
+      },
+      "odrl:uid": {
+        "@id": "b:regel-geen-export"
+      },
+      "dct:description": {
+        "@value": "Een schuldhulpverlener mag de inkomensgegevens niet exporteren.",
+        "@language": "nl"
+      },
+      "ts:volgorde": 2,
+      "odrl:action": {
+        "@id": "b:handeling-geen-export"
+      },
+      "odrl:assignee": {
+        "@id": "b:groep-schuldhulpverlener"
+      },
+      "odrl:target": {
+        "@id": "b:gegevens-inkomensgegevens"
+      }
+    },
+    {
+      "@id": "ts:exporteren",
+      "@type": [
+        "odrl:Action",
+        "skos:Concept"
+      ],
+      "rdfs:label": {
+        "@value": "exporteren",
+        "@language": "nl"
+      },
+      "odrl:includedIn": {
+        "@id": "odrl:use"
+      }
+    },
+    {
+      "@id": "b:handeling-geen-export",
+      "@type": "odrl:Action",
+      "rdf:value": {
+        "@id": "ts:exporteren"
+      },
+      "odrl:refinement": {
+        "@id": "b:vw-aanvrager-rol-schuldhulpverlener"
+      }
+    },
+    {
+      "@id": "ts:profiel",
+      "@type": "odrl:Profile",
+      "dct:title": {
+        "@value": "Toegangsspraak-woordenschat (Omnium Studio, werkversie)",
+        "@language": "nl"
+      },
+      "dct:description": {
+        "@value": "De termen die Toegangsspraak nodig heeft bovenop ODRL 2.2 en ODRL-AP-NL: operanden uit de van-vorm, een paar vergelijkingen en handelingen. Elk label is de zinsnede uit de klare taal.",
+        "@language": "nl"
       }
     }
   ]

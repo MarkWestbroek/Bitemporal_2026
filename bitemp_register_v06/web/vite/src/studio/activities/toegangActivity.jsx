@@ -10,7 +10,7 @@
  *               van-vorm in te voegen; dubbelklik in de tekst filtert de boom
  *   Main      → Tabs: Tekst (editor met zinsontleding, autocomplete, fouten)
  *               + Canoniek (leesweergave: de geherformatteerde canonieke vorm)
- *   Inspector → ODRL JSON-LD (NLGov-profiel) van het geparste beleid
+ *   Inspector → ODRL (ODRL-AP-NL) van het geparste beleid, als Turtle of JSON-LD
  *
  * Metamodel-koppeling (schema-API): keten-resolutie met verkorting en
  * typebewaking (metamodel.js) draaien live mee; de ODRL-uitvoer gebruikt de
@@ -31,12 +31,13 @@ const Editor = EditorModule.default ?? EditorModule;
 import Prism from "../../shared/prismSetup";
 import { ModelPicker, FIELDREF_MIME, useSchemaModel, verzamelVelden } from "../../modelpicker";
 import {
-  parseBeleid, renderBeleid, naarOdrl, compileerBundel, padNaarVerwijzing, renderVerwijzing,
+  parseBeleid, renderBeleid, compileerBundel, padNaarVerwijzing, renderVerwijzing,
   verwijzingNaarPad, maakVeldIndex, resolveerBeleid, resolveerVerwijzing,
   resolveerGroep, bepaalSuggesties, VOORBEELD_BELEID,
 } from "../../toegangsspraak";
 import { IconToegang } from "../icons";
 import { menuBus } from "../menuBus";
+import ButtonGroupKeuze from "../../vormen/ButtonGroupKeuze";
 import { apiBase, downloadJson, downloadTekst } from "../studioUtils";
 import { toegangsspraakNaarOdrl } from "../../toegangsspraak/odrlExport.js";
 import { odrlNaarToegangsspraak, importMeldingen } from "../../toegangsspraak/odrlImport.js";
@@ -135,7 +136,8 @@ function ToegangProvider({ children }) {
   );
   const controleFouten = geresolved?.fouten || [];
   const odrl = useMemo(
-    () => (resultaat.ok ? naarOdrl(geresolved?.beleid || resultaat.beleid) : null),
+    // Eén export (ODRL-AP-NL); Turtle en JSON-LD zijn twee schrijfvormen van dezelfde inhoud.
+    () => (resultaat.ok ? toegangsspraakNaarOdrl(geresolved?.beleid || resultaat.beleid) : null),
     [resultaat, geresolved]
   );
   const canoniek = useMemo(
@@ -248,10 +250,10 @@ function ToegangProvider({ children }) {
         else setTekst(canoniek);
       }),
       menuBus.on("toegang:odrl", () => {
-        const { odrl, resultaat } = ref.current;
-        if (odrl) {
-          downloadJson(odrl, `${(resultaat.beleid?.naam || "beleid").replace(/\s+/g, "_")}.odrl.json`);
-        }
+        const { resultaat, geresolved } = ref.current;
+        if (!resultaat.ok) { window.alert("Het beleid bevat nog parseerfouten."); return; }
+        const uit = toegangsspraakNaarOdrl(geresolved?.beleid || resultaat.beleid, { uitgegeven: new Date().toISOString().slice(0, 10) });
+        downloadJson(uit.jsonld, `${(resultaat.beleid?.naam || "beleid").replace(/\s+/g, "_")}.odrl.jsonld`);
       }),
       // ODRL-AP-NL in Turtle (docs/TRANSFORMATIES.md §3): de export via de regelset, met de paden
       // uit het metamodel waar dat geladen is. De klare taal reist mee (ts:brontekst).
@@ -700,15 +702,25 @@ function ToegangMain() {
   );
 }
 
+const SCHRIJFVORMEN = [
+  { value: "turtle", label: "Turtle" },
+  { value: "jsonld", label: "JSON-LD" },
+];
+
 function ToegangInspector() {
   const { resultaat, controleFouten, odrl } = useContext(Ctx);
+  // De schrijfvorm is een keuze van de lezer; de inhoud is dezelfde (ODRL-AP-NL).
+  const [vorm, setVorm] = useState("turtle");
 
   return (
     <div className="studio-inspector-pad">
-      <h3 style={{ margin: "0 0 6px", fontSize: 13 }}>ODRL (NLGov-profiel)</h3>
+      <h3 style={{ margin: "0 0 6px", fontSize: 13 }}>ODRL (ODRL-AP-NL)</h3>
+      <div data-testid="odrl-schrijfvorm" style={{ marginBottom: 6 }}>
+        <ButtonGroupKeuze items={SCHRIJFVORMEN} config={{ sort: "none" }} waarde={vorm} onChange={(w) => setVorm(w || vorm)} />
+      </div>
       {odrl ? (
-        <pre style={{ margin: 0, background: "var(--s-panel-head)", color: "var(--s-fg)", padding: 10, borderRadius: 8, fontSize: 11, overflow: "auto" }}>
-          {JSON.stringify(odrl, null, 2)}
+        <pre data-testid="odrl-weergave" style={{ margin: 0, background: "var(--s-panel-head)", color: "var(--s-fg)", padding: 10, borderRadius: 8, fontSize: 11, overflow: "auto" }}>
+          {vorm === "jsonld" ? JSON.stringify(odrl.jsonld, null, 2) : odrl.turtle}
         </pre>
       ) : (
         <p style={{ fontSize: 12, color: "var(--s-fg-muted)" }}>

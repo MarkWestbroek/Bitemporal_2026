@@ -1,15 +1,12 @@
-// Toegangsspraak → ODRL JSON-LD (NLGov), met de echte parser en exporter uit
-// web/vite/src/toegangsspraak. Gebruik: node scripts/exporteer_odrl.mjs
-import { parseBeleid } from "../../../web/vite/src/toegangsspraak/parser.js";
-import { naarOdrl } from "../../../web/vite/src/toegangsspraak/odrl.js";
-import fs from "node:fs";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
-const hier = path.dirname(fileURLToPath(import.meta.url));
-const tekst = fs.readFileSync(path.join(hier, "../beleid/gbo-persoon.toegangsspraak"), "utf8");
-const r = parseBeleid(tekst);
-if (!r.ok) { console.error(r.fouten); process.exit(1); }
-const odrl = naarOdrl(r.beleid);
-fs.writeFileSync(path.join(hier, "../beleid/gbo-persoon.odrl.json"), JSON.stringify(odrl, null, 2) + "\n");
-console.log("beleid/gbo-persoon.odrl.json:", (odrl.permission || []).length, "permissions");
-for (const p of odrl.permission) console.log(" -", p["nlgov:regelnaam"], "→", p.target?.uid, p.constraint ? JSON.stringify(p.constraint) : "");
+// HISTORISCH (19-11-2026). Dit script maakte beleid/gbo-persoon.odrl.json met de oude
+// JSON-LD-export (web/vite/src/toegangsspraak/odrl.js, NLGov-termen). Die export bestaat niet
+// meer: hij is opgegaan in de export naar ODRL-AP-NL (toegangsspraak/odrlExport.js), die een
+// andere vorm en andere termen schrijft dan compiler.py en pdp_odre.py lezen.
+//
+// De keten van dit voorbeeld werkt op het vastgelegde bestand beleid/gbo-persoon.odrl.json.
+// Zie de README ("Bevroren") voor wat een port naar ODRL-AP-NL vraagt.
+console.error(
+  "exporteer_odrl.mjs is historisch: de NLGov-export (odrl.js) bestaat niet meer.\n" +
+    "beleid/gbo-persoon.odrl.json is bevroren; zie de README van gbo-voorbeeld.",
+);
+process.exit(1);

@@ -12,7 +12,8 @@ naast de voorbeelden Vlierdam en Breda.
 | **GBO persoon** (het voorbeeld uit het FTV GraphQL-profiel) | het register tot op veldniveau uit het model, een bestaansvraag, een argument-voorwaarde, en per regel de **realisatie** door een gegenereerde Rego-module | [`beleid/gbo-persoon.toegangsspraak`](beleid/gbo-persoon.toegangsspraak) | [`uit/gbo-persoon.viewer.ttl`](uit/gbo-persoon.viewer.ttl) |
 
 Elk `.viewer.ttl` begint met de oorspronkelijke tekst als commentaar. Daarnaast staat per
-voorbeeld `uit/<naam>.odrl.jsonld`: wat de editor vandaag exporteert, ter vergelijking.
+voorbeeld `uit/<naam>.odrl.jsonld`: dezelfde ODRL als JSON-LD. Turtle en JSON-LD komen uit
+dezelfde triples en zeggen dus hetzelfde (tot 19-11 stond hier de oudere export met NLGov-termen).
 
 ## Zo schrijven wij het
 

@@ -7,12 +7,14 @@
  *
  *   parseBeleid(tekst)  → { ok, beleid, fouten }
  *   renderBeleid(beleid)→ canonieke klare-taaltekst (van-vorm)
- *   naarOdrl(beleid)    → ODRL JSON-LD (NLGov-profiel)
+ *   toegangsspraakNaarOdrl(beleid) → ODRL volgens ODRL-AP-NL, als Turtle en als JSON-LD
+ *   odrlNaarToegangsspraak(turtle) → beleid in klare taal uit ODRL (Turtle)
  *   compileerBundel(beleid, { index }) → uitvoerbare beleidsbundel voor de PDP (Go)
  */
 export { parseBeleid, valideerBeleid, padNaarVerwijzing, verwijzingNaarPad, verwijzingNaarGroepPad, ParseFout, ANKERS } from "./parser.js";
 export { renderBeleid, renderVerwijzing, renderVoorwaarde } from "./renderer.js";
-export { naarOdrl } from "./odrl.js";
+export { toegangsspraakNaarOdrl } from "./odrlExport.js";
+export { odrlNaarToegangsspraak, importMeldingen } from "./odrlImport.js";
 export { compileerBundel, BUNDEL_FORMAAT } from "./bundel.js";
 export {
   maakVeldIndex, resolveerBeleid, resolveerVerwijzing, resolveerGroep,

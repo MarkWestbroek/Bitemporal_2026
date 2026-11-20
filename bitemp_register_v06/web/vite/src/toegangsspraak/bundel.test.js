@@ -14,7 +14,11 @@ import path from "node:path";
 import { parseBeleid } from "./parser.js";
 import { maakVeldIndex, resolveerBeleid } from "./metamodel.js";
 import { compileerBundel, BUNDEL_FORMAAT } from "./bundel.js";
-import { naarOdrl } from "./odrl.js";
+import { toegangsspraakNaarOdrl } from "./odrlExport.js";
+
+/** De knopen van de ODRL-export (ODRL-AP-NL) op naam; `lijst` maakt van één of meer waarden een lijst van namen. */
+const odrlKnopen = (beleid) => Object.fromEntries(toegangsspraakNaarOdrl(beleid).jsonld["@graph"].map((k) => [k["@id"], k]));
+const lijst = (w) => [w ?? []].flat().map((x) => x?.["@id"] ?? x);
 import { renderBeleid } from "./renderer.js";
 
 const MAP = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../../../testdata/toegang");
@@ -60,9 +64,10 @@ test("Iedereen: subject null in de bundel, geen assignee in ODRL, round-trip in 
   assert.equal(open.subject, null);
   assert.deepEqual(open.gegevens, [{ pad: "NatuurlijkPersoon.namen" }]);
 
-  const odrl = naarOdrl(beleid);
-  const perm = odrl.permission.find((p) => p["nlgov:regelnaam"] === "namen openbaar");
-  assert.equal(perm.assignee, undefined);
+  // Iedereen is in de ODRL-export een groep zonder kenmerken: geen verfijning, dus elke partij.
+  const g = odrlKnopen(beleid);
+  assert.deepEqual(g["b:regel-namen-openbaar"]["odrl:assignee"], { "@id": "b:groep-iedereen" });
+  assert.equal(g["b:groep-iedereen"]["odrl:refinement"], undefined);
 
   const tekst = renderBeleid(beleid);
   assert.match(tekst, /Iedereen mag alle gegevens van de namen van een natuurlijk persoon bekijken\./);
@@ -87,11 +92,11 @@ test("superpolicy: Standaard en Bij conflict — bundel, ODRL en round-trip", ()
   const { bundel, beleid } = compileer("open-tenzij");
   assert.equal(bundel.standaard, "toestaan");
   assert.equal(bundel.conflict, "eerste-geldt");
-  const odrl = naarOdrl(beleid);
-  assert.equal(odrl.conflict, "nlgov:eersteRegel");
-  assert.equal(odrl["nlgov:standaard"], "toestaan");
-  assert.equal(naarOdrl(compileer("toestemming-wint").beleid).conflict, "perm");
-  assert.equal(naarOdrl(compileer("openbaar").beleid).conflict, "prohibit");
+  const set = odrlKnopen(beleid)["b:beleid"];
+  assert.deepEqual(set["odrl:conflict"], { "@id": "ts:eersteRegel" });
+  assert.equal(set["ts:standaard"], "toestaan");
+  assert.deepEqual(odrlKnopen(compileer("toestemming-wint").beleid)["b:beleid"]["odrl:conflict"], { "@id": "odrl:perm" });
+  assert.deepEqual(odrlKnopen(compileer("openbaar").beleid)["b:beleid"]["odrl:conflict"], { "@id": "odrl:prohibit" });
 
   const tekst = renderBeleid(beleid);
   assert.match(tekst, /Standaard: toestaan\./);

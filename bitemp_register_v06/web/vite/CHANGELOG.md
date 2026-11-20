@@ -39,11 +39,19 @@ De single source of truth voor het nummer is `package.json` `"version"`.
   *Bij conflict* en *Standaard*, `waarvan` bij een begrip (de afbakening van de populatie), voor wie een
   bestaansvraag geldt, en een verwijzing als rechterterm. Dat stond tot nu toe alleen in de oudere JSON-LD-export.
   De import leest het terug.
+- **Eén ODRL-export in Toegangverlening** (Mark 19-11): het paneel rechts toont de ODRL volgens ODRL-AP-NL,
+  met de keuze *Turtle* of *JSON-LD*. Beide zeggen altijd hetzelfde: ze komen uit dezelfde inhoud en verschillen
+  alleen in schrijfwijze.
 - **Instellingen van een schrijver als paneel** (Mark 18-11): *BPMN voor GZAC* is geen lijst regels maar de stand
   van de BPMN-schrijver. Die toont de activiteit nu als paneel in groepen (engine, wachtpunten, taken, berichten,
   proceskoppeling), met uitleg per instelling, schakelaars voor ja/nee en gekleurde placeholders. Alleen-lezen.
   Ook de *GZAC-dossierbundel* (ingedeeld per onderdeel van de bundel) en het *zaaktype* (afleidingen en
   volgnummers) tonen hun instellingen zo.
+
+### Gewijzigd
+- **Exporteer ODRL (JSON-LD)** schrijft nu ODRL-AP-NL, dezelfde inhoud als de Turtle-export, en het bestand heet
+  `.odrl.jsonld`. De oude vorm met NLGov-termen (`nlgov:`) bestaat niet meer. Wie die vorm inlas, moet over op
+  ODRL-AP-NL.
 
 ## [studio/v0.47.0] — 2026-11-18
 

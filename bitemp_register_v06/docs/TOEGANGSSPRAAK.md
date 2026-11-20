@@ -91,8 +91,9 @@ Beleid "Inzage inkomen bij schuldhulp".
   statusregel; tab "Canonieke vorm" toont de geherformatteerde tekst (met
   dezelfde ontleding); tab "Diagram" toont de regels als read-only
   regelkaarten (toegangsregel-profiel, zelfde kleuren);
-  menu Beleid: voorbeeld laden, herformatteren, ODRL-export (JSON-LD en Turtle
-  volgens ODRL-AP-NL) en ODRL-import (Turtle).
+  menu Beleid: voorbeeld laden, herformatteren, ODRL-export (ODRL-AP-NL, als Turtle of
+  JSON-LD) en ODRL-import (Turtle). Het paneel rechts toont dezelfde export, met de keuze
+  Turtle of JSON-LD.
 - **Zinsontleding** (schakelaar): zinsdelen krijgen kleur — subject groen,
   gegevens geel, waarde blauw, vergelijking paars, handeling oranje, plicht
   zeegroen, mag/niet vet.
@@ -126,7 +127,7 @@ lopend dossier") en een nette plicht-subgrammatica staan op de rol (ontwerpdoc
 ### Plaats in de architectuur
 
 ```
-klare tekst ──parser──▶ AST (+ spans) ──validatie/resolutie──▶ ODRL JSON-LD (NLGov)
+klare tekst ──parser──▶ AST (+ spans) ──validatie/resolutie──▶ ODRL (ODRL-AP-NL)   
    ▲                          │   (metamodel: schema-API)          │
    └────── renderer ◀─────────┘                     vertalers → Rego/Cedar (fase 3)
 ```
@@ -143,8 +144,7 @@ projecties van dezelfde AST. Round-trip is een geteste wet:
 | `operatoren.js` | registers: vergelijkingen (met `typen` voor typebewaking), handelingen, plichten; `registreer*()` voor domeinprofielen (geo meegeleverd) |
 | `parser.js` | tokenizer + recursive-descent parser → AST + `spans` (bronposities per element-soort); accepteert stelling- én bijzinsvolgorde; pad-shorthand; `padNaarVerwijzing`/`verwijzingNaarPad` |
 | `renderer.js` | AST → canonieke tekst; bijzinsvorm na als/waarvan, stellingsvorm in opsommingen |
-| `odrl.js` | AST → ODRL JSON-LD (Permission/Prohibition/Duty, LogicalConstraint, Party-/AssetCollection, `conflict: prohibit`); gebruikt geresolvede paden waar aanwezig |
-| `graaf.js` · `odrlApNlRegels.js` · `odrlExport.js` | AST → ODRL in **Turtle volgens ODRL-AP-NL** en de ODRL Visualisation Note, in de transformatievorm graafbeeld → regelset → schrijver (zie `TRANSFORMATIES.md` §8). Verschil met `odrl.js`: elke regel, voorwaarde en plicht heeft een eigen IRI en een naam; elk label is de zinsnede uit de klare taal; rol en doel zijn verfijningen op de handeling (`apnl:rolAanvrager`, `odrl:purpose`); het register is een `partOf`-hiërarchie (een pad met delen eronder is `odrl:AssetCollection`, een blad `odrl:Asset`); geldigheid met `schema:validFrom`. De trace is het verliesrapport. Voorbeelden voor de ODRL-viewer van de werkgroep FTV: `authz/odrl-viewer-voorbeelden/` |
+| `graaf.js` · `odrlApNlRegels.js` · `odrlExport.js` | De ene ODRL-export, met twee schrijfvormen uit dezelfde triples: Turtle en JSON-LD (`transformatie/jsonldSchrijver.js`). De oudere losse JSON-LD-export `odrl.js` (NLGov-termen) is hierin opgegaan (19-11). AST → ODRL in **Turtle volgens ODRL-AP-NL** en de ODRL Visualisation Note, in de transformatievorm graafbeeld → regelset → schrijver (zie `TRANSFORMATIES.md` §8). Verschil met `odrl.js`: elke regel, voorwaarde en plicht heeft een eigen IRI en een naam; elk label is de zinsnede uit de klare taal; rol en doel zijn verfijningen op de handeling (`apnl:rolAanvrager`, `odrl:purpose`); het register is een `partOf`-hiërarchie (een pad met delen eronder is `odrl:AssetCollection`, een blad `odrl:Asset`); geldigheid met `schema:validFrom`. De trace is het verliesrapport. Voorbeelden voor de ODRL-viewer van de werkgroep FTV: `authz/odrl-viewer-voorbeelden/` |
 | `odrlNaarToegangsspraakRegels.js` · `odrlNaarBeleid.js` · `odrlImport.js` | De terugweg: **ODRL in Turtle (ODRL-AP-NL) → beleid in klare taal** (zie `TRANSFORMATIES.md` §8.1). Lezer, graaflaag en regelset geven een plan; de bouwer maakt daar de AST van. De export geeft de klare taal mee (`ts:brontekst`); de import neemt die over als ze hetzelfde zegt als de ODRL, en bouwt anders uit de structuur. Wat niet overkomt staat in het verliesrapport. Leest ook **ODRL van anderen** als concept (§8.2): eigen operanden, handelingen en partijen worden naar de taal gelezen, en het resultaat wordt nooit ongemerkt ruimer dan de ODRL |
 | `bundel.js` | AST (geresolved) → **uitvoerbare beleidsbundel** (`omnium-toegangsbundel/1`) voor de PDP in de Go-API (`toegang/`): regels als data, gedekte registerpaden, voorwaarden als boom, betrokkene-paden volledig opgelost binnen de entiteit van de regel. Contract met de PDP: `testdata/toegang/*.bundel.json` + `vectoren.json`. Zie hieronder *Uitvoeren* |
 | `metamodel.js` | veldindex over de schema-API-velden; keten-resolutie (verkorting, dubbelzinnigheids-fouten, metamodel-casing); typebewaking; `suggereerVanVormen`/`suggereerBases` |
@@ -180,7 +180,7 @@ Toegangsspraak maar evalueert de bundel. ODRL blijft het uitwisselformaat.
 | Semantiek | |
 |---|---|
 | standaard | `weigeren` (default) of `toestaan` — kopregel `Standaard:` |
-| conflict | `verbod-wint` (default), `toestemming-wint` of `eerste-geldt` (volgorde = prioriteit) — kopregel `Bij conflict:`. ODRL JSON-LD: `prohibit`, `perm`, `nlgov:eersteRegel`; standaard-toestaan als `nlgov:standaard`. De Turtle-export (ODRL-AP-NL) schrijft `odrl:prohibit`, `odrl:perm` of `ts:eersteRegel`, en standaard-toestaan als `ts:standaard` (`TRANSFORMATIES.md` §8.1) |
+| conflict | `verbod-wint` (default), `toestemming-wint` of `eerste-geldt` (volgorde = prioriteit) — kopregel `Bij conflict:`. De ODRL-export (ODRL-AP-NL, Turtle en JSON-LD) schrijft `odrl:prohibit`, `odrl:perm` of `ts:eersteRegel`, en standaard-toestaan als `ts:standaard` (`TRANSFORMATIES.md` §8.1) |
 | dekking | een regel dekt zijn registerpad en alles eronder, per padsegment; `*` dekt alles |
 | subject | `null` = iedereen (ook anoniem); anders moeten alle kenmerken aanwezig zijn (hoofdletterongevoelig) |
 | voorwaarden | drieweg: waar / onwaar / onbepaald. Kenmerken van de **aanvrager** zijn een gesloten wereld (ontbreken = leeg). Gegevens van de **betrokkene** en PIP-vragen (`bestaat`) zijn onbepaald zolang de PDP ze niet kent. Fail-closed: een toestemming met een onbepaalde voorwaarde geldt níet (staat dan in `Voorwaardelijk`), een verbod met een onbepaalde voorwaarde geldt wél |

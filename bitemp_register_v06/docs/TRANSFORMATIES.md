@@ -342,8 +342,8 @@ element-id's als Mermaid-id's.
    validatie (`valideerRegelset`) is daar al op voorbereid.
 6. **Schrijver** voor export met tekstsjablonen (vrije tekst: code, DDL), en
    dezelfde runner in een CLI. De RDF-schrijver (§3, §8) en de Mermaid-schrijver
-   (§6) bestaan; een JSON-LD-serialisatie hoeft alleen `triplesNaarTurtle` te
-   vervangen.
+   (§6) bestaan; de JSON-LD-serialisatie is er sinds 19-11 (`jsonldSchrijver.js`,
+   naast `triplesNaarTurtle`).
 7. **Bronnen samenvoegen en regelsets stapelen.** Een transformatie heeft vaak
    méér dan één bron, en dan is één regelset niet genoeg. Het speelt nu op drie
    plekken, telkens anders opgelost:
@@ -421,9 +421,19 @@ in de ODRL. De tests eisen dat op alle voorbeelden niets verloren gaat, en legge
 de Turtle van het voorbeeldbeleid vast als gouden bestand.
 
 Voorbeelden, de runner en hoe je ze in de viewer bekijkt:
-`authz/odrl-viewer-voorbeelden/`. De bestaande JSON-LD-export uit de editor
-(`toegangsspraak/odrl.js`) blijft ernaast bestaan; het verschil staat in
-[TOEGANGSSPRAAK.md](TOEGANGSSPRAAK.md).
+`authz/odrl-viewer-voorbeelden/`.
+
+**Twee schrijfvormen, één inhoud (19-11).** De export geeft de ODRL als Turtle én als JSON-LD
+(`uit.turtle`, `uit.jsonld`). Beide komen uit dezelfde triples: `planNaarTriples` maakt ze,
+`triplesNaarTurtle` en `triplesNaarJsonLd` (`transformatie/jsonldSchrijver.js`) schrijven ze.
+De schrijfvorm is een keuze van de aanroeper, geen tweede regelset. De JSON-LD is vlak: een
+`@context` met de prefixen en een `@graph` met per subject één knoop.
+
+De oudere, losse JSON-LD-export `toegangsspraak/odrl.js` (NLGov-termen, gewone code zonder
+regelset) is hierin opgegaan en verwijderd. Wat hij meer zei dan de Turtle staat sinds
+regelset v3 ook in de Turtle (§8.1). De enige afnemer van de NLGov-vorm was het GBO-voorbeeld
+(`authz/gbo-voorbeeld`); dat werkt verder op zijn vastgelegde ODRL-bestand en is als bevroren
+gemarkeerd.
 
 ### 8.1 De terugweg: ODRL → Toegangsspraak (2026-11-18)
 
@@ -484,7 +494,8 @@ voorwaarden over verzoek en gegevens door elkaar; een doelbinding die ook nog ee
 regel stond; de kop van een begrip ("Het dossier is"); begrippen die geen regel gebruikt.
 
 **Sinds regelset v3 van de export (19-11) draagt de structuur ook** wat tot dan alleen de
-oude JSON-LD-export (`odrl.js`) zei. Dat is stap 1 van het uitfaseren van die export:
+oude JSON-LD-export (`odrl.js`) zei. Dat was stap 1 van het uitfaseren van die export
+(stap 2, de JSON-LD als tweede schrijfvorm, staat in §8):
 
 | In de taal | In de ODRL |
 |---|---|
@@ -789,9 +800,8 @@ regelset zijn dan de ingebouwde.
 | inrichting | model → artefact voor een component | objecttype, formulier, zaaktype, GZAC-dossierbundel, BPMN voor GZAC |
 
 Toegangsspraak → ODRL is een export: het beleid is het model, ODRL het formaat. De omgekeerde
-richting is er sinds 18-11 als import (§8.1). Naast deze Turtle-export bestaat de
-oudere export naar ODRL JSON-LD (`toegangsspraak/odrl.js`): gewone code zonder regelset, en
-daarom niet in de catalogus.
+richting is er sinds 18-11 als import (§8.1). De export schrijft Turtle en JSON-LD uit
+dezelfde triples (§8); de oudere, losse JSON-LD-export `odrl.js` is daarin opgegaan (19-11).
 
 **Twee vormen.** Van de elf regelsets hebben er acht **regels** voor de generieke toepasser
 (Mermaid ↔ use case, BPMN-XML, DMN-XML, objecttype, formulier, ODRL heen en terug). Drie bestaan uit
