@@ -17,7 +17,7 @@ export { toegangsspraakNaarOdrl } from "./odrlExport.js";
 export { odrlNaarToegangsspraak, importMeldingen } from "./odrlImport.js";
 export { compileerBundel, BUNDEL_FORMAAT } from "./bundel.js";
 export {
-  maakVeldIndex, resolveerBeleid, resolveerVerwijzing, resolveerGroep,
+  maakVeldIndex, resolveerBeleid, resolveerVerwijzing, resolveerGroep, isGroepPad,
   bepaalWaardetype, suggereerVanVormen, suggereerBases,
 } from "./metamodel.js";
 export { bepaalSuggesties } from "./editorSuggesties.js";
