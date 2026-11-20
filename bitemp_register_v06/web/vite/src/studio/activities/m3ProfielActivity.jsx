@@ -1,0 +1,48 @@
+/**
+ * m3ProfielActivity — "Profiel (M3)": een profiel (M2) als model in het M3, als gewone
+ * modelleertaal in een project (PROF-1, het sidecar-project; Mark 19-11).
+ *
+ * Dezelfde taal als het Profiel-ontwerp (`m3Profiel.js`, `ontwerptaal.js`), maar in Modelleren:
+ * de inhoud hoort bij het project en wordt bewaard, gesynchroniseerd en vertakt als elk ander
+ * model. Het sidecar-project (Profiel-ontwerp → Exporteer het sidecar-project) zet hier per profiel
+ * een diagram neer. Het Profiel-ontwerp zelf blijft het kladblok dat zich vult met alle
+ * geregistreerde profielen.
+ *
+ * - *Profiel (M3) → Activeer profiel…* maakt van het actieve diagram een activiteit (zoals in het
+ *   Profiel-ontwerp);
+ * - *Profiel (M3) → Laad een profiel als diagram…* zet een geregistreerd profiel erbij.
+ */
+import { IconProfielOntwerp05 } from "../icons";
+import { maakDiagramActiviteit } from "./maakDiagramActiviteit.jsx";
+import { maakGeneriekeMaakElement } from "./profielGereedschap.js";
+import { ontwerpDescriptor, registreerProfielOntwerp, M3_PROFIEL_ID } from "./m3Profiel.js";
+import { registreerM3Editors } from "./m3Editors.jsx";
+import ShapeSetPaneel from "./shapeSetPaneel.jsx";
+import { activeerProfiel, bekijkBestaandProfiel, exporteerSidecarProject } from "./profielOntwerpActivity.jsx";
+
+registreerM3Editors();
+registreerProfielOntwerp();
+
+export default maakDiagramActiviteit({
+  id: M3_PROFIEL_ID,
+  label: "Profiel (M3)",
+  icon: <IconProfielOntwerp05 />,
+  descriptor: ontwerpDescriptor,
+  maakElement: maakGeneriekeMaakElement(ontwerpDescriptor),
+  persistKey: "studio05-m3-profiel",
+  taakbalkSleutel: "studio05-taakbalken-m3-profiel",
+  menuPrefix: "m3p05",
+  menuLabel: "Profiel (M3)",
+  kleur: "#0ea5e9",
+  standaardVerborgen: true, // via Modelleren en het sidecar-project; het Profiel-ontwerp blijft het kladblok
+  diagramTerm: "profiel",
+  previewTekst: "Profiel (M3) — een profiel (M2) als model in het M3: elementtypen, compartimenten, veldtypen en verbindingsregels, met alle M3-eigenschappen.",
+  devHookNaam: "__m3Profiel05Store",
+  browserAlleenActiefDiagram: true,
+  onderPaneel: { id: "shapesets", label: "Shape-sets (vorm per elementtype)", Component: ShapeSetPaneel },
+  hoofdmenuExtra: [
+    { id: "activeer", label: "Activeer profiel… (registreer/ververs)", run: activeerProfiel },
+    { id: "laad-profiel", label: "Laad een profiel als diagram…", run: bekijkBestaandProfiel },
+    { id: "sidecar", label: "Exporteer het sidecar-project (profielen en transformaties)", run: exporteerSidecarProject },
+  ],
+});
