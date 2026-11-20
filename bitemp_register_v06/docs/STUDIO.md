@@ -2410,7 +2410,13 @@ dag vervangen).
     scenario met dezelfde naam wordt bijgewerkt; de instantie, de verwachting en de stubs blijven dezelfde
     elementen, zodat hun plek op het diagram blijft. De eerste keer ontstaat de simulatie, met de processen
     van het project als subjecten. Het overzicht (simulatie, subjecten, scenario's) en elk scenario krijgen een
-    eigen diagram. Nieuwe diagrammen komen in de projectboom in een map met de naam van de simulatie; wat je
+    eigen diagram, opgesteld als boom (Mark 20-11, naar zijn opstelling van GPK 4 en 5): de ouder
+    gecentreerd bovenaan, de «heeft»-lijnen in boomstijl. Op het overzicht staan de subjecten en scenario's in
+    één rij. Op een scenariodiagram staan de stubs en de verwachting eronder: tot vier in één rij, meer
+    verspringend over twee rijen. Bij één kind is de lijn recht. De instantie (de startgegevens) hoort niet
+    in de boom: die staat links naast het scenario, met een rechte «start met»-lijn langs de kortste weg.
+    Komt er later iets bij, dan schuift het rechts in de rij en de ouder mee naar het midden, tenzij je de
+    ouder zelf verplaatst hebt. Nieuwe diagrammen komen in de projectboom in een map met de naam van de simulatie; wat je
     daarna verplaatst blijft staan. Een scenario-diagram heet zoals het scenario zelf, dus in de boom zie je die
     naam twee keer: het diagram, en het scenario-element onder het overzicht. Verwijzingen naar andere talen worden gelegd waar de naam gevonden wordt: het type van de
     instantie, de taak van een stub, het startevent, het einde; anders blijft de tekst staan.

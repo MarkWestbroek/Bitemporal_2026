@@ -51,6 +51,10 @@ De single source of truth voor het nummer is `package.json` `"version"`.
   volgnummers) tonen hun instellingen zo.
 
 ### Gewijzigd
+- **Bewaar in het project: als boom opgesteld** (Mark 20-11): de diagrammen die *Bewaar in het project* maakt,
+  staan als boom: de simulatie of het scenario gecentreerd bovenaan met boomlijnen; op een scenariodiagram tot
+  vier stubs in één rij en meer verspringend over twee rijen; de startgegevens links naast het scenario met een
+  rechte lijn.
 - **Simulatie: de Waterstede-scenario's staan in het demo-project** (16-11): ze zijn uit de ingebakken keuzelijst;
   in het demo-project *Omnium demo — gemeente Waterstede* staan ze onder *Uit het project*.
 - **ArchiMate 1.1.0: de relaties staan op een abstract basistype** (Mark 19-11). Wat je mag verbinden is niet

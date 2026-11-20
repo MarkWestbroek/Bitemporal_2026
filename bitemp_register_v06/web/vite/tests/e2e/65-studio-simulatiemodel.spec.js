@@ -51,6 +51,35 @@ test("scenario bewaren in het project, terugkiezen, afspelen en toetsen aan de v
   });
   expect(inMap).toBe(6);
   expect(na.diagrammen.find((d) => d.naam === gpk4.naam)).toEqual({ naam: gpk4.naam, nodes: 1 + 1 + stubs + 1 });
+  // Als boom (Mark 20-11): de ouder gecentreerd bovenaan, alleen «heeft» als boomlijn; tot vier
+  // kinderen in één rij, meer verspringend over twee rijen; de instantie links naast het scenario,
+  // met een rechte «start met»-lijn langs de kortste weg.
+  const boom = await page.evaluate(() => {
+    const st = window.__simulatiemodel05Store.getState();
+    const els = st.elements;
+    return Object.values(st.diagrams).map((d) => {
+      const ouder = d.nodes.find((k) => els[k.elementId]?.elementType === (d.naam === "Simulatie" ? "simulatie" : "scenario"));
+      const inst = d.nodes.find((k) => els[k.elementId]?.elementType === "instantie");
+      const rij = d.nodes.filter((k) => k !== ouder && k !== inst);
+      const xs = rij.map((k) => k.position.x);
+      const heeft = Object.entries(d.lijnen || {}).filter(([id]) => els[id]?.elementType === "heeft").map(([, l]) => l);
+      const start = Object.entries(d.lijnen || {}).filter(([id]) => els[id]?.elementType === "start-met");
+      return {
+        naam: d.naam,
+        rijen: new Set(rij.map((k) => k.position.y)).size,
+        onderOuder: rij.every((k) => k.position.y > ouder.position.y),
+        gecentreerd: ouder.position.x === Math.round((Math.min(...xs) + Math.max(...xs)) / 2),
+        boomlijnen: heeft.length === rij.length && heeft.every((l) => l.vorm === (heeft.length === 1 ? "recht" : "boom") && l.sourceHandle === "source-bottom" && l.targetHandle === "target-top"),
+        startRecht: start.length === 1 && start[0][1].vorm === "recht" && start[0][1].sourceHandle === "source-left" && start[0][1].targetHandle === "target-right",
+        instantieLinks: inst ? inst.position.y === ouder.position.y && inst.position.x < ouder.position.x : null,
+        aantal: rij.length,
+      };
+    });
+  });
+  for (const d of boom) expect(d, d.naam).toMatchObject({ onderOuder: true, gecentreerd: true, boomlijnen: true, rijen: d.naam === "Simulatie" || d.aantal <= 4 ? 1 : 2 });
+  for (const d of boom.filter((x) => x.naam !== "Simulatie")) expect([d.instantieLinks, d.startRecht], d.naam).toEqual([true, true]);
+  expect(boom.find((d) => d.naam === gpk4.naam)).toMatchObject({ aantal: 4, rijen: 1 }); // zoals Mark GPK 4 had
+  expect(boom.find((d) => d.naam.startsWith("GPK 5"))).toMatchObject({ aantal: 6, rijen: 2 }); // en GPK 5
   // Verwijzingen naar de andere talen: het subject naar het BPMN-diagram, het scenario naar het
   // startevent, een stub naar zijn taak.
   const subject = na.els.find((e) => e.elementType === "subject" && e.naam === "Aanvraag oppakken");
