@@ -4,7 +4,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { sidecarVanAlles, sidecarVerschillen, profielIds } from "./dist/studio-profielen.mjs";
 
-test("het sidecar-project draagt elk profiel en elke regelset; alleen code blijft achter", () => {
+test("het sidecar-project draagt elk profiel en elke regelset volledig, code op id", () => {
   const project = sidecarVanAlles();
   const m3 = project.profielen.m3Profiel05;
   // Alle profielen behalve de twee talen zelf (de M3-taal en Transformatie).
@@ -12,9 +12,7 @@ test("het sidecar-project draagt elk profiel en elke regelset; alleen code blijf
   assert.ok(Object.keys(project.profielen.transformatie05.elements).some((id) => id.startsWith("tr_")));
   // Het past ruim in een project (localStorage-grens 5 MB).
   assert.ok(JSON.stringify(project).length < 2_500_000, `${JSON.stringify(project).length} tekens`);
-  const verschillen = sidecarVerschillen(project);
-  for (const [pid, lijst] of Object.entries(verschillen)) {
-    const geenCode = lijst.filter((v) => !/^(ConnectorType|ElementType|DiagramType)\.(hooks|referenceResolvers|layouts) — /.test(v));
-    assert.deepEqual(geenCode, [], pid);
-  }
+  // Ook door JSON heen (opslaan, sync): elk profiel komt exact terug, met de code op id.
+  const verschillen = sidecarVerschillen(JSON.parse(JSON.stringify(project)));
+  for (const [pid, lijst] of Object.entries(verschillen)) assert.deepEqual(lijst, [], pid);
 });

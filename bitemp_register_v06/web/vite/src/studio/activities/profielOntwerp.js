@@ -503,7 +503,8 @@ export function bouwProfielUitOntwerp(state, { id, label }) {
       { id: "maken", label: "Maken", acties: "elementTypes" },
       { id: "verbinding", label: "Verbinding", acties: "connectorTypes" },
     ],
-    layouts: [],
+    // Eigen layouts (code op id) uit het profiel; anders maakt de registratie ze uit de layoutstijlen.
+    layouts: profiel.layouts || [],
   });
 }
 

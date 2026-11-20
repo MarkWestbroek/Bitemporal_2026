@@ -9,6 +9,9 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 ## [Unreleased]
 
 ### Toegevoegd
+- **Code op id** (PROF-1): de hooks, resolvers en eigen layouts van een profiel hebben nu een vaste naam, waar het
+  Profiel-ontwerp en het sidecar-project naar verwijzen. Daardoor komt elk ingebouwd profiel volledig uit zijn model
+  terug, ook zijn code; *Activeer profiel* op een geladen profiel geeft hetzelfde profiel.
 - **Het sidecar-project** (Mark 18/19-11, PROF-1): *Profiel-ontwerp → Exporteer het sidecar-project* downloadt alle
   profielen en transformaties van de tool als één project. Open het met *Project → Importeer project…*: per profiel een
   map met het profiel als model, en een map met de regelsets. Een nieuwe taal *Profiel (M3)* in Modelleren houdt die

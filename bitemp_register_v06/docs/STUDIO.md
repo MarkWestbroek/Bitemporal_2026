@@ -2691,9 +2691,24 @@ project. Stap 3 van de volgorde in BACKLOG PROF-1 (akkoord Mark 19-11).
 - **Niet in de repo**: zolang de tool zijn profielen uit de code laadt, is het project een afgeleide;
   een gecommitte kopie zou bij elke profielwijziging mee moeten.
 
+**Code op id (21-11).** Een model kan geen functie bevatten, wel een verwijzing ernaar.
+`diagramcore/types/codeRegister.js` geeft bij de registratie van een profiel elk stuk code een vaste
+id naar zijn plek: `<profiel>:<elementtype>.hooks.<soort>`, `<profiel>:hooks.<soort>`,
+`<profiel>:referenceResolvers.<type>` en `<profiel>:layouts.<layout>` (alleen eigen layouts; de
+afgeleide uit de layoutstijlen maakt de registratie opnieuw). Het ontwerp en het sidecar-project
+dragen die id's (`m3:hooks`, en op het diagram `referenceResolvers` en `layouts`); een hook uit de
+catalogus houdt zijn catalogus-id (`kardinaliteiten`). Bij het activeren zet `vertaalHooks` de id's
+terug om naar de code; een id die deze tool niet kent, is een duidelijke fout. Wie het eerst
+registreert geeft de naam: een functie die twee profielen delen, heet naar de eerste.
+
+Daarmee is de rondreis **exact**: alle 28 profielen komen uit het ontwerp en uit het sidecar-project
+(ook na JSON) volledig terug, code vergeleken op id. De meetlat staat op nul
+(`render-svc/profielRondreis.vast.json` is `{}`), dus elke achteruitgang laat de test falen; het
+sidecar-project wordt ook streng getoetst (`sidecar.test.mjs`).
+
 **Nog niet**: kruisverbanden tussen een «taal» en het profiel waar hij naar wijst (een profiel heeft
-geen eigen element), de weergaven (vormen, iconen als SVG), code op id (de 115 resterende
-verschillen) en de tool die zijn profielen uit dit project laadt.
+geen eigen element), de weergaven (vormen, iconen als SVG) en de tool die zijn profielen uit dit
+project laadt.
 
 ## Activiteit Transformaties: regelsets bekijken en proefdraaien (2026-11-18)
 
