@@ -34,6 +34,7 @@
 import { handlerInfo } from "../../diagramcore/types/handlerCatalogus.js";
 import { AARD_CONNECTOR, AARD_ELEMENT } from "../../diagramcore/types/layoutStijl.js";
 import { M3, m3PropertyTypes, naarData, uitData, naamNaarData, naamUitData } from "./ontwerptaal.js";
+import { ALTIJD_SUPERPROFIEL, SUPERPROFIEL_IDS } from "../../diagramcore/types/superprofiel.js";
 
 export const PROFIEL_ONTWERP_ID = "profiel-ontwerp";
 
@@ -226,6 +227,9 @@ const GELDIGE_DATATYPES = new Set(["string", "tekst", "boolean", "colour"]);
 const ID = `${M3}id`;
 const LEEG = `${M3}_leeg`;
 const REGELS = `${M3}_regels`;
+/** De volgorde van de elementtypen van een geladen profiel (palet, en waar een notitielijn heen mag). */
+const VOLGORDE = `${M3}_volgorde`;
+const VELDTYPEN = `${M3}_veldtypen`;
 
 function compVelden(el, compartmentType) {
   return (
@@ -324,17 +328,20 @@ export function bouwProfielUitOntwerp(state, { id, label }) {
     if (!m3Id && !properties.some((p) => p.key === "naam")) properties.unshift({ key: "naam", datatype: "string", verplicht: true });
     fieldTypes.push({ id: ftId, viewer: "naam-type", ...rest, properties });
   }
-  if (!fieldTypes.length) {
-    // Vangnet zodat compartimenten zonder getekend veldtype toch werken.
-    fieldTypes.push({
-      id: "veld",
-      viewer: "naam-type",
-      properties: [
-        { key: "naam", datatype: "string", verplicht: true },
-        { key: "typeLabel", label: "type", datatype: "string" },
-      ],
-    });
-  }
+  // Vangnet zodat compartimenten zonder getekend veldtype toch werken; alleen als er een nodig is.
+  const vangnetVeldtype = () => {
+    if (!fieldTypes.length) {
+      fieldTypes.push({
+        id: "veld",
+        viewer: "naam-type",
+        properties: [
+          { key: "naam", datatype: "string", verplicht: true },
+          { key: "typeLabel", label: "type", datatype: "string" },
+        ],
+      });
+    }
+    return fieldTypes[0].id;
+  };
 
   const elementTypes = [];
   for (const def of defs) {
@@ -351,7 +358,7 @@ export function bouwProfielUitOntwerp(state, { id, label }) {
       return schoon({
         id: ctId || slug(ct.naam),
         label: ctNaam.gezet ? ctNaam.waarde : undefined,
-        fieldType: veldDef ? fieldTypeIdVoor.get(veldDef.id) : fieldTypes[0].id,
+        fieldType: veldDef ? fieldTypeIdVoor.get(veldDef.id) : vangnetVeldtype(),
         ...ctRest,
       });
     });
@@ -461,6 +468,43 @@ export function bouwProfielUitOntwerp(state, { id, label }) {
       elementTypes.find((ct) => ct.isConnector && hierarchieConnectoren.includes(ct.id) && bronnenVan(ct).includes(et.id)) ||
       elementTypes.find((ct) => ct.isConnector && bronnenVan(ct).includes(et.id));
     if (kandidaat) et.containerVoor = kandidaat.id;
+  }
+
+  // De volgorde van een geladen profiel. De registratie zet de typen uit het superprofiel erbij:
+  // wat ontbreekt achteraan (in de volgorde van SUPERPROFIEL_IDS), en een type dat ze altijd
+  // vervangt (notitie, notitielijn, diagramverwijzing) op de plek waar het profiel het zelf noemde.
+  // Zo'n type krijgt hier een kale id op zijn plek, maar alleen als dat nodig is om precies de
+  // oude volgorde terug te krijgen (hooguit drie typen: alle keuzes proberen).
+  const volgorde = state?.m3Profiel?.[VOLGORDE];
+  if (Array.isArray(volgorde)) {
+    const plek = new Map(volgorde.map((id, i) => [id, i]));
+    const oud = new Map(elementTypes.map((et, i) => [et.id, i]));
+    const opVolgorde = (lijst) => [...lijst].sort((a, b) => (plek.get(a) ?? Infinity) - (plek.get(b) ?? Infinity) || (oud.get(a) ?? 0) - (oud.get(b) ?? 0));
+    const eigen = elementTypes.map((et) => et.id);
+    const kandidaten = volgorde.filter((id) => !eigen.includes(id) && ALTIJD_SUPERPROFIEL.has(id));
+    const naRegistratie = (stubs) => {
+      const lijst = opVolgorde([...eigen, ...stubs]);
+      for (const id of SUPERPROFIEL_IDS) if (!lijst.includes(id)) lijst.push(id);
+      return lijst;
+    };
+    const doel = JSON.stringify(volgorde);
+    let gekozen = [];
+    for (let m = 0; m < 1 << kandidaten.length; m++) {
+      const stubs = kandidaten.filter((_, i) => m & (1 << i));
+      if (JSON.stringify(naRegistratie(stubs)) === doel) {
+        gekozen = stubs;
+        break;
+      }
+    }
+    for (const id of gekozen) elementTypes.push({ id });
+    const volgordeIds = opVolgorde(elementTypes.map((et) => et.id));
+    elementTypes.sort((a, b) => volgordeIds.indexOf(a.id) - volgordeIds.indexOf(b.id));
+  }
+  const veldtypen = state?.m3Profiel?.[VELDTYPEN];
+  if (Array.isArray(veldtypen)) {
+    const plek = new Map(veldtypen.map((id, i) => [id, i]));
+    const oud = new Map(fieldTypes.map((ft, i) => [ft.id, i]));
+    fieldTypes.sort((a, b) => (plek.get(a.id) ?? Infinity) - (plek.get(b.id) ?? Infinity) || oud.get(a.id) - oud.get(b.id));
   }
 
   // Facetten en layoutstijlen (M3, 18-10): getekende knopen → DiagramType.
@@ -807,7 +851,12 @@ export function ontwerpUitProfiel(descriptor, { prefix: vast } = {}) {
   // Shape-sets, typering-standaard en de eigenschappen van het profiel zelf zijn gegevens op het
   // ontwerp-diagram (geen canvas-node): het shape-set-paneel bewerkt de eerste twee, en
   // `bouwProfielUitOntwerp` krijgt ze pass-through terug.
-  const m3Profiel = { ...naarData("profiel", descriptor), ...legeLijsten(descriptor, ["layoutStijlen"]) };
+  const m3Profiel = {
+    ...naarData("profiel", descriptor),
+    ...legeLijsten(descriptor, ["layoutStijlen"]),
+    [VOLGORDE]: (descriptor.elementTypes || []).map((et) => et.id),
+    [VELDTYPEN]: (descriptor.fieldTypes || []).map((ft) => ft.id),
+  };
   return {
     elements,
     diagrams: {

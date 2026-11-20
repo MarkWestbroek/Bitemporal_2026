@@ -9,6 +9,9 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 ## [Unreleased]
 
 ### Toegevoegd
+- **Profielen uit het project laden** (PROF-1): *Profiel (M3) → Laad de profielen uit dit project in de tool* maakt
+  van de profiel-diagrammen in je project weer profielen. Pas je in het sidecar-project een profiel aan (een kleur, een
+  eigenschap, een verbindingsregel) en laad je het, dan tekent de tool daarmee, tot je de pagina herlaadt.
 - **Code op id** (PROF-1): de hooks, resolvers en eigen layouts van een profiel hebben nu een vaste naam, waar het
   Profiel-ontwerp en het sidecar-project naar verwijzen. Daardoor komt elk ingebouwd profiel volledig uit zijn model
   terug, ook zijn code; *Activeer profiel* op een geladen profiel geeft hetzelfde profiel.

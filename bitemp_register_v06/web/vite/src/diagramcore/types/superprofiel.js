@@ -115,7 +115,7 @@ export function superprofielTypen() {
 export const SUPERPROFIEL_IDS = ["notitie", "constraint", "notitielijn", "diagramverwijzing"];
 
 /** Puur-M3-typen: de superprofielversie wint van een eigen definitie. */
-const ALTIJD_SUPERPROFIEL = new Set(["notitie", "notitielijn", "diagramverwijzing"]);
+export const ALTIJD_SUPERPROFIEL = new Set(["notitie", "notitielijn", "diagramverwijzing"]);
 
 /**
  * Voeg het superprofiel toe aan een (uitgevlakt) DiagramType — in place,

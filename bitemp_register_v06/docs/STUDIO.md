@@ -2706,9 +2706,27 @@ Daarmee is de rondreis **exact**: alle 28 profielen komen uit het ontwerp en uit
 (`render-svc/profielRondreis.vast.json` is `{}`), dus elke achteruitgang laat de test falen; het
 sidecar-project wordt ook streng getoetst (`sidecar.test.mjs`).
 
+**Laden uit het project (21-11, opt-in).** *Profiel (M3) → Laad de profielen uit dit project in de
+tool* maakt van elk profiel-diagram weer een profiel (`studio/profielenUitProject.js`):
+
+- een profiel dat de tool kent, wordt **op zijn plek** vervangen: het geregistreerde
+  descriptor-object krijgt de nieuwe inhoud, dus de activiteiten die het vasthouden tekenen
+  voortaan met het profiel uit het project (ze worden opnieuw aangemeld zodat ze hertekenen);
+- een onbekend profiel wordt een eigen profiel (een activiteit erbij, zoals bij *Activeer profiel*);
+- een profiel dat niet te bouwen of niet geldig is (bv. een code-id die deze tool niet kent), wordt
+  niet geladen en staat in de melding.
+
+Het geldt tot een herlaad; de tool start nog met de profielen uit de code. De test
+`render-svc/sidecarLaden.test.mjs` laadt alle 27 profielen uit het sidecar-project in de tool en eist
+dat de tool daarna dezelfde is: dezelfde vingerafdruk per profiel, dezelfde objecten, en de rondreis
+nog steeds nul. Daarvoor moest de rondreis twee dingen meer bewaren: de volgorde van de
+elementtypen en veldtypen (het palet; waar een notitielijn heen mag), met de typen uit het
+superprofiel op hun plek, en geen vangnet-veldtype als niets het nodig heeft. De meetlat ziet die
+nu ook (`type erbij`, `volgorde`).
+
 **Nog niet**: kruisverbanden tussen een «taal» en het profiel waar hij naar wijst (een profiel heeft
-geen eigen element), de weergaven (vormen, iconen als SVG) en de tool die zijn profielen uit dit
-project laadt.
+geen eigen element), de weergaven (vormen, iconen als SVG), en starten uit het project in plaats
+van uit de code.
 
 ## Activiteit Transformaties: regelsets bekijken en proefdraaien (2026-11-18)
 
