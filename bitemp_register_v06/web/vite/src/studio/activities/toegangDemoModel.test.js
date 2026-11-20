@@ -26,6 +26,8 @@ import { parseBeleid } from "../../toegangsspraak/parser.js";
 import { maakVeldIndex, resolveerBeleid, resolveerVerwijzing } from "../../toegangsspraak/metamodel.js";
 import { padNaarVerwijzing } from "../../toegangsspraak/parser.js";
 import { toegangsspraakNaarOdrl } from "../../toegangsspraak/odrlExport.js";
+import { compileerBundel } from "../../toegangsspraak/bundel.js";
+import { VOORBEELD_STUDIO } from "../../toegangsspraak/voorbeeld.js";
 
 // Zelfde doorkijk-diepte als toegangActivity.jsx.
 const RELATIE_DIEPTE = 2;
@@ -244,4 +246,26 @@ test("enum-bewaking pakt een onbekende geslachtswaarde", () => {
   assert.equal(fouten.length, 1);
   assert.match(fouten[0].bericht, /geen toegestane waarde/);
   assert.match(fouten[0].bericht, /"man", "vrouw", "X"/);
+});
+
+test("het voorbeeld van de Studio past op het model en levert een werkende bundel", () => {
+  const { ok, beleid, fouten } = parseBeleid(VOORBEELD_STUDIO);
+  assert.ok(ok, JSON.stringify(fouten));
+  const geresolved = resolveerBeleid(beleid, INDEX);
+  assert.deepEqual(geresolved.fouten.map((f) => f.bericht), [], "geen controle-meldingen tegen het demo-model");
+  const { bundel, meldingen } = compileerBundel(geresolved.beleid, { index: INDEX });
+  // Alleen de melding dat het doel (een binding) in de API nog niet getoetst wordt.
+  assert.equal(meldingen.length, 1);
+  assert.match(meldingen[0], /^Het doel in de kop \("schuldhulpverlening"\) wordt in de API nog niet getoetst/);
+  const [inzage, verbod] = bundel.regels;
+  assert.deepEqual(inzage.gegevens, [{ pad: "NatuurlijkPersoon.namen" }]);
+  assert.deepEqual(inzage.subject, { kenmerken: [{ kenmerk: "rol", waarde: "schuldhulpverlener" }] });
+  // Alleen een voorwaarde die de API vandaag kan beoordelen: een veld van de betrokkene.
+  assert.deepEqual(inzage.voorwaarden.links, { anker: "betrokkene", pad: "NatuurlijkPersoon.namen.achternaam" });
+  assert.equal(inzage.voorwaarden.op, "begintMet");
+  assert.equal(verbod.effect, "verbieden");
+  assert.deepEqual(verbod.gegevens, [{ pad: "NatuurlijkPersoon.namen" }]);
+  // En de ODRL-export loopt zonder verlies.
+  const uit = toegangsspraakNaarOdrl(geresolved.beleid);
+  assert.deepEqual(uit.trace.filter((x) => x.actie === "geen-regel" || x.actie === "overgeslagen"), []);
 });

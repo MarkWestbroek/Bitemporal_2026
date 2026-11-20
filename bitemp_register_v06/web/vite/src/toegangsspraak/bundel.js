@@ -155,6 +155,14 @@ export function compileerBundel(beleid, { index = null } = {}) {
     };
   });
 
+  // `Doel:` is een binding (besluit Mark 20-11): elke toestemming geldt alleen voor een aanvraag
+  // met dat doel, zoals de ODRL-export het schrijft. De API geeft het doel van de aanvraag nog niet
+  // door (dat wordt een header); tot dan schrijft de bundel het niet als voorwaarde uit, want dan
+  // zou geen toestemming meer gelden. Het verschil wordt gemeld, niet verzwegen.
+  if (beleid.doel) {
+    meldingen.push(`Het doel in de kop ("{doel}") wordt in de API nog niet getoetst: de bundel is op dit punt ruimer dan het beleid en de ODRL. Dat volgt zodra de API het doel van de aanvraag doorgeeft (een header).`.replace("{doel}", beleid.doel));
+  }
+
   return {
     bundel: {
       formaat: BUNDEL_FORMAAT,

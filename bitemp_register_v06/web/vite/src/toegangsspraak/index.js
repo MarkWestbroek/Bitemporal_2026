@@ -25,4 +25,4 @@ export {
   registreerOperatoren, resetOperatoren, geefOperatoren, GEO_OPERATOREN,
   registreerActies, geefActies, registreerPlichten, geefPlichten,
 } from "./operatoren.js";
-export { VOORBEELD_BELEID } from "./voorbeeld.js";
+export { VOORBEELD_BELEID, VOORBEELD_STUDIO } from "./voorbeeld.js";
