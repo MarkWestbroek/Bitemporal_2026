@@ -33,7 +33,6 @@ import { cmVorm } from "../../simulatie/cmVorm.js";
 import {
   BPMN_PROFIEL,
   VOORBEELDEN,
-  VOORBEELDSETS,
   useRun,
   zet,
   probeer,
@@ -433,15 +432,13 @@ function Sidebar() {
               ))}
             </optgroup>
           )}
-          {VOORBEELDSETS.map((set) => (
-            <optgroup key={set.id} label={set.label}>
-              {VOORBEELDEN.filter((v) => v.set === set.id).map((v) => (
-                <option key={v.nr} value={v.nr} title={v.beschrijving}>
-                  {v.naam}
-                </option>
-              ))}
-            </optgroup>
-          ))}
+          <optgroup label="GPK-voorbeeld (met eigen beslistabel en e-dienstmodel)">
+            {VOORBEELDEN.map((v) => (
+              <option key={v.nr} value={v.nr} title={v.beschrijving}>
+                {v.naam}
+              </option>
+            ))}
+          </optgroup>
         </select>
         {uitProject.length > 0 && (
           <div style={{ marginBottom: 6 }}>
