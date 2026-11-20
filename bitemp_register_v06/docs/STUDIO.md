@@ -2666,6 +2666,35 @@ het profiel zelf (DiagramType: versie, hiërarchie, taakbalken, …) staan op he
   zonder op de volgorde van sleutels te letten. Stand 20-11: 115 verschillen, allemaal code:
   hooks als functie (105), resolvers (5) en eigen layouts (5). Was 1.725.
 
+## Het sidecar-project: profielen en transformaties als één project (2026-11-21)
+
+Mark 18-11: het sidecar-project is het project waarin de M2's en de transformaties vastliggen. Het
+zit half vastgegroeid aan de tool: zonder geladen profielen valt de tool om, zonder transformaties
+werkt hij beperkt. Profielen en transformaties leunen op elkaar en staan daarom samen in één
+project. Stap 3 van de volgorde in BACKLOG PROF-1 (akkoord Mark 19-11).
+
+- **Exporteren**: *Profiel-ontwerp → Ontwerp → Exporteer het sidecar-project* (of hetzelfde in
+  *Profiel (M3)*) downloadt `omnium-sidecar.studio-project.json`: alle geregistreerde profielen en
+  alle regelsets uit de catalogus. Openen met *Project → Importeer project…*.
+- **Indeling**: map *Profielen* met per profiel een submap en één diagram in de M3-taal
+  (`ontwerptaal.js`); map *Transformaties* met één diagram in het profiel Transformatie. De id's zijn
+  vast (afgeleid van profiel-id en regelset-id), zodat een volgende export dezelfde elementen houdt.
+- **Profiel (M3)** (`m3Profiel05`, Modelleren, standaard verborgen): dezelfde taal als het
+  Profiel-ontwerp, maar als gewone modelleertaal in een project, dus bewaard, gesynchroniseerd en
+  te vertakken. Het Profiel-ontwerp blijft het kladblok dat zich vult met alle geregistreerde
+  profielen. Beide delen de descriptor uit `studio/activities/m3Profiel.js`. Vanuit *Profiel (M3)*
+  activeer je een profiel net als in het Profiel-ontwerp.
+- **Code**: `studio/sidecarProject.js` (puur), in render-svc `sidecarVanAlles()` en
+  `sidecarVerschillen()`. De test `render-svc/sidecar.test.mjs` bouwt het project uit alle 27
+  profielen en 11 regelsets en eist dat elk profiel eruit terugkomt, op code na. Ongeveer 1,4 MB
+  (1.727 + 47 elementen).
+- **Niet in de repo**: zolang de tool zijn profielen uit de code laadt, is het project een afgeleide;
+  een gecommitte kopie zou bij elke profielwijziging mee moeten.
+
+**Nog niet**: kruisverbanden tussen een «taal» en het profiel waar hij naar wijst (een profiel heeft
+geen eigen element), de weergaven (vormen, iconen als SVG), code op id (de 115 resterende
+verschillen) en de tool die zijn profielen uit dit project laadt.
+
 ## Activiteit Transformaties: regelsets bekijken en proefdraaien (2026-11-18)
 
 Onderaan de activiteitenbalk (groep beheer, preview). Een regelset is M2: hoe elk model in taal A

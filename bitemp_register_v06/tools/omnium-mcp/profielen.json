@@ -7276,6 +7276,323 @@
    ]
   },
   {
+   "id": "m3Profiel05",
+   "naam": "Profiel (M3)",
+   "diagramTypeId": "profiel-ontwerp",
+   "elementen": [
+    {
+     "id": "elementDef",
+     "label": "Elementtype",
+     "eigenschappen": [
+      "m3:id",
+      "m3:lidwoord",
+      "m3:verwijstNaar",
+      "m3:beschrijving",
+      "m3:isAbstract",
+      "m3:omschrijving",
+      "m3:shape",
+      "m3:stereotype",
+      "m3:naamLabel",
+      "m3:randDikte",
+      "m3:hoekRadius",
+      "m3:hoekStijl",
+      "m3:icoon",
+      "m3:randStijl",
+      "m3:handleStijl",
+      "m3:omtrek",
+      "m3:aanhechtpunten",
+      "m3:randAanhechting",
+      "m3:verwijderen",
+      "m3:inPalet",
+      "m3:resizebaar",
+      "m3:minBreedte",
+      "m3:minHoogte",
+      "m3:achtergrond",
+      "m3:sleeptInhoudMee",
+      "m3:meerdereVoorkomens",
+      "m3:kort",
+      "m3:taakbalkGroep",
+      "m3:aard",
+      "m3:facetten",
+      "m3:containerVoor",
+      "m3:afbakeningVoor",
+      "m3:overbrugt",
+      "m3:randElement",
+      "m3:gedragsVerwijzing",
+      "m3:uitwerking",
+      "m3:samentrekking",
+      "m3:opname",
+      "m3:standaardDichtInBoom",
+      "m3:layoutDimensie",
+      "m3:edgePresentatie",
+      "m3:hooks",
+      "container"
+     ],
+     "velden": [
+      {
+       "id": "eigenschappen",
+       "soort": "attribuut",
+       "fieldType": "eigenschapDef"
+      },
+      {
+       "id": "implementatie",
+       "soort": "attribuut",
+       "fieldType": "implementatieDef"
+      }
+     ]
+    },
+    {
+     "id": "compartimentDef",
+     "label": "Compartimenttype",
+     "eigenschappen": [
+      "m3:id",
+      "m3:alleenWeergave",
+      "m3:verbergInInspector"
+     ]
+    },
+    {
+     "id": "fieldDef",
+     "label": "Veldtype",
+     "eigenschappen": [
+      "m3:id",
+      "m3:viewer",
+      "m3:afgeleid"
+     ],
+     "velden": [
+      {
+       "id": "eigenschappen",
+       "soort": "attribuut",
+       "fieldType": "eigenschapDef"
+      }
+     ]
+    },
+    {
+     "id": "facetDef",
+     "label": "Facet",
+     "eigenschappen": [
+      "m3:waarden"
+     ]
+    },
+    {
+     "id": "layoutStijlDef",
+     "label": "Layoutstijl",
+     "eigenschappen": [
+      "m3:id",
+      "m3:renderer",
+      "m3:richting",
+      "m3:alleenStroom",
+      "m3:rijen",
+      "m3:kolommen",
+      "m3:secundairAchteraan",
+      "m3:secundairUit",
+      "m3:maxPerRij",
+      "m3:kaderKolommen",
+      "m3:afstanden",
+      "m3:regels"
+     ]
+    },
+    {
+     "id": "constraint",
+     "label": "Constraint",
+     "omschrijving": "Regel die het standaardarsenaal niet kan uitdrukken (UML Constraint), tussen {…}; koppel hem met annotatie-lijnen aan wat hij beperkt (bv. {xor} tussen twee relaties).",
+     "eigenschappen": [
+      "specificatie",
+      "taal"
+     ]
+    },
+    {
+     "id": "diagramverwijzing",
+     "label": "Diagramverwijzing",
+     "omschrijving": "Verwijst naar een ander diagram (ook in een andere taal); dubbelklik opent het."
+    }
+   ],
+   "connectoren": [
+    {
+     "id": "compositie",
+     "label": "Bevat (◆)",
+     "regels": [
+      {
+       "bron": [
+        "elementDef",
+        "compartimentDef"
+       ],
+       "doel": [
+        "compartimentDef",
+        "fieldDef"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "erft",
+     "label": "Erft van (▷)",
+     "omschrijving": "Overerving tussen elementtypen: het kind neemt shape, eigenschappen en compartimenten over.",
+     "regels": [
+      {
+       "bron": [
+        "elementDef"
+       ],
+       "doel": [
+        "elementDef"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "verbindingsregel",
+     "label": "Verbindingsregel",
+     "regels": [
+      {
+       "bron": [
+        "elementDef"
+       ],
+       "doel": [
+        "elementDef"
+       ]
+      }
+     ],
+     "eigenschappen": [
+      "m3:id",
+      "m3:lidwoord",
+      "m3:erft",
+      "m3:verwijstNaar",
+      "m3:beschrijving",
+      "m3:isAbstract",
+      "m3:omschrijving",
+      "m3:shape",
+      "m3:stereotype",
+      "m3:naamLabel",
+      "m3:randDikte",
+      "m3:hoekRadius",
+      "m3:hoekStijl",
+      "m3:icoon",
+      "m3:randStijl",
+      "m3:handleStijl",
+      "m3:omtrek",
+      "m3:aanhechtpunten",
+      "m3:randAanhechting",
+      "m3:verwijderen",
+      "m3:inPalet",
+      "m3:resizebaar",
+      "m3:minBreedte",
+      "m3:minHoogte",
+      "m3:achtergrond",
+      "m3:sleeptInhoudMee",
+      "m3:meerdereVoorkomens",
+      "m3:kort",
+      "m3:taakbalkGroep",
+      "m3:aard",
+      "m3:facetten",
+      "m3:containerVoor",
+      "m3:afbakeningVoor",
+      "m3:overbrugt",
+      "m3:randElement",
+      "m3:gedragsVerwijzing",
+      "m3:uitwerking",
+      "m3:samentrekking",
+      "m3:opname",
+      "m3:standaardDichtInBoom",
+      "m3:layoutDimensie",
+      "m3:edgePresentatie",
+      "m3:properties",
+      "m3:compartments",
+      "m3:hooks",
+      "metKardinaliteiten",
+      "richtingOptie",
+      "isHierarchie"
+     ]
+    },
+    {
+     "id": "notitielijn",
+     "label": "Annotatie-lijn",
+     "omschrijving": "Van een notitie of constraint naar het element waar hij over gaat (UML annotatedElement / constrainedElement).",
+     "regels": [
+      {
+       "bron": [
+        "constraint"
+       ],
+       "doel": [
+        "elementDef",
+        "compartimentDef",
+        "fieldDef",
+        "facetDef",
+        "layoutStijlDef",
+        "constraint",
+        "diagramverwijzing"
+       ]
+      }
+     ]
+    }
+   ],
+   "layouts": [
+    {
+     "id": "leesvolgorde-tb",
+     "label": "Leesvolgorde, van boven naar beneden (standaard)"
+    },
+    {
+     "id": "leesvolgorde-lr",
+     "label": "Leesvolgorde, van links naar rechts"
+    },
+    {
+     "id": "leesvolgorde-bt",
+     "label": "Leesvolgorde, van onder naar boven"
+    },
+    {
+     "id": "leesvolgorde-rl",
+     "label": "Leesvolgorde, van rechts naar links"
+    }
+   ],
+   "layoutTypen": [
+    {
+     "id": "elementDef"
+    },
+    {
+     "id": "compartimentDef"
+    },
+    {
+     "id": "fieldDef"
+    },
+    {
+     "id": "compositie",
+     "isConnector": true
+    },
+    {
+     "id": "erft",
+     "isConnector": true
+    },
+    {
+     "id": "verbindingsregel",
+     "isConnector": true
+    },
+    {
+     "id": "facetDef"
+    },
+    {
+     "id": "layoutStijlDef"
+    },
+    {
+     "id": "notitie",
+     "minBreedte": 100,
+     "minHoogte": 44
+    },
+    {
+     "id": "constraint",
+     "minBreedte": 100,
+     "minHoogte": 44
+    },
+    {
+     "id": "notitielijn",
+     "isConnector": true,
+     "aard": "annotatie"
+    },
+    {
+     "id": "diagramverwijzing",
+     "minBreedte": 120,
+     "minHoogte": 44
+    }
+   ]
+  },
+  {
    "id": "requirements05",
    "naam": "Requirements",
    "diagramTypeId": "requirements",

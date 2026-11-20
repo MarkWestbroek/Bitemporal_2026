@@ -65,6 +65,7 @@ import toegangActivity from "./toegangActivity";
 import toegangsregelsActivity from "./toegangsregelsActivity";
 import transformatiesActivity from "./transformatiesActivity";
 import transformatieProfielActivity from "./transformatieProfielActivity";
+import m3ProfielActivity from "./m3ProfielActivity";
 
 // ── Nog te bouwen functies: uniforme placeholder met de drie-slot-structuur ──
 const apiActivity = maakPlaceholderActiviteit({
@@ -126,6 +127,7 @@ registreerActiviteiten([
   bpmnMotorActivity, // "BPMN" — eigen motor: events/gateways/boundary (preview)
   archimateActivity, // "ArchiMate" — vier lagen, elf relaties (preview)
   sequenceActivity, // "Sequence" — levenslijnen op het rand-primitief (preview)
+  m3ProfielActivity, // "Profiel (M3)" — een profiel (M2) als model in het M3, voor het sidecar-project (PROF-1)
   transformatieProfielActivity, // "Transformatie" — het profiel (M2) waarin je een regelset schrijft (TRANS-1)
   erdActivity, // "ERD" — kraaienpoten, kardinaliteit per uiteinde (preview)
   sysmlActivity, // "SysML" — bdd + ibd (poorten op de rand) + requirements (preview)

@@ -16,14 +16,18 @@
  */
 import { IconProfielOntwerp05 } from "../icons";
 import useStudioStore from "../useStudioStore";
-import { vervangDiagramType, getDiagramType, alleDiagramTypes } from "../../diagramcore/types/typeRegistry.js";
+import { getDiagramType, alleDiagramTypes } from "../../diagramcore/types/typeRegistry.js";
 import { maakDiagramActiviteit } from "./maakDiagramActiviteit.jsx";
 import ShapeSetPaneel from "./shapeSetPaneel.jsx";
 import { registreerM3Editors } from "./m3Editors.jsx";
-import { vertaalHooks, maakGeneriekeMaakElement } from "./profielGereedschap.js";
+import { maakGeneriekeMaakElement } from "./profielGereedschap.js";
+import { ontwerpDescriptor, registreerProfielOntwerp } from "./m3Profiel.js";
+import "./regelsetsIngebouwd.js";
+import { alleRegelsets } from "../../transformatie/regelsetCatalogus.js";
+import { sidecarProject } from "../sidecarProject.js";
+import { downloadJson } from "../studioUtils.js";
 import { vraagNaam, vraagBevestiging, toonMelding } from "../naamDialog.jsx";
 import {
-  profielOntwerpKern,
   PROFIEL_ONTWERP_ID,
   bouwProfielUitOntwerp,
   ontwerpUitProfiel,
@@ -42,14 +46,15 @@ import {
 
 // De ontwerptaal is het M3 (ontwerptaal.js): getallen en samengestelde waarden hebben een eigen invoer.
 registreerM3Editors();
-const descriptor = vertaalHooks(profielOntwerpKern);
-vervangDiagramType(descriptor);
+// De taal zelf staat in m3Profiel.js: de activiteit Profiel (M3) in Modelleren deelt hem.
+const descriptor = ontwerpDescriptor;
+registreerProfielOntwerp();
 
 /**
  * Vertaal het áctieve diagram (= profiel) naar een descriptor en registreer
  * hem als activiteit; een bestaand profiel met dezelfde id wordt ververst.
  */
-async function activeerProfiel(useStore) {
+export async function activeerProfiel(useStore) {
   const id = await vraagNaam({ titel: "Profiel activeren", label: "Profiel-id (kleine letters en koppeltekens)", waarde: "mijn-profiel", bevestig: "Volgende" });
   if (!id) return;
   const label = (await vraagNaam({ titel: "Profiel activeren", label: "Naam in de activity bar", waarde: id, bevestig: "Volgende" })) || id;
@@ -86,7 +91,7 @@ async function activeerProfiel(useStore) {
 }
 
 /** Laad een geregistreerd profiel als éxtra ontwerp-diagram in de sandbox. */
-async function bekijkBestaandProfiel(useStore) {
+export async function bekijkBestaandProfiel(useStore) {
   const ids = alleDiagramTypes()
     .map((dt) => dt.id)
     .filter((dtId) => dtId !== PROFIEL_ONTWERP_ID);
@@ -152,6 +157,22 @@ function bewaarLayoutAlsStandaard(useStore) {
   toonMelding({ tekst: `Layout bewaard als standaard voor profiel "${m[1]}".` });
 }
 
+/**
+ * Het sidecar-project (PROF-1): alle geregistreerde profielen in de M3-taal en alle regelsets uit
+ * de catalogus als één projectbestand. Openen met Project → Importeer project…; dan staan ze in
+ * Modelleren onder Profielen en Transformaties.
+ */
+export function exporteerSidecarProject() {
+  const descriptors = alleDiagramTypes().filter((dt) => dt.id !== PROFIEL_ONTWERP_ID && dt.id !== "transformatie");
+  const project = sidecarProject({
+    descriptors,
+    vermeldingen: alleRegelsets(),
+    taalDescriptors: { m3: getDiagramType(PROFIEL_ONTWERP_ID), transformatie: getDiagramType("transformatie") },
+  });
+  downloadJson({ ...project, geexporteerd: new Date().toISOString() }, "omnium-sidecar.studio-project.json");
+  toonMelding({ tekst: `Sidecar-project geëxporteerd: ${descriptors.length} profielen en ${alleRegelsets().length} regelsets. Openen kan met Project → Importeer project….` });
+}
+
 /** Voorbeeld-ontwerp (Ster ◆ Planeet) laden — vervangt de sandbox. */
 async function laadVoorbeeld(useStore) {
   if (
@@ -214,6 +235,7 @@ export default maakDiagramActiviteit({
     { id: "bekijk-profiel", label: "Bekijk bestaand profiel als ontwerp…", run: bekijkBestaandProfiel },
     { id: "bewaar-layout", label: "Bewaar layout als standaard voor dit profiel", run: bewaarLayoutAlsStandaard },
     { id: "voorbeeld", label: "Laad voorbeeld-ontwerp (Ster ◆ Planeet)…", run: laadVoorbeeld },
+    { id: "sidecar", label: "Exporteer het sidecar-project (profielen en transformaties)", run: exporteerSidecarProject },
   ],
   // Zelfde acties onder de rechtermuisknop op een leeg stuk canvas.
   canvasMenuExtra: [

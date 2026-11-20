@@ -9,6 +9,10 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 ## [Unreleased]
 
 ### Toegevoegd
+- **Het sidecar-project** (Mark 18/19-11, PROF-1): *Profiel-ontwerp → Exporteer het sidecar-project* downloadt alle
+  profielen en transformaties van de tool als één project. Open het met *Project → Importeer project…*: per profiel een
+  map met het profiel als model, en een map met de regelsets. Een nieuwe taal *Profiel (M3)* in Modelleren houdt die
+  profielen in je project, en vanuit daar kun je een profiel activeren.
 - **Profiel-ontwerp: de taal is het M3** (Mark 19-11). Wat je van een elementtype, compartiment, veldtype, eigenschap
   of verbindingsregel kunt instellen, komt nu rechtstreeks uit het M3: alle eigenschappen staan in de inspector, met de
   M3-naam (bijvoorbeeld `m3:kleur`, `m3:isAbstract`). Getallen hebben een getalveld, samengestelde waarden een

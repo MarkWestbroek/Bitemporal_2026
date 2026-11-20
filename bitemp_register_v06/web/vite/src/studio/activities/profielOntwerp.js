@@ -604,12 +604,17 @@ const legeLijsten = (obj, sleutels) => {
  * ingebouwde profielen; functies (code) gaan niet mee, die staan alleen ter
  * informatie in het vak "implementatie".
  *
+ * Zonder `prefix` krijgen de knopen een nieuw voorvoegsel per aanroep (de sandbox laadt een
+ * profiel vaker naast zichzelf); mét een vast voorvoegsel zijn de id's stabiel, zodat een
+ * project (het sidecar-project) bij een volgende export dezelfde elementen houdt.
+ *
  * @param {Object} descriptor
+ * @param {{prefix?: string}} [opties]
  * @returns {{elements: Record<string, Object>, diagrams: Record<string, Object>}}
  */
-export function ontwerpUitProfiel(descriptor) {
+export function ontwerpUitProfiel(descriptor, { prefix: vast } = {}) {
   _ontwerpTeller += 1;
-  const prefix = `ow${_ontwerpTeller}`;
+  const prefix = vast || `ow${_ontwerpTeller}`;
   const elements = {};
   const nodes = [];
   let vrijeVeldX = 60;

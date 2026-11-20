@@ -62,19 +62,35 @@ function zoalsGeregistreerd(kern) {
  * @returns {string[]} leeg = de rondreis is exact
  */
 export function rondreisVerschillen(descriptor) {
+  let kern;
+  try {
+    const ontwerp = ontwerpUitProfiel(descriptor);
+    const diagram = Object.values(ontwerp.diagrams)[0] || {};
+    kern = bouwProfielUitOntwerp(
+      { elements: ontwerp.elements, shapeSets: diagram.shapeSets, typeWeergave: diagram.typeWeergave, m3Profiel: diagram.m3Profiel },
+      { id: descriptor.id, label: descriptor.label }
+    );
+  } catch (fout) {
+    return [`DiagramType — niet te bouwen (${String(fout?.message || fout).slice(0, 80)})`];
+  }
+  return verschillenMetKern(descriptor, kern);
+}
+
+/**
+ * De verschillen tussen een geregistreerd profiel en een kern die eruit is teruggebouwd (uit een
+ * ontwerp, of uit het sidecar-project).
+ * @param {any} descriptor
+ * @param {any} kern
+ * @returns {string[]}
+ */
+export function verschillenMetKern(descriptor, kern) {
   const uit = [];
   const voor = vergelijkbaar(descriptor);
   let na;
   try {
-    const ontwerp = ontwerpUitProfiel(descriptor);
-    const diagram = Object.values(ontwerp.diagrams)[0] || {};
-    const kern = bouwProfielUitOntwerp(
-      { elements: ontwerp.elements, shapeSets: diagram.shapeSets, typeWeergave: diagram.typeWeergave, m3Profiel: diagram.m3Profiel },
-      { id: descriptor.id, label: descriptor.label }
-    );
     na = vergelijkbaar(zoalsGeregistreerd(kern));
   } catch (fout) {
-    return [`DiagramType — niet te bouwen (${String(fout?.message || fout).slice(0, 80)})`];
+    return [`DiagramType — niet te registreren (${String(fout?.message || fout).slice(0, 80)})`];
   }
   const sleutels = (klasse, a, b) => {
     for (const sleutel of new Set([...Object.keys(a || {}), ...Object.keys(b || {})])) {

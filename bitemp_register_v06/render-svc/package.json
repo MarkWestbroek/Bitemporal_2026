@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "bouw": "node bouw.mjs",
-    "test": "node bouw.mjs && node --test server.test.mjs profielVersies.test.mjs samenvoegScenario.test.mjs m3Dekking.test.mjs profielRondreis.test.mjs",
+    "test": "node bouw.mjs && node --test server.test.mjs profielVersies.test.mjs samenvoegScenario.test.mjs m3Dekking.test.mjs profielRondreis.test.mjs sidecar.test.mjs",
     "profielversies": "node bouw.mjs && node profielVersies.mjs --bijwerken",
     "profielrondreis": "node bouw.mjs && node profielRondreis.mjs --bijwerken"
   },

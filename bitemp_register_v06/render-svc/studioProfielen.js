@@ -37,6 +37,12 @@ import { registreerStateMachine, STATEMACHINE_ID } from "../web/vite/src/diagram
 import { registreerSysml, SYSML_ID } from "../web/vite/src/diagramprofielen/sysml/index.js";
 import { registreerToegangsregelProfiel, TOEGANGSREGEL_ID } from "../web/vite/src/diagramprofielen/toegangsregel/index.js";
 import { registreerTransformatieProfiel, TRANSFORMATIE_PROFIEL_ID } from "../web/vite/src/diagramprofielen/transformatie/index.js";
+import { registreerProfielOntwerp, PROFIEL_ONTWERP_ID } from "../web/vite/src/studio/activities/m3Profiel.js";
+import "../web/vite/src/studio/activities/regelsetsIngebouwd.js";
+import { alleRegelsets } from "../web/vite/src/transformatie/regelsetCatalogus.js";
+import { sidecarProject } from "../web/vite/src/studio/sidecarProject.js";
+import { bouwProfielUitOntwerp } from "../web/vite/src/studio/activities/profielOntwerp.js";
+import { verschillenMetKern } from "../web/vite/src/studio/activities/profielRondreis.js";
 import { registreerUseCase, USECASE_ID } from "../web/vite/src/diagramprofielen/usecase/index.js";
 import { registreerWsdl, wsdlDiagramType } from "../web/vite/src/diagramprofielen/wsdl/index.js";
 import { registreerXsd, xsdDiagramType } from "../web/vite/src/diagramprofielen/xsd/index.js";
@@ -68,6 +74,7 @@ const PROFIELEN = [
   ["sysml05", registreerSysml, SYSML_ID],
   ["toegangsregels", registreerToegangsregelProfiel, TOEGANGSREGEL_ID],
   ["transformatie05", registreerTransformatieProfiel, TRANSFORMATIE_PROFIEL_ID],
+  ["m3Profiel05", registreerProfielOntwerp, PROFIEL_ONTWERP_ID],
   ["usecase05", registreerUseCase, USECASE_ID],
   ["wsdl05", registreerWsdl, wsdlDiagramType.id],
   ["xsd05", registreerXsd, xsdDiagramType.id],
@@ -103,6 +110,36 @@ export function profielVersieOverzicht() {
  */
 export function profielRondreisStand() {
   return rondreisStand([...typeIds.values()].map((id) => getDiagramType(id)));
+}
+
+/**
+ * Het sidecar-project (PROF-1): alle profielen in de M3-taal en alle regelsets, als één werkbestand
+ * (studio/sidecarProject.js). De M3-taal en het profiel Transformatie zelf staan er niet als
+ * profiel in; zij zijn de talen waarin de rest geschreven is.
+ */
+export function sidecarVanAlles() {
+  const descriptors = [...typeIds.values()].filter((id) => id !== PROFIEL_ONTWERP_ID && id !== TRANSFORMATIE_PROFIEL_ID).map((id) => getDiagramType(id));
+  return sidecarProject({ descriptors, vermeldingen: alleRegelsets(), taalDescriptors: { m3: getDiagramType(PROFIEL_ONTWERP_ID), transformatie: getDiagramType(TRANSFORMATIE_PROFIEL_ID) } });
+}
+
+/**
+ * Wat elk profiel verliest als je hem uit het sidecar-project terugbouwt: per profiel-id de
+ * verschillen (profielRondreis.js). Leeg op de code na = het project draagt het profiel.
+ * @returns {Record<string, string[]>}
+ */
+export function sidecarVerschillen(project = sidecarVanAlles()) {
+  const m3 = project.profielen.m3Profiel05;
+  const uit = {};
+  for (const [pid, typeId] of typeIds) {
+    if (typeId === PROFIEL_ONTWERP_ID || typeId === TRANSFORMATIE_PROFIEL_ID) continue;
+    const descriptor = getDiagramType(typeId);
+    const diagram = Object.values(m3.diagrams).find((d) => d.naam === (descriptor.label || descriptor.id));
+    const op = new Set(diagram.nodes.map((n) => n.elementId));
+    const elements = Object.fromEntries(Object.entries(m3.elements).filter(([id, el]) => op.has(id) || (op.has(el.source) && op.has(el.target))));
+    const kern = bouwProfielUitOntwerp({ elements, shapeSets: diagram.shapeSets, typeWeergave: diagram.typeWeergave, m3Profiel: diagram.m3Profiel }, { id: descriptor.id, label: descriptor.label });
+    uit[pid] = verschillenMetKern(descriptor, kern);
+  }
+  return uit;
 }
 
 /** De descriptor van een profiel-id uit een project, of undefined. */
