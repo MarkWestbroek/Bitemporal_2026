@@ -1,94 +1,51 @@
 // @ts-check
 /**
- * regelsetModel — een regelset als **modelelement** (TRANS-1, docs/TRANSFORMATIES.md §9.8).
+ * regelsetModel — een regelset als **model** in het profiel Transformatie (TRANS-1,
+ * docs/TRANSFORMATIES.md §9.8).
  *
- * Besluit Mark 18-11: transformaties worden modelelementen in het profielenproject, naast de
- * profielen (M2) waartussen ze afbeelden. Dan komen opslag op de server, samenwerken, historie
- * en branches vanzelf mee, net als bij een profiel (PROF-1). Het JSON-bestand blijft de
+ * Besluit Mark 18/19-11: transformaties worden modelelementen in het sidecar-project, naast de
+ * profielen (M2) waartussen ze afbeelden; het metamodel van een transformatie is zelf een M2
+ * (`diagramprofielen/transformatie/`), geen deel van het M3. Het JSON-bestand blijft de
  * uitwisselvorm; dit bestand is de afbeelding tussen die twee, heen en terug zonder verlies.
  *
- * Eén element per regelset, van het type «transformatie» (`transformatieDef`) in het
- * profiel-ontwerp:
+ * Een regelset wordt:
  *
- *   data                         de kop: code (= regelset-id), versie, bron, doel, richting, schrijver
- *   compartiment "regels"        één veld per regel, **in volgorde** (volgorde = prioriteit)
- *   compartiment "instellingen"  één veld per instelling: wat een schrijver leest (de stand)
+ *   element «transformatie»      naam = titel; data: code (= regelset-id), versie, richting, schrijver
+ *     compartiment "regels"        één veld per regel, **in volgorde** (volgorde = prioriteit)
+ *     compartiment "instellingen"  één veld per instelling: wat een schrijver leest (de stand)
+ *   element «taal» of «formaat»  de bron en het doel; de naam is het id van het profiel of de
+ *                                naam van het formaat. Gedeeld: twee regelsets met dezelfde bron
+ *                                wijzen naar hetzelfde element.
+ *   connector "van" en "naar"    bron → transformatie → doel
  *
  * Een regel is een veld en geen eigen element: hij betekent niets zonder zijn plaats in de
  * volgorde (§9.1). De voorwaarden (`als`) en de actie (`dan`) blijven JSON in een tekstveld,
  * dezelfde JSON als in het bestand, met dezelfde validator.
  *
- * Lezers, schrijvers en de toepasser blijven code; het element wijst de schrijver aan op naam.
- *
  * Puur en store-loos.
  */
+import {
+  TRANSFORMATIE_TYPE,
+  TAAL_TYPE,
+  FORMAAT_TYPE,
+  VAN_TYPE,
+  NAAR_TYPE,
+  REGEL_VELDTYPE,
+  INSTELLING_VELDTYPE,
+  COMP_REGELS,
+  COMP_INSTELLINGEN,
+} from "../diagramprofielen/transformatie/index.js";
 
-export const TRANSFORMATIE_TYPE = "transformatieDef";
-export const REGEL_VELDTYPE = "regelDef";
-export const INSTELLING_VELDTYPE = "instellingDef";
-const COMP_REGELS = "regels";
-const COMP_INSTELLINGEN = "instellingen";
+export { TRANSFORMATIE_TYPE };
 
 const ACTIES = ["maak", "zet", "negeer"];
 const REGEL_SLEUTELS = ["naam", "bij", "als", ...ACTIES, "meld"];
 const KOP = ["id", "versie", "titel", "bron", "doel", "regels"];
 
-/** De veldtypen die het profiel-ontwerp erbij krijgt. */
-export const TRANSFORMATIE_FIELDTYPES = [
-  {
-    id: REGEL_VELDTYPE,
-    viewer: "naam-type",
-    properties: [
-      { key: "naam", datatype: "string", verplicht: true },
-      // Alleen weergave ("knoop → actor"); afgeleid uit bij en dan, telt niet mee bij het teruglezen.
-      { key: "typeLabel", label: "samenvatting (afgeleid)", datatype: "string" },
-      { key: "bij", label: "bij (knoop/groep/verbinding)", datatype: "string" },
-      { key: "als", label: "als: voorwaarden (JSON)", datatype: "tekst" },
-      { key: "actie", label: "actie (maak/zet/negeer)", datatype: "string" },
-      { key: "dan", label: "dan: wat de actie maakt of zet (JSON)", datatype: "tekst" },
-      { key: "meld", label: "interpretatie melden", datatype: "boolean" },
-      { key: "overig", label: "overige sleutels van de regel (JSON)", datatype: "tekst" },
-    ],
-  },
-  {
-    id: INSTELLING_VELDTYPE,
-    viewer: "naam-type",
-    properties: [
-      { key: "naam", label: "sleutel", datatype: "string", verplicht: true },
-      { key: "typeLabel", label: "samenvatting (afgeleid)", datatype: "string" },
-      { key: "waarde", label: "waarde (JSON)", datatype: "tekst" },
-    ],
-  },
-];
-
-/** Het elementtype «transformatie» voor het profiel-ontwerp. */
-export const TRANSFORMATIE_ELEMENTTYPE = {
-  id: TRANSFORMATIE_TYPE,
-  label: "Transformatie",
-  omschrijving: "Een regelset: de afbeelding tussen twee talen, of tussen een taal en een extern formaat. De regels staan in volgorde; de eerste die past wint.",
-  kort: "TR",
-  stereotype: "«transformatie»",
-  shape: "class-box",
-  kleur: "#fecdd3",
-  icoon: "elementtype",
-  properties: [
-    { key: "code", label: "code (id van de regelset)", datatype: "string" },
-    { key: "versie", label: "versie", datatype: "string" },
-    { key: "versieIsGetal", label: "versie is een getal (1, 2, …) en geen tekst (0.8.1)", datatype: "boolean" },
-    { key: "richting", label: "richting (import/export/inrichting)", datatype: "string" },
-    { key: "bron", label: "bron (profiel of formaat)", datatype: "string" },
-    { key: "doel", label: "doel (profiel of formaat)", datatype: "string" },
-    { key: "schrijver", label: "schrijver (de motor waarvan de instellingen de stand zijn)", datatype: "string" },
-  ],
-  compartments: [
-    { id: COMP_REGELS, label: "regels", fieldType: REGEL_VELDTYPE },
-    { id: COMP_INSTELLINGEN, label: "instellingen", fieldType: INSTELLING_VELDTYPE },
-  ],
-};
-
 const isObject = (w) => !!w && typeof w === "object" && !Array.isArray(w);
 const json = (waarde) => JSON.stringify(waarde, null, 2);
 const kort = (tekst, max = 60) => (tekst.length > max ? `${tekst.slice(0, max - 1)}…` : tekst);
+const slug = (tekst) => String(tekst).toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "") || "x";
 
 /** "knoop → actor", "verbinding → zet op doel", "groep → negeer". */
 function regelSamenvatting(regel) {
@@ -122,8 +79,13 @@ function regelNaarVeld(regel) {
   };
 }
 
+/** Het id van het element «transformatie» voor een regelset. */
+export const transformatieId = (regelsetId) => `tr_${slug(regelsetId)}`;
+const eindpuntId = (naam) => `tre_${slug(naam)}`;
+
 /**
- * Regelset → element. `opties` zijn de gegevens die de catalogus naast de regelset bijhoudt.
+ * Regelset → het element «transformatie» (zonder bron en doel; die zijn eigen elementen, zie
+ * `regelsetsNaarModel`). `opties` zijn de gegevens die de catalogus naast de regelset bijhoudt.
  *
  * @param {any} regelset
  * @param {{id?: string, richting?: string, schrijver?: string|null}} [opties]
@@ -131,7 +93,7 @@ function regelNaarVeld(regel) {
 export function regelsetNaarElement(regelset, { id, richting, schrijver } = {}) {
   const instellingen = Object.entries(regelset || {}).filter(([sleutel]) => !KOP.includes(sleutel));
   return {
-    id: id || `tr_${regelset.id}`,
+    id: id || transformatieId(regelset.id),
     naam: regelset.titel || regelset.id,
     elementType: TRANSFORMATIE_TYPE,
     compartimenten: [
@@ -143,27 +105,87 @@ export function regelsetNaarElement(regelset, { id, richting, schrijver } = {}) 
     data: {
       code: regelset.id,
       versie: String(regelset.versie ?? ""),
-      // Een versie die een getal was, komt als getal terug (zie elementNaarRegelset).
+      // Een versie die een getal was, komt als getal terug (zie modelNaarRegelset).
       ...(typeof regelset.versie === "number" ? { versieIsGetal: true } : {}),
       ...(richting ? { richting } : {}),
-      ...(regelset.bron !== undefined ? { bron: regelset.bron } : {}),
-      ...(regelset.doel !== undefined ? { doel: regelset.doel } : {}),
       ...(schrijver ? { schrijver } : {}),
     },
   };
 }
 
+/** Geschatte hoogte van het element op het canvas: kop plus een regel per veld. */
+const hoogteVan = (element) => 90 + 22 * element.compartimenten.reduce((n, c) => n + 1 + c.velden.length, 0);
+
 /**
- * Element → regelset. Wat niet te lezen is (kapotte JSON, een regel zonder actie) komt als
- * melding terug en wordt nooit stil weggelaten; `regelset` is dan `null`.
+ * Een rij vermeldingen uit de catalogus als model: `{ elements, nodes }`.
  *
+ * Elke bron en elk doel wordt één element: «taal» als de naam een profiel is (`isProfiel`),
+ * anders «formaat». Op het diagram staat per richting een rij transformaties, met de bronnen
+ * links en de doelen rechts van het geheel.
+ *
+ * @param {{regelset: any, richting?: string, schrijver?: string|null}[]} vermeldingen
+ * @param {{isProfiel?: (naam: string) => boolean, achtervoegsel?: string}} [opties] -
+ *   `achtervoegsel` maakt de id's uniek als hetzelfde model vaker naast elkaar geladen wordt
+ */
+export function regelsetsNaarModel(vermeldingen, { isProfiel = () => false, achtervoegsel = "" } = {}) {
+  /** @type {Record<string, any>} */
+  const elements = {};
+  const nodes = [];
+  /** @type {Map<string|undefined, any[]>} */
+  const rijen = new Map();
+  const eindpunt = (naam) => {
+    const id = `${eindpuntId(naam)}${achtervoegsel}`;
+    if (!elements[id]) elements[id] = { id, naam, elementType: isProfiel(naam) ? TAAL_TYPE : FORMAAT_TYPE, compartimenten: [], data: {} };
+    return id;
+  };
+  const bronnen = [];
+  const doelen = [];
+  for (const v of vermeldingen || []) {
+    const r = v.regelset;
+    const element = regelsetNaarElement(r, { id: `${transformatieId(r.id)}${achtervoegsel}`, richting: v.richting, schrijver: v.schrijver });
+    elements[element.id] = element;
+    rijen.set(v.richting, [...(rijen.get(v.richting) || []), element]);
+    if (r.bron !== undefined) {
+      const bron = eindpunt(r.bron);
+      if (!bronnen.includes(bron)) bronnen.push(bron);
+      elements[`${element.id}__van`] = { id: `${element.id}__van`, naam: "", elementType: VAN_TYPE, source: bron, target: element.id, compartimenten: [], data: {} };
+    }
+    if (r.doel !== undefined) {
+      const doel = eindpunt(r.doel);
+      if (!doelen.includes(doel)) doelen.push(doel);
+      elements[`${element.id}__naar`] = { id: `${element.id}__naar`, naam: "", elementType: NAAR_TYPE, source: element.id, target: doel, compartimenten: [], data: {} };
+    }
+  }
+  const X0 = 360;
+  let y = 60;
+  let breedst = 0;
+  for (const rij of rijen.values()) {
+    rij.forEach((element, kolom) => nodes.push({ elementId: element.id, position: { x: X0 + kolom * 380, y } }));
+    breedst = Math.max(breedst, rij.length);
+    y += Math.max(...rij.map(hoogteVan)) + 80;
+  }
+  // Een eindpunt dat zowel bron als doel is, staat links.
+  bronnen.forEach((id, i) => nodes.push({ elementId: id, position: { x: 40, y: 60 + i * 90 } }));
+  doelen.filter((id) => !bronnen.includes(id)).forEach((id, i) => nodes.push({ elementId: id, position: { x: X0 + breedst * 380 + 40, y: 60 + i * 90 } }));
+  return { elements, nodes };
+}
+
+/**
+ * Het element «transformatie» → regelset. `elements` is het model eromheen: de bron en het doel
+ * komen uit de connectoren "van" en "naar". Wat niet te lezen is (kapotte JSON, een regel zonder
+ * actie, twee bronnen) komt als melding terug en wordt nooit stil weggelaten; `regelset` is dan
+ * `null`.
+ *
+ * @param {any} element
+ * @param {Record<string, any>} [elements]
  * @returns {{regelset: any|null, richting: string|null, schrijver: string|null, fouten: string[]}}
  */
-export function elementNaarRegelset(element) {
+export function modelNaarRegelset(element, elements = {}) {
   const fouten = [];
   const data = element?.data || {};
+  const wie = `Transformatie "${element?.naam || element?.id || ""}"`;
   if (element?.elementType !== TRANSFORMATIE_TYPE) fouten.push(`"${element?.naam || element?.id}" is geen transformatie.`);
-  if (!data.code) fouten.push(`Transformatie "${element?.naam || ""}": code (het id van de regelset) ontbreekt.`);
+  if (!data.code) fouten.push(`${wie}: code (het id van de regelset) ontbreekt.`);
 
   const leesJson = (tekst, waar) => {
     try {
@@ -174,12 +196,21 @@ export function elementNaarRegelset(element) {
     }
   };
   const comp = (soort) => (element?.compartimenten || []).find((c) => c.compartmentType === soort);
+  const eindpunt = (type, eigen, ander, woord) => {
+    const lijnen = Object.values(elements).filter((c) => c.elementType === type && c[eigen] === element?.id);
+    if (lijnen.length > 1) fouten.push(`${wie}: meer dan één ${woord}.`);
+    const el = lijnen.length ? elements[lijnen[0][ander]] : null;
+    if (lijnen.length && !el) fouten.push(`${wie}: de ${woord} bestaat niet meer.`);
+    return el ? el.naam : undefined;
+  };
 
   const regelset = { id: data.code };
   if (data.versie !== undefined && data.versie !== "") regelset.versie = data.versieIsGetal ? Number(data.versie) : data.versie;
   regelset.titel = element?.naam;
-  if (data.bron !== undefined) regelset.bron = data.bron;
-  if (data.doel !== undefined) regelset.doel = data.doel;
+  const bron = eindpunt(VAN_TYPE, "target", "source", "bron");
+  const doel = eindpunt(NAAR_TYPE, "source", "target", "doel");
+  if (bron !== undefined) regelset.bron = bron;
+  if (doel !== undefined) regelset.doel = doel;
 
   for (const veld of comp(COMP_INSTELLINGEN)?.velden || []) {
     const waar = `Instelling "${veld.naam}"`;
@@ -207,31 +238,4 @@ export function elementNaarRegelset(element) {
   }
 
   return { regelset: fouten.length ? null : regelset, richting: data.richting || null, schrijver: data.schrijver || null, fouten };
-}
-
-/** Geschatte hoogte van het element op het canvas: kop plus een regel per veld. */
-const hoogteVan = (element) => 90 + 22 * element.compartimenten.reduce((n, c) => n + 1 + c.velden.length, 0);
-
-/**
- * Een rij vermeldingen uit de catalogus als ontwerp: `{ elements, nodes }`, per richting een rij.
- * Een rij is zo hoog als zijn langste regelset, zodat de rijen elkaar niet overlappen.
- *
- * @param {{regelset: any, richting?: string, schrijver?: string|null}[]} vermeldingen
- */
-export function ontwerpUitRegelsets(vermeldingen) {
-  const elements = {};
-  const nodes = [];
-  /** @type {Map<string|undefined, any[]>} */
-  const rijen = new Map();
-  for (const v of vermeldingen || []) {
-    const element = regelsetNaarElement(v.regelset, { richting: v.richting, schrijver: v.schrijver });
-    elements[element.id] = element;
-    rijen.set(v.richting, [...(rijen.get(v.richting) || []), element]);
-  }
-  let y = 60;
-  for (const rij of rijen.values()) {
-    rij.forEach((element, kolom) => nodes.push({ elementId: element.id, position: { x: 60 + kolom * 380, y } }));
-    y += Math.max(...rij.map(hoogteVan)) + 80;
-  }
-  return { elements, nodes };
 }

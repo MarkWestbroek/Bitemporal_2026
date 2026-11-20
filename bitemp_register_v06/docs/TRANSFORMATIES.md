@@ -621,7 +621,30 @@ Regelsets zijn nu `.js`-bestanden in de broncode. Dit is het ontwerp om ze te
 bekijken, te testen en te bewerken, en om ze later vast te leggen. Het zijn
 **twee verschillende dingen** die elkaar op één punt raken.
 
-### 9.0 Een transformatie is M2, geen M1 (aanscherping 2026-10-20)
+### 9.0 De niveaus van een transformatie (aanscherping 2026-10-20, rechtgezet 2026-11-19)
+
+**Rechtgezet (Mark 19-11).** De tekst hieronder zei "een regelset is M2". Dat haalt twee dingen
+door elkaar: waar een regelset *over gaat* en waar hij *in geschreven* is.
+
+| Wat | Niveau | Waar |
+|---|---|---|
+| de taal waarin je een regelset schrijft (Transformatie, Regel, Instelling, Taal, Formaat) | **M2**: een profiel, zoals elk ander | `diagramprofielen/transformatie/` |
+| een concrete regelset (Mermaid → use case) | een **model** in die taal; hij verwijst naar elementtypen van andere profielen | het sidecar-project, als kruisverband naar die profielen |
+| wat hij omzet | een M1 naar een M1, of een M0 naar een M0; de regels toetsen op "een knoop met deze eigenschappen" | de proefbron, de map waarop je hem toepast |
+
+Het metamodel van een transformatie hoort dus **niet in het M3**. Het M3 beschrijft talen; dit
+*is* een taal. QVT doet hetzelfde: het QVT-metamodel is een model in MOF, geen onderdeel van MOF.
+Dat het profiel veel haken naar de code heeft (lezers, schrijvers, de toepasser) verandert het
+niveau niet: canoniek-uml heeft er ook veel.
+
+Het profiel Transformatie is **optioneel**. Zonder een modelleerprofiel kun je niets modelleren;
+zonder dit profiel kun je niet transformeren, maar wel modelleren. Een eenvoudige inrichting van
+de tool laat het weg, een inrichting voor de Common Ground-stack neemt het mee met al zijn
+regelsets.
+
+Wat hieronder staat blijft gelden: een regelset leunt op de profielen waartussen hij afbeeldt en
+leeft daarom op dezelfde plek.
+
 
 Een regelset is een afbeelding tussen twee **talen** — profiel ↔ profiel, of
 profiel ↔ extern formaat. Ze zegt niets over een concreet model, maar hoe *elk*
@@ -750,7 +773,7 @@ de M2's (het profielenproject van PROF-1), naast de profielen waartussen ze afbe
 JSON-bestand blijft de uitwisselvorm, niet de bewaarplek. De volgorde wordt daarmee:
 
 1. Live view als lezer. **Gebouwd, §9.6.**
-2. Een M2 voor transformaties en de omzetting regelset ↔ modelelement. **Gebouwd, §9.8.**
+2. Een M2 voor transformaties (het profiel Transformatie) en de omzetting regelset ↔ model. **Gebouwd, §9.8.**
 3. Het profielenproject (PROF-1 stap 1): de ingebouwde profielen en hun regelsets daarheen
    exporteren.
 4. De catalogus laadt uit dat project; de transformaties halen hun regelset uit de catalogus in
@@ -874,21 +897,30 @@ over de bron, maar een doel met gaten die uit de bron gevuld worden (Mark: "van 
 voor"). Dat is een derde soort naast regels en schrijverinstellingen: een **sjabloon**. Kandidaat
 voor de gaten is JSONata (JSON → JSON, draait in de browser); nog niet geprobeerd.
 
-### 9.8 Een transformatie als modelelement (2026-11-18)
+### 9.8 Een regelset als model in het profiel Transformatie (2026-11-18, omgezet 2026-11-19)
 
-Besluit Mark 18-11: een regelset is een modelelement in het profielenproject. Dat is M1-opslag
-van M2-inhoud, precies zoals een getekend profiel in het Profiel-ontwerp: het element beschrijft
-een afbeelding tussen talen, en de Studio bewaart, synchroniseert en vertakt het als elk ander
-element.
+Besluit Mark 18-11: een regelset is een modelelement in het sidecar-project. Besluit Mark 19-11:
+de taal daarvoor is een eigen profiel (M2), niet een elementtype in het Profiel-ontwerp (dat is
+de M3-taal; zie §9.0). De eerste versie van 18-11 had het type in het Profiel-ontwerp gezet; dat
+is teruggedraaid.
 
-Het Profiel-ontwerp heeft er een elementtype bij, **«transformatie»** (`transformatieDef`), met
-twee veldtypen. De definitie en de omzetting staan in `transformatie/regelsetModel.js` (puur):
+Het profiel **Transformatie** (`diagramprofielen/transformatie/`, activiteit `transformatie05`):
+
+| Elementtype | Wat |
+|---|---|
+| «transformatie» | de regelset: compartiment **regels** (in volgorde) en **instellingen** |
+| «taal» | een profiel als bron of doel; de naam is het id van het profiel |
+| «formaat» | een extern formaat als bron of doel (Mermaid, XML, Turtle, JSON) |
+| *van*, *naar* | bron → transformatie → doel |
+
+De omzetting staat in `transformatie/regelsetModel.js` (puur):
 
 | Deel van de regelset | In het model |
 |---|---|
-| titel | de naam van het element |
-| id, versie, bron, doel | eigenschappen `code`, `versie` (+ `versieIsGetal`), `bron`, `doel` |
+| titel | de naam van het element «transformatie» |
+| id, versie | eigenschappen `code`, `versie` (+ `versieIsGetal`) |
 | richting, schrijver (uit de catalogus) | eigenschappen `richting`, `schrijver` |
+| bron, doel | een eigen element «taal» of «formaat» met een connector *van* of *naar*; twee regelsets met dezelfde bron delen dat element |
 | `regels` | compartiment **regels**: één veld per regel, in volgorde. Per veld `bij`, `als` (JSON), `actie` (maak/zet/negeer), `dan` (JSON van de maak of zet), `meld` |
 | elke andere sleutel (de stand van een schrijver, `enveloppen`) | compartiment **instellingen**: één veld per sleutel, met de waarde als JSON |
 
@@ -896,27 +928,33 @@ twee veldtypen. De definitie en de omzetting staan in `transformatie/regelsetMod
   prioriteit. Het samenvoegen per veld van een branch werkt daarmee per regel.
 - **`als` en `dan` blijven JSON** in een tekstveld: dezelfde JSON als in het bestand, met
   dezelfde validator. Ze verder uitsplitsen naar velden is een latere stap van de bewerker.
-- **Heen en terug zonder verlies**: `regelsetNaarElement` en `elementNaarRegelset`. De test
+- **Taal of formaat**: een bron of doel waarvan de naam het id van een geregistreerd profiel is,
+  wordt een «taal»; de rest een «formaat». Een samengestelde bron ("canoniek-uml (V3) +
+  e-dienst") is nu één formaat met die naam; uitsplitsen naar meerdere bronnen volgt met het
+  bereik van §4.
+- **Heen en terug zonder verlies**: `regelsetsNaarModel` en `modelNaarRegelset`. De test
   `regelsetModel.test.js` eist dat voor alle ingebouwde regelsets, ook na een gang door JSON.
-  Wat niet te lezen is (kapotte JSON, een regel zonder actie) komt als fout terug en levert geen
-  regelset op; er wordt niets stil weggelaten.
+  Wat niet te lezen is (kapotte JSON, een regel zonder actie, twee bronnen) komt als fout terug
+  en levert geen regelset op; er wordt niets stil weggelaten.
 - **Code blijft code**: lezers, schrijvers en de toepasser. Het element wijst de schrijver aan op
   naam; het schema van zijn instellingen hoort bij de schrijver (§9.7) en reist niet mee.
 
-In de Studio (activiteit *Profiel-ontwerp*, menu *Ontwerp*):
+In de Studio (profiel *Transformatie* in Modelleren, menu *Transformatie*):
 
-- **Bekijk de transformaties als ontwerp** zet alle regelsets uit de catalogus op een diagram
-  *Transformaties*, per richting een rij.
+- **Laad de ingebouwde regelsets** zet alle regelsets uit de catalogus op een nieuw diagram, per
+  richting een rij, met de bronnen links en de doelen rechts.
 - **Meld de transformaties van dit diagram aan** leest de elementen terug en meldt ze aan bij de
-  catalogus met vindplaats `ontwerp`. De activiteit *Transformaties* toont en proefdraait dan de
+  catalogus met vindplaats `model`. De activiteit *Transformaties* toont en proefdraait dan de
   getekende versie; de proefbron en het schema van de ingebouwde regelset met dezelfde code
-  blijven staan. Dit geldt tot een herlaad, want het Profiel-ontwerp bewaart zijn inhoud niet.
+  blijven staan. De aanmelding geldt tot een herlaad.
 
-**Nog niet:** `bron` en `doel` zijn tekst en geen verwijzing naar een profiel. In het
-profielenproject worden dat kruisverbanden tussen de transformatie en de twee profielen (PROF-1:
-een profiel is daar een map). De transformaties zelf draaien nog op de regelset uit de code
-(stap 4); aanmelden verandert dus alleen wat de view toont en proefdraait. Bewaren vraagt het
-profielenproject (stap 3).
+Omdat het een gewoon modelleerprofiel is, **bewaart** de Studio een regelset nu als elk ander
+model: in het project, met sync, historie en branches.
+
+**Nog niet:** een «taal» is een element met de naam van het profiel, nog geen kruisverband naar
+het profiel zelf; dat komt met het sidecar-project (PROF-1), waar een profiel ook een model is.
+De transformaties zelf draaien nog op de regelset uit de code (§9.5 stap 4); aanmelden verandert
+dus alleen wat de view toont en proefdraait.
 
 ## 10. BPMN 2.0 XML en DMN XML → eigen model (2026-10-10)
 

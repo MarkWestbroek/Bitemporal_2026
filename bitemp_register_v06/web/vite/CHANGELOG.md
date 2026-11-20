@@ -15,10 +15,12 @@ De single source of truth voor het nummer is `package.json` `"version"`.
   DMN-XML) of op een map uit je project (use case-model) en laat per regel zien welke bron-items hij pakte, welke
   regels niets raakten en welke items bij geen regel landden. Er wordt niets in je model geschreven. Bewerken
   kan nog niet. De lijst is ingedeeld in *Import*, *Export* en *Inrichting*.
-- **Een transformatie als modelelement** (Mark 18-11, TRANS-1): in het *Profiel-ontwerp* is een regelset nu een
-  element «transformatie», met zijn regels in volgorde. *Ontwerp → Bekijk de transformaties als ontwerp* zet ze op
-  een diagram; *Ontwerp → Meld de transformaties van dit diagram aan* geeft je getekende versie aan *Transformaties*,
-  waar je haar ziet en proefdraait. Bewaren kan nog niet: dat komt met het profielenproject.
+- **Profiel Transformatie: een regelset als model** (Mark 18/19-11, TRANS-1). Een nieuw profiel in Modelleren, de
+  taal waarin je een regelset schrijft: een element «transformatie» met zijn regels in volgorde, tussen een bron en
+  een doel (een taal of een formaat). *Transformatie → Laad de ingebouwde regelsets* zet de elf regelsets op een
+  diagram; *Meld de transformaties van dit diagram aan* geeft je getekende versie aan *Transformaties*, waar je haar
+  ziet en proefdraait. Een regelset in dit profiel bewaart de Studio als elk ander model. De transformaties zelf
+  draaien nog op de regelset uit de code.
 - **ODRL importeren in Toegangverlening** (Mark 18-11): *Beleid → Importeer ODRL (Turtle)…* leest een beleid in
   ODRL-AP-NL terug als klare taal, en *Exporteer ODRL (Turtle, ODRL-AP-NL)…* schrijft het zo weg (tot nu toe kon dat
   alleen met een script). Een export uit de Studio komt letterlijk terug: het bestand draagt de klare taal mee, en

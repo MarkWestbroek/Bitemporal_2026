@@ -36,6 +36,7 @@ import { registreerSequence, SEQUENCE_ID } from "../web/vite/src/diagramprofiele
 import { registreerStateMachine, STATEMACHINE_ID } from "../web/vite/src/diagramprofielen/statemachine/index.js";
 import { registreerSysml, SYSML_ID } from "../web/vite/src/diagramprofielen/sysml/index.js";
 import { registreerToegangsregelProfiel, TOEGANGSREGEL_ID } from "../web/vite/src/diagramprofielen/toegangsregel/index.js";
+import { registreerTransformatieProfiel, TRANSFORMATIE_PROFIEL_ID } from "../web/vite/src/diagramprofielen/transformatie/index.js";
 import { registreerUseCase, USECASE_ID } from "../web/vite/src/diagramprofielen/usecase/index.js";
 import { registreerWsdl, wsdlDiagramType } from "../web/vite/src/diagramprofielen/wsdl/index.js";
 import { registreerXsd, xsdDiagramType } from "../web/vite/src/diagramprofielen/xsd/index.js";
@@ -66,6 +67,7 @@ const PROFIELEN = [
   ["statemachine05", registreerStateMachine, STATEMACHINE_ID],
   ["sysml05", registreerSysml, SYSML_ID],
   ["toegangsregels", registreerToegangsregelProfiel, TOEGANGSREGEL_ID],
+  ["transformatie05", registreerTransformatieProfiel, TRANSFORMATIE_PROFIEL_ID],
   ["usecase05", registreerUseCase, USECASE_ID],
   ["wsdl05", registreerWsdl, wsdlDiagramType.id],
   ["xsd05", registreerXsd, xsdDiagramType.id],

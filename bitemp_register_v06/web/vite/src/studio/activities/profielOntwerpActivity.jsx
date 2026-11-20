@@ -14,9 +14,6 @@
  * - Elk diagram stelt hier een profiel voor: menu's en dialogen zeggen
  *   daarom "profiel" (diagramTerm).
  */
-import "./regelsetsIngebouwd.js";
-import { alleRegelsets, getRegelsetVermelding, registreerRegelset } from "../../transformatie/regelsetCatalogus.js";
-import { elementNaarRegelset, ontwerpUitRegelsets, TRANSFORMATIE_TYPE } from "../../transformatie/regelsetModel.js";
 import { IconProfielOntwerp05 } from "../icons";
 import useStudioStore from "../useStudioStore";
 import { vervangDiagramType, getDiagramType, alleDiagramTypes } from "../../diagramcore/types/typeRegistry.js";
@@ -148,55 +145,6 @@ function bewaarLayoutAlsStandaard(useStore) {
   toonMelding({ tekst: `Layout bewaard als standaard voor profiel "${m[1]}".` });
 }
 
-/**
- * Alle regelsets uit de catalogus als één extra ontwerp-diagram: elke transformatie een element
- * «transformatie», met zijn regels in volgorde (TRANS-1, transformatie/regelsetModel.js).
- */
-function bekijkTransformaties(useStore) {
-  const ontwerp = ontwerpUitRegelsets(alleRegelsets());
-  // Elke keer nieuwe element-id's: het diagram kan vaker geladen worden naast een eerder exemplaar.
-  const achter = `_${Date.now()}`;
-  useStore.getState().addDiagram({ id: `ontw_transformaties${achter}`, naam: "Transformaties", diagramType: PROFIEL_ONTWERP_ID });
-  const dId = useStore.getState().actiefDiagramId;
-  for (const el of Object.values(ontwerp.elements)) useStore.getState().addElement({ ...el, id: `${el.id}${achter}` });
-  for (const n of ontwerp.nodes) useStore.getState().addElementToDiagram(dId, `${n.elementId}${achter}`, n.position);
-}
-
-/**
- * De transformaties op het actieve diagram aanmelden bij de catalogus (vindplaats "ontwerp"):
- * de activiteit Transformaties toont en proefdraait dan de getekende versie. De proefbron en het
- * schema van de ingebouwde regelset met dezelfde code blijven staan. Geldt tot een herlaad.
- */
-function meldTransformatiesAan(useStore) {
-  const st = useStore.getState();
-  const opDiagram = new Set((st.diagrams?.[st.actiefDiagramId]?.nodes || []).map((n) => n.elementId));
-  const elementen = Object.values(st.elements).filter((el) => el.elementType === TRANSFORMATIE_TYPE && opDiagram.has(el.id));
-  if (!elementen.length) {
-    toonMelding({ tekst: "Op dit diagram staat geen transformatie." });
-    return;
-  }
-  const fouten = [];
-  let aantal = 0;
-  for (const el of elementen) {
-    const uit = elementNaarRegelset(el);
-    if (!uit.regelset) {
-      fouten.push(...uit.fouten);
-      continue;
-    }
-    const was = getRegelsetVermelding(uit.regelset.id);
-    registreerRegelset(uit.regelset, {
-      vindplaats: "ontwerp",
-      bestand: null,
-      proef: was?.proef || null,
-      richting: uit.richting || was?.richting || "export",
-      schema: was?.schema || null,
-      schrijver: uit.schrijver || was?.schrijver || null,
-    });
-    aantal += 1;
-  }
-  toonMelding({ tekst: fouten.length ? `${aantal} aangemeld; niet gelukt: ${fouten.join(" ")}` : `${aantal} transformatie(s) aangemeld bij de catalogus (vindplaats: ontwerp).` });
-}
-
 /** Voorbeeld-ontwerp (Ster ◆ Planeet) laden — vervangt de sandbox. */
 async function laadVoorbeeld(useStore) {
   if (
@@ -258,8 +206,6 @@ export default maakDiagramActiviteit({
     { id: "activeer", label: "Activeer profiel… (registreer/ververs)", run: activeerProfiel },
     { id: "bekijk-profiel", label: "Bekijk bestaand profiel als ontwerp…", run: bekijkBestaandProfiel },
     { id: "bewaar-layout", label: "Bewaar layout als standaard voor dit profiel", run: bewaarLayoutAlsStandaard },
-    { id: "bekijk-transformaties", label: "Bekijk de transformaties als ontwerp", run: bekijkTransformaties },
-    { id: "meld-transformaties", label: "Meld de transformaties van dit diagram aan", run: meldTransformatiesAan },
     { id: "voorbeeld", label: "Laad voorbeeld-ontwerp (Ster ◆ Planeet)…", run: laadVoorbeeld },
   ],
   // Zelfde acties onder de rechtermuisknop op een leeg stuk canvas.
