@@ -7,7 +7,7 @@ import { toegangsspraakNaarOdrl } from "./odrlExport.js";
 /** De knopen van de ODRL-export (ODRL-AP-NL) op naam; `lijst` maakt van één of meer waarden een lijst van namen. */
 const odrlKnopen = (beleid) => Object.fromEntries(toegangsspraakNaarOdrl(beleid).jsonld["@graph"].map((k) => [k["@id"], k]));
 const lijst = (w) => [w ?? []].flat().map((x) => x?.["@id"] ?? x);
-import { maakVeldIndex, resolveerVerwijzing, resolveerBeleid, suggereerVanVormen, suggereerBases } from "./metamodel.js";
+import { maakVeldIndex, resolveerVerwijzing, resolveerBeleid, suggereerVanVormen, suggereerBases, isGroepPad } from "./metamodel.js";
 import { padNaarVerwijzing } from "./parser.js";
 
 // Kleine metamodel-fixture in de vorm van de schema-API (veldpad met
@@ -158,4 +158,32 @@ test("gegevensgroepen resolven ook: entiteit en GE-rol", () => {
   const { beleid: verrijkt, fouten } = resolveerBeleid(beleid, INDEX);
   assert.deepEqual(fouten, []);
   assert.deepEqual(odrlKnopen(verrijkt)["b:regel-alles"]["odrl:target"], { "@id": "reg:NatuurlijkPersoon.inkomen" });
+});
+
+test("een groep gegevens waar een veld verwacht wordt: de melding zegt wat je moet schrijven", () => {
+  const tekst = `Beleid "Naam".
+
+  Begrippen.
+    Naamgegevens zijn: de naam van een natuurlijk persoon.
+
+  Regel "inzage".
+    Een beheerder mag de naamgegevens bekijken
+    als de naam van een natuurlijk persoon bekend is.
+`;
+  const { fouten } = resolveerBeleid(parseBeleid(tekst).beleid, INDEX);
+  assert.deepEqual(fouten.map((f) => f.bericht), [
+    'Begrip "Naamgegevens": "naam" is onder natuurlijk persoon een groep gegevens, geen veld (keten: "de naam van een natuurlijk persoon"). Bedoel je de hele groep, schrijf dan: "alle gegevens van de naam van een natuurlijk persoon".',
+    'Regel "inzage": "naam" is onder natuurlijk persoon een groep gegevens, geen veld (keten: "de naam van een natuurlijk persoon"). Een voorwaarde gaat over één veld, bijvoorbeeld "de voorletters van de naam van een natuurlijk persoon" (velden: voorletters, achternaam).',
+  ]);
+  // Met "alle gegevens van" is het begrip goed.
+  const goed = resolveerBeleid(parseBeleid(tekst.replace("Naamgegevens zijn: de naam", "Naamgegevens zijn: alle gegevens van de naam")).beleid, INDEX);
+  assert.ok(!goed.fouten.some((f) => f.bericht.startsWith('Begrip "Naamgegevens"')));
+});
+
+test("isGroepPad: entiteit en gegevenselement zijn een groep, een veld niet", () => {
+  assert.equal(isGroepPad("NatuurlijkPersoon", INDEX), true);
+  assert.equal(isGroepPad("NatuurlijkPersoon.naam", INDEX), true);
+  assert.equal(isGroepPad("NatuurlijkPersoon.naam.achternaam", INDEX), false);
+  assert.equal(isGroepPad("Onbekend.iets", INDEX), false);
+  assert.equal(isGroepPad("NatuurlijkPersoon.naam", null), false, "zonder canoniek model: geen gok");
 });

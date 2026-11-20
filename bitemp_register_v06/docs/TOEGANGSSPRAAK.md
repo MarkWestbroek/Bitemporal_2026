@@ -104,12 +104,17 @@ Beleid "Inzage inkomen bij schuldhulp".
   bestaande keten vervangt een suggestie de héle keten. **Ctrl+Z** werkt op
   alle invoegingen.
 - **Modelboom-koppeling**: velden klikken/slepen uit de ModelPicker voegt de
-  van-vorm in; dubbelklik op een gegevens-keten in de tekst kadert hem,
+  van-vorm in; een groep gegevens (entiteit of gegevenselement) wordt
+  "alle gegevens van …" (sinds 20-11; "de namen van een natuurlijk persoon"
+  zou de taal als één veld lezen); dubbelklik op een gegevens-keten in de tekst kadert hem,
   toont het registerpad en focust het exacte element in de boom (boom blijft
   staan; context zichtbaar).
-- **Metamodel-controle** (schema-API): keten-resolutie met verkorting,
+- **Controle tegen het canonieke model** (M1 van het register, uit de schema-API; in de
+  code nog `metamodel.js`): keten-resolutie met verkorting,
   typebewaking ("begint met" kan alleen met tekst; enum-waarden bewaakt) als
-  niet-blokkerende "Controle"-meldingen; de ODRL-uitvoer gebruikt de
+  niet-blokkerende "Controle"-meldingen. Wijst een tekst een groep aan waar een veld hoort,
+  dan zegt de melding wat er moet staan: "alle gegevens van …" bij gegevens, een veld eronder
+  bij een voorwaarde; de ODRL-uitvoer gebruikt de
   geresolvede registerpaden.
 
 ### Wat het (nog) niet is

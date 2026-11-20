@@ -107,7 +107,7 @@ export function resolveerVerwijzing(verwijzing, index) {
   const ent = index.perEntiteit.get(entKey);
   const basisNaam = verwijzing.basis.woorden.join(" ");
   if (!ent) {
-    return { fout: `Onbekend gegevenstype "${basisNaam}" — niet gevonden in het metamodel.` };
+    return { fout: `Onbekend gegevenstype "${basisNaam}" — niet gevonden in het canonieke model.` };
   }
   if (!verwijzing.keten.length) return { pad: ent.naam, veld: null };
 
@@ -122,10 +122,33 @@ export function resolveerVerwijzing(verwijzing, index) {
   if (kandidaten.length === 1) return { pad: kandidaten[0].pad, veld: kandidaten[0] };
   const bladNaam = verwijzing.keten[0].woorden.join(" ");
   if (kandidaten.length === 0) {
+    // Een groep gegevens (entiteit of gegevenselement) waar een veld verwacht wordt: zeg wat er wél kan.
+    const groep = resolveerGroep(verwijzing, index);
+    if (groep.pad) {
+      const velden = ent.velden.filter((v) => v.pad.toLowerCase().startsWith(`${groep.pad.toLowerCase()}.`) && v.pad.split(".").length === groep.pad.split(".").length + 1);
+      return {
+        fout: `"${bladNaam}" is onder ${basisNaam} een groep gegevens, geen veld (keten: "${renderVerwijzing(verwijzing)}").`,
+        groep: { pad: groep.pad, velden: velden.map((v) => v.pad.split(".").pop()) },
+      };
+    }
     return { fout: `Onder ${basisNaam} is geen veld "${bladNaam}" bekend (keten: "${renderVerwijzing(verwijzing)}").` };
   }
   const paden = kandidaten.map((k) => k.pad).slice(0, 4).join('", "');
   return { fout: `"${renderVerwijzing(verwijzing)}" is dubbelzinnig: het kan "${paden}" zijn. Gebruik de volledige keten.` };
+}
+
+/**
+ * Is dit veldpad (uit de modelboom) een groep gegevens — een entiteit of een gegevenselement —
+ * en geen veld? Dan hoort er in de tekst "alle gegevens van …" te staan.
+ */
+export function isGroepPad(veldpad, index) {
+  const segmenten = String(veldpad || "").split(".").filter(Boolean);
+  if (!index || !segmenten.length) return false;
+  const ent = index.perEntiteit.get(sleutelVanSegment(segmenten[0]));
+  if (!ent) return false;
+  const pad = segmenten.join(".").toLowerCase();
+  if (ent.velden.some((v) => v.pad.toLowerCase() === pad)) return false;
+  return segmenten.length === 1 || [...ent.groepen.values()].some((g) => g.pad.toLowerCase() === pad);
 }
 
 /** Idem voor een gegevensgroep ("alle gegevens van …"): entiteit of GE-rol. */
@@ -135,7 +158,7 @@ export function resolveerGroep(verwijzing, index) {
   const ent = index.perEntiteit.get(entKey);
   const basisNaam = verwijzing.basis.woorden.join(" ");
   if (!ent) {
-    return { fout: `Onbekend gegevenstype "${basisNaam}" — niet gevonden in het metamodel.` };
+    return { fout: `Onbekend gegevenstype "${basisNaam}" — niet gevonden in het canonieke model.` };
   }
   if (!verwijzing.keten.length) return { pad: ent.naam };
   const bladKey = sleutelVanWoorden(verwijzing.keten[0].woorden);
@@ -269,6 +292,14 @@ export function resolveerBeleid(beleid, index) {
   const resolveerTerm = (term, context) => {
     if (!term || term.soort !== "verwijzing") return null;
     const res = resolveerVerwijzing(term, index);
+    if (res.groep) {
+      const voorbeeld = res.groep.velden[0];
+      const tip = voorbeeld
+        ? ` Een voorwaarde gaat over één veld, bijvoorbeeld "${renderVerwijzing({ ...term, keten: [{ lidwoord: lidwoordVoor(voorbeeld), woorden: camelNaarWoorden(voorbeeld) }, ...term.keten] })}"${res.groep.velden.length > 1 ? ` (velden: ${res.groep.velden.slice(0, 6).join(", ")})` : ""}.`
+        : "";
+      meld(context, `${res.fout}${tip}`);
+      return null;
+    }
     if (res.fout) { meld(context, res.fout); return null; }
     if (res.pad) term.pad = res.pad;
     return res.veld || null;
@@ -321,7 +352,8 @@ export function resolveerBeleid(beleid, index) {
   const controleerWat = (wat, context) => {
     if (wat.soort === "verwijzing") {
       const res = resolveerVerwijzing(wat, index);
-      if (res.fout) meld(context, res.fout);
+      if (res.groep) meld(context, `${res.fout} Bedoel je de hele groep, schrijf dan: "alle gegevens van ${renderVerwijzing(wat)}".`);
+      else if (res.fout) meld(context, res.fout);
       else if (res.pad) wat.pad = res.pad;
     } else if (wat.soort === "alle") {
       const res = resolveerGroep(wat.verwijzing, index);

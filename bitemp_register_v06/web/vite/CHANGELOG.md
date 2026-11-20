@@ -58,6 +58,11 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 ### Gewijzigd
 - **Simulatie: de Waterstede-scenario's staan in het demo-project** (16-11): ze zijn uit de ingebakken keuzelijst;
   in het demo-project *Omnium demo — gemeente Waterstede* staan ze onder *Uit het project*.
+- **Toegangverlening: hulp bij groepen gegevens** (Mark 20-11). *Kies* bij een gegevenselement in de modelboom
+  (bijvoorbeeld *namen*) zet nu "alle gegevens van de namen van een natuurlijk persoon" in de tekst, niet "de namen
+  van …": dat las de taal als één veld. Schrijf je het toch zo, dan zegt de controle wat er moet staan. De meldingen
+  spreken van het *canonieke model* in plaats van het "metamodel", en bij de beleidsbundel zonder model staat wat je
+  moet doen.
 - **ArchiMate 1.1.0: de relaties staan op een abstract basistype** (Mark 19-11). Wat je mag verbinden is niet
   veranderd. In het *Profiel-ontwerp* zie je nu elf verbindingsregels naar *ArchiMate-element* in plaats van ruim
   veertigduizend lijnen (één per paar typen). Een project dat je met deze

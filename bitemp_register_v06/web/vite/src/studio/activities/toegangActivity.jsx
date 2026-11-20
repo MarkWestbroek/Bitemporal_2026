@@ -12,7 +12,7 @@
  *               + Canoniek (leesweergave: de geherformatteerde canonieke vorm)
  *   Inspector → ODRL (ODRL-AP-NL) van het geparste beleid, als Turtle of JSON-LD
  *
- * Metamodel-koppeling (schema-API): keten-resolutie met verkorting en
+ * Koppeling met het canonieke model van het register (schema-API): keten-resolutie met verkorting en
  * typebewaking (metamodel.js) draaien live mee; de ODRL-uitvoer gebruikt de
  * geresolvede registerpaden.
  *
@@ -33,7 +33,7 @@ import { ModelPicker, FIELDREF_MIME, useSchemaModel, verzamelVelden } from "../.
 import {
   parseBeleid, renderBeleid, compileerBundel, padNaarVerwijzing, renderVerwijzing,
   verwijzingNaarPad, maakVeldIndex, resolveerBeleid, resolveerVerwijzing,
-  resolveerGroep, bepaalSuggesties, VOORBEELD_BELEID,
+  resolveerGroep, bepaalSuggesties, VOORBEELD_BELEID, isGroepPad,
 } from "../../toegangsspraak";
 import { IconToegang } from "../icons";
 import { menuBus } from "../menuBus";
@@ -75,9 +75,14 @@ function registreerToegangsspraakGrammar() {
 }
 registreerToegangsspraakGrammar();
 
-/** FieldRef-veldpad → van-vorm, bv. "de achternaam van de naam van een natuurlijk persoon". */
-function veldpadNaarVanVorm(veldpad) {
-  return renderVerwijzing(padNaarVerwijzing(veldpad));
+/**
+ * FieldRef-veldpad → van-vorm, bv. "de achternaam van de naam van een natuurlijk persoon".
+ * Een groep gegevens (entiteit of gegevenselement) wordt "alle gegevens van …": "de namen van een
+ * natuurlijk persoon" zou de taal als één veld lezen.
+ */
+function veldpadNaarVanVorm(veldpad, veldIndex) {
+  const vanVorm = renderVerwijzing(padNaarVerwijzing(veldpad));
+  return isGroepPad(veldpad, veldIndex) ? `alle gegevens van ${vanVorm}` : vanVorm;
 }
 
 // Doorkijk over relaties: Toegangsspraak-ketens lopen over registergrenzen
@@ -121,7 +126,7 @@ function ToegangProvider({ children }) {
   // Na een programmatische invoeging even geen suggesties heropenen.
   const onderdrukRef = useRef(false);
 
-  // Metamodel uit de schema-API → veldindex voor resolutie, typebewaking en
+  // Canoniek model uit de schema-API → veldindex voor resolutie, typebewaking en
   // autocomplete. Zonder backend blijft alles werken, alleen zonder controle.
   const { types } = useSchemaModel({ baseUrl: apiBase() });
   const veldIndex = useMemo(() => {
@@ -214,7 +219,7 @@ function ToegangProvider({ children }) {
     const span = spans.find((s) => s.soort === "gegevens" && s.van <= positie && positie <= s.tot);
     if (!span) { setActieveGegevens(null); return; }
     let pad = null;
-    let echtPad = null; // pad zoals het in het metamodel staat → exact element
+    let echtPad = null; // pad zoals het in het canonieke model staat → exact element
     if (span.verwijzing) {
       if (veldIndex) {
         const veld = resolveerVerwijzing(span.verwijzing, veldIndex);
@@ -256,7 +261,7 @@ function ToegangProvider({ children }) {
         downloadJson(uit.jsonld, `${(resultaat.beleid?.naam || "beleid").replace(/\s+/g, "_")}.odrl.jsonld`);
       }),
       // ODRL-AP-NL in Turtle (docs/TRANSFORMATIES.md §3): de export via de regelset, met de paden
-      // uit het metamodel waar dat geladen is. De klare taal reist mee (ts:brontekst).
+      // uit het canonieke model waar dat geladen is. De klare taal reist mee (ts:brontekst).
       menuBus.on("toegang:odrl-turtle", () => {
         const { resultaat, geresolved } = ref.current;
         if (!resultaat.ok) { window.alert("Het beleid bevat nog parseerfouten."); return; }
@@ -310,7 +315,7 @@ function ToegangProvider({ children }) {
       menuBus.on("toegang:bundel", () => {
         const { resultaat, geresolved, veldIndex } = ref.current;
         if (!resultaat.ok) { window.alert("Het beleid bevat nog parseerfouten."); return; }
-        if (!geresolved || !veldIndex) { window.alert("Geen metamodel geladen: paden kunnen niet worden opgelost."); return; }
+        if (!geresolved || !veldIndex) { window.alert("Er is geen canoniek model van het register geladen, dus de paden in het beleid kunnen niet aan velden worden gekoppeld.\n\nDe beleidsbundel heeft dat nodig. Start de API (lokaal op poort 8082) of open de Studio bij een register, en probeer het opnieuw. De ODRL-exports werken ook zonder."); return; }
         if (geresolved.fouten.length) {
           window.alert(`Eerst de controle-meldingen oplossen (${geresolved.fouten.length}):\n- ${geresolved.fouten.map((f) => f.bericht).join("\n- ")}`);
           return;
@@ -396,7 +401,7 @@ function ToegangProvider({ children }) {
         editorWrapRef, invoegOpCursor,
         suggesties, setSuggesties, actieveIndex, setActieveIndex,
         bijwerkSuggesties, pasSuggestieToe, actieveGegevens, setActieveGegevens,
-        toonGegevensOpPositie, focusVeldpad, terugMeldingen, setTerugMeldingen,
+        toonGegevensOpPositie, focusVeldpad, terugMeldingen, setTerugMeldingen, veldIndex,
       }}
     >
       {children}
@@ -405,11 +410,11 @@ function ToegangProvider({ children }) {
 }
 
 function ToegangSidebar() {
-  const { invoegOpCursor, focusVeldpad } = useContext(Ctx);
+  const { invoegOpCursor, focusVeldpad, veldIndex } = useContext(Ctx);
 
   const onPick = useCallback(
-    (fieldRef) => invoegOpCursor(veldpadNaarVanVorm(fieldRef.veldpad)),
-    [invoegOpCursor]
+    (fieldRef) => invoegOpCursor(veldpadNaarVanVorm(fieldRef.veldpad, veldIndex)),
+    [invoegOpCursor, veldIndex]
   );
 
   return (
@@ -507,7 +512,7 @@ function ToegangMain() {
     editorWrapRef, invoegOpCursor,
     suggesties, setSuggesties, actieveIndex, setActieveIndex,
     bijwerkSuggesties, pasSuggestieToe, actieveGegevens, setActieveGegevens,
-    toonGegevensOpPositie, terugMeldingen,
+    toonGegevensOpPositie, terugMeldingen, veldIndex,
   } = useContext(Ctx);
 
   const highlight = useCallback(
@@ -533,9 +538,9 @@ function ToegangMain() {
       const veldpad = data ? JSON.parse(data).veldpad : e.dataTransfer.getData("text/plain");
       if (!veldpad) return;
       e.preventDefault();
-      invoegOpCursor(veldpadNaarVanVorm(veldpad));
+      invoegOpCursor(veldpadNaarVanVorm(veldpad, veldIndex));
     },
-    [invoegOpCursor]
+    [invoegOpCursor, veldIndex]
   );
 
   const onChange = useCallback(
@@ -654,7 +659,7 @@ function ToegangMain() {
               <div style={{ borderTop: "1px solid var(--s-border, #e5e7eb)", padding: "6px 12px", fontSize: 12, background: "var(--s-panel-head)", color: "var(--s-fg)" }}>
                 <span style={{ fontWeight: 600, color: "#6366f1" }}>Gegevens: </span>
                 {actieveGegevens.pad
-                  ? <>registerpad <code>{actieveGegevens.pad}</code>{actieveGegevens.inBoom ? " — gemarkeerd in de modelboom links." : " — niet gevonden in het metamodel."}</>
+                  ? <>registerpad <code>{actieveGegevens.pad}</code>{actieveGegevens.inBoom ? " — gemarkeerd in de modelboom links." : " — niet gevonden in het canonieke model."}</>
                   : actieveGegevens.begrip
                     ? <>begrip “{actieveGegevens.begrip}” — gedefinieerd onder Begrippen.</>
                     : null}
@@ -735,7 +740,7 @@ function ToegangInspector() {
       )}
       {resultaat.ok && controleFouten.length > 0 && (
         <p style={{ fontSize: 12, color: "#f59e0b" }}>
-          {controleFouten.length} controle-melding(en) uit het metamodel — de ODRL-weergave
+          {controleFouten.length} controle-melding(en) uit het canonieke model — de ODRL-weergave
           gebruikt waar mogelijk de geresolvede registerpaden.
         </p>
       )}
