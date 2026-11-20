@@ -19,6 +19,7 @@ import useStudioStore from "../useStudioStore";
 import { vervangDiagramType, getDiagramType, alleDiagramTypes } from "../../diagramcore/types/typeRegistry.js";
 import { maakDiagramActiviteit } from "./maakDiagramActiviteit.jsx";
 import ShapeSetPaneel from "./shapeSetPaneel.jsx";
+import { registreerM3Editors } from "./m3Editors.jsx";
 import { vertaalHooks, maakGeneriekeMaakElement } from "./profielGereedschap.js";
 import { vraagNaam, vraagBevestiging, toonMelding } from "../naamDialog.jsx";
 import {
@@ -39,6 +40,8 @@ import {
   bewaarProfielLayout,
 } from "./profielRegistratie.jsx";
 
+// De ontwerptaal is het M3 (ontwerptaal.js): getallen en samengestelde waarden hebben een eigen invoer.
+registreerM3Editors();
 const descriptor = vertaalHooks(profielOntwerpKern);
 vervangDiagramType(descriptor);
 
@@ -69,6 +72,7 @@ async function activeerProfiel(useStore) {
         elements: elementenVanDiagram(staat, staat.actiefDiagramId),
         shapeSets: diag.shapeSets,
         typeWeergave: diag.typeWeergave,
+        m3Profiel: diag.m3Profiel,
       },
       { id, label }
     );
@@ -96,7 +100,10 @@ async function bekijkBestaandProfiel(useStore) {
   // P01: elk bekeken profiel wordt een éigen diagram in de sandbox,
   // naast wat er al staat — activeren werkt per diagram.
   const ontwerp = ontwerpUitProfiel(gekozen);
+  // De gegevens op diagram-niveau (shape-sets, typering, de eigenschappen van het profiel) gaan mee.
+  const { id: _id, naam: _naam, nodes: _nodes, edges: _edges, ...diagramGegevens } = Object.values(ontwerp.diagrams)[0] || {};
   useStore.getState().addDiagram({
+    ...diagramGegevens,
     id: `ontw_${gekozen.id}_${Date.now()}`,
     naam: gekozen.label || gekozen.id,
     diagramType: PROFIEL_ONTWERP_ID,

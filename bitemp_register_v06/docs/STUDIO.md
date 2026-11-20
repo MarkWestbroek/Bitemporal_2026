@@ -2628,6 +2628,40 @@ taal waarin een profiel een model is; volgorde akkoord Mark 19-11) gebruiken dez
 ze niet uit elkaar lopen. Een transformatie hoort niet in het M3: de transformatietaal is een M2
 (een profiel), een regelset een M1 daarin (Mark 19-11).
 
+**De ontwerptaal is het M3 (20-11).** De inspector van het Profiel-ontwerp komt niet meer uit een
+handgeschreven lijst maar uit `m3.js` (`studio/activities/ontwerptaal.js`). Per knoop- of lijnsoort
+één metaklasse: «elementtype» = ElementType, een verbindingsregel-lijn = ElementType als
+connector, «compartimenttype» = CompartmentType, «veldtype» = FieldType, een regel in het vak
+eigenschappen = PropertyType, «facet» = Facet, «layoutstijl» = LayoutStijl. De eigenschappen van
+het profiel zelf (DiagramType: versie, hiërarchie, taakbalken, …) staan op het ontwerp-diagram
+(`m3Profiel`), naast de shape-sets; er is geen «profiel»-knoop.
+
+| Een M3-eigenschap … | wordt in het ontwerp |
+|---|---|
+| die de tekening draagt (naam, ◆, erft-pijl, lijnen, vak) | tekening; de reden staat in `ONTWERP_SOORTEN` |
+| code (operatie, of een klasse uit het pakket Implementatie) | niet tekenbaar; ter informatie in het vak *implementatie*. Hook-id's (tekst) reizen wel mee |
+| ja/nee, tekst, keuze uit een enumeratie, getal | een veld met die bediening |
+| een verwijzing naar een niet-getekende metaklasse (shape, style) | een id |
+| een lijst, een map of een datatype (bron, randElement, edgePresentatie, …) | JSON (`m3-json`) |
+
+- **De M3-naam achter `m3:`** (`m3:kleur`, `m3:stereotype`, `m3:isAbstract`): het voorvoegsel houdt
+  de waarden van het profiel gescheiden van die van de ontwerp-knoop zelf. De oude omdopingen
+  (`doelKleur`, `doelStereotype`, `abstract`, `nietInPalet`, `geenBeschrijving`) zijn weg.
+- **Echte waarden**: getallen, lijsten en objecten blijven wat ze zijn; alleen de invoer is tekst.
+  Ongeldige JSON wordt niet opgeslagen (`studio/activities/m3Editors.jsx`).
+- **Geladen of zelf getekend**: een knoop met `m3:id` komt uit een profiel en gaat letterlijk
+  terug (ook `null`, lege lijsten en een ontbrekend label); een knoop zonder is zelf getekend en
+  krijgt bij de bouw wat een nieuw type nodig heeft (korte code, kleur). De gemak-vinkjes
+  (container, kardinaliteiten, richting, hiërarchie) gelden alleen als het M3-veld leeg is.
+- **Dekkingstest** `ontwerptaal.test.js`: elke eigenschap van de betrokken metaklassen is in de
+  ontwerptaal een eigenschap, tekening of code. Een nieuwe M3-eigenschap verschijnt dus vanzelf,
+  of de test zegt waar hij heen moet.
+- **Rondreis**: alle gegevens van de 28 profielen komen exact terug. De meetlat
+  (`profielRondreis.js`, `npm run profielrondreis` in render-svc) vergelijkt nu na dezelfde stappen
+  als het activeren (hook-id's → code, erfenis uitvlakken, superprofiel, standaard-layouts) en
+  zonder op de volgorde van sleutels te letten. Stand 20-11: 115 verschillen, allemaal code:
+  hooks als functie (105), resolvers (5) en eigen layouts (5). Was 1.725.
+
 ## Activiteit Transformaties: regelsets bekijken en proefdraaien (2026-11-18)
 
 Onderaan de activiteitenbalk (groep beheer, preview). Een regelset is M2: hoe elk model in taal A

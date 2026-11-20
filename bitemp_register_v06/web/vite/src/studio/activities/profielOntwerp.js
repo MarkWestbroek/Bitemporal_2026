@@ -5,36 +5,45 @@
  *
  *   ElementType ◆── CompartmentType ◆── FieldType, elk met eigen properties.
  *
- * Drie node-soorten plus twee connector-soorten:
- *   - **Elementtype** («elementtype»): shape/kleur/kort als properties; het
- *     compartiment "eigenschappen" beschrijft de PropertyTypes van het type.
+ * Knoop- en lijnsoorten:
+ *   - **Elementtype** («elementtype»): het vak "eigenschappen" beschrijft de PropertyTypes van
+ *     het type; de rest van het ElementType staat in de inspector.
  *   - **Compartimenttype** («compartimenttype»): een sectie in het element;
  *     hangt via een ◆-compositie aan een Elementtype.
  *   - **Veldtype** («veldtype»): de regels in zo'n sectie; hangt via ◆ aan
- *     een Compartimenttype en heeft (naast de intrinsieke naam) zijn eigen
- *     "eigenschappen" — precies FieldType 0..* PropertyType.
- *   - **compositie** (◆): de bevat-relaties hierboven.
- *   - **verbindingsregel** (→): tussen Elementtypes; wordt een
- *     connector-ElementType van het doelprofiel.
+ *     een Compartimenttype en heeft zijn eigen "eigenschappen" — precies
+ *     FieldType 0..* PropertyType.
+ *   - **Facet** en **Layoutstijl**: horen bij het DiagramType.
+ *   - **compositie** (◆), **erft** (▷) en **verbindingsregel** (→): lijnen. Een verbindingsregel
+ *     wordt een connector-ElementType van het doelprofiel; lijnen met dezelfde naam zijn samen
+ *     één connectortype.
+ *
+ * **De taal is het M3** (Mark 19-11, `ontwerptaal.js`): welke eigenschappen een knoop in de
+ * inspector heeft, volgt uit de metaklassen van `types/m3.js`, met de M3-naam achter `m3:`. De
+ * eigenschappen van het profiel zelf (DiagramType) staan op het ontwerp-diagram (`m3Profiel`),
+ * naast de shape-sets. Een paar gemak-vinkjes voor wie zelf tekent (container,
+ * kardinaliteiten, richting, hiërarchie) blijven; ze gelden alleen als het M3-veld leeg is.
  *
  * `bouwProfielUitOntwerp` vertaalt de tekening naar een descriptor-kern
  * (trede 1-vorm, hooks op id); `ontwerpUitProfiel` is de omgekeerde weg —
  * een bestaande descriptor als ontwerp-diagram bekijken (en desgewenst
- * onder een nieuw id opnieuw genereren).
+ * onder een nieuw id opnieuw genereren). Wat er op die rondreis nog verloren gaat, meet
+ * `profielRondreis.js`.
  */
 
 import { handlerInfo } from "../../diagramcore/types/handlerCatalogus.js";
 import { AARD_CONNECTOR, AARD_ELEMENT } from "../../diagramcore/types/layoutStijl.js";
+import { M3, m3PropertyTypes, naarData, uitData, naamNaarData, naamUitData } from "./ontwerptaal.js";
 
 export const PROFIEL_ONTWERP_ID = "profiel-ontwerp";
 
+/** Het veldtype van een regel in het vak "eigenschappen": een PropertyType. */
 const EIGENSCHAP_VELDEN = [
-  { key: "naam", label: "key", datatype: "string", verplicht: true },
-  { key: "typeLabel", label: "datatype (string/tekst/boolean/colour)", datatype: "string" },
-  // M3 PropertyType.betekenis (16-10): wat de eigenschap voor de motor betekent.
-  { key: "betekenis", label: "betekenis (afgeleid/kardinaliteit/standaardwaarde/geordend/nietUniek/alleenLezen/id/zichtbaarheid/beschrijving)", datatype: "string" },
+  { key: "naam", label: "label (of de sleutel)", datatype: "string", verplicht: true },
+  // Wat de knoop als type toont; wijzig je het, dan wint het boven m3:datatype.
+  { key: "typeLabel", label: "datatype (getoond)", datatype: "string" },
+  ...m3PropertyTypes("eigenschapDef"),
 ];
-const BETEKENISSEN = new Set(["afgeleid", "kardinaliteit", "standaardwaarde", "geordend", "nietUniek", "alleenLezen", "id", "zichtbaarheid", "beschrijving", "verwijzing"]);
 
 /** @type {Object} descriptor-kern van de ontwerper zelf (hooks op id). */
 export const profielOntwerpKern = {
@@ -67,36 +76,9 @@ export const profielOntwerpKern = {
       kleur: "#bae6fd",
       icoon: "elementtype",
       properties: [
-        { key: "kort", label: "korte code (taakbalk)", datatype: "string" },
-        // Kiezers met preview (P06): de registry levert de opties.
-        { key: "shape", label: "shape", datatype: "shape-keuze" },
-        { key: "icoon", label: "icoon (taakbalk/boom)", datatype: "icoon-keuze" },
-        { key: "doelKleur", label: "kleur van het type", datatype: "colour" },
-        // Niet "stereotype": dat dataveld is de generieke per-element
-        // weergave-override (ClassBox toont hem), waardoor de ET-node zelf
-        // ineens «package» i.p.v. «elementtype» zou heten.
-        { key: "doelStereotype", label: "stereotype van het type («…»)", datatype: "string" },
-        // Boom/packages: container = drop-doel (containerVoor volgt uit de
-        // bevat-verbindingsregel), standaard dicht = ingeklapt beginnen.
-        { key: "container", label: "container (drop-doel, package)", datatype: "boolean" },
-        { key: "standaardDichtInBoom", label: "standaard dicht in boom", datatype: "boolean" },
-        // M3 (15/16-10): een uitwerking dragen (diagrammen en elementen eronder in de
-        // projectboom, zoals het AD onder een use case); verwijzen naar een gedragsdiagram
-        // (data.gedragDiagramId, dubbelklik opent het).
-        { key: "uitwerking", label: "uitwerking (diagrammen eronder in de boom)", datatype: "boolean" },
-        { key: "gedragsVerwijzing", label: "gedragsverwijzing (dubbelklik opent een diagram)", datatype: "boolean" },
-        // M3-velden uit schema.js die de ontwerper nog miste (werklijst M3-MOF, 16-10).
-        { key: "meerdereVoorkomens", label: "meerdere voorkomens op één diagram", datatype: "boolean" },
-        { key: "nietInPalet", label: "niet in het palet (ontstaat alleen via de motor)", datatype: "boolean" },
-        { key: "geenBeschrijving", label: "geen beschrijving (M3) op dit type", datatype: "boolean" },
-        { key: "layoutDimensie", label: "beweegt alleen in: x, y of xy", datatype: "string" },
-        // M3: abstract type (EMOF isAbstract) — niet instantieerbaar, wel bereik;
-        // de naam toont cursief (ClassBox leest data.abstract).
-        { key: "abstract", label: "abstract (niet instantieerbaar)", datatype: "boolean" },
-        // M3 betekenis (18-10, types/layoutStijl.js): wat het type ís — de auto-layout,
-        // transformaties en de MCP lezen het. Facetten: bv. "laag=business; aspect=actief".
-        { key: "aard", label: `aard (${AARD_ELEMENT.join("/")})`, datatype: "string" },
-        { key: "facetten", label: "facetten (naam=waarde; …)", datatype: "string" },
+        ...m3PropertyTypes("elementDef"),
+        // Gemak voor wie zelf tekent: kiest de lidmaatschapsrelatie als m3:containerVoor leeg is.
+        { key: "container", label: "container (gemak; m3:containerVoor wint)", datatype: "boolean" },
       ],
       compartments: [
         { id: "eigenschappen", label: "eigenschappen", fieldType: "eigenschapDef" },
@@ -113,7 +95,7 @@ export const profielOntwerpKern = {
       shape: "class-box",
       kleur: "#ddd6fe",
       icoon: "compartimenttype",
-      properties: [],
+      properties: m3PropertyTypes("compartimentDef"),
       compartments: [],
     },
     {
@@ -124,7 +106,7 @@ export const profielOntwerpKern = {
       shape: "class-box",
       kleur: "#bbf7d0",
       icoon: "veldtype",
-      properties: [],
+      properties: m3PropertyTypes("fieldDef"),
       compartments: [{ id: "eigenschappen", label: "eigenschappen", fieldType: "eigenschapDef" }],
     },
     {
@@ -163,18 +145,11 @@ export const profielOntwerpKern = {
       doel: { elementTypes: ["elementDef"] },
       edgePresentatie: { lijn: "solid", kleur: "#0ea5e9" },
       properties: [
-        { key: "lijn", label: "lijn (solid/dash-6-3/…)", datatype: "string" },
-        { key: "vorm", label: "vorm (bezier/hoekig/recht/boom)", datatype: "string" },
-        { key: "markerStart", label: "markerStart (ruit/ruit-open)", datatype: "string" },
-        { key: "markerEnd", label: "markerEnd (driehoek/pijl-open/pijl-dicht/bol)", datatype: "string" },
-        { key: "doelKleur", label: "lijnkleur", datatype: "colour" },
-        { key: "metKardinaliteiten", label: "kardinaliteiten-labels", datatype: "boolean" },
-        { key: "richtingOptie", label: "richting-vinkje (→)", datatype: "boolean" },
-        // M3 ConnectorType.verwijderen (16-10): Delete haalt de connector uit het model (niet alleen van het diagram).
-        { key: "verwijderenUitModel", label: "Delete = uit het model (verwijderen: model)", datatype: "boolean" },
-        { key: "isHierarchie", label: "bevat-relatie (hiërarchie, P02)", datatype: "boolean" },
-        // M3 betekenis (18-10): wat de verbinding betekent (stroom bepaalt de leesvolgorde, …).
-        { key: "aard", label: `aard (${AARD_CONNECTOR.join("/")})`, datatype: "string" },
+        ...m3PropertyTypes("verbindingsregel"),
+        // Gemak voor wie zelf tekent; m3:hooks, m3:properties en de hiërarchie van het profiel winnen.
+        { key: "metKardinaliteiten", label: "kardinaliteiten-labels (gemak)", datatype: "boolean" },
+        { key: "richtingOptie", label: "richting-vinkje → (gemak)", datatype: "boolean" },
+        { key: "isHierarchie", label: "bevat-relatie, hiërarchie (gemak)", datatype: "boolean" },
       ],
     },
     {
@@ -187,12 +162,12 @@ export const profielOntwerpKern = {
       shape: "class-box",
       kleur: "#fde68a",
       icoon: "elementtype",
-      properties: [{ key: "waarden", label: "waarden, in volgorde (komma's)", datatype: "string" }],
+      properties: m3PropertyTypes("facetDef"),
       compartments: [],
     },
     {
-      // M3 (18-10): DiagramType.layoutStijlen — de weergave van de auto-layout (renderer
-      // "leesvolgorde"). De naam van de node is het label; regels als JSON (LayoutRegel[]).
+      // M3 (18-10): DiagramType.layoutStijlen — de weergave van de auto-layout. De naam van de
+      // node is het label.
       id: "layoutStijlDef",
       label: "Layoutstijl",
       kort: "LAY",
@@ -200,20 +175,7 @@ export const profielOntwerpKern = {
       shape: "class-box",
       kleur: "#a7f3d0",
       icoon: "elementtype",
-      properties: [
-        { key: "richting", label: "richting (TB/LR/BT/RL)", datatype: "string" },
-        { key: "alleenStroom", label: "alleen aard 'stroom' bepaalt de volgorde", datatype: "boolean" },
-        { key: "secundairAchteraan", label: "secundaire beginpunten achteraan (use case: actor rechts)", datatype: "boolean" },
-        { key: "kaderKolommen", label: "hoogstens zoveel kolommen in een kader (bv. 2)", datatype: "string" },
-        { key: "maxPerRij", label: "hoogstens zoveel elementen naast elkaar (bv. 6)", datatype: "string" },
-        { key: "secundairUit", label: "eigenschap op een verbinding die 'primair' maakt (bv. primair)", datatype: "string" },
-        { key: "rijen", label: "rijen per facet (bv. laag)", datatype: "string" },
-        { key: "kolommen", label: "kolommen per facet (bv. aspect)", datatype: "string" },
-        { key: "afstandLaag", label: "afstand tussen lagen (px)", datatype: "string" },
-        { key: "afstandDwars", label: "afstand binnen een laag (px)", datatype: "string" },
-        { key: "marge", label: "binnenrand van een container (px)", datatype: "string" },
-        { key: "regels", label: "regels (JSON: [{selector, opties}])", datatype: "tekst" },
-      ],
+      properties: m3PropertyTypes("layoutStijlDef"),
       compartments: [],
     },
     {
@@ -244,6 +206,7 @@ export function slug(tekst) {
   );
 }
 
+/** Vormen die een zelf getekend elementtype mag kiezen zonder dat de vorm-registry geladen is. */
 const GELDIGE_SHAPES = new Set([
   "class-box",
   "chip",
@@ -259,31 +222,65 @@ const GELDIGE_SHAPES = new Set([
 ]);
 const GELDIGE_DATATYPES = new Set(["string", "tekst", "boolean", "colour"]);
 
+/** Sleutels van de gegevens van een knoop die niet in de inspector staan. */
+const ID = `${M3}id`;
+const LEEG = `${M3}_leeg`;
+const REGELS = `${M3}_regels`;
+
 function compVelden(el, compartmentType) {
   return (
     (el.compartimenten || []).find((c) => c.compartmentType === compartmentType)?.velden || []
   );
 }
 
-/** "eigenschappen"-compartiment → PropertyType-lijst. */
-function eigenschappenVan(el) {
-  return compVelden(el, "eigenschappen").map((v) => ({
-    key: slug(v.naam),
-    label: v.naam,
-    datatype: GELDIGE_DATATYPES.has(v.data?.typeLabel) ? v.data.typeLabel : "string",
-    ...(BETEKENISSEN.has(v.data?.betekenis) ? { betekenis: v.data.betekenis } : {}),
-  }));
+/** Een object zonder sleutels met `undefined`. */
+const schoon = (obj) => Object.fromEntries(Object.entries(obj).filter(([, w]) => w !== undefined));
+
+/** Een veld in het vak "eigenschappen" → PropertyType. */
+function eigenschapVan(veld) {
+  const d = veld.data || {};
+  const vers = d[`${M3}key`] === undefined;
+  const { key, datatype, ...rest } = uitData("eigenschapDef", d);
+  const naam = naamUitData(veld);
+  const getoond = d.typeLabel || "";
+  return schoon({
+    key: key ?? slug(veld.naam),
+    label: vers ? veld.naam : naam.gezet ? naam.waarde : undefined,
+    // Zelf getekend: het getoonde type is het datatype. Geladen: het M3-veld, tenzij je het
+    // getoonde type hebt gewijzigd.
+    datatype: vers ? (GELDIGE_DATATYPES.has(getoond) ? getoond : "string") : getoond && getoond !== (datatype ?? "") ? getoond : datatype,
+    ...rest,
+  });
 }
+
+/** De lijst eigenschappen uit een vak; bij een geladen knoop ook als hij leeg was. */
+function lijstUit(el, soort, velden, vers) {
+  if (velden.length) return velden;
+  if (vers || (el.data?.[LEEG] || []).includes(soort)) return [];
+  return undefined;
+}
+
+/** Elk (bron, doel)-paar van een of meer verbindingsregels, als "bron→doel". */
+function parenVan(regels) {
+  const lijst = (kant) => (Array.isArray(kant) ? kant : kant?.elementTypes || []);
+  return regels.flatMap((r) => lijst(r.bron).flatMap((b) => lijst(r.doel).map((d) => `${b}→${d}`)));
+}
+/** De verbindingsregels van een connector, of zijn verkorte vorm (bron/doel). */
+const regelsVan = (ct) => ct.verbindingsregels || [{ bron: ct.bron, doel: ct.doel }];
+const zelfdeParen = (a, b) => JSON.stringify([...new Set(a)].sort()) === JSON.stringify([...new Set(b)].sort());
 
 /**
  * Vertaal een getekend profiel-ontwerp naar een descriptor-kern
  * (trede 1-vorm, hooks als catalogus-id's).
  *
- * Shape-sets en de typering-standaard zijn Style-data op diagram-niveau (géén
- * model-elementen); ze komen als eigen velden op `state` binnen — niet als
- * canvas-node — en gaan pass-through naar de descriptor-kern.
+ * Shape-sets, de typering-standaard en de eigenschappen van het profiel zelf (`m3Profiel`) zijn
+ * gegevens op diagram-niveau (géén model-elementen); ze komen als eigen velden op `state` binnen.
  *
- * @param {{elements: Record<string, Object>, shapeSets?: Array, typeWeergave?: string}} state
+ * Een knoop zonder `m3:id` is **zelf getekend**: dan vult de bouw aan wat een nieuw type nodig
+ * heeft (korte code, kleur, een kleur-eigenschap). Een knoop met `m3:id` komt uit een profiel en
+ * wordt zo letterlijk mogelijk teruggegeven.
+ *
+ * @param {{elements: Record<string, Object>, shapeSets?: Array, typeWeergave?: string, m3Profiel?: Record<string, any>}} state
  * @param {{id: string, label?: string}} opties
  */
 export function bouwProfielUitOntwerp(state, { id, label }) {
@@ -293,6 +290,7 @@ export function bouwProfielUitOntwerp(state, { id, label }) {
   if (!defs.length) {
     throw new Error("Het ontwerp bevat nog geen Elementtype-nodes.");
   }
+  const { id: _id, style, hierarchie: hierarchieVast, taakbalken, ...profiel } = uitData("profiel", state?.m3Profiel || {});
 
   // Bevat-relaties (composities): ET → CT's en CT → VT's.
   const composities = perSoort("compositie").filter((c) => c.source && c.target);
@@ -303,7 +301,7 @@ export function bouwProfielUitOntwerp(state, { id, label }) {
       .map((c) => elementen.get(c.target));
 
   const doelIdVoor = new Map();
-  for (const def of defs) doelIdVoor.set(def.id, slug(def.naam));
+  for (const def of defs) doelIdVoor.set(def.id, def.data?.[ID] || slug(def.naam));
   // Overerving: ▷-pijl kind → ouder (één ouder; de laatste getekende wint).
   const erftVan = new Map();
   for (const pijl of perSoort("erft")) {
@@ -316,17 +314,15 @@ export function bouwProfielUitOntwerp(state, { id, label }) {
   const fieldTypes = [];
   const fieldTypeIdVoor = new Map(); // fieldDef-node-id → fieldType-id
   for (const veldDef of perSoort("fieldDef")) {
-    const ftId = slug(veldDef.naam);
-    if (!fieldTypeIdVoor.has(veldDef.id)) {
-      fieldTypeIdVoor.set(veldDef.id, ftId);
-      if (!fieldTypes.some((ft) => ft.id === ftId)) {
-        fieldTypes.push({
-          id: ftId,
-          viewer: "naam-type",
-          properties: [{ key: "naam", datatype: "string", verplicht: true }, ...eigenschappenVan(veldDef)],
-        });
-      }
-    }
+    const d = veldDef.data || {};
+    const { id: m3Id, ...rest } = uitData("fieldDef", d);
+    const ftId = m3Id || slug(veldDef.naam);
+    fieldTypeIdVoor.set(veldDef.id, ftId);
+    if (fieldTypes.some((ft) => ft.id === ftId)) continue;
+    const properties = compVelden(veldDef, "eigenschappen").map(eigenschapVan);
+    // Elk veld heeft een naam; een zelf getekend veldtype krijgt die erbij.
+    if (!m3Id && !properties.some((p) => p.key === "naam")) properties.unshift({ key: "naam", datatype: "string", verplicht: true });
+    fieldTypes.push({ id: ftId, viewer: "naam-type", ...rest, properties });
   }
   if (!fieldTypes.length) {
     // Vangnet zodat compartimenten zonder getekend veldtype toch werken.
@@ -343,50 +339,52 @@ export function bouwProfielUitOntwerp(state, { id, label }) {
   const elementTypes = [];
   for (const def of defs) {
     const d = def.data || {};
-    const shape = GELDIGE_SHAPES.has(d.shape) ? d.shape : "class-box";
+    const vers = !d[ID];
+    const { id: _etId, ...m } = uitData("elementDef", d);
+    const naam = naamUitData(def);
     // CompartmentTypes: de CT-nodes die via ◆ aan dit ET hangen; hun
     // veldtype is de (eerste) VT-node die via ◆ aan de CT hangt.
     const compartments = kinderenVan(def.id, "compartimentDef").map((ct) => {
+      const { id: ctId, ...ctRest } = uitData("compartimentDef", ct.data || {});
+      const ctNaam = naamUitData(ct);
       const veldDef = kinderenVan(ct.id, "fieldDef")[0];
-      return {
-        id: slug(ct.naam),
-        label: ct.naam,
+      return schoon({
+        id: ctId || slug(ct.naam),
+        label: ctNaam.gezet ? ctNaam.waarde : undefined,
         fieldType: veldDef ? fieldTypeIdVoor.get(veldDef.id) : fieldTypes[0].id,
-      };
+        ...ctRest,
+      });
     });
-    elementTypes.push({
+    const properties = compVelden(def, "eigenschappen").map(eigenschapVan);
+    if (vers && !properties.some((p) => p.key === "kleur")) properties.unshift({ key: "kleur", datatype: "colour" });
+    // Een geladen type zonder eigen vorm erft hem van zijn ouder (de registratie vlakt dat uit).
+    const shape = vers ? (GELDIGE_SHAPES.has(m.shape) ? m.shape : "class-box") : m.shape || (erftVan.has(def.id) ? undefined : "class-box");
+    const et = schoon({
       id: doelIdVoor.get(def.id),
-      label: def.naam,
-      kort: d.kort || def.naam.slice(0, 3).toUpperCase(),
-      ...((d.doelStereotype ?? d.stereotype)
-        ? { stereotype: d.doelStereotype ?? d.stereotype }
-        : {}),
+      label: naam.gezet ? naam.waarde : def.naam,
+      ...m,
       shape,
-      ...(shape === "boundary" ? { achtergrond: true, handleStijl: "onzichtbaar" } : {}),
-      ...(shape === "note" ? { handleStijl: "onzichtbaar" } : {}),
-      kleur: d.doelKleur || "#e2e8f0",
-      ...(d.icoon ? { icoon: d.icoon } : {}),
-      ...(d.standaardDichtInBoom ? { standaardDichtInBoom: true } : {}),
-      ...(d.uitwerking ? { uitwerking: true } : {}),
-      ...(d.gedragsVerwijzing ? { gedragsVerwijzing: true } : {}),
-      ...(d.meerdereVoorkomens ? { meerdereVoorkomens: true } : {}),
-      ...(d.nietInPalet ? { inPalet: false } : {}),
-      ...(d.geenBeschrijving ? { beschrijving: false } : {}),
-      ...(["x", "y", "xy"].includes(d.layoutDimensie) ? { layoutDimensie: d.layoutDimensie } : {}),
-      ...(d.container ? { _containerWens: true } : {}),
-      ...(erftVan.has(def.id) ? { erft: erftVan.get(def.id) } : {}),
-      ...(d.abstract ? { isAbstract: true } : {}),
-      ...(AARD_ELEMENT.includes(String(d.aard || "").trim()) ? { aard: String(d.aard).trim() } : {}),
-      ...(Object.keys(leesFacetten(d.facetten)).length ? { facetten: leesFacetten(d.facetten) } : {}),
-      properties: [{ key: "kleur", datatype: "colour" }, ...eigenschappenVan(def)],
-      compartments,
+      ...(vers
+        ? {
+            kort: m.kort || def.naam.slice(0, 3).toUpperCase(),
+            kleur: m.kleur || "#e2e8f0",
+            ...(shape === "boundary" ? { achtergrond: m.achtergrond ?? true, handleStijl: m.handleStijl || "onzichtbaar" } : {}),
+            ...(shape === "note" ? { handleStijl: m.handleStijl || "onzichtbaar" } : {}),
+          }
+        : {}),
+      erft: erftVan.get(def.id),
+      aard: AARD_ELEMENT.includes(m.aard) ? m.aard : undefined,
+      properties: lijstUit(def, "properties", properties, vers),
+      compartments: lijstUit(def, "compartments", compartments, vers),
+      _containerWens: !m.containerVoor && d.container ? true : undefined,
     });
+    elementTypes.push(et);
   }
 
-  // Verbindingsregel-lijnen met dezelfde náám vormen samen één connectortype
+  // Verbindingsregel-lijnen met dezelfde id (of naam) vormen samen één connectortype
   // met meerdere verbindingsregels (metametamodel: ConnectorType ◆ 1..*
   // Verbindingsregel) — het connectortype manifesteert zich als meerdere
-  // lijnen. Presentatie-properties van de eerste lijn winnen.
+  // lijnen. De gegevens van de eerste lijn winnen.
   const perConnectorType = new Map();
   perSoort("verbindingsregel")
     .filter((el) => el.source && el.target)
@@ -394,7 +392,7 @@ export function bouwProfielUitOntwerp(state, { id, label }) {
       const bron = doelIdVoor.get(regel.source);
       const doel = doelIdVoor.get(regel.target);
       if (!bron || !doel) return;
-      const connectorId = slug(regel.naam) !== "naamloos" ? slug(regel.naam) : `regel-${i + 1}`;
+      const connectorId = regel.data?.[ID] || (slug(regel.naam) !== "naamloos" ? slug(regel.naam) : `regel-${i + 1}`);
       if (!perConnectorType.has(connectorId)) {
         perConnectorType.set(connectorId, { eerste: regel, regels: [], isHierarchie: false });
       }
@@ -407,119 +405,106 @@ export function bouwProfielUitOntwerp(state, { id, label }) {
   for (const [connectorId, { eerste, regels, isHierarchie }] of perConnectorType) {
     if (isHierarchie) hierarchieConnectoren.push(connectorId);
     const d = eerste.data || {};
-    const hooks = {};
-    const properties = [{ key: "kleur", datatype: "colour" }];
-    if (d.metKardinaliteiten) {
-      hooks.edgeLabels = "kardinaliteiten";
-      properties.push(
-        { key: "bronKardinaliteit", label: "kardinaliteit (bron)", datatype: "string" },
-        { key: "doelKardinaliteit", label: "kardinaliteit (doel)", datatype: "string" }
-      );
-    }
-    if (d.richtingOptie) {
-      hooks.edgePresentatie = "directioneel-pijl";
-      properties.push({ key: "directioneel", label: "gericht (→ doel)", datatype: "boolean" });
-    }
-    elementTypes.push({
-      id: connectorId,
-      label: eerste.naam || connectorId,
-      kort: d.markerStart === "ruit" ? "◆" : d.markerEnd === "driehoek" ? "▷" : "—",
-      shape: "edge",
-      isConnector: true,
-      ...(d.verwijderenUitModel ? { verwijderen: "model" } : {}),
-      ...(AARD_CONNECTOR.includes(String(d.aard || "").trim()) ? { aard: String(d.aard).trim() } : {}),
-      ...(regels.length === 1
+    const vers = !d[ID];
+    const { id: _cId, ...m } = uitData("verbindingsregel", d);
+    const naam = naamUitData(eerste);
+    // De regels zoals het profiel ze had (naar een abstract type, met kardinaliteiten), zolang de
+    // lijnen nog precies dezelfde paren tekenen; anders wat er getekend is.
+    // Paren met een type dat niet getekend is (een type uit het superprofiel) tellen daarbij niet.
+    const bewaard = d[REGELS];
+    const getekendeTypen = new Set(doelIdVoor.values());
+    const tekenbaar = (paar) => paar.split("→").every((t) => getekendeTypen.has(t));
+    const getekend = bewaard && zelfdeParen(parenVan(regelsVan(bewaard)).filter(tekenbaar), parenVan(regels))
+      ? bewaard
+      : regels.length === 1
         ? { bron: { elementTypes: regels[0].bron }, doel: { elementTypes: regels[0].doel } }
-        : { verbindingsregels: regels }),
-      edgePresentatie: {
-        lijn: d.lijn || "solid",
-        ...(d.vorm ? { vorm: d.vorm } : {}),
-        kleur: d.doelKleur || "#64748b",
-        ...(d.markerStart ? { markerStart: d.markerStart } : {}),
-        ...(d.markerEnd ? { markerEnd: d.markerEnd } : {}),
-      },
-      properties,
-      ...(Object.keys(hooks).length ? { hooks } : {}),
-    });
+        : { verbindingsregels: regels };
+    // Gemak-vinkjes: hooks op id plus de eigenschappen die ze tonen.
+    const hooks = { ...(m.hooks || {}) };
+    const properties = m.properties ? [...m.properties] : vers ? [{ key: "kleur", datatype: "colour" }] : undefined;
+    const voegToe = (p) => properties && !properties.some((x) => x.key === p.key) && properties.push(p);
+    if (d.metKardinaliteiten && !hooks.edgeLabels) {
+      hooks.edgeLabels = "kardinaliteiten";
+      voegToe({ key: "bronKardinaliteit", label: "kardinaliteit (bron)", datatype: "string" });
+      voegToe({ key: "doelKardinaliteit", label: "kardinaliteit (doel)", datatype: "string" });
+    }
+    if (d.richtingOptie && !hooks.edgePresentatie) {
+      hooks.edgePresentatie = "directioneel-pijl";
+      voegToe({ key: "directioneel", label: "gericht (→ doel)", datatype: "boolean" });
+    }
+    const p = m.edgePresentatie || {};
+    elementTypes.push(
+      schoon({
+        id: connectorId,
+        label: naam.gezet ? naam.waarde || connectorId : eerste.naam || connectorId,
+        ...m,
+        kort: m.kort || (vers ? (p.markerStart === "ruit" ? "◆" : p.markerEnd === "driehoek" ? "▷" : "—") : undefined),
+        // Een connector die van een knoop-type erft (Relatie → Gegevenselement) erft ook zijn vorm.
+        shape: m.shape || (vers || !m.erft ? "edge" : undefined),
+        isConnector: true,
+        aard: AARD_CONNECTOR.includes(m.aard) ? m.aard : undefined,
+        ...getekend,
+        edgePresentatie: m.edgePresentatie || (vers ? { lijn: "solid", kleur: "#64748b" } : undefined),
+        properties,
+        hooks: Object.keys(hooks).length ? hooks : undefined,
+      })
+    );
   }
 
-  // containerVoor: een ET met het container-vinkje krijgt het (liefst
-  // hiërarchie-)connectortype waarvan hij bron is als lidmaatschapsrelatie.
-  const regelsVanCt = (ct) =>
-    ct.verbindingsregels || [{ bron: ct.bron?.elementTypes || [], doel: ct.doel?.elementTypes || [] }];
+  // containerVoor (gemak): een ET met het container-vinkje en zonder m3:containerVoor krijgt het
+  // (liefst hiërarchie-)connectortype waarvan hij bron is als lidmaatschapsrelatie.
+  const bronnenVan = (ct) => regelsVan(ct).flatMap((r) => (Array.isArray(r.bron) ? r.bron : r.bron?.elementTypes || []));
   for (const et of elementTypes) {
     if (!et._containerWens) continue;
     delete et._containerWens;
     const kandidaat =
-      elementTypes.find(
-        (ct) =>
-          ct.isConnector &&
-          hierarchieConnectoren.includes(ct.id) &&
-          regelsVanCt(ct).some((r) => r.bron.includes(et.id))
-      ) ||
-      elementTypes.find(
-        (ct) => ct.isConnector && regelsVanCt(ct).some((r) => r.bron.includes(et.id))
-      );
+      elementTypes.find((ct) => ct.isConnector && hierarchieConnectoren.includes(ct.id) && bronnenVan(ct).includes(et.id)) ||
+      elementTypes.find((ct) => ct.isConnector && bronnenVan(ct).includes(et.id));
     if (kandidaat) et.containerVoor = kandidaat.id;
   }
 
   // Facetten en layoutstijlen (M3, 18-10): getekende knopen → DiagramType.
   const facetten = {};
   for (const f of perSoort("facetDef")) {
-    const waarden = String(f.data?.waarden || "").split(",").map((x) => x.trim()).filter(Boolean);
-    if (f.naam && waarden.length) facetten[slug(f.naam)] = waarden;
+    const { waarden } = uitData("facetDef", f.data || {});
+    if (f.naam && Array.isArray(waarden) && waarden.length) facetten[f.naam.trim()] = waarden.map(String);
   }
-  const getal = (v) => (String(v ?? "").trim() !== "" && Number.isFinite(Number(v)) ? Number(v) : undefined);
   const layoutStijlen = perSoort("layoutStijlDef").map((st) => {
-    const d = st.data || {};
-    let regels;
-    try {
-      regels = d.regels ? JSON.parse(d.regels) : undefined;
-    } catch {
-      regels = undefined; // ongeldige JSON: geen regels (de registratie meldt verder niets)
-    }
-    const afstanden = Object.fromEntries(Object.entries({ laag: getal(d.afstandLaag), dwars: getal(d.afstandDwars), marge: getal(d.marge) }).filter(([, v]) => v !== undefined));
-    return {
-      id: slug(st.naam),
-      label: st.naam || "Layoutstijl",
+    const { id: stId, ...rest } = uitData("layoutStijlDef", st.data || {});
+    const naam = naamUitData(st);
+    return schoon({
+      id: stId || slug(st.naam),
+      label: naam.gezet ? naam.waarde : undefined,
       renderer: "leesvolgorde",
-      ...(["TB", "LR", "BT", "RL"].includes(String(d.richting || "").trim().toUpperCase()) ? { richting: String(d.richting).trim().toUpperCase() } : {}),
-      ...(d.alleenStroom ? { alleenStroom: true } : {}),
-      ...(d.secundairAchteraan ? { secundairAchteraan: true } : {}),
-      ...(getal(d.kaderKolommen) > 0 ? { kaderKolommen: getal(d.kaderKolommen) } : {}),
-      ...(getal(d.maxPerRij) > 0 ? { maxPerRij: getal(d.maxPerRij) } : {}),
-      ...(String(d.secundairUit || "").trim() ? { secundairUit: String(d.secundairUit).trim() } : {}),
-      ...(d.rijen ? { rijen: slug(d.rijen) } : {}),
-      ...(d.kolommen ? { kolommen: slug(d.kolommen) } : {}),
-      ...(Object.keys(afstanden).length ? { afstanden } : {}),
-      ...(Array.isArray(regels) && regels.length ? { regels } : {}),
-    };
+      ...rest,
+    });
   });
 
   // Style-data (diagram-niveau): shape-sets + typering-standaard, pass-through.
   const shapeSets =
     Array.isArray(state?.shapeSets) && state.shapeSets.length ? state.shapeSets : null;
+  // Hiërarchie: wat het profiel had wint; anders de gemak-vinkjes op de lijnen.
+  const hierarchie = hierarchieVast ?? (hierarchieConnectoren.length ? (hierarchieConnectoren.length === 1 ? hierarchieConnectoren[0] : hierarchieConnectoren) : undefined);
 
-  return {
+  return schoon({
+    ...profiel,
     id: slug(id),
     label: label || id,
-    style: "uml-klassiek",
-    ...(state?.typeWeergave ? { typeWeergave: state.typeWeergave } : {}),
-    ...(shapeSets ? { shapeSets } : {}),
-    // 1 hierarchie-connector → string (compat), meerdere → lijstje.
-    ...(hierarchieConnectoren.length
-      ? { hierarchie: hierarchieConnectoren.length === 1 ? hierarchieConnectoren[0] : hierarchieConnectoren }
-      : {}),
+    style: style || "uml-klassiek",
+    typeWeergave: state?.typeWeergave || undefined,
+    shapeSets: shapeSets || undefined,
+    hierarchie,
     fieldTypes,
     elementTypes,
-    ...(Object.keys(facetten).length ? { facetten } : {}),
-    ...(layoutStijlen.length ? { layoutStijlen } : {}),
-    taakbalken: [
+    facetten: Object.keys(facetten).length ? facetten : undefined,
+    // `layoutStijlen: []` betekent "geen", niet "de standaard": dat onthoudt het diagram.
+    layoutStijlen: layoutStijlen.length ? layoutStijlen : (state?.m3Profiel?.[LEEG] || []).includes("layoutStijlen") ? [] : undefined,
+    taakbalken: taakbalken || [
       { id: "maken", label: "Maken", acties: "elementTypes" },
       { id: "verbinding", label: "Verbinding", acties: "connectorTypes" },
     ],
     layouts: [],
-  };
+  });
 }
 
 /** "laag=business; aspect=actief" → {laag: "business", aspect: "actief"} (en een object blijft een object). */
@@ -532,9 +517,6 @@ export function leesFacetten(waarde) {
   }
   return uit;
 }
-
-/** {laag: "business", aspect: "actief"} → "laag=business; aspect=actief". */
-const facettenTekst = (f) => Object.entries(f || {}).map(([k, v]) => `${k}=${v}`).join("; ");
 
 /**
  * De elementen die bij één ontwerp-diagram horen (P01: meerdere profielen
@@ -564,25 +546,16 @@ export function elementenVanDiagram(state, diagramId) {
 
 let _ontwerpTeller = 0;
 
-function eigenschapVelden(properties) {
-  return (properties || [])
-    .filter((p) => p.key !== "kleur")
-    .map((p) => ({
-      naam: p.label || p.key,
-      fieldType: "eigenschapDef",
-      data: { typeLabel: p.datatype || "string", ...(p.betekenis ? { betekenis: p.betekenis } : {}) },
-    }));
+/** Een PropertyType → een veld in het vak "eigenschappen". */
+function eigenschapVeld(p) {
+  const naam = p.label || p.key;
+  return {
+    naam,
+    fieldType: "eigenschapDef",
+    data: { typeLabel: p.datatype || "", ...naarData("eigenschapDef", p), ...naamNaarData(p.label, naam) },
+  };
 }
 
-/**
- * Zet een descriptor(-kern) om in een ontwerp-diagram (elements + diagram),
- * klaar voor `laadModel` van de profiel-ontwerp-store. Werkt ook op de
- * ingebouwde profielen (functie-hooks worden herkend aan hun properties:
- * bronKardinaliteit → kardinaliteiten-vinkje, directioneel → richting).
- *
- * @param {Object} descriptor
- * @returns {{elements: Record<string, Object>, diagrams: Record<string, Object>}}
- */
 /** Eigen (niet-geërfde) compartimenten/eigenschappen van een uitgevlakt type. */
 function eigenCompartments(et) {
   const geerfd = new Set(et._geerfd?.compartments || []);
@@ -593,6 +566,47 @@ function eigenProperties(et) {
   return (et.properties || []).filter((pr) => !geerfd.has(pr.key));
 }
 
+/**
+ * Wat een kind van zijn ouder erfde (een uitgevlakt type draagt de waarden van zijn ouder): die
+ * hoeven niet nog eens op de knoop van het kind. Hooks en edgePresentatie zijn per sleutel
+ * samengevoegd; die blijven staan.
+ */
+function geerfdeWaarden(et, perId) {
+  const ouder = et.erft ? perId.get(et.erft) : null;
+  if (!ouder) return new Set();
+  const gelijk = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+  return new Set(Object.keys(et).filter((k) => !["id", "label", "erft", "isAbstract", "hooks", "edgePresentatie"].includes(k) && k in ouder && gelijk(et[k], ouder[k])));
+}
+
+/** Een eindpunt of verbindingsregel zoals getekend: vóór de bereik-expansie, zonder `_`-sleutels. */
+function voorExpansie(et) {
+  const eindpunt = (e) => (e ? schoon({ ...Object.fromEntries(Object.entries(e).filter(([k]) => !k.startsWith("_"))), elementTypes: e._voorExpansie || e.elementTypes }) : undefined);
+  if (Array.isArray(et.verbindingsregels) && et.verbindingsregels.length) {
+    return {
+      verbindingsregels: et.verbindingsregels.map((r) => ({
+        bron: Array.isArray(r.bron) ? r._bronVoorExpansie || r.bron : eindpunt(r.bron),
+        doel: Array.isArray(r.doel) ? r._doelVoorExpansie || r.doel : eindpunt(r.doel),
+      })),
+    };
+  }
+  return schoon({ bron: eindpunt(et.bron), doel: eindpunt(et.doel) });
+}
+
+/** Welke lege lijsten een type had: die komen bij de bouw terug als lijst (en niet weg). */
+const legeLijsten = (obj, sleutels) => {
+  const leeg = sleutels.filter((k) => Array.isArray(obj[k]) && !obj[k].length);
+  return leeg.length ? { [LEEG]: leeg } : {};
+};
+
+/**
+ * Zet een descriptor(-kern) om in een ontwerp-diagram (elements + diagram),
+ * klaar voor `laadModel` van de profiel-ontwerp-store. Werkt ook op de
+ * ingebouwde profielen; functies (code) gaan niet mee, die staan alleen ter
+ * informatie in het vak "implementatie".
+ *
+ * @param {Object} descriptor
+ * @returns {{elements: Record<string, Object>, diagrams: Record<string, Object>}}
+ */
 export function ontwerpUitProfiel(descriptor) {
   _ontwerpTeller += 1;
   const prefix = `ow${_ontwerpTeller}`;
@@ -607,6 +621,7 @@ export function ontwerpUitProfiel(descriptor) {
   // Superprofiel-typen (notitie, constraint, notitielijn, diagramverwijzing; M3 20-10) erft elk
   // profiel; ze horen niet in de tekening, net als geërfde eigenschappen.
   const eigen = (descriptor.elementTypes || []).filter((et) => !et._superprofiel);
+  const perId = new Map(eigen.map((et) => [et.id, et]));
   const nietConnectoren = eigen.filter((et) => !et.isConnector);
   const connectoren = eigen.filter((et) => et.isConnector);
 
@@ -637,33 +652,22 @@ export function ontwerpUitProfiel(descriptor) {
         (pr.referenceTypes || []).map((rt) => implRegel("resolver", rt, pr.key))
       ),
     ];
+    const naam = et.label || et.id;
     elements[etNodeId] = {
       id: etNodeId,
-      naam: et.label || et.id,
+      naam,
       elementType: "elementDef",
       compartimenten: [
-        { compartmentType: "eigenschappen", velden: eigenschapVelden(eigenProperties(et)) },
+        { compartmentType: "eigenschappen", velden: eigenProperties(et).map(eigenschapVeld) },
         ...(implementatieRegels.length
           ? [{ compartmentType: "implementatie", velden: implementatieRegels }]
           : []),
       ],
       data: {
-        kort: et.kort || "",
-        shape: et.shape || "class-box",
-        doelKleur: et.kleur || "#e2e8f0",
-        ...(et.icoon ? { icoon: et.icoon } : {}),
-        ...(et.stereotype ? { doelStereotype: et.stereotype } : {}),
-        ...(et.containerVoor ? { container: true } : {}),
-        ...(et.standaardDichtInBoom ? { standaardDichtInBoom: true } : {}),
-        ...(et.uitwerking ? { uitwerking: true } : {}),
-        ...(et.gedragsVerwijzing ? { gedragsVerwijzing: true } : {}),
-        ...(et.meerdereVoorkomens ? { meerdereVoorkomens: true } : {}),
-        ...(et.inPalet === false ? { nietInPalet: true } : {}),
-        ...(et.beschrijving === false ? { geenBeschrijving: true } : {}),
-        ...(et.layoutDimensie ? { layoutDimensie: et.layoutDimensie } : {}),
-        ...(et.isAbstract ? { abstract: true } : {}),
-        ...(et.aard ? { aard: et.aard } : {}),
-        ...(et.facetten && Object.keys(et.facetten).length ? { facetten: facettenTekst(et.facetten) } : {}),
+        ...naarData("elementDef", et, geerfdeWaarden(et, perId)),
+        [ID]: et.id,
+        ...naamNaarData(et.label, naam),
+        ...legeLijsten({ properties: et.properties ? eigenProperties(et) : undefined, compartments: et.compartments ? eigenCompartments(et) : undefined }, ["properties", "compartments"]),
       },
     };
     const x = 60 + kolom * 340;
@@ -671,12 +675,13 @@ export function ontwerpUitProfiel(descriptor) {
 
     eigenCompartments(et).forEach((ct, rij) => {
       const ctNodeId = `${prefix}_ct_${et.id}_${ct.id}`;
+      const ctNaam = ct.label || ct.id;
       elements[ctNodeId] = {
         id: ctNodeId,
-        naam: ct.label || ct.id,
+        naam: ctNaam,
         elementType: "compartimentDef",
         compartimenten: [],
-        data: {},
+        data: { ...naarData("compartimentDef", ct), ...naamNaarData(ct.label, ctNaam) },
       };
       nodes.push({ elementId: ctNodeId, position: { x, y: 330 + rij * 150 } });
       elements[`${ctNodeId}_c`] = {
@@ -698,13 +703,8 @@ export function ontwerpUitProfiel(descriptor) {
           id: vtNodeId,
           naam: ft.id,
           elementType: "fieldDef",
-          compartimenten: [
-            {
-              compartmentType: "eigenschappen",
-              velden: eigenschapVelden((ft.properties || []).filter((p) => p.key !== "naam")),
-            },
-          ],
-          data: {},
+          compartimenten: [{ compartmentType: "eigenschappen", velden: (ft.properties || []).map(eigenschapVeld) }],
+          data: naarData("fieldDef", ft),
         };
         nodes.push({ elementId: vtNodeId, position: { x: vrijeVeldX, y: 640 } });
         vrijeVeldX += 300;
@@ -720,6 +720,22 @@ export function ontwerpUitProfiel(descriptor) {
       };
     });
   });
+
+  // Veldtypen die geen compartiment gebruikt, horen ook bij het profiel: los op de rij eronder.
+  for (const ft of descriptor.fieldTypes || []) {
+    if (veldDefVoorFieldType.has(ft.id)) continue;
+    const vtNodeId = `${prefix}_vt_${ft.id}`;
+    veldDefVoorFieldType.set(ft.id, vtNodeId);
+    elements[vtNodeId] = {
+      id: vtNodeId,
+      naam: ft.id,
+      elementType: "fieldDef",
+      compartimenten: [{ compartmentType: "eigenschappen", velden: (ft.properties || []).map(eigenschapVeld) }],
+      data: naarData("fieldDef", ft),
+    };
+    nodes.push({ elementId: vtNodeId, position: { x: vrijeVeldX, y: 640 } });
+    vrijeVeldX += 300;
+  }
 
   // Overerving (M3): één ▷-pijl per kind → ouder.
   for (const et of nietConnectoren) {
@@ -737,53 +753,25 @@ export function ontwerpUitProfiel(descriptor) {
   }
 
   connectoren.forEach((et, i) => {
-    const p = et.edgePresentatie || {};
-    const props = et.properties || [];
     // Elk toegestaan (bron, doel)-paar wordt één regel-lijn; lijnen met
-    // dezelfde naam bundelen bij het genereren weer tot dit connectortype.
-    const regels =
-      Array.isArray(et.verbindingsregels) && et.verbindingsregels.length
-        ? et.verbindingsregels
-        : [{ bron: et.bron || [], doel: et.doel || [] }];
+    // dezelfde id bundelen bij het genereren weer tot dit connectortype.
+    const zoals = voorExpansie(et);
+    const naam = et.label || et.id;
+    const data = {
+      ...naarData("verbindingsregel", et, geerfdeWaarden(et, perId)),
+      [ID]: et.id,
+      ...naamNaarData(et.label, naam),
+      [REGELS]: zoals,
+    };
     let volgnr = 0;
-    for (const regel of regels) {
-      // Vóór de bereik-expansie: de regel zoals getekend (naar een abstract
-      // type), niet de uitgeschreven lijst concrete afstammelingen.
-      const bronnen = regel._bronVoorExpansie || regel.bron?._voorExpansie || regel.bron?.elementTypes || regel.bron || [];
-      const doelen = regel._doelVoorExpansie || regel.doel?._voorExpansie || regel.doel?.elementTypes || regel.doel || [];
-      for (const bronType of bronnen) {
-        for (const doelType of doelen) {
-          const bron = nodeIdVoorElementType.get(bronType);
-          const doel = nodeIdVoorElementType.get(doelType);
-          if (!bron || !doel) continue;
-          volgnr += 1;
-          const id = `${prefix}_regel_${i}_${volgnr}`;
-          elements[id] = {
-            id,
-            naam: et.label || et.id,
-            elementType: "verbindingsregel",
-            source: bron,
-            target: doel,
-            compartimenten: [],
-            data: {
-              lijn: p.lijn || "solid",
-              ...(p.vorm ? { vorm: p.vorm } : {}),
-              ...(p.markerStart ? { markerStart: p.markerStart } : {}),
-              ...(p.markerEnd ? { markerEnd: p.markerEnd } : {}),
-              doelKleur: p.kleur || "#64748b",
-              metKardinaliteiten: props.some((pr) => pr.key === "bronKardinaliteit"),
-              richtingOptie: props.some((pr) => pr.key === "directioneel"),
-              ...(et.verwijderen === "model" ? { verwijderenUitModel: true } : {}),
-              ...(et.aard ? { aard: et.aard } : {}),
-              ...([].concat(descriptor.hierarchie || [])
-                .map((h) => (typeof h === "string" ? h : h?.type))
-                .includes(et.id)
-                ? { isHierarchie: true }
-                : {}),
-            },
-          };
-        }
-      }
+    for (const paar of parenVan(regelsVan(zoals))) {
+      const [bronType, doelType] = paar.split("→");
+      const bron = nodeIdVoorElementType.get(bronType);
+      const doel = nodeIdVoorElementType.get(doelType);
+      if (!bron || !doel) continue;
+      volgnr += 1;
+      const id = `${prefix}_regel_${i}_${volgnr}`;
+      elements[id] = { id, naam, elementType: "verbindingsregel", source: bron, target: doel, compartimenten: [], data };
     }
   });
 
@@ -792,40 +780,28 @@ export function ontwerpUitProfiel(descriptor) {
   let x2 = 60;
   for (const [naam, waarden] of Object.entries(descriptor.facetten || {})) {
     const id = `${prefix}_facet_${naam}`;
-    elements[id] = { id, naam, elementType: "facetDef", compartimenten: [], data: { waarden: waarden.join(", ") } };
+    elements[id] = { id, naam, elementType: "facetDef", compartimenten: [], data: { [`${M3}waarden`]: [...waarden] } };
     nodes.push({ elementId: id, position: { x: x2, y: 900 } });
     x2 += 300;
   }
   for (const st of descriptor.layoutStijlen || []) {
     const id = `${prefix}_stijl_${st.id}`;
-    const a = st.afstanden || {};
+    const naam = st.label || st.id;
     elements[id] = {
       id,
-      naam: st.label || st.id,
+      naam,
       elementType: "layoutStijlDef",
       compartimenten: [],
-      data: {
-        ...(st.richting ? { richting: st.richting } : {}),
-        ...(st.alleenStroom ? { alleenStroom: true } : {}),
-        ...(st.secundairAchteraan ? { secundairAchteraan: true } : {}),
-        ...(st.kaderKolommen ? { kaderKolommen: String(st.kaderKolommen) } : {}),
-        ...(st.maxPerRij ? { maxPerRij: String(st.maxPerRij) } : {}),
-        ...(st.secundairUit ? { secundairUit: st.secundairUit } : {}),
-        ...(st.rijen ? { rijen: st.rijen } : {}),
-        ...(st.kolommen ? { kolommen: st.kolommen } : {}),
-        ...(a.laag != null ? { afstandLaag: String(a.laag) } : {}),
-        ...(a.dwars != null ? { afstandDwars: String(a.dwars) } : {}),
-        ...(a.marge != null ? { marge: String(a.marge) } : {}),
-        ...(st.regels?.length ? { regels: JSON.stringify(st.regels) } : {}),
-      },
+      data: { ...naarData("layoutStijlDef", st), ...naamNaarData(st.label, naam) },
     };
     nodes.push({ elementId: id, position: { x: x2, y: 900 } });
     x2 += 300;
   }
 
-  // Shape-sets en typering-standaard zijn Style-data (diagram-niveau, geen
-  // canvas-node): zet ze op het ontwerp-diagram, zodat het shape-set-paneel
-  // ze bewerkt en `bouwProfielUitOntwerp` ze pass-through terugkrijgt.
+  // Shape-sets, typering-standaard en de eigenschappen van het profiel zelf zijn gegevens op het
+  // ontwerp-diagram (geen canvas-node): het shape-set-paneel bewerkt de eerste twee, en
+  // `bouwProfielUitOntwerp` krijgt ze pass-through terug.
+  const m3Profiel = { ...naarData("profiel", descriptor), ...legeLijsten(descriptor, ["layoutStijlen"]) };
   return {
     elements,
     diagrams: {
@@ -836,6 +812,7 @@ export function ontwerpUitProfiel(descriptor) {
         edges: [],
         ...(descriptor.shapeSets?.length ? { shapeSets: descriptor.shapeSets } : {}),
         ...(descriptor.typeWeergave ? { typeWeergave: descriptor.typeWeergave } : {}),
+        ...(Object.keys(m3Profiel).length ? { m3Profiel } : {}),
       },
     },
   };
@@ -930,12 +907,11 @@ export function voorbeeldOntwerp() {
         compartments: [{ id: "kenmerken", label: "Kenmerken", fieldType: "meting" }],
       },
     ],
-    connectorVoorbeeld: true,
   });
 }
 
-// Het voorbeeld heeft ook een verbindingsregel; ontwerpUitProfiel leest die
-// uit de descriptor — voeg hem daar toe via een kleine nabewerking.
+// Het voorbeeld heeft ook een verbindingsregel, zoals je hem zelf tekent: een lijn zonder
+// m3:id, met de gemak-vinkjes voor kardinaliteiten en richting.
 const _voorbeeldBasis = voorbeeldOntwerp;
 export function voorbeeldOntwerpMetRegel() {
   const ontwerp = _voorbeeldBasis();
@@ -950,7 +926,11 @@ export function voorbeeldOntwerpMetRegel() {
       source: planeet.id,
       target: ster.id,
       compartimenten: [],
-      data: { lijn: "solid", vorm: "recht", metKardinaliteiten: true, richtingOptie: true, doelKleur: "#64748b" },
+      data: {
+        [`${M3}edgePresentatie`]: { lijn: "solid", vorm: "recht", kleur: "#64748b" },
+        metKardinaliteiten: true,
+        richtingOptie: true,
+      },
     };
   }
   return ontwerp;
