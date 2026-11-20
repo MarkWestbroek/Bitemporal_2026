@@ -9,6 +9,11 @@
  * wordt op id aangewezen. Deze meting is de werklijst daarvoor; `render-svc/profielRondreis.*`
  * legt de stand vast en laat de test falen als hij verandert zonder dat de stand is bijgewerkt.
  *
+ * Eerlijk vergelijken (20-11): het teruggebouwde profiel gaat door dezelfde stappen als een
+ * zelf getekend profiel bij het activeren — hook-id's worden code (`vertaalHooks`), de erfenis
+ * wordt uitgevlakt, het superprofiel en de standaard-layouts worden aangevuld — en de volgorde
+ * van sleutels in een object telt niet (die betekent niets).
+ *
  * Een verschil is `"<Metaklasse>.<sleutel> — weg | erbij | anders"`, of `"<Metaklasse> — type
  * weg"` als een heel type niet terugkomt. Sleutels met een `_` vooraan zijn afgeleid (uitgevlakte
  * erfenis) en tellen niet mee; typen uit het superprofiel ook niet, die erft elk profiel.
@@ -16,20 +21,40 @@
  * Puur en store-loos.
  */
 import { ontwerpUitProfiel, bouwProfielUitOntwerp } from "./profielOntwerp.js";
+import { vertaalHooks } from "./profielGereedschap.js";
+import { normaliseerErfenis, kopieVoorNormalisatie } from "../../diagramcore/types/erfenis.js";
+import { vulSuperprofielAan } from "../../diagramcore/types/superprofiel.js";
+import { vulLayoutsAan } from "../../diagramcore/types/typeRegistry.js";
+import { STANDAARD_PROFIELVERSIE } from "../../diagramcore/types/profielVersie.js";
 
 const CODE = "«code»";
 
-/** Vergelijkbare vorm: code wordt een merkteken, afgeleide (`_`) sleutels vervallen. */
+/** Vergelijkbare vorm: code wordt een merkteken, afgeleide (`_`) sleutels vervallen, sleutels op volgorde. */
 function vergelijkbaar(waarde) {
   if (typeof waarde === "function") return CODE;
   if (Array.isArray(waarde)) return waarde.map(vergelijkbaar);
   if (waarde && typeof waarde === "object") {
-    return Object.fromEntries(Object.entries(waarde).filter(([sleutel]) => !sleutel.startsWith("_")).map(([sleutel, w]) => [sleutel, vergelijkbaar(w)]));
+    return Object.fromEntries(
+      Object.entries(waarde)
+        .filter(([sleutel]) => !sleutel.startsWith("_"))
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([sleutel, w]) => [sleutel, vergelijkbaar(w)])
+    );
   }
   return waarde;
 }
 
 const gelijk = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+
+/** Wat de registratie met een zelf getekend profiel doet (profielRegistratie.jsx, typeRegistry.js). */
+function zoalsGeregistreerd(kern) {
+  const dt = kopieVoorNormalisatie(vertaalHooks(kern));
+  normaliseerErfenis(dt);
+  vulSuperprofielAan(dt);
+  vulLayoutsAan(dt);
+  if (!dt.versie) dt.versie = STANDAARD_PROFIELVERSIE;
+  return dt;
+}
 
 /**
  * De verschillen van één profiel na de rondreis.
@@ -42,7 +67,12 @@ export function rondreisVerschillen(descriptor) {
   let na;
   try {
     const ontwerp = ontwerpUitProfiel(descriptor);
-    na = vergelijkbaar(bouwProfielUitOntwerp({ elements: ontwerp.elements }, { id: descriptor.id, label: descriptor.label }));
+    const diagram = Object.values(ontwerp.diagrams)[0] || {};
+    const kern = bouwProfielUitOntwerp(
+      { elements: ontwerp.elements, shapeSets: diagram.shapeSets, typeWeergave: diagram.typeWeergave, m3Profiel: diagram.m3Profiel },
+      { id: descriptor.id, label: descriptor.label }
+    );
+    na = vergelijkbaar(zoalsGeregistreerd(kern));
   } catch (fout) {
     return [`DiagramType — niet te bouwen (${String(fout?.message || fout).slice(0, 80)})`];
   }

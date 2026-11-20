@@ -97,7 +97,7 @@ function ColourEditor({ regel, waarde, onChange }) {
  * Shape-kiezer (P06): keuzelijst over de shape-registry met een live
  * mini-preview van de gekozen shape — zo zie je in de PE wat een
  * ElementType gaat worden. De preview gebruikt de kleur van het ontwerp
- * (data.doelKleur) als die er is.
+ * (data["m3:kleur"], de M3-naam in het Profiel-ontwerp) als die er is.
  */
 function ShapeKeuzeEditor({ regel, waarde, onChange, element }) {
   const ids = alleShapeTypeIds().filter((id) => !["anker", "edge"].includes(id));
@@ -119,7 +119,7 @@ function ShapeKeuzeEditor({ regel, waarde, onChange, element }) {
         title={`preview: ${gekozen}`}
         style={{ flex: "0 0 auto", width: 78, height: 40, overflow: "hidden", borderRadius: 6, border: "1px dashed var(--s-border, #cbd5e1)", position: "relative", pointerEvents: "none" }}
       >
-        <VormVoorbeeld shapeId={gekozen} naam={element?.naam || "Aa"} kleur={element?.data?.doelKleur} breedte={76} hoogte={38} />
+        <VormVoorbeeld shapeId={gekozen} naam={element?.naam || "Aa"} kleur={element?.data?.["m3:kleur"] ?? element?.data?.doelKleur} breedte={76} hoogte={38} />
       </div>
     </div>
   );

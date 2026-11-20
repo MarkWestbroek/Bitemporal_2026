@@ -34,9 +34,9 @@ function maakOntwerp() {
             velden: [{ naam: "helderheid", fieldType: "eigenschapDef", data: { typeLabel: "string" } }],
           },
         ],
-        data: { kort: "ST", shape: "bol", doelKleur: "#fde68a" },
+        data: { "m3:kort": "ST", "m3:shape": "bol", "m3:kleur": "#fde68a" },
       },
-      E2: { id: "E2", naam: "Planeet", elementType: "elementDef", compartimenten: [], data: { shape: "raar" } },
+      E2: { id: "E2", naam: "Planeet", elementType: "elementDef", compartimenten: [], data: { "m3:shape": "raar" } },
       CT1: { id: "CT1", naam: "Metingen", elementType: "compartimentDef", compartimenten: [], data: {} },
       VT1: {
         id: "VT1",
@@ -62,7 +62,7 @@ function maakOntwerp() {
         source: "E2",
         target: "E1",
         compartimenten: [],
-        data: { vorm: "recht", markerEnd: "pijl-open", metKardinaliteiten: true, richtingOptie: true },
+        data: { "m3:edgePresentatie": { vorm: "recht", markerEnd: "pijl-open" }, metKardinaliteiten: true, richtingOptie: true },
       },
     },
   };
@@ -185,9 +185,9 @@ test("hiërarchie (P02): bevat-vinkje op een regel-lijn wordt kern.hierarchie en
   assert.equal(kern.hierarchie, "draait-om");
   assert.deepEqual(valideerDiagramType(vertaalHooks(kern)), []);
 
+  // Terug: de hiërarchie is een eigenschap van het profiel (DiagramType), op het ontwerp-diagram.
   const terug = ontwerpUitProfiel(kern);
-  const lijn = Object.values(terug.elements).find((el) => el.elementType === "verbindingsregel");
-  assert.equal(lijn.data.isHierarchie, true);
+  assert.equal(Object.values(terug.diagrams)[0].m3Profiel["m3:hierarchie"], "draait-om");
 });
 
 test("ontwerpUitAlleProfielen: diagram per profiel + bewaarde layout wint", () => {
@@ -260,29 +260,32 @@ test("container-vinkje en standaard-dicht reizen mee door ontwerp en bouw", () =
     hierarchie: "in",
   });
   const mapDef = Object.values(ontwerp.elements).find((el) => el.naam === "Map");
-  assert.equal(mapDef.data.container, true, "containerVoor wordt het container-vinkje");
-  assert.equal(mapDef.data.standaardDichtInBoom, true);
-  assert.equal(mapDef.data.uitwerking, true, "uitwerking wordt een vinkje");
-  assert.equal(mapDef.data.gedragsVerwijzing, true);
+  // De M3-namen achter "m3:" (ontwerptaal.js).
+  assert.equal(mapDef.data["m3:containerVoor"], "in");
+  assert.equal(mapDef.data["m3:standaardDichtInBoom"], true);
+  assert.equal(mapDef.data["m3:uitwerking"], true);
+  assert.equal(mapDef.data["m3:gedragsVerwijzing"], true);
+  assert.equal(mapDef.data["m3:inPalet"], false);
 
-  const kern = bouwProfielUitOntwerp({ elements: ontwerp.elements }, { id: "pkg-test", label: "Pkg" });
+  const diag = Object.values(ontwerp.diagrams)[0];
+  const kern = bouwProfielUitOntwerp({ elements: ontwerp.elements, m3Profiel: diag.m3Profiel }, { id: "pkg-test", label: "Pkg" });
   const mapEt = kern.elementTypes.find((et) => et.label === "Map");
   const inCt = kern.elementTypes.find((et) => et.isConnector);
   assert.equal(mapEt.standaardDichtInBoom, true);
   assert.equal(mapEt.uitwerking, true, "en komt als M3-eigenschap terug");
   assert.equal(mapEt.gedragsVerwijzing, true);
   assert.equal(mapEt.meerdereVoorkomens, true);
-  assert.equal(mapEt.inPalet, false, "nietInPalet-vinkje → inPalet: false");
-  assert.equal(mapEt.beschrijving, false, "geenBeschrijving-vinkje → beschrijving: false");
+  assert.equal(mapEt.inPalet, false);
+  assert.equal(mapEt.beschrijving, false);
   assert.equal(mapEt.layoutDimensie, "x");
-  assert.equal(inCt.verwijderen, "model", "verwijderenUitModel-vinkje → verwijderen: model");
+  assert.equal(inCt.verwijderen, "model");
   const bladEt = kern.elementTypes.find((et) => et.label === "Blad");
   assert.equal(bladEt.properties.find((p) => p.key === "definitie")?.betekenis, "beschrijving", "PropertyType.betekenis reist mee");
-  assert.equal(mapEt.containerVoor, inCt.id, "containerVoor wijst naar de hiërarchie-connector");
+  assert.equal(mapEt.containerVoor, inCt.id, "containerVoor komt letterlijk terug");
   assert.ok(!("_containerWens" in mapEt), "werk-vlag blijft niet achter");
 });
 
-test("ET-stereotype reist als doelStereotype (ontwerp-node toont zijn eigen «elementtype»)", () => {
+test("ET-stereotype reist als m3:stereotype (ontwerp-node toont zijn eigen «elementtype»)", () => {
   const ontwerp = ontwerpUitProfiel({
     id: "st-test",
     label: "St",
@@ -292,7 +295,7 @@ test("ET-stereotype reist als doelStereotype (ontwerp-node toont zijn eigen «el
     ],
   });
   const def = Object.values(ontwerp.elements).find((el) => el.naam === "Pak");
-  assert.equal(def.data.doelStereotype, "«package»");
+  assert.equal(def.data["m3:stereotype"], "«package»");
   assert.equal(def.data.stereotype, undefined, "weergave-override blijft vrij voor de ET-node zelf");
 
   const kern = bouwProfielUitOntwerp({ elements: ontwerp.elements }, { id: "st-test", label: "St" });
@@ -344,7 +347,7 @@ test("icoon en embleem reizen mee door ontwerp en bouw", () => {
     ],
   });
   const def = Object.values(ontwerp.elements).find((el) => el.naam === "Ding");
-  assert.equal(def.data.icoon, "enumeratie");
+  assert.equal(def.data["m3:icoon"], "enumeratie");
   const kern = bouwProfielUitOntwerp({ elements: ontwerp.elements }, { id: "ico-test", label: "Ico" });
   assert.equal(kern.elementTypes[0].icoon, "enumeratie");
 });
@@ -381,12 +384,12 @@ test("erft/isAbstract: ontwerp ⇄ descriptor roundtrip, geërfde delen niet dub
     elements: {
       R: { id: "R", naam: "Representatie", elementType: "elementDef", compartimenten: [
         { compartmentType: "eigenschappen", velden: [{ naam: "alias", fieldType: "eigenschapDef", data: { typeLabel: "string" } }] },
-      ], data: { shape: "class-box", abstract: true } },
-      E: { id: "E", naam: "Entiteit", elementType: "elementDef", compartimenten: [], data: { shape: "class-box", kort: "ENT" } },
-      G: { id: "G", naam: "Gegevenselement", elementType: "elementDef", compartimenten: [], data: { shape: "class-box", kort: "GE" } },
+      ], data: { "m3:shape": "class-box", "m3:isAbstract": true } },
+      E: { id: "E", naam: "Entiteit", elementType: "elementDef", compartimenten: [], data: { "m3:shape": "class-box", "m3:kort": "ENT" } },
+      G: { id: "G", naam: "Gegevenselement", elementType: "elementDef", compartimenten: [], data: { "m3:shape": "class-box", "m3:kort": "GE" } },
       e1: { id: "e1", naam: "", elementType: "erft", source: "E", target: "R", compartimenten: [], data: {} },
       e2: { id: "e2", naam: "", elementType: "erft", source: "G", target: "R", compartimenten: [], data: {} },
-      rel: { id: "rel", naam: "Relatie", elementType: "verbindingsregel", source: "R", target: "R", compartimenten: [], data: { lijn: "solid" } },
+      rel: { id: "rel", naam: "Relatie", elementType: "verbindingsregel", source: "R", target: "R", compartimenten: [], data: { "m3:edgePresentatie": { lijn: "solid" } } },
     },
     diagrams: { ontwerp: { id: "ontwerp", naam: "x", nodes: [], edges: [] } },
   };
@@ -409,7 +412,7 @@ test("erft/isAbstract: ontwerp ⇄ descriptor roundtrip, geërfde delen niet dub
   assert.equal(pijlen.length, 2);
   const entNode = Object.values(terug.elements).find((el) => el.elementType === "elementDef" && el.naam === "Entiteit");
   const repNode = Object.values(terug.elements).find((el) => el.elementType === "elementDef" && el.naam === "Representatie");
-  assert.equal(repNode.data.abstract, true);
+  assert.equal(repNode.data["m3:isAbstract"], true);
   const entVelden = entNode.compartimenten[0].velden.map((v) => v.naam);
   assert.ok(!entVelden.includes("alias"), "geërfde eigenschap niet nog eens op het kind");
   const regels = Object.values(terug.elements).filter((el) => el.elementType === "verbindingsregel");
@@ -435,7 +438,7 @@ test("M3 aard, facetten en layoutstijl (18-10): ontwerp ⇄ profiel, en registre
   const ontwerp = ontwerpUitProfiel(kern);
   const soorten = Object.values(ontwerp.elements).map((e) => e.elementType);
   assert.ok(soorten.includes("facetDef") && soorten.includes("layoutStijlDef"));
-  const terug = bouwProfielUitOntwerp({ elements: ontwerp.elements }, { id: "lagen-test", label: "Lagen-test" });
+  const terug = bouwProfielUitOntwerp({ elements: ontwerp.elements, m3Profiel: Object.values(ontwerp.diagrams)[0].m3Profiel }, { id: "lagen-test", label: "Lagen-test" });
   assert.deepEqual(terug.facetten, { laag: ["business", "applicatie"] });
   assert.deepEqual(terug.layoutStijlen, [{ id: "lagen", label: "Lagen", renderer: "leesvolgorde", richting: "TB", rijen: "laag", afstanden: { laag: 90 }, regels: kern.layoutStijlen[0].regels }]);
   const start = terug.elementTypes.find((e) => e.id === "start");
@@ -448,7 +451,69 @@ test("M3 aard, facetten en layoutstijl (18-10): ontwerp ⇄ profiel, en registre
 test("M3 aard: een onbekende aard in het ontwerp wordt niet overgenomen", () => {
   const ontwerp = voorbeeldOntwerpMetRegel();
   const et = Object.values(ontwerp.elements).find((e) => e.elementType === "elementDef");
-  et.data = { ...et.data, aard: "zomaar" };
+  et.data = { ...et.data, "m3:aard": "zomaar" };
   const kern = bouwProfielUitOntwerp({ elements: ontwerp.elements }, { id: "rt2" });
   assert.ok(kern.elementTypes.every((e) => e.aard === undefined));
+});
+
+test("ontwerptaal = M3: een geladen profiel komt letterlijk terug (null, lege lijsten, label null)", () => {
+  const descriptor = {
+    id: "exact",
+    label: "Exact",
+    versie: "2.1.0",
+    style: "uml-klassiek",
+    taakbalken: [{ id: "maken", label: "Maken", acties: "elementTypes" }],
+    layoutStijlen: [],
+    fieldTypes: [
+      { id: "kolom", viewer: "naam-type", properties: [{ key: "naam", datatype: "string", verplicht: true }, { key: "type", datatype: "keuze", opties: [{ waarde: "a", label: "A" }] }] },
+      { id: "los", viewer: "tekst", properties: [{ key: "tekst", datatype: "tekst" }] },
+    ],
+    elementTypes: [
+      {
+        id: "tabel",
+        label: "Tabel",
+        shape: "class-box",
+        kort: "TAB",
+        minBreedte: 120,
+        lidwoord: "de",
+        randElement: undefined,
+        properties: [],
+        compartments: [{ id: "kolommen", label: null, fieldType: "kolom" }],
+      },
+      {
+        id: "verwijst",
+        label: "verwijst naar",
+        shape: "edge",
+        isConnector: true,
+        opname: null,
+        bron: { elementTypes: ["tabel"], kardinaliteiten: ["1"] },
+        doel: { elementTypes: ["tabel"] },
+        edgePresentatie: { lijn: "solid", markerEnd: "pijl-open" },
+        properties: [{ key: "rol", datatype: "string" }],
+      },
+    ],
+  };
+  const ontwerp = ontwerpUitProfiel(descriptor);
+  const diag = Object.values(ontwerp.diagrams)[0];
+  const kern = bouwProfielUitOntwerp({ elements: ontwerp.elements, m3Profiel: diag.m3Profiel }, { id: "exact", label: "Exact" });
+  const zonderLeeg = (o) => JSON.parse(JSON.stringify(o));
+  assert.deepEqual(zonderLeeg(kern.elementTypes), zonderLeeg(descriptor.elementTypes));
+  assert.deepEqual(kern.fieldTypes, descriptor.fieldTypes, "ook een veldtype dat geen compartiment gebruikt");
+  assert.equal(kern.versie, "2.1.0");
+  assert.deepEqual(kern.taakbalken, descriptor.taakbalken);
+  assert.deepEqual(kern.layoutStijlen, [], "layoutStijlen: [] = geen stijlen, en niet de standaard");
+});
+
+test("ontwerptaal: een gewijzigde naam wint van wat er onthouden was", () => {
+  const ontwerp = ontwerpUitProfiel({
+    id: "n",
+    label: "N",
+    fieldTypes: [{ id: "v", viewer: "naam-type", properties: [{ key: "naam", datatype: "string" }] }],
+    elementTypes: [{ id: "a", label: "A", shape: "class-box", compartments: [{ id: "vak", label: null, fieldType: "v" }] }],
+  });
+  const ct = Object.values(ontwerp.elements).find((e) => e.elementType === "compartimentDef");
+  assert.equal(ct.naam, "vak");
+  assert.equal(bouwProfielUitOntwerp({ elements: ontwerp.elements }, { id: "n" }).elementTypes[0].compartments[0].label, null);
+  ct.naam = "Velden";
+  assert.equal(bouwProfielUitOntwerp({ elements: ontwerp.elements }, { id: "n" }).elementTypes[0].compartments[0].label, "Velden");
 });

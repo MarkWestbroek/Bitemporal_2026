@@ -9,6 +9,11 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 ## [Unreleased]
 
 ### Toegevoegd
+- **Profiel-ontwerp: de taal is het M3** (Mark 19-11). Wat je van een elementtype, compartiment, veldtype, eigenschap
+  of verbindingsregel kunt instellen, komt nu rechtstreeks uit het M3: alle eigenschappen staan in de inspector, met de
+  M3-naam (bijvoorbeeld `m3:kleur`, `m3:isAbstract`). Getallen hebben een getalveld, samengestelde waarden een
+  JSON-veld dat alleen geldige JSON opslaat. Een geladen profiel komt bij *Activeer profiel* letterlijk terug; alleen
+  code (hooks, resolvers) blijft achter.
 - **Transformaties bekijken en proefdraaien** (Mark 18-11, TRANS-1 stap 1): een nieuwe activiteit *Transformaties*
   toont de regelsets die tot nu toe alleen in de code stonden. Per regelset zie je de regels in volgorde, in
   woorden (bij, als, dan), en of hij geldig is. *Proefdraaien* past hem toe op geplakte tekst (Mermaid, BPMN-XML,

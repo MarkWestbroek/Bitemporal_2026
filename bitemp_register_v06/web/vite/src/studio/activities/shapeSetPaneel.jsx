@@ -194,36 +194,30 @@ export default function ShapeSetPaneel({ useStore }) {
   }
   const sets = diagram.shapeSets || [];
 
+  // De standaard staat in de M3-velden van de knoop (ontwerptaal.js): m3:shape, m3:icoon, m3:kleur.
   const standaardVan = (el) => ({
-    shape: el.data?.shape || "class-box",
-    icoon: el.data?.icoon,
-    kleur: el.data?.doelKleur,
+    shape: el.data?.["m3:shape"] || "class-box",
+    icoon: el.data?.["m3:icoon"],
+    kleur: el.data?.["m3:kleur"],
   });
-  // Connector-standaard uit de verbindingsregel-data (edgePresentatie-vorm).
-  const lijnStandaardVan = (el) => ({
-    lijn: el.data?.lijn || "solid",
-    vorm: el.data?.vorm,
-    markerStart: el.data?.markerStart,
-    markerEnd: el.data?.markerEnd,
-    kleur: el.data?.doelKleur,
-  });
+  // Connector-standaard: de m3:edgePresentatie van de lijn.
+  const lijnStandaardVan = (el) => {
+    const p = el.data?.["m3:edgePresentatie"] || {};
+    return { lijn: p.lijn || "solid", vorm: p.vorm, markerStart: p.markerStart, markerEnd: p.markerEnd, kleur: p.kleur };
+  };
   const zetLijnStandaard = (groep, stijl) => {
     for (const id of groep.ids) {
+      const oud = useStore.getState().elements[id]?.data?.["m3:edgePresentatie"] || {};
+      const nieuw = { ...oud, lijn: stijl.lijn || "solid", vorm: stijl.vorm || undefined, markerStart: stijl.markerStart || undefined, markerEnd: stijl.markerEnd || undefined, kleur: stijl.kleur || undefined };
       useStore.getState().updateElement(id, {
-        data: {
-          lijn: stijl.lijn || "solid",
-          vorm: stijl.vorm || undefined,
-          markerStart: stijl.markerStart || undefined,
-          markerEnd: stijl.markerEnd || undefined,
-          doelKleur: stijl.kleur || undefined,
-        },
+        data: { "m3:edgePresentatie": Object.fromEntries(Object.entries(nieuw).filter(([, w]) => w !== undefined)) },
       });
     }
   };
 
   const zetStandaard = (el, skin) =>
     useStore.getState().updateElement(el.id, {
-      data: { shape: skin.shape || "class-box", icoon: skin.icoon || undefined, doelKleur: skin.kleur || undefined },
+      data: { "m3:shape": skin.shape || "class-box", "m3:icoon": skin.icoon || undefined, "m3:kleur": skin.kleur || undefined },
     });
 
   const zetCel = (setIndex, sleutel, skin) => {
