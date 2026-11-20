@@ -1,153 +1,954 @@
 {
-  "@context": [
-    "http://www.w3.org/ns/odrl.jsonld",
+  "@context": {
+    "odrl": "http://www.w3.org/ns/odrl/2/",
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "xsd": "http://www.w3.org/2001/XMLSchema#",
+    "skos": "http://www.w3.org/2004/02/skos/core#",
+    "dct": "http://purl.org/dc/terms/",
+    "prov": "http://www.w3.org/ns/prov#",
+    "dpv": "https://w3id.org/dpv#",
+    "schema": "https://schema.org/",
+    "apnl": "https://standaarden.overheid.nl/odrl-ap-nl/",
+    "ts": "https://omnium.example/toegangsspraak/",
+    "reg": "https://omnium.example/register/gbo/",
+    "b": "https://omnium.example/toegangsbeleid/gbo-persoon/"
+  },
+  "@graph": [
     {
-      "nlgov": "https://standaarden.overheid.nl/odrl/terms/"
-    }
-  ],
-  "@type": "Set",
-  "uid": "urn:nlgov:beleid:gbo-persoon",
-  "profile": "https://standaarden.overheid.nl/odrl/profile/toegangsbeleid",
-  "conflict": "prohibit",
-  "dc:description": "GBO persoon",
-  "nlgov:doelbinding": "inkomensverstrekking",
-  "permission": [
-    {
-      "nlgov:regelnaam": "persoon op bsn",
-      "target": {
-        "@type": "Asset",
-        "uid": "nlgov:register:Persoon"
+      "@id": "b:beleid",
+      "@type": "odrl:Set",
+      "dct:title": {
+        "@value": "GBO persoon",
+        "@language": "nl"
       },
-      "assignee": {
-        "@type": "PartyCollection",
-        "uid": "urn:nlgov:rolgroep:afnemer",
-        "refinement": [
-          {
-            "leftOperand": {
-              "@id": "nlgov:rol"
-            },
-            "operator": "eq",
-            "rightOperand": "afnemer"
-          }
-        ]
+      "odrl:uid": {
+        "@id": "b:beleid"
       },
-      "action": {
-        "@id": "nlgov:view"
-      },
-      "constraint": [
+      "odrl:profile": [
         {
-          "leftOperand": {
-            "@id": "nlgov:bestaat:toestemming"
-          },
-          "operator": "eq",
-          "rightOperand": true,
-          "nlgov:voor": {
-            "@id": "nlgov:betrokkene"
-          }
+          "@id": "apnl:profiel"
+        },
+        {
+          "@id": "ts:profiel"
+        }
+      ],
+      "dct:description": {
+        "@value": "Geschreven in Toegangsspraak (klare taal) en daaruit vertaald naar ODRL. Elke regel draagt zijn oorspronkelijke zin als beschrijving. Doel: inkomensverstrekking.",
+        "@language": "nl"
+      },
+      "dct:issued": {
+        "@value": "2026-10-05",
+        "@type": "xsd:date"
+      },
+      "odrl:conflict": {
+        "@id": "odrl:prohibit"
+      },
+      "ts:brontekst": "Beleid \"GBO persoon\".\n  Doel: \"inkomensverstrekking\".\n\n  Begrippen.\n    Een afnemer is: iemand met rol \"afnemer\".\n    Een geautoriseerde afnemer is: iemand met autorisatie \"naam-en-adres\".\n    Inkomensgegevens zijn: alle gegevens van het inkomen van een persoon.\n\n  Regel \"persoon op bsn\".\n    Een afnemer mag alle gegevens van een persoon bekijken\n    als er een toestemming voor de betrokkene is.\n\n  Regel \"naam en adres\".\n    Een geautoriseerde afnemer mag de naam van een persoon bekijken.\n\n  Regel \"adres\".\n    Een geautoriseerde afnemer mag het adres van een persoon bekijken.\n\n  Regel \"inkomens tot en met 2024\".\n    Een afnemer mag de inkomens van een persoon bekijken\n    als het jaar van de aanvraag ten hoogste 2024 is.\n\n  Regel \"inkomen velden\".\n    Een geautoriseerde afnemer mag de inkomensgegevens bekijken.\n",
+      "dpv:hasPurpose": {
+        "@id": "b:doel-inkomensverstrekking"
+      },
+      "odrl:permission": [
+        {
+          "@id": "b:regel-persoon-op-bsn"
+        },
+        {
+          "@id": "b:regel-naam-en-adres"
+        },
+        {
+          "@id": "b:regel-adres"
+        },
+        {
+          "@id": "b:regel-inkomens-tot-en-met-2024"
+        },
+        {
+          "@id": "b:regel-inkomen-velden"
         }
       ]
     },
     {
-      "nlgov:regelnaam": "naam en adres",
-      "target": {
-        "@type": "Asset",
-        "uid": "nlgov:register:Persoon.naam"
+      "@id": "b:vw-doel-inkomensverstrekking",
+      "@type": "odrl:Constraint",
+      "rdfs:label": {
+        "@value": "het doel van de aanvraag is \"inkomensverstrekking\"",
+        "@language": "nl"
       },
-      "assignee": {
-        "@type": "PartyCollection",
-        "uid": "urn:nlgov:rolgroep:geautoriseerde-afnemer",
-        "refinement": [
-          {
-            "leftOperand": {
-              "@id": "nlgov:autorisatie"
-            },
-            "operator": "eq",
-            "rightOperand": "naam-en-adres"
-          }
-        ]
+      "odrl:leftOperand": {
+        "@id": "odrl:purpose"
       },
-      "action": {
-        "@id": "nlgov:view"
+      "odrl:operator": {
+        "@id": "odrl:eq"
+      },
+      "odrl:rightOperand": {
+        "@id": "b:doel-inkomensverstrekking"
       }
     },
     {
-      "nlgov:regelnaam": "adres",
-      "target": {
-        "@type": "Asset",
-        "uid": "nlgov:register:Persoon.adres"
+      "@id": "b:doel-inkomensverstrekking",
+      "@type": "skos:Concept",
+      "rdfs:label": {
+        "@value": "inkomensverstrekking",
+        "@language": "nl"
       },
-      "assignee": {
-        "@type": "PartyCollection",
-        "uid": "urn:nlgov:rolgroep:geautoriseerde-afnemer",
-        "refinement": [
-          {
-            "leftOperand": {
-              "@id": "nlgov:autorisatie"
-            },
-            "operator": "eq",
-            "rightOperand": "naam-en-adres"
-          }
-        ]
-      },
-      "action": {
-        "@id": "nlgov:view"
+      "skos:definition": {
+        "@value": "Doelbinding \"inkomensverstrekking\" zoals genoemd in het beleid.",
+        "@language": "nl"
       }
     },
     {
-      "nlgov:regelnaam": "inkomens tot en met 2024",
-      "target": {
-        "@type": "Asset",
-        "uid": "nlgov:register:Persoon.inkomens"
+      "@id": "b:regel-persoon-op-bsn",
+      "@type": "odrl:Permission",
+      "dct:title": {
+        "@value": "persoon op bsn",
+        "@language": "nl"
       },
-      "assignee": {
-        "@type": "PartyCollection",
-        "uid": "urn:nlgov:rolgroep:afnemer",
-        "refinement": [
-          {
-            "leftOperand": {
-              "@id": "nlgov:rol"
-            },
-            "operator": "eq",
-            "rightOperand": "afnemer"
-          }
-        ]
+      "odrl:uid": {
+        "@id": "b:regel-persoon-op-bsn"
       },
-      "action": {
-        "@id": "nlgov:view"
+      "dct:description": {
+        "@value": "Een afnemer mag alle gegevens van een persoon bekijken als er een toestemming voor de betrokkene is.",
+        "@language": "nl"
       },
-      "constraint": [
+      "ts:volgorde": 1,
+      "odrl:action": {
+        "@id": "b:handeling-persoon-op-bsn"
+      },
+      "odrl:assignee": {
+        "@id": "b:groep-afnemer"
+      },
+      "odrl:target": {
+        "@id": "reg:Persoon"
+      },
+      "odrl:constraint": {
+        "@id": "b:vw-er-is-een-toestemming-voor-de-betrokkene"
+      }
+    },
+    {
+      "@id": "b:handeling-persoon-op-bsn",
+      "@type": "odrl:Action",
+      "rdf:value": {
+        "@id": "odrl:read"
+      },
+      "odrl:refinement": [
         {
-          "leftOperand": {
-            "@id": "nlgov:aanvraag:jaar"
-          },
-          "operator": "lteq",
-          "rightOperand": 2024
+          "@id": "b:vw-aanvrager-rol-afnemer"
+        },
+        {
+          "@id": "b:vw-doel-inkomensverstrekking"
+        },
+        {
+          "@id": "b:anker-persoon-op-bsn"
         }
       ]
     },
     {
-      "nlgov:regelnaam": "inkomen velden",
-      "target": {
-        "@type": "AssetCollection",
-        "uid": "urn:nlgov:gegevens:inkomensgegevens",
-        "source": "nlgov:register:Persoon.Inkomen"
+      "@id": "b:groep-afnemer",
+      "@type": "odrl:PartyCollection",
+      "rdfs:label": {
+        "@value": "afnemer",
+        "@language": "nl"
       },
-      "assignee": {
-        "@type": "PartyCollection",
-        "uid": "urn:nlgov:rolgroep:geautoriseerde-afnemer",
-        "refinement": [
-          {
-            "leftOperand": {
-              "@id": "nlgov:autorisatie"
-            },
-            "operator": "eq",
-            "rightOperand": "naam-en-adres"
-          }
-        ]
+      "skos:definition": {
+        "@value": "iemand met rol \"afnemer\"",
+        "@language": "nl"
       },
-      "action": {
-        "@id": "nlgov:view"
+      "odrl:refinement": {
+        "@id": "b:vw-aanvrager-rol-afnemer"
       }
+    },
+    {
+      "@id": "b:vw-aanvrager-rol-afnemer",
+      "@type": "odrl:Constraint",
+      "rdfs:label": {
+        "@value": "de rol van de aanvrager is \"afnemer\"",
+        "@language": "nl"
+      },
+      "odrl:leftOperand": {
+        "@id": "apnl:rolAanvrager"
+      },
+      "odrl:operator": {
+        "@id": "odrl:eq"
+      },
+      "odrl:rightOperand": "afnemer"
+    },
+    {
+      "@id": "ts:Entiteit",
+      "@type": [
+        "rdfs:Class",
+        "skos:Concept"
+      ],
+      "rdfs:label": {
+        "@value": "entiteit",
+        "@language": "nl"
+      }
+    },
+    {
+      "@id": "reg:Persoon",
+      "@type": [
+        "odrl:AssetCollection",
+        "ts:Entiteit"
+      ],
+      "rdfs:label": {
+        "@value": "een persoon",
+        "@language": "nl"
+      },
+      "dct:identifier": "Persoon"
+    },
+    {
+      "@id": "ts:Gegevenselement",
+      "@type": [
+        "rdfs:Class",
+        "skos:Concept"
+      ],
+      "rdfs:label": {
+        "@value": "gegevenselement",
+        "@language": "nl"
+      }
+    },
+    {
+      "@id": "reg:Persoon.Naam",
+      "@type": [
+        "odrl:AssetCollection",
+        "ts:Gegevenselement"
+      ],
+      "rdfs:label": {
+        "@value": "naam",
+        "@language": "nl"
+      },
+      "dct:identifier": "Persoon.Naam",
+      "odrl:partOf": {
+        "@id": "reg:Persoon"
+      }
+    },
+    {
+      "@id": "ts:Veld",
+      "@type": [
+        "rdfs:Class",
+        "skos:Concept"
+      ],
+      "rdfs:label": {
+        "@value": "veld",
+        "@language": "nl"
+      }
+    },
+    {
+      "@id": "reg:Persoon.Naam.naam",
+      "@type": [
+        "odrl:Asset",
+        "ts:Veld"
+      ],
+      "rdfs:label": {
+        "@value": "naam",
+        "@language": "nl"
+      },
+      "dct:identifier": "Persoon.Naam.naam",
+      "odrl:partOf": {
+        "@id": "reg:Persoon.Naam"
+      }
+    },
+    {
+      "@id": "reg:Persoon.Adres",
+      "@type": [
+        "odrl:AssetCollection",
+        "ts:Gegevenselement"
+      ],
+      "rdfs:label": {
+        "@value": "adres",
+        "@language": "nl"
+      },
+      "dct:identifier": "Persoon.Adres",
+      "odrl:partOf": {
+        "@id": "reg:Persoon"
+      }
+    },
+    {
+      "@id": "reg:Persoon.Adres.straat",
+      "@type": [
+        "odrl:Asset",
+        "ts:Veld"
+      ],
+      "rdfs:label": {
+        "@value": "straat",
+        "@language": "nl"
+      },
+      "dct:identifier": "Persoon.Adres.straat",
+      "odrl:partOf": {
+        "@id": "reg:Persoon.Adres"
+      }
+    },
+    {
+      "@id": "reg:Persoon.Adres.huisnummer",
+      "@type": [
+        "odrl:Asset",
+        "ts:Veld"
+      ],
+      "rdfs:label": {
+        "@value": "huisnummer",
+        "@language": "nl"
+      },
+      "dct:identifier": "Persoon.Adres.huisnummer",
+      "odrl:partOf": {
+        "@id": "reg:Persoon.Adres"
+      }
+    },
+    {
+      "@id": "reg:Persoon.Adres.postcode",
+      "@type": [
+        "odrl:Asset",
+        "ts:Veld"
+      ],
+      "rdfs:label": {
+        "@value": "postcode",
+        "@language": "nl"
+      },
+      "dct:identifier": "Persoon.Adres.postcode",
+      "odrl:partOf": {
+        "@id": "reg:Persoon.Adres"
+      }
+    },
+    {
+      "@id": "reg:Persoon.Adres.plaats",
+      "@type": [
+        "odrl:Asset",
+        "ts:Veld"
+      ],
+      "rdfs:label": {
+        "@value": "plaats",
+        "@language": "nl"
+      },
+      "dct:identifier": "Persoon.Adres.plaats",
+      "odrl:partOf": {
+        "@id": "reg:Persoon.Adres"
+      }
+    },
+    {
+      "@id": "reg:Persoon.Inkomen",
+      "@type": [
+        "odrl:AssetCollection",
+        "ts:Gegevenselement"
+      ],
+      "rdfs:label": {
+        "@value": "inkomen",
+        "@language": "nl"
+      },
+      "dct:identifier": "Persoon.Inkomen",
+      "odrl:partOf": [
+        {
+          "@id": "reg:Persoon"
+        },
+        {
+          "@id": "b:gegevens-inkomensgegevens"
+        }
+      ]
+    },
+    {
+      "@id": "reg:Persoon.Inkomen.jaar",
+      "@type": [
+        "odrl:Asset",
+        "ts:Veld"
+      ],
+      "rdfs:label": {
+        "@value": "jaar",
+        "@language": "nl"
+      },
+      "dct:identifier": "Persoon.Inkomen.jaar",
+      "odrl:partOf": {
+        "@id": "reg:Persoon.Inkomen"
+      }
+    },
+    {
+      "@id": "reg:Persoon.Inkomen.bedrag",
+      "@type": [
+        "odrl:Asset",
+        "ts:Veld"
+      ],
+      "rdfs:label": {
+        "@value": "bedrag",
+        "@language": "nl"
+      },
+      "dct:identifier": "Persoon.Inkomen.bedrag",
+      "odrl:partOf": {
+        "@id": "reg:Persoon.Inkomen"
+      }
+    },
+    {
+      "@id": "ts:bestaat.toestemming",
+      "@type": [
+        "odrl:LeftOperand",
+        "skos:Concept"
+      ],
+      "rdfs:label": {
+        "@value": "toestemming voor de betrokkene",
+        "@language": "nl"
+      },
+      "skos:definition": {
+        "@value": "Bestaansvraag aan een informatiepunt: het beleid zegt wát er moet bestaan en voor wie, de uitvoering beantwoordt de vraag.",
+        "@language": "nl"
+      }
+    },
+    {
+      "@id": "ts:bestaat",
+      "@type": [
+        "odrl:Operator",
+        "skos:Concept"
+      ],
+      "rdfs:label": {
+        "@value": "bestaat",
+        "@language": "nl"
+      }
+    },
+    {
+      "@id": "ts:betrokkene",
+      "@type": [
+        "odrl:LeftOperand",
+        "skos:Concept"
+      ],
+      "rdfs:label": {
+        "@value": "de betrokkene",
+        "@language": "nl"
+      },
+      "skos:definition": {
+        "@value": "Gegeven van de persoon over wie de gegevens gaan; pas te toetsen met de gegevens in handen.",
+        "@language": "nl"
+      }
+    },
+    {
+      "@id": "b:vw-er-is-een-toestemming-voor-de-betrokkene",
+      "@type": "odrl:Constraint",
+      "rdfs:label": {
+        "@value": "er is een toestemming voor de betrokkene",
+        "@language": "nl"
+      },
+      "odrl:leftOperand": {
+        "@id": "ts:bestaat.toestemming"
+      },
+      "odrl:operator": {
+        "@id": "ts:bestaat"
+      },
+      "odrl:rightOperand": true,
+      "ts:voor": {
+        "@id": "ts:betrokkene"
+      }
+    },
+    {
+      "@id": "b:regel-naam-en-adres",
+      "@type": "odrl:Permission",
+      "dct:title": {
+        "@value": "naam en adres",
+        "@language": "nl"
+      },
+      "odrl:uid": {
+        "@id": "b:regel-naam-en-adres"
+      },
+      "dct:description": {
+        "@value": "Een geautoriseerde afnemer mag de naam van een persoon bekijken.",
+        "@language": "nl"
+      },
+      "ts:volgorde": 2,
+      "odrl:action": {
+        "@id": "b:handeling-naam-en-adres"
+      },
+      "odrl:assignee": {
+        "@id": "b:groep-geautoriseerde-afnemer"
+      },
+      "odrl:target": {
+        "@id": "reg:Persoon.Naam"
+      }
+    },
+    {
+      "@id": "b:handeling-naam-en-adres",
+      "@type": "odrl:Action",
+      "rdf:value": {
+        "@id": "odrl:read"
+      },
+      "odrl:refinement": [
+        {
+          "@id": "b:vw-aanvrager-autorisatie-naam-en-adres"
+        },
+        {
+          "@id": "b:vw-doel-inkomensverstrekking"
+        },
+        {
+          "@id": "b:anker-naam-en-adres"
+        }
+      ]
+    },
+    {
+      "@id": "b:groep-geautoriseerde-afnemer",
+      "@type": "odrl:PartyCollection",
+      "rdfs:label": {
+        "@value": "geautoriseerde afnemer",
+        "@language": "nl"
+      },
+      "skos:definition": {
+        "@value": "iemand met autorisatie \"naam-en-adres\"",
+        "@language": "nl"
+      },
+      "odrl:refinement": {
+        "@id": "b:vw-aanvrager-autorisatie-naam-en-adres"
+      }
+    },
+    {
+      "@id": "ts:aanvrager.autorisatie",
+      "@type": [
+        "odrl:LeftOperand",
+        "skos:Concept"
+      ],
+      "rdfs:label": {
+        "@value": "de autorisatie van de aanvrager",
+        "@language": "nl"
+      },
+      "skos:definition": {
+        "@value": "Kenmerk van degene die het verzoek doet; te toetsen voordat de bron iets ophaalt.",
+        "@language": "nl"
+      }
+    },
+    {
+      "@id": "b:vw-aanvrager-autorisatie-naam-en-adres",
+      "@type": "odrl:Constraint",
+      "rdfs:label": {
+        "@value": "de autorisatie van de aanvrager is \"naam-en-adres\"",
+        "@language": "nl"
+      },
+      "odrl:leftOperand": {
+        "@id": "ts:aanvrager.autorisatie"
+      },
+      "odrl:operator": {
+        "@id": "odrl:eq"
+      },
+      "odrl:rightOperand": "naam-en-adres"
+    },
+    {
+      "@id": "b:regel-adres",
+      "@type": "odrl:Permission",
+      "dct:title": {
+        "@value": "adres",
+        "@language": "nl"
+      },
+      "odrl:uid": {
+        "@id": "b:regel-adres"
+      },
+      "dct:description": {
+        "@value": "Een geautoriseerde afnemer mag het adres van een persoon bekijken.",
+        "@language": "nl"
+      },
+      "ts:volgorde": 3,
+      "odrl:action": {
+        "@id": "b:handeling-adres"
+      },
+      "odrl:assignee": {
+        "@id": "b:groep-geautoriseerde-afnemer"
+      },
+      "odrl:target": {
+        "@id": "reg:Persoon.Adres"
+      }
+    },
+    {
+      "@id": "b:handeling-adres",
+      "@type": "odrl:Action",
+      "rdf:value": {
+        "@id": "odrl:read"
+      },
+      "odrl:refinement": [
+        {
+          "@id": "b:vw-aanvrager-autorisatie-naam-en-adres"
+        },
+        {
+          "@id": "b:vw-doel-inkomensverstrekking"
+        },
+        {
+          "@id": "b:anker-adres"
+        }
+      ]
+    },
+    {
+      "@id": "b:regel-inkomens-tot-en-met-2024",
+      "@type": "odrl:Permission",
+      "dct:title": {
+        "@value": "inkomens tot en met 2024",
+        "@language": "nl"
+      },
+      "odrl:uid": {
+        "@id": "b:regel-inkomens-tot-en-met-2024"
+      },
+      "dct:description": {
+        "@value": "Een afnemer mag de inkomens van een persoon bekijken als het jaar van de aanvraag ten hoogste 2024 is.",
+        "@language": "nl"
+      },
+      "ts:volgorde": 4,
+      "odrl:action": {
+        "@id": "b:handeling-inkomens-tot-en-met-2024"
+      },
+      "odrl:assignee": {
+        "@id": "b:groep-afnemer"
+      },
+      "odrl:target": {
+        "@id": "reg:Persoon.Inkomen"
+      }
+    },
+    {
+      "@id": "b:handeling-inkomens-tot-en-met-2024",
+      "@type": "odrl:Action",
+      "rdf:value": {
+        "@id": "odrl:read"
+      },
+      "odrl:refinement": [
+        {
+          "@id": "b:vw-aanvrager-rol-afnemer"
+        },
+        {
+          "@id": "b:vw-het-jaar-van-de-aanvraag-is-ten-hoogste-2024"
+        },
+        {
+          "@id": "b:vw-doel-inkomensverstrekking"
+        },
+        {
+          "@id": "b:anker-inkomens-tot-en-met-2024"
+        }
+      ]
+    },
+    {
+      "@id": "ts:aanvraag.jaar",
+      "@type": [
+        "odrl:LeftOperand",
+        "skos:Concept"
+      ],
+      "rdfs:label": {
+        "@value": "het jaar van de aanvraag",
+        "@language": "nl"
+      },
+      "skos:definition": {
+        "@value": "Kenmerk van het verwerkingsverzoek zelf (argument of context); te toetsen voordat de bron iets ophaalt.",
+        "@language": "nl"
+      }
+    },
+    {
+      "@id": "b:vw-het-jaar-van-de-aanvraag-is-ten-hoogste-2024",
+      "@type": "odrl:Constraint",
+      "rdfs:label": {
+        "@value": "het jaar van de aanvraag is ten hoogste 2024",
+        "@language": "nl"
+      },
+      "odrl:leftOperand": {
+        "@id": "ts:aanvraag.jaar"
+      },
+      "odrl:operator": {
+        "@id": "odrl:lteq"
+      },
+      "odrl:rightOperand": 2024
+    },
+    {
+      "@id": "b:regel-inkomen-velden",
+      "@type": "odrl:Permission",
+      "dct:title": {
+        "@value": "inkomen velden",
+        "@language": "nl"
+      },
+      "odrl:uid": {
+        "@id": "b:regel-inkomen-velden"
+      },
+      "dct:description": {
+        "@value": "Een geautoriseerde afnemer mag de inkomensgegevens bekijken.",
+        "@language": "nl"
+      },
+      "ts:volgorde": 5,
+      "odrl:action": {
+        "@id": "b:handeling-inkomen-velden"
+      },
+      "odrl:assignee": {
+        "@id": "b:groep-geautoriseerde-afnemer"
+      },
+      "odrl:target": {
+        "@id": "b:gegevens-inkomensgegevens"
+      }
+    },
+    {
+      "@id": "b:handeling-inkomen-velden",
+      "@type": "odrl:Action",
+      "rdf:value": {
+        "@id": "odrl:read"
+      },
+      "odrl:refinement": [
+        {
+          "@id": "b:vw-aanvrager-autorisatie-naam-en-adres"
+        },
+        {
+          "@id": "b:vw-doel-inkomensverstrekking"
+        },
+        {
+          "@id": "b:anker-inkomen-velden"
+        }
+      ]
+    },
+    {
+      "@id": "b:gegevens-inkomensgegevens",
+      "@type": "odrl:AssetCollection",
+      "rdfs:label": {
+        "@value": "inkomensgegevens",
+        "@language": "nl"
+      },
+      "skos:definition": {
+        "@value": "alle gegevens van het inkomen van een persoon",
+        "@language": "nl"
+      }
+    },
+    {
+      "@id": "ts:profiel",
+      "@type": "odrl:Profile",
+      "dct:title": {
+        "@value": "Toegangsspraak-woordenschat (Omnium Studio, werkversie)",
+        "@language": "nl"
+      },
+      "dct:description": {
+        "@value": "De termen die Toegangsspraak nodig heeft bovenop ODRL 2.2 en ODRL-AP-NL: operanden uit de van-vorm, een paar vergelijkingen en handelingen. Elk label is de zinsnede uit de klare taal.",
+        "@language": "nl"
+      }
+    },
+    {
+      "@id": "b:rego-persoon-op-bsn",
+      "@type": [
+        "apnl:RegoModule",
+        "schema:SoftwareSourceCode"
+      ],
+      "rdfs:label": {
+        "@value": "Rego-module \"persoon op bsn\" (gegenereerd uit dit beleid)",
+        "@language": "nl"
+      },
+      "dct:identifier": "rules/persoon-op-bsn.rego",
+      "schema:programmingLanguage": "Rego",
+      "dct:format": "application/vnd.rego",
+      "apnl:entrypoint": "data.rules[\"persoon-op-bsn\"].allow",
+      "apnl:sha256": "17f1b2bc29ec4fdc5d3ded1bfbba6f862a423a7f00b961e8c8d42271bbcc312c",
+      "rdfs:comment": {
+        "@value": "Gegenereerd door authz/gbo-voorbeeld/scripts/compiler.py uit dezelfde ODRL; draait op het vaste ftv/graphql.rego van het FTV GraphQL-profiel. De doelbinding van het beleid zit er niet in: het voorbeeldverzoek draagt geen doel.",
+        "@language": "nl"
+      }
+    },
+    {
+      "@id": "b:anker-persoon-op-bsn",
+      "@type": [
+        "odrl:Constraint",
+        "dpv:TechnicalMeasure"
+      ],
+      "rdfs:label": {
+        "@value": "het verzoek voldoet aan de Rego-module \"persoon op bsn\"",
+        "@language": "nl"
+      },
+      "odrl:leftOperand": {
+        "@id": "apnl:verwerkingsverzoek"
+      },
+      "odrl:operator": {
+        "@id": "apnl:conformsToPolicy"
+      },
+      "odrl:rightOperand": {
+        "@id": "b:rego-persoon-op-bsn"
+      },
+      "prov:wasDerivedFrom": [
+        {
+          "@id": "b:regel-persoon-op-bsn"
+        },
+        {
+          "@id": "b:vw-aanvrager-rol-afnemer"
+        },
+        {
+          "@id": "b:vw-er-is-een-toestemming-voor-de-betrokkene"
+        }
+      ]
+    },
+    {
+      "@id": "b:rego-naam-en-adres",
+      "@type": [
+        "apnl:RegoModule",
+        "schema:SoftwareSourceCode"
+      ],
+      "rdfs:label": {
+        "@value": "Rego-module \"naam en adres\" (gegenereerd uit dit beleid)",
+        "@language": "nl"
+      },
+      "dct:identifier": "rules/naam-en-adres.rego",
+      "schema:programmingLanguage": "Rego",
+      "dct:format": "application/vnd.rego",
+      "apnl:entrypoint": "data.rules[\"naam-en-adres\"].allow",
+      "apnl:sha256": "aa58d2ecdc65fff022ae64dbc155004f84fc225017dd00c150bd98e0698994a8",
+      "rdfs:comment": {
+        "@value": "Gegenereerd door authz/gbo-voorbeeld/scripts/compiler.py uit dezelfde ODRL; draait op het vaste ftv/graphql.rego van het FTV GraphQL-profiel. De doelbinding van het beleid zit er niet in: het voorbeeldverzoek draagt geen doel.",
+        "@language": "nl"
+      }
+    },
+    {
+      "@id": "b:anker-naam-en-adres",
+      "@type": [
+        "odrl:Constraint",
+        "dpv:TechnicalMeasure"
+      ],
+      "rdfs:label": {
+        "@value": "het verzoek voldoet aan de Rego-module \"naam en adres\"",
+        "@language": "nl"
+      },
+      "odrl:leftOperand": {
+        "@id": "apnl:verwerkingsverzoek"
+      },
+      "odrl:operator": {
+        "@id": "apnl:conformsToPolicy"
+      },
+      "odrl:rightOperand": {
+        "@id": "b:rego-naam-en-adres"
+      },
+      "prov:wasDerivedFrom": [
+        {
+          "@id": "b:regel-naam-en-adres"
+        },
+        {
+          "@id": "b:vw-aanvrager-autorisatie-naam-en-adres"
+        }
+      ]
+    },
+    {
+      "@id": "b:rego-adres",
+      "@type": [
+        "apnl:RegoModule",
+        "schema:SoftwareSourceCode"
+      ],
+      "rdfs:label": {
+        "@value": "Rego-module \"adres\" (gegenereerd uit dit beleid)",
+        "@language": "nl"
+      },
+      "dct:identifier": "rules/adres.rego",
+      "schema:programmingLanguage": "Rego",
+      "dct:format": "application/vnd.rego",
+      "apnl:entrypoint": "data.rules[\"adres\"].allow",
+      "apnl:sha256": "3c8499fafc67d2caeea775af5fd1a46d75494d0e0c08212390eb40374528fd9d",
+      "rdfs:comment": {
+        "@value": "Gegenereerd door authz/gbo-voorbeeld/scripts/compiler.py uit dezelfde ODRL; draait op het vaste ftv/graphql.rego van het FTV GraphQL-profiel. De doelbinding van het beleid zit er niet in: het voorbeeldverzoek draagt geen doel.",
+        "@language": "nl"
+      }
+    },
+    {
+      "@id": "b:anker-adres",
+      "@type": [
+        "odrl:Constraint",
+        "dpv:TechnicalMeasure"
+      ],
+      "rdfs:label": {
+        "@value": "het verzoek voldoet aan de Rego-module \"adres\"",
+        "@language": "nl"
+      },
+      "odrl:leftOperand": {
+        "@id": "apnl:verwerkingsverzoek"
+      },
+      "odrl:operator": {
+        "@id": "apnl:conformsToPolicy"
+      },
+      "odrl:rightOperand": {
+        "@id": "b:rego-adres"
+      },
+      "prov:wasDerivedFrom": [
+        {
+          "@id": "b:regel-adres"
+        },
+        {
+          "@id": "b:vw-aanvrager-autorisatie-naam-en-adres"
+        }
+      ]
+    },
+    {
+      "@id": "b:rego-inkomens-tot-en-met-2024",
+      "@type": [
+        "apnl:RegoModule",
+        "schema:SoftwareSourceCode"
+      ],
+      "rdfs:label": {
+        "@value": "Rego-module \"inkomens tot en met 2024\" (gegenereerd uit dit beleid)",
+        "@language": "nl"
+      },
+      "dct:identifier": "rules/inkomens-tot-en-met-2024.rego",
+      "schema:programmingLanguage": "Rego",
+      "dct:format": "application/vnd.rego",
+      "apnl:entrypoint": "data.rules[\"inkomens-tot-en-met-2024\"].allow",
+      "apnl:sha256": "8e01fc64872283cecdb2cae3f0dc0fb8fd736821db75be427cf0da635380d6fc",
+      "rdfs:comment": {
+        "@value": "Gegenereerd door authz/gbo-voorbeeld/scripts/compiler.py uit dezelfde ODRL; draait op het vaste ftv/graphql.rego van het FTV GraphQL-profiel. De doelbinding van het beleid zit er niet in: het voorbeeldverzoek draagt geen doel.",
+        "@language": "nl"
+      }
+    },
+    {
+      "@id": "b:anker-inkomens-tot-en-met-2024",
+      "@type": [
+        "odrl:Constraint",
+        "dpv:TechnicalMeasure"
+      ],
+      "rdfs:label": {
+        "@value": "het verzoek voldoet aan de Rego-module \"inkomens tot en met 2024\"",
+        "@language": "nl"
+      },
+      "odrl:leftOperand": {
+        "@id": "apnl:verwerkingsverzoek"
+      },
+      "odrl:operator": {
+        "@id": "apnl:conformsToPolicy"
+      },
+      "odrl:rightOperand": {
+        "@id": "b:rego-inkomens-tot-en-met-2024"
+      },
+      "prov:wasDerivedFrom": [
+        {
+          "@id": "b:regel-inkomens-tot-en-met-2024"
+        },
+        {
+          "@id": "b:vw-aanvrager-rol-afnemer"
+        },
+        {
+          "@id": "b:vw-het-jaar-van-de-aanvraag-is-ten-hoogste-2024"
+        }
+      ]
+    },
+    {
+      "@id": "b:rego-inkomen-velden",
+      "@type": [
+        "apnl:RegoModule",
+        "schema:SoftwareSourceCode"
+      ],
+      "rdfs:label": {
+        "@value": "Rego-module \"inkomen velden\" (gegenereerd uit dit beleid)",
+        "@language": "nl"
+      },
+      "dct:identifier": "rules/inkomen-velden.rego",
+      "schema:programmingLanguage": "Rego",
+      "dct:format": "application/vnd.rego",
+      "apnl:entrypoint": "data.rules[\"inkomen-velden\"].allow",
+      "apnl:sha256": "544fd012b66bb51754f93aee4d9bcf2effa6740447a4a6896ef28596a908a93b",
+      "rdfs:comment": {
+        "@value": "Gegenereerd door authz/gbo-voorbeeld/scripts/compiler.py uit dezelfde ODRL; draait op het vaste ftv/graphql.rego van het FTV GraphQL-profiel. De doelbinding van het beleid zit er niet in: het voorbeeldverzoek draagt geen doel.",
+        "@language": "nl"
+      }
+    },
+    {
+      "@id": "b:anker-inkomen-velden",
+      "@type": [
+        "odrl:Constraint",
+        "dpv:TechnicalMeasure"
+      ],
+      "rdfs:label": {
+        "@value": "het verzoek voldoet aan de Rego-module \"inkomen velden\"",
+        "@language": "nl"
+      },
+      "odrl:leftOperand": {
+        "@id": "apnl:verwerkingsverzoek"
+      },
+      "odrl:operator": {
+        "@id": "apnl:conformsToPolicy"
+      },
+      "odrl:rightOperand": {
+        "@id": "b:rego-inkomen-velden"
+      },
+      "prov:wasDerivedFrom": [
+        {
+          "@id": "b:regel-inkomen-velden"
+        },
+        {
+          "@id": "b:vw-aanvrager-autorisatie-naam-en-adres"
+        }
+      ]
     }
   ]
 }

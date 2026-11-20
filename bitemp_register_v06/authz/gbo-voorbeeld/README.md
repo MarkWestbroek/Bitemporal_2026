@@ -82,7 +82,14 @@ Beleid "GBO persoon".
 
 Dit zijn PJ's vier regels (persoon-op-bsn, naam-en-adres, inkomens-tot-en-met-2024,
 inkomen-velden), met adres als aparte regel omdat een Toegangsspraak-regel één gegevensselectie
-heeft. De parser en `odrl.js` zijn de echte uit `web/vite/src/toegangsspraak`.
+heeft. De parser en `odrl.js` waren de echte uit `web/vite/src/toegangsspraak`.
+
+> **Bevroren (19-11-2026).** `beleid/gbo-persoon.odrl.json` is ODRL in de NLGov-vorm, gemaakt met
+> de oude JSON-LD-export `odrl.js`. Die export is opgegaan in de export naar ODRL-AP-NL
+> (`toegangsspraak/odrlExport.js`, Turtle en JSON-LD uit dezelfde triples). Deze keten blijft
+> werken op het vastgelegde bestand; `scripts/exporteer_odrl.mjs` kan het niet meer opnieuw
+> genereren. Opnieuw genereren vraagt een port van `compiler.py` en `pdp_odre.py` naar
+> ODRL-AP-NL (`nlgov:register:<pad>` wordt `dct:identifier` op de asset, enzovoort).
 
 ### Afbeelding ODRL → veldsleutels (compiler-keuzes)
 

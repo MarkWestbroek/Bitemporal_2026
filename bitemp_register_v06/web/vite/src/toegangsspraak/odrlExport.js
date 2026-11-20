@@ -16,8 +16,10 @@
  * De **trace** die terugkomt is het verliesrapport van de export: elk onderdeel
  * met actie "geen-regel" of "overgeslagen" zit niet in de ODRL.
  *
- * Naast deze vorm bestaat `odrl.js` (JSON-LD, de export uit de editor); die
- * blijft zoals hij is. Het verschil staat in docs/TOEGANGSSPRAAK.md.
+ * De schrijfvorm is een keuze van de aanroeper: `turtle` en `jsonld` komen uit
+ * dezelfde triples (`transformatie/jsonldSchrijver.js`) en zeggen dus altijd
+ * hetzelfde. De oudere, losse JSON-LD-export (`odrl.js`, NLGov-termen) is
+ * hierin opgegaan (19-11).
  *
  * Puur en node-testbaar; geen store, geen React.
  */
@@ -28,6 +30,7 @@ import { beleidNaarGraaf } from "./graaf.js";
 import { TOEGANGSSPRAAK_NAAR_ODRL_AP_NL } from "./odrlApNlRegels.js";
 import { pasRegelsToe } from "../transformatie/regels.js";
 import { schrijfTurtle } from "../transformatie/turtleSchrijver.js";
+import { triplesNaarJsonLd } from "../transformatie/jsonldSchrijver.js";
 
 export const TS_NAMESPACE = "https://omnium.example/toegangsspraak/";
 
@@ -125,7 +128,8 @@ const PROFIEL_REGEL = { naam: "Profiel van de woordenschat", bij: "knoop", als: 
  * @param {any[]} [opties.extraRegels]        regels vóór de regelset (voor die aanvulling)
  * @param {Record<string, any>} [opties.extraPredicaten]
  * @param {string} [opties.bron]              pad van de brontekst, voor de kopregel
- * @returns {{ok: boolean, turtle: string, plan: any, graaf: any, trace: any[], diagnostics: any[]}}
+ * @returns {{ok: boolean, turtle: string, jsonld: any, plan: any, graaf: any, trace: any[], diagnostics: any[]}}
+ *          `turtle` en `jsonld` zijn twee schrijfvormen van dezelfde triples
  */
 export function toegangsspraakNaarOdrl(beleidOfTekst, opties = {}) {
   let beleid = beleidOfTekst;
@@ -135,6 +139,7 @@ export function toegangsspraakNaarOdrl(beleidOfTekst, opties = {}) {
       return {
         ok: false,
         turtle: "",
+        jsonld: null,
         plan: null,
         graaf: null,
         trace: [],
@@ -167,5 +172,5 @@ export function toegangsspraakNaarOdrl(beleidOfTekst, opties = {}) {
   ].join("\n");
   const uit = schrijfTurtle(plan, context, { kop });
 
-  return { ok: true, turtle: uit.tekst, plan, graaf, trace: plan.trace, diagnostics: [...plan.diagnostics, ...uit.diagnostics] };
+  return { ok: true, turtle: uit.tekst, jsonld: triplesNaarJsonLd(uit.triples, context), plan, graaf, trace: plan.trace, diagnostics: [...plan.diagnostics, ...uit.diagnostics] };
 }

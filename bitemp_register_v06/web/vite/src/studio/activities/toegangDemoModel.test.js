@@ -25,7 +25,7 @@ import { verzamelVelden } from "../../modelpicker/veldenlijst.js";
 import { parseBeleid } from "../../toegangsspraak/parser.js";
 import { maakVeldIndex, resolveerBeleid, resolveerVerwijzing } from "../../toegangsspraak/metamodel.js";
 import { padNaarVerwijzing } from "../../toegangsspraak/parser.js";
-import { naarOdrl } from "../../toegangsspraak/odrl.js";
+import { toegangsspraakNaarOdrl } from "../../toegangsspraak/odrlExport.js";
 
 // Zelfde doorkijk-diepte als toegangActivity.jsx.
 const RELATIE_DIEPTE = 2;
@@ -204,9 +204,9 @@ test("demo-beleid parseert en resolvet zonder controle-meldingen", () => {
 test("demo-beleid levert 3 permissions en 1 prohibition in ODRL", () => {
   const { beleid } = parseBeleid(DEMO_BELEID);
   const { beleid: geresolved } = resolveerBeleid(beleid, INDEX);
-  const odrl = naarOdrl(geresolved);
-  assert.equal(odrl.permission.length, 3);
-  assert.equal(odrl.prohibition.length, 1);
+  const set = toegangsspraakNaarOdrl(geresolved).jsonld["@graph"].find((k) => k["@id"] === "b:beleid");
+  assert.equal([set["odrl:permission"]].flat().length, 3);
+  assert.equal([set["odrl:prohibition"]].flat().length, 1);
 });
 
 test("de verbods- en aanspraak-regel wijzen naar echte registerpaden", () => {

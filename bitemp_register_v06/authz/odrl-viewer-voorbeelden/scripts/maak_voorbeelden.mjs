@@ -3,7 +3,7 @@
 // Per beleid in beleid/*.toegangsspraak:
 //   uit/<naam>.viewer.ttl    de export "Toegangsspraak → ODRL (ODRL-AP-NL)":
 //                            graafbeeld → regelset → schrijver (docs/TRANSFORMATIES.md)
-//   uit/<naam>.odrl.jsonld   wat de editor vandaag exporteert (odrl.js), ter vergelijking
+//   uit/<naam>.odrl.jsonld   dezelfde ODRL als JSON-LD (dezelfde triples, andere schrijfvorm)
 //
 // Dit script is alleen de runner: het leest de teksten, geeft het model mee
 // waar we er een hebben, en hangt bij het GBO-beleid de uitvoering eraan (de
@@ -16,7 +16,6 @@ import path from "node:path";
 import crypto from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { parseBeleid } from "../../../web/vite/src/toegangsspraak/parser.js";
-import { naarOdrl } from "../../../web/vite/src/toegangsspraak/odrl.js";
 import { toegangsspraakNaarOdrl } from "../../../web/vite/src/toegangsspraak/odrlExport.js";
 
 const HIER = path.dirname(fileURLToPath(import.meta.url));
@@ -157,7 +156,7 @@ for (const v of VOORBEELDEN) {
     continue;
   }
   fs.writeFileSync(path.join(MAP, "uit", `${v.naam}.viewer.ttl`), uit.turtle);
-  fs.writeFileSync(path.join(MAP, "uit", `${v.naam}.odrl.jsonld`), JSON.stringify(naarOdrl(parseBeleid(tekst).beleid), null, 2) + "\n");
+  fs.writeFileSync(path.join(MAP, "uit", `${v.naam}.odrl.jsonld`), JSON.stringify(uit.jsonld, null, 2) + "\n");
   const acties = {};
   for (const spoor of uit.trace) acties[spoor.actie] = (acties[spoor.actie] || 0) + 1;
   const verlies = uit.trace.filter((s) => s.actie === "geen-regel" || s.actie === "overgeslagen");

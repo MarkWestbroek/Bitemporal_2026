@@ -4,7 +4,7 @@
  * Plan: docs/plans/"2026-10-12 Toegang op beleid — PAP, PDP en PEP (plan).md" §5 (B4).
  * De Studio is de PAP: zij parseert en resolveert het beleid (parser.js + metamodel.js) en
  * publiceert deze bundel. De Go-PDP (package toegang) evalueert alleen data; er komt geen
- * tweede parser in Go. ODRL (odrl.js, odrlExport.js) blijft het uitwisselformaat.
+ * tweede parser in Go. ODRL (odrlExport.js) blijft het uitwisselformaat.
  *
  * Vorm (formaat "omnium-toegangsbundel/1"):
  *   {
@@ -28,7 +28,7 @@
  *              | { anker: "aanvrager"|"aanvraag"|"betrokkene"|"gegevens", pad }   // pad relatief
  *
  * Een wat-begrip met "waarvan" wordt een extra voorwaarde (EN) op de regel. Een niet
- * gedefinieerd wie-begrip is, net als in odrl.js, een impliciete rol met dezelfde naam.
+ * gedefinieerd wie-begrip is, net als in de ODRL-export, een impliciete rol met dezelfde naam.
  */
 import { verwijzingNaarPad, verwijzingNaarGroepPad } from "./parser.js";
 import { vindOperator } from "./operatoren.js";
