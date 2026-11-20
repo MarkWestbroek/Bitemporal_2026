@@ -39,7 +39,10 @@ function compileer(naam) {
 for (const naam of ["np-loc-demo", "openbaar", "open-tenzij", "toestemming-wint", "cg-portfolio"]) {
   test(`bundel ${naam} = testdata/toegang/${naam}.bundel.json`, () => {
     const { bundel, meldingen } = compileer(naam);
-    assert.deepEqual(meldingen, []);
+    // Een beleid met Doel: krijgt alleen de melding dat de API het doel (een binding) nog niet toetst.
+    const doelMelding = (m) => /^Het doel in de kop \(".+"\) wordt in de API nog niet getoetst/.test(m);
+    assert.deepEqual(meldingen.filter((m) => !doelMelding(m)), []);
+    assert.equal(meldingen.some(doelMelding), Boolean(bundel.beleid.doel));
     assert.equal(bundel.formaat, BUNDEL_FORMAAT);
     const bestand = path.join(MAP, `${naam}.bundel.json`);
     if (process.env.BIJWERKEN || !existsSync(bestand)) {

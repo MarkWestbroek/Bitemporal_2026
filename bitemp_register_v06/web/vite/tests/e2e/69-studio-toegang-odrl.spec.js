@@ -12,7 +12,7 @@ test.use({ viewport: { width: 1700, height: 1000 } });
 async function open(page) {
   await openStudio(page);
   await page.locator(".studio-activitybar [title^='Toegangverlening']").first().click();
-  await expect(page.locator("textarea.toegangsspraak-textarea")).toHaveValue(/Beleid "Inzage inkomen bij schuldhulp"/);
+  await expect(page.locator("textarea.toegangsspraak-textarea")).toHaveValue(/Beleid "Inzage naam bij schuldhulp"/);
 }
 const menu = async (page, regel) => {
   await page.locator(".studio-menubar").getByText("Beleid", { exact: true }).click();
@@ -22,7 +22,7 @@ async function exporteer(page) {
   const download = page.waitForEvent("download");
   await menu(page, "Exporteer ODRL (Turtle, ODRL-AP-NL)…");
   const bestand = await download;
-  expect(bestand.suggestedFilename()).toBe("Inzage_inkomen_bij_schuldhulp.odrl.ttl");
+  expect(bestand.suggestedFilename()).toBe("Inzage_naam_bij_schuldhulp.odrl.ttl");
   return fs.readFileSync(await bestand.path(), "utf8");
 }
 async function importeer(page, turtle) {
@@ -37,7 +37,7 @@ test("exporteren en importeren geeft dezelfde tekst terug", async ({ page }) => 
   const origineel = await editor.inputValue();
   const turtle = await exporteer(page);
   expect(turtle).toContain("b:beleid a odrl:Set");
-  expect(turtle).toContain('ts:brontekst """Beleid "Inzage inkomen bij schuldhulp".');
+  expect(turtle).toContain('ts:brontekst """Beleid "Inzage naam bij schuldhulp".');
   expect(turtle).toContain("ts:volgorde 2");
 
   await editor.fill('Beleid "Leeg".\n');
@@ -51,7 +51,7 @@ test("bewerkte ODRL: de structuur wint en dat wordt gemeld", async ({ page }) =>
   const turtle = (await exporteer(page)).replace('odrl:rightOperand "A" .', 'odrl:rightOperand "B" .');
   await importeer(page, turtle);
   const editor = page.locator("textarea.toegangsspraak-textarea");
-  await expect(editor).toHaveValue(/als de achternaam van de naam van de betrokkene met "B" begint/);
+  await expect(editor).toHaveValue(/als de achternaam van de namen van de betrokkene met "B" begint/);
   await expect(page.getByText("zegt niet hetzelfde als de ODRL")).toBeVisible();
 });
 
@@ -100,7 +100,7 @@ test("het paneel ODRL toont dezelfde export als Turtle of JSON-LD, en de JSON-LD
   await expect(weergave).toContainText("odrl:conflict odrl:prohibit ;");
   await page.getByTestId("odrl-schrijfvorm").getByText("JSON-LD", { exact: true }).click();
   await expect(weergave).toContainText('"@graph": [');
-  await expect(weergave).toContainText('"@id": "b:regel-inzage-bij-lopend-dossier"');
+  await expect(weergave).toContainText('"@id": "b:regel-inzage-naam"');
   await expect(weergave).not.toContainText("a odrl:Set ;");
   await page.getByTestId("odrl-schrijfvorm").getByText("Turtle", { exact: true }).click();
   await expect(weergave).toContainText("b:beleid a odrl:Set ;");
@@ -109,10 +109,10 @@ test("het paneel ODRL toont dezelfde export als Turtle of JSON-LD, en de JSON-LD
   const download = page.waitForEvent("download");
   await menu(page, "Exporteer ODRL (JSON-LD)…");
   const bestand = await download;
-  expect(bestand.suggestedFilename()).toBe("Inzage_inkomen_bij_schuldhulp.odrl.jsonld");
+  expect(bestand.suggestedFilename()).toBe("Inzage_naam_bij_schuldhulp.odrl.jsonld");
   const document = JSON.parse(fs.readFileSync(await bestand.path(), "utf8"));
   const set = document["@graph"].find((k) => k["@id"] === "b:beleid");
   expect(set["@type"]).toBe("odrl:Set");
-  expect(set["odrl:permission"]).toEqual({ "@id": "b:regel-inzage-bij-lopend-dossier" });
+  expect(set["odrl:permission"]).toEqual({ "@id": "b:regel-inzage-naam" });
   expect(JSON.stringify(document)).not.toContain("nlgov:");
 });

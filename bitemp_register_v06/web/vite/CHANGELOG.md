@@ -60,6 +60,9 @@ De single source of truth voor het nummer is `package.json` `"version"`.
   staan als boom: de simulatie of het scenario gecentreerd bovenaan met boomlijnen; op een scenariodiagram tot
   vier stubs in één rij en meer verspringend over twee rijen; de startgegevens links naast het scenario met een
   rechte lijn.
+- **Toegangverlening: een voorbeeld dat past op het register** (Mark 20-11). De starttekst en *Voorbeeldbeleid
+  laden* geven nu "Inzage naam bij schuldhulp": dat past op het canonieke model (de namen van een natuurlijk persoon),
+  geeft geen controle-meldingen en levert een beleidsbundel. Het vorige voorbeeld (inkomen) paste niet op het model.
 - **Simulatie: de Waterstede-scenario's staan in het demo-project** (16-11): ze zijn uit de ingebakken keuzelijst;
   in het demo-project *Omnium demo — gemeente Waterstede* staan ze onder *Uit het project*.
 - **Toegangverlening: hulp bij groepen gegevens** (Mark 20-11). *Kies* bij een gegevenselement in de modelboom

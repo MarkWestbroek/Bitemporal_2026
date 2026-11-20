@@ -54,6 +54,51 @@ Beleid "Inzage inkomen bij schuldhulp".
     Een schuldhulpverlener mag de inkomensgegevens niet exporteren.
 ```
 
+Dit is het voorbeeld uit de whitepaper (`VOORBEELD_BELEID`, het anker van de tests). Het
+past niet op het canonieke model van het register: daar is geen "inkomen" onder een
+natuurlijk persoon.
+
+**Het voorbeeld in de Studio** (`VOORBEELD_STUDIO`, sinds 20-11 de starttekst en *Beleid →
+Voorbeeldbeleid laden*) past er wel op (np-loc: `NatuurlijkPersoon.namen`). Het geeft geen
+controle-meldingen en levert een beleidsbundel zonder meldingen:
+
+```
+Beleid "Inzage naam bij schuldhulp".
+  Geldig vanaf 1 mei 2026.
+  Grondslag: de Wet gemeentelijke schuldhulpverlening.
+  Doel: "schuldhulpverlening".
+
+  Begrippen.
+    Een schuldhulpverlener is: iemand met rol "schuldhulpverlener".
+    Naamgegevens zijn: alle gegevens van de namen van een natuurlijk persoon.
+
+  Regel "inzage naam".
+    Een schuldhulpverlener mag de naamgegevens bekijken
+    als de achternaam van de namen van de betrokkene met "A" begint
+    waarbij: elke raadpleging wordt vastgelegd in het logboek.
+
+  Regel "geen export".
+    Een schuldhulpverlener mag de naamgegevens niet exporteren.
+```
+
+Wat de API er vandaag mee doet (de bundel draait als proef, alleen met `TOEGANG_BUNDEL` bij
+het starten): wie de rol *schuldhulpverlener* in zijn inlogtoken heeft, ziet bij het lezen de
+namen van personen van wie de achternaam met A begint; de andere namen worden weggesnoeid.
+Het verbod op exporteren en de plicht om te loggen staan in de bundel, maar de API dwingt ze
+nog niet af. Het doel staat alleen als kopregel en niet als voorwaarde in de regel: de API
+geeft het doel van de aanvraag nog niet door, dus een voorwaarde erop zou nooit waar zijn.
+
+> **`Doel:` in de kop is een binding** (besluit Mark 20-11). Elke toestemming van het beleid
+> geldt alleen voor een aanvraag met dat doel (AVG-doelbinding); een verbod geldt ongeacht het
+> doel. `Grondslag:` is daarentegen een vermelding. De ODRL-export schrijft de binding zo
+> (`odrl:purpose` als verfijning op elke toestemming).
+>
+> **De API toetst het nog niet.** Het doel van de aanvraag komt binnen als **header** (besluit
+> Mark 20-11); dat bouwt de sessie die de uitvoering doet, samen met de verzoekzijde. Daarbij
+> schrijft de bundel het doel uit als `aanvraag.doel eq <doel>` op elke toestemming, zonder
+> dubbeling als de regel dezelfde voorwaarde al heeft. Tot dan meldt *Exporteer beleidsbundel*
+> dat de bundel op dit punt ruimer is, en werkt dit voorbeeld in de API zonder doeltoets.
+
 ### Taaleigenschappen (voor de auteur)
 
 - **Van-vorm**: naar gegevens verwijs je in woorden — "de achternaam van de

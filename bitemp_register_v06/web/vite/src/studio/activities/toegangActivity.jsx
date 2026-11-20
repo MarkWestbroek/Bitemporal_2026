@@ -33,7 +33,7 @@ import { ModelPicker, FIELDREF_MIME, useSchemaModel, verzamelVelden } from "../.
 import {
   parseBeleid, renderBeleid, compileerBundel, padNaarVerwijzing, renderVerwijzing,
   verwijzingNaarPad, maakVeldIndex, resolveerBeleid, resolveerVerwijzing,
-  resolveerGroep, bepaalSuggesties, VOORBEELD_BELEID, isGroepPad,
+  resolveerGroep, bepaalSuggesties, VOORBEELD_STUDIO, isGroepPad,
 } from "../../toegangsspraak";
 import { IconToegang } from "../icons";
 import { menuBus } from "../menuBus";
@@ -114,7 +114,7 @@ function ontleedHtml(tekst, spans, actieveSpan) {
 const Ctx = createContext(null);
 
 function ToegangProvider({ children }) {
-  const [tekst, setTekst] = useState(VOORBEELD_BELEID);
+  const [tekst, setTekst] = useState(VOORBEELD_STUDIO);
   const [activeTab, setActiveTab] = useState("tekst"); // "tekst" | "canoniek"
   const [ontleding, setOntleding] = useState(true);
   const [suggesties, setSuggesties] = useState([]);
@@ -244,8 +244,8 @@ function ToegangProvider({ children }) {
       // Vervang de tekst via het edit-mechanisme zodat ook dit undo-baar is.
       menuBus.on("toegang:voorbeeld", () => {
         const ta = vindTextarea();
-        if (ta) invoegOpCursor(VOORBEELD_BELEID, 0, { van: 0, tot: ta.value.length });
-        else setTekst(VOORBEELD_BELEID);
+        if (ta) invoegOpCursor(VOORBEELD_STUDIO, 0, { van: 0, tot: ta.value.length });
+        else setTekst(VOORBEELD_STUDIO);
       }),
       menuBus.on("toegang:herformatteer", () => {
         const { canoniek } = ref.current;
