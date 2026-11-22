@@ -13,7 +13,10 @@ De single source of truth voor het nummer is `package.json` `"version"`.
   tekent zich op het canvas in zijn eigen gedaante. *Weergave → Laad de vormen uit dit project in de tool* probeert een
   gewijzigde vorm uit tot je de pagina herlaadt. Iconen als SVG met een eigen editor; de SVG wordt altijd geschoond.
   Ook alle ingebouwde iconen staan erin (als SVG-tekst; de iconen in de code blijven de reserve), zodat je een icoon
-  kunt aanpassen en uitproberen. *Profiel (M3) → Laad alle profielen van de tool* doet hetzelfde voor de profielen.
+  kunt aanpassen en uitproberen, en per profiel een **koppeling**: welk elementtype welke vorm, welk icoon en welke kleur
+  krijgt, in een tabel. *Weergave → Open het weergaveproject van de tool* en *Profiel (M3) → Open het sidecar-project van
+  de tool* openen die als eigen project, nooit in je gewone project; *Haal de weergaven/profielen uit dit project* ruimt
+  op als ze daar toch staan.
 - **Profielen uit het project laden** (PROF-1): *Profiel (M3) → Laad de profielen uit dit project in de tool* maakt
   van de profiel-diagrammen in je project weer profielen. Pas je in het sidecar-project een profiel aan (een kleur, een
   eigenschap, een verbindingsregel) en laad je het, dan tekent de tool daarmee, tot je de pagina herlaadt.
@@ -71,6 +74,8 @@ De single source of truth voor het nummer is `package.json` `"version"`.
   volgnummers) tonen hun instellingen zo.
 
 ### Gewijzigd
+- **ArchiMate equipment: een tandwiel in plaats van een zonnetje** (Mark 22-11): één omtrek met acht tanden en een as,
+  zoals de BPMN-servicetaak.
 - **Bewaar in het project: als boom opgesteld** (Mark 20-11): de diagrammen die *Bewaar in het project* maakt,
   staan als boom: de simulatie of het scenario gecentreerd bovenaan met boomlijnen; op een scenariodiagram tot
   vier stubs in één rij en meer verspringend over twee rijen; de startgegevens links naast het scenario met een

@@ -2,7 +2,7 @@
 // model in het profiel Weergave, en terug. Eigen proces (node --test): het register verandert.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { weergaveVanAlles, vormenVanDeTool, iconenVanDeTool, laadWeergavenInDeTool, descriptorVan, tekenDiagram, naarSvg } from "./dist/studio-profielen.mjs";
+import { weergaveVanAlles, vormenVanDeTool, iconenVanDeTool, laadWeergavenInDeTool, descriptorVan, diagramTypeVan, tekenDiagram, naarSvg } from "./dist/studio-profielen.mjs";
 
 const perId = (lijst) => Object.fromEntries(lijst.map((st) => [st.id, st]));
 
@@ -19,7 +19,7 @@ test("elke vorm van de tool staat precies één keer in het project, in een map"
   const bpmn = Object.values(model.diagrams).find((d) => d.naam === "Vormen van BPMN");
   assert.ok(bpmn, "diagram van BPMN");
   assert.ok(bpmn.nodes.some((n) => model.elements[n.elementId].naam === "bpmn-taak"));
-  assert.equal(project.profielVersies.weergave05, "0.1.0");
+  assert.equal(project.profielVersies.weergave05, "0.2.0");
 });
 
 test("rondreis: de vormen uit het project zijn exact de vormen van de tool", () => {
@@ -46,6 +46,27 @@ test("iconen: elk ingebouwd icoon staat in het project, in een map, en komt exac
   assert.deepEqual(fouten, []);
   assert.deepEqual(Object.fromEntries(terug.map((i) => [i.id, i.svg])), tool);
   assert.ok(terug.every((i) => i.monochroom === false));
+});
+
+test("koppelingen: per profiel in het project; terug in de tool geeft exact dezelfde profielen", () => {
+  const ids = [...new Set(Object.values(weergaveVanAlles().profielen.weergave05.elements).filter((e) => e.elementType === "koppeling").map((e) => e.data.profiel))];
+  assert.ok(ids.length >= 25, `koppelingen voor ${ids.length} profielen`);
+  const voor = JSON.stringify(ids.map((id) => diagramTypeVan(id)));
+  const project = JSON.parse(JSON.stringify(weergaveVanAlles()));
+  assert.ok(Object.values(project.profielen.weergave05.diagrams).some((d) => d.naam === "Koppeling van ArchiMate"));
+  const { koppelingen, fouten } = laadWeergavenInDeTool(project);
+  assert.deepEqual(fouten, []);
+  assert.ok(koppelingen.includes("archimate") && koppelingen.some((k) => k.startsWith("archimate/")), "standaard en shape-set van ArchiMate");
+  assert.equal(JSON.stringify(ids.map((id) => diagramTypeVan(id))), voor);
+});
+
+test("een gewijzigde koppeling verandert het profiel: de BPMN-taak als ruit", () => {
+  const project = JSON.parse(JSON.stringify(weergaveVanAlles()));
+  const bpmn = Object.values(project.profielen.weergave05.elements).find((e) => e.elementType === "koppeling" && e.data.profiel === "bpmn-motor" && !e.data.set);
+  const taakType = diagramTypeVan("bpmn-motor").elementTypes.find((et) => et.shape === "bpmn-taak");
+  bpmn.data.regels[taakType.id].shape = "ruit";
+  laadWeergavenInDeTool(project);
+  assert.equal(diagramTypeVan("bpmn-motor").elementTypes.find((et) => et.id === taakType.id).shape, "ruit");
 });
 
 test("een gewijzigde vorm in het project verandert de tool; een onbekende renderer niet", () => {

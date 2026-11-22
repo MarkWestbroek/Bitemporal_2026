@@ -3891,6 +3891,46 @@ async function importeerProjectTekst(tekst, bestandsnaam = "") {
   pasProjectToe(data);
 }
 
+/** De id van het project dat nu open is. */
+export const huidigProjectId = () => useModellerenStore.getState().project?.id || null;
+
+/**
+ * Een gegenereerd werkbestand (het weergaveproject, het sidecar-project) als **eigen project**
+ * openen, in plaats van het in het huidige project te zetten (Mark 22-11: de weergaven waren in
+ * het gewone project beland). De Studio heeft één project tegelijk; het huidige wordt vervangen, dus
+ * eerst de vraag of het als bestand bewaard moet worden (zoals bij Nieuw project).
+ * @param {any} data - een werkbestand (formaat studio-project)
+ * @returns {Promise<boolean>} geopend
+ */
+export async function openAlsProject(data) {
+  const { project } = useModellerenStore.getState();
+  const heeftInhoud = getProfieltypen().some((p) => {
+    if (p.klassiek) return false;
+    const st = p.useStore.getState();
+    return Object.keys(st.elements).length || Object.keys(st.diagrams).length;
+  });
+  const ok = await vraagBevestiging({
+    titel: `${data.project.naam} openen`,
+    tekst:
+      `"${data.project.naam}" is een eigen project. Het opent in plaats van "${project.naam}".` +
+      (heeftInhoud ? `\n\nStaat "${project.naam}" op de server, dan haal je het daar later weer op; anders kun je het hierna eerst als bestand bewaren.` : ""),
+    bevestig: "Openen",
+  });
+  if (!ok) return false;
+  if (heeftInhoud && project.serverVersie == null) {
+    const bewaar = await vraagBevestiging({
+      titel: "Eerst bewaren?",
+      tekst: `"${project.naam}" staat niet op de server. Eerst als JSON-bestand bewaren?`,
+      bevestig: "Exporteren",
+      annuleer: "Niet exporteren",
+    });
+    if (bewaar) exporteerProject();
+  }
+  meldProfielVersies(data);
+  pasProjectToe(data);
+  return true;
+}
+
 function kiesEnImporteerProject() {
   const inp = document.createElement("input");
   inp.type = "file";

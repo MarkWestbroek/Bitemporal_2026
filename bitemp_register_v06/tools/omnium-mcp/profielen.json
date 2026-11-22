@@ -10768,6 +10768,18 @@
      ]
     },
     {
+     "id": "koppeling",
+     "label": "Koppeling",
+     "omschrijving": "Hoe de elementtypen van één profiel getekend worden: per elementtype de vorm en het icoon (op id, uit dit project of de code), de kleur en of het een achtergrond is; per relatie de lijn. Zonder set is het de standaard, met een set een andere gedaante.",
+     "eigenschappen": [
+      "profiel",
+      "set",
+      "setLabel",
+      "typeWeergave",
+      "regels"
+     ]
+    },
+    {
      "id": "constraint",
      "label": "Constraint",
      "omschrijving": "Regel die het standaardarsenaal niet kan uitdrukken (UML Constraint), tussen {…}; koppel hem met annotatie-lijnen aan wat hij beperkt (bv. {xor} tussen twee relaties).",
@@ -10795,6 +10807,7 @@
        "doel": [
         "icoon",
         "vorm",
+        "koppeling",
         "constraint",
         "diagramverwijzing"
        ]
@@ -10826,6 +10839,9 @@
     },
     {
      "id": "vorm"
+    },
+    {
+     "id": "koppeling"
     },
     {
      "id": "notitie",
