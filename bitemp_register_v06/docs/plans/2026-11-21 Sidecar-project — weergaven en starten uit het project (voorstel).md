@@ -260,6 +260,12 @@ diagram, dus de overgang is mechanisch.
    zitten te veel constraints op). Een descriptor binnenhalen blijft een import die elementen
    maakt.
 
+**Gebouwd 22-11.** Deel 1: *Profiel* (`profielDef`) als container in de M3-taal 1.1.0, de
+diagrammen als views, de JSON als afgeleide eigenschap (`profielContainer.js`). Deel 2: de
+activiteiten *Profielen* en *Transformaties* zijn de Modelleren-host met een gefilterde boom
+(`projectZicht.jsx`, `boomZicht.js`); de JSON-editor, het kladblok *Profiel-ontwerp* en de lezer
+(nu *Regelsets proefdraaien*) staan standaard niet meer in de balk. Zie STUDIO.md.
+
 ## 10. Stappen 7, 8 en 10 toegelicht (22-11)
 
 - **7. De rol ontwerper.** Een rol tussen modelleur en beheerder: mag een branch maken van een

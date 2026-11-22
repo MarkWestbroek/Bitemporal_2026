@@ -198,6 +198,9 @@ export default maakDiagramActiviteit({
   id: "profielOntwerp05",
   label: "Profiel-ontwerp",
   icon: <IconProfielOntwerp05 />,
+  // De probeerhoek (blijft, Mark 23-11: iets uitproberen zonder project); de ingang is sinds stap 9 deel 2 de activiteit Profielen (projectZicht.jsx,
+  // Mark 22-11). Via Ga naar en de instellingen van de balk blijft het bereikbaar.
+  standaardVerborgen: true,
   // Gereedschap, geen modelleeractiviteit (zie profielActivity).
   groep: "beheer",
   descriptor,

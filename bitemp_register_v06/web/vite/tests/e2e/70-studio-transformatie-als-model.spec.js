@@ -4,7 +4,7 @@
 //  2. Een regel wijzigen in het model en aanmelden: de activiteit Transformaties toont en
 //     proefdraait de getekende versie (vindplaats: model).
 import { test, expect } from "@playwright/test";
-import { openStudio, zetModel, inStore } from "./helpers/studio.js";
+import { openStudio, zetModel, inStore, kiesActiviteit } from "./helpers/studio.js";
 
 test.use({ viewport: { width: 1700, height: 1000 } });
 
@@ -72,7 +72,7 @@ test("regelsets als model laden, een regel wijzigen en aanmelden bij de catalogu
   await expect(page.getByText("11 transformatie(s) aangemeld")).toBeVisible();
   await page.getByRole("dialog").getByRole("button", { name: "OK" }).click();
 
-  await page.locator(".studio-activitybar [title^='Transformaties']").first().click();
+  await kiesActiviteit(page, "transformaties");
   await page.locator('[data-regelset="mermaid-flowchart-naar-usecase"]').first().click();
   const main = page.getByTestId("regelset");
   await expect(main).toContainText("vindplaats: model");

@@ -46,7 +46,7 @@ registreerProfielOntwerp();
  * Elk profiel van de tool als diagram in dit project (de tegenhanger van Weergave → Laad de vormen
  * van de tool). Dezelfde opbouw en id's als het sidecar-project; een diagram dat er al is, blijft.
  */
-async function laadProfielenVanDeTool(useStore) {
+export async function laadProfielenVanDeTool(useStore) {
   const { huidigProjectId, openAlsProject } = await import("./modellerenActivity.jsx");
   if (huidigProjectId() !== SIDECAR_PROJECT_ID) {
     const project = sidecarProject({
@@ -153,7 +153,7 @@ async function startUitDeCode(soort, wat) {
 }
 
 /** Alle profiel-diagrammen van dit project als profielen in de tool zetten (profielenUitProject.js). */
-async function laadInDeTool(useStore) {
+export async function laadInDeTool(useStore) {
   const st = useStore.getState();
   const kernen = kernenUitProject({ elements: st.elements, diagrams: st.diagrams });
   if (!kernen.length) {

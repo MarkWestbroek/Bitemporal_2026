@@ -4,13 +4,13 @@
 //  3. Proefdraaien op een map uit het project (use case-model) geeft de Mermaid-tekst.
 //  4. Een regelset met instellingen is te bekijken, niet proef te draaien.
 import { test, expect } from "@playwright/test";
-import { openStudio, zetModel } from "./helpers/studio.js";
+import { openStudio, zetModel, kiesActiviteit } from "./helpers/studio.js";
 
 test.use({ viewport: { width: 1700, height: 1000 } });
 
 async function open(page) {
   await openStudio(page);
-  await page.locator(".studio-activitybar [title^='Transformaties']").first().click();
+  await kiesActiviteit(page, "transformaties");
   await expect(page.getByTestId("regelset-lijst")).toBeVisible();
 }
 
@@ -60,7 +60,7 @@ test("proefdraaien op een map uit het project geeft de doeltekst", async ({ page
     { id: "bestellen", naam: "Bestellen", type: "usecase", pos: { x: 400, y: 200 } },
     { id: "a1", naam: "", type: "associatie", source: "klant", target: "bestellen" },
   ] });
-  await page.locator(".studio-activitybar [title^='Transformaties']").first().click();
+  await kiesActiviteit(page, "transformaties");
   await page.locator('[data-regelset="usecase-naar-mermaid-flowchart"]').first().click();
   const proef = page.getByTestId("proef");
   const kies = proef.getByTestId("proef-map");

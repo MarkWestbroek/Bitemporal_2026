@@ -286,10 +286,13 @@ function Main() {
 
 export default {
   id: "transformaties",
-  label: "Transformaties",
+  // Sinds stap 9 deel 2 (Mark 22-11) heet het zicht op het project "Transformaties"
+  // (projectZicht.jsx); deze lezer is daar de knop Proefdraaien… en staat standaard niet in de balk.
+  label: "Regelsets proefdraaien",
   icon: <IconTransformatie />,
   groep: "beheer",
   status: "preview",
+  standaardVerborgen: true,
   Sidebar,
   Main,
 };

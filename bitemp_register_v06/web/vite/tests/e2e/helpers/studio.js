@@ -117,3 +117,14 @@ export async function wachtOpNode(page, id) {
   await page.locator(`.react-flow__node[data-id="${id}"]`).waitFor({ timeout: 20_000 });
   await page.waitForTimeout(700);
 }
+
+/**
+ * Een activiteit openen op id, ook als ze niet in de balk staat (standaardVerborgen; bv. het
+ * Profiel-ontwerp en Regelsets proefdraaien sinds stap 9 deel 2, Mark 22-11).
+ */
+export async function kiesActiviteit(page, id) {
+  await page.evaluate(async (id) => {
+    const { default: useStudioStore } = await import(location.origin + "/viz/react/src/studio/useStudioStore.js");
+    useStudioStore.getState().setActief(id);
+  }, id);
+}

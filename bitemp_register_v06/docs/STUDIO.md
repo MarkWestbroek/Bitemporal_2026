@@ -2894,9 +2894,32 @@ in het canonieke model; de diagrammen zijn views, het model is één.
 - Tests: `profielContainer.test.js`, `sidecarProject.test.js`, render-svc `sidecar.test.mjs` (de
   rondreis van alle profielen via de container is exact); e2e `75-studio-profiel-container`.
 
-**Volgende stappen** (plan §7–§10): stap 9, tweede deel (de activiteiten Profielen en Transformaties
-als gefilterde bomen op het ene project; de JSON-ingang *Profiel (0.5)* vervalt); daarna stap 5
-(de centrale plek op app).
+**Stap 9, tweede deel (gebouwd 22-11): Profielen en Transformaties als zicht op één project**
+(`studio/activities/projectZicht.jsx`, `studio/boomZicht.js`).
+
+Mark 22-11: één profielen- en transformatieproject; de activiteiten blijven gescheiden, elk met een
+gefilterde boom.
+
+- **Profielen** en **Transformaties** (onderaan de balk, groep beheer) zijn de Modelleren-host
+  (tabs, canvas, eigenschappen, menu's) met een **zicht** op de boom: alleen de mappen waarin iets
+  van hun taal staat (met de voormappen), en daarin alleen de diagrammen en elementen van die taal
+  (Profiel (M3) resp. Transformatie). Het zicht filtert alleen; model en structuur blijven gelijk.
+  Modelleren toont nog steeds alles.
+- De kop van het zicht noemt het open project en zijn versie. Is dat geen profielen- en
+  transformatieproject (soort `profielen`), dan zegt hij dat, met de knop *Open het profielen- en
+  transformatieproject* (als eigen project). Profielen heeft de knop *Laad in de tool*,
+  Transformaties de knop *Proefdraaien…*.
+- De oude ingangen staan standaard niet meer in de balk (via Ga naar en de balkinstellingen nog
+  bereikbaar): de JSON-editor *Profiel-editor* (stond al uit), het *Profiel-ontwerp* (blijft als probeerhoek
+  zonder project, Mark 23-11), en de lezer, die nu *Regelsets proefdraaien* heet.
+- Tests: `boomZicht.test.js`; e2e `76-studio-profielen-transformaties-zicht`. De e2e-tests die het
+  kladblok of de lezer via de balk openden, gebruiken nu `kiesActiviteit` (helpers/studio.js).
+
+Nog open: de startpagina in een zicht toont alle talen; *Beeld → Typering* schrijft nog op het
+diagram; een nieuwe view krijgt nog geen plaats onder zijn Profiel.
+
+**Volgende stappen** (plan §7–§10): stap 5 (de centrale plek op app: uitbrengen en ophalen met een
+leestoken, exact vastpinnen, elke versie met haar ouders), daarna 7, 8 en 10.
 
 ## Activiteit Transformaties: regelsets bekijken en proefdraaien (2026-11-18)
 

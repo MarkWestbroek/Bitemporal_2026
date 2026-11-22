@@ -38,6 +38,7 @@ import { herkomstRegel, isBranch, projectKop } from "../takken/herkomst.js";
 import { bestaandeBranch, standaardBranchNaam, waaromGeenBranch } from "../takken/branchMaken.js";
 import { koppelStore, zonderVastleggen, rebaseStand, herschikOpVolgorde, structuurNet, STRUCTUUR_OPS, STRUCTUUR_VELDEN, isStil } from "../sync/operaties.js";
 import { volgDiagram, bouwHierarchie } from "../boomRegels.js";
+import { mappenInZicht, inZicht } from "../boomZicht.js";
 import { waaromNietOnder, boomRelatieVoor, boomRelatiesVan, REDEN_NIET_OMHANGEN } from "../../diagramcore/model/omhangen.js";
 import VerwezenDoorPaneel from "../VerwezenDoorPaneel.jsx";
 import { startBeeldWachter } from "../gedeeldeBeelden.js";
@@ -2371,7 +2372,15 @@ function boomIndex(mappen, plaatsing) {
 }
 const GEEN = [];
 
+/**
+ * Het zicht op de boom (boomZicht.js, stap 9 deel 2): null = de hele boom (Modelleren); anders
+ * `{talen, mappen}` — alleen de mappen in het zicht en daarin alleen de diagrammen en elementen van
+ * die talen (de activiteiten Profielen en Transformaties, projectZicht.jsx).
+ */
+const BoomZichtCtx = React.createContext(null);
+
 function Map_({ map, diepte }) {
+  const zicht = React.useContext(BoomZichtCtx);
   const mappen = useModellerenStore((s) => s.mappen);
   const mapOpen = useModellerenStore((s) => s.mapOpen);
   const plaatsing = useModellerenStore((s) => s.plaatsing);
@@ -2386,8 +2395,10 @@ function Map_({ map, diepte }) {
   // maakt honderden geneste mappen; alles open tekende 100.000 DOM-knopen).
   const open = mapOpen[map.id] ?? standaardMapOpen(diepte);
   const index = boomIndex(mappen, plaatsing);
-  const kinderen = index.kinderen.get(map.id) || GEEN;
-  const inhoud = index.inhoud.get(map.id) || GEEN;
+  const alleKinderen = index.kinderen.get(map.id) || GEEN;
+  const alleInhoud = index.inhoud.get(map.id) || GEEN;
+  const kinderen = zicht ? alleKinderen.filter((m) => zicht.mappen.has(m.id)) : alleKinderen;
+  const inhoud = zicht ? alleInhoud.filter((k) => inZicht(zicht, k)) : alleInhoud;
   const selecteerMap = useModellerenStore((s) => s.selecteerMap);
   const mapSelectie = useModellerenStore((s) => s.mapSelectie);
   const [bewerk, setBewerk] = React.useState(false);
@@ -2702,11 +2713,17 @@ function BundelSectie() {
   );
 }
 
-function Sidebar() {
+/**
+ * De projectboom. `talen` (optioneel) maakt er een zicht van: alleen wat bij die talen hoort
+ * (boomZicht.js; de activiteiten Profielen en Transformaties, projectZicht.jsx).
+ * @param {{talen?: string[]|null}} [props]
+ */
+function Sidebar({ talen = null } = {}) {
   useSyncExternalStore(abonneerOpProfieltypen, profieltypenVersie);
   const beheer = useBeheerZicht();
   zetBeheerZicht(beheer);
-  const profielen = zichtbareProfielen(getProfieltypen(), beheer);
+  const alleProfielen = zichtbareProfielen(getProfieltypen(), beheer);
+  const profielen = talen ? alleProfielen.filter((p) => talen.includes(p.id)) : alleProfielen;
   const scrollRef = React.useRef(null);
   useEffect(() => {
     const el = scrollRef.current;
@@ -2724,7 +2741,14 @@ function Sidebar() {
   const actieveTab = useModellerenStore((s) => s.actieveTab);
   const tabs = useModellerenStore((s) => s.tabs);
   const verplaatsMap = useModellerenStore((s) => s.verplaatsMap);
-  const rootMappen = Object.values(mappen).filter((m) => !m.ouderId).sort(opVolgorde);
+  const plaatsingVoorZicht = useModellerenStore((s) => s.plaatsing);
+  const talenSleutel = talen ? talen.join("|") : "";
+  const zicht = React.useMemo(
+    () => (talen ? { talen: new Set(talen), mappen: mappenInZicht(mappen, plaatsingVoorZicht, talen) } : null),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [talenSleutel, mappen, plaatsingVoorZicht]
+  );
+  const rootMappen = Object.values(mappen).filter((m) => !m.ouderId && (!zicht || zicht.mappen.has(m.id))).sort(opVolgorde);
   // Droppen op de "Mappen"-kop (of het vlak eronder): een map hangt terug aan de root, een diagram
   // gaat uit zijn map naar de root. Elementen niet: die hebben geen plek in de root (verwijderen
   // kan wél, via het contextmenu — met bevestiging).
@@ -3046,6 +3070,7 @@ function Sidebar() {
   };
 
   return (
+    <BoomZichtCtx.Provider value={zicht}>
     <div
       style={{ display: "flex", flexDirection: "column", height: "100%", minHeight: 0, outline: "none" }}
       onKeyDown={onKey}
@@ -3106,6 +3131,7 @@ function Sidebar() {
       )}
       <BoomContextMenu />
     </div>
+    </BoomZichtCtx.Provider>
   );
 }
 
