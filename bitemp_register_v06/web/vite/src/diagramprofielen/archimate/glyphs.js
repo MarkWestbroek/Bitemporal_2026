@@ -51,7 +51,12 @@ export const GLYPHS = {
   // ── technology/physical-aanvulling ──
   "am-pad": [p("M4.4 4.6 L2 7 L4.4 9.4 M9.6 4.6 L12 7 L9.6 9.4 M2.6 7 H11.4", { "stroke-dasharray": "2.2 1.6" })],
   "am-netwerk": [c(3.4, 4, 1.4), c(10.6, 4, 1.4), c(3.4, 10, 1.4), c(10.6, 10, 1.4), p("M4.8 4 H9.2 M4.8 10 H9.2 M3.4 5.4 V8.6 M10.6 5.4 V8.6")],
-  "am-equipment": [c(7, 7, 2), p("M7 2.6 V4 M7 10 V11.4 M2.6 7 H4 M10 7 H11.4 M3.9 3.9 L4.9 4.9 M9.1 9.1 L10.1 10.1 M10.1 3.9 L9.1 4.9 M4.9 9.1 L3.9 10.1")],
+  // Een tandwiel: één omtrek met acht tanden en een as (losse spaken lazen als een zonnetje — Mark 22-11;
+  // dezelfde vorm als de BPMN-servicetaak, bpmn/vormen.js, geschaald naar viewBox 14).
+  "am-equipment": [
+    p("M11.07 6.11 L12.55 6.17 L12.55 7.83 L11.07 7.89 A4.17 4.17 0 0 1 10.51 9.24 L11.51 10.33 L10.33 11.51 L9.24 10.51 A4.17 4.17 0 0 1 7.89 11.07 L7.83 12.55 L6.17 12.55 L6.11 11.07 A4.17 4.17 0 0 1 4.76 10.51 L3.67 11.51 L2.49 10.33 L3.49 9.24 A4.17 4.17 0 0 1 2.93 7.89 L1.45 7.83 L1.45 6.17 L2.93 6.11 A4.17 4.17 0 0 1 3.49 4.76 L2.49 3.67 L3.67 2.49 L4.76 3.49 A4.17 4.17 0 0 1 6.11 2.93 L6.17 1.45 L7.83 1.45 L7.89 2.93 A4.17 4.17 0 0 1 9.24 3.49 L10.33 2.49 L11.51 3.67 L10.51 4.76 A4.17 4.17 0 0 1 11.07 6.11 Z"),
+    c(7, 7, 1.6),
+  ],
   "am-facility": [p("M2 11.5 V4 L5.2 6.4 V4 L8.4 6.4 V4 L11.6 6.4 V11.5 Z")],
   "am-distributie": [p("M4.4 4 L1.8 7 L4.4 10 M9.6 4 L12.2 7 L9.6 10 M2.4 5.8 H11.6 M2.4 8.2 H11.6")],
   "am-materiaal": [p("M7 2.4 L12 7 L7 11.6 L2 7 Z"), p("M5.2 7 H8.8")],

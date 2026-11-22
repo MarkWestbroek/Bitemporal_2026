@@ -4,7 +4,8 @@
 //     (M3-taal) en de regelsets (profiel Transformatie).
 //  2. Dat bestand importeren: Modelleren toont de mappen; een profiel-diagram opent met zijn
 //     elementtypen; uit het geïmporteerde model is het profiel te activeren.
-//  3. Profiel (M3) → Laad alle profielen van de tool: elk profiel als diagram, en exact terug.
+//  3. Profiel (M3) → Open het sidecar-project van de tool: een eigen project met elk profiel als
+//     diagram (nooit in het gewone project, Mark 22-11), en exact terug.
 import { test, expect } from "@playwright/test";
 import { openStudio, zetModel, inStore } from "./helpers/studio.js";
 
@@ -131,7 +132,7 @@ test("de profielen uit het project in de tool laden: een wijziging in het model 
   expect(erdNa).toEqual({ zelfde: true, kleur: "#123456", kort: "ENX", superprofiel: true });
 });
 
-test("Laad alle profielen van de tool: elk profiel als diagram, daarna exact terug in de tool", async ({ page }) => {
+test("Open het sidecar-project van de tool: elk profiel als diagram, daarna exact terug in de tool", async ({ page }) => {
   test.setTimeout(120_000);
   await openStudio(page);
   await zetModel(page, { profielId: "m3Profiel05", diagramId: "leeg", diagramNaam: "Leeg" });
@@ -141,14 +142,24 @@ test("Laad alle profielen van de tool: elk profiel als diagram, daarna exact ter
   };
   const melding = page.locator(".studio-dialoog");
 
-  await menu("Laad alle profielen van de tool");
-  await expect(melding).toContainText("als diagram in dit project gezet");
-  await melding.getByRole("button", { name: "OK" }).click();
-  const aantal = await inStore(page, "m3Profiel05", `return Object.values(store.getState().diagrams).filter((d) => d.id.startsWith("dg_")).length;`);
+  await menu("Open het sidecar-project van de tool");
+  await expect(melding).toContainText("is een eigen project");
+  await page.getByRole("button", { name: "Openen", exact: true }).click();
+  await page.getByRole("button", { name: "Niet exporteren", exact: true }).click();
+  expect(await page.evaluate(async () => (await import(location.origin + "/viz/react/src/studio/activities/modellerenActivity.jsx")).huidigProjectId())).toBe("omnium-sidecar");
+  const aantal = await page.evaluate(async () => {
+    const { getProfieltype } = await import(location.origin + "/viz/react/src/studio/profieltypeRegistry.js");
+    const { menuBus } = await import(location.origin + "/viz/react/src/studio/menuBus.js");
+    const store = getProfieltype("m3Profiel05").useStore;
+    window.__stores = { ...(window.__stores || {}), m3Profiel05: store };
+    const ids = Object.keys(store.getState().diagrams).filter((id) => id.startsWith("dg_"));
+    menuBus.emit("studio:open-diagram", { profielId: "m3Profiel05", diagramId: ids[0] });
+    return ids.length;
+  });
   expect(aantal).toBeGreaterThan(20);
 
-  // Een tweede keer laat de bestaande diagrammen staan.
-  await menu("Laad alle profielen van de tool");
+  // In het sidecar-project zelf: een tweede keer laat de bestaande diagrammen staan.
+  await menu("Open het sidecar-project van de tool");
   await expect(melding).toContainText(`Alle ${aantal} profielen staan al als diagram`);
   await melding.getByRole("button", { name: "OK" }).click();
 

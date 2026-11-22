@@ -1,5 +1,6 @@
 // Studio — het profiel Weergave (plan 2026-11-21 Sidecar-project §7 stap 1).
-//  1. Weergave → "Laad de weergaven van de tool" zet alle vormen en iconen als model neer, met een diagram per
+//  1. Weergave → "Open het weergaveproject van de tool" opent alle vormen en iconen als eigen project
+//     (nooit in het gewone project, Mark 22-11), met een diagram per
 //     profiel; een vorm tekent zich op het canvas in zijn eigen gedaante.
 //  2. Een vorm en een icoon wijzigen in het model en "Laad de weergaven uit dit project in de
 //     tool": de tool tekent daarmee (een concept uitproberen).
@@ -17,14 +18,19 @@ async function menu(page, label) {
   await page.getByRole("menuitem", { name: label, exact: true }).click();
 }
 
-test("de vormen als model laden, een vorm wijzigen en in de tool laden", async ({ page }) => {
+test("het weergaveproject openen, een vorm en icoon wijzigen en in de tool laden", async ({ page }) => {
   test.setTimeout(120_000);
   await openStudio(page);
   await zetModel(page, { profielId: PROFIEL, diagramId: "leeg", diagramNaam: "Leeg" });
-  await menu(page, "Laad de weergaven van de tool");
+  await menu(page, "Open het weergaveproject van de tool");
   const melding = page.locator(".studio-dialoog");
-  await expect(melding).toContainText("iconen in");
-  await melding.getByRole("button", { name: "OK" }).click();
+  await expect(melding).toContainText("is een eigen project");
+  await page.getByRole("button", { name: "Openen", exact: true }).click();
+  await page.getByRole("button", { name: "Niet exporteren", exact: true }).click();
+  const projectId = await page.evaluate(async () => (await import(location.origin + "/viz/react/src/studio/activities/modellerenActivity.jsx")).huidigProjectId());
+  expect(projectId).toBe("omnium-weergaven");
+  // Het "Leeg"-diagram van het vorige project is weg: het weergaveproject verving het.
+  expect(await inStore(page, PROFIEL, `return !!store.getState().diagrams.leeg;`)).toBe(false);
 
   const stand = await inStore(
     page,
@@ -122,4 +128,54 @@ test("het geëxporteerde weergaveproject importeren: mappen per profiel en de vo
   }, PROFIEL);
   expect(stand.vormen).toBeGreaterThan(80);
   expect(stand.bpmn).toBe(true);
+});
+test("Haal de weergaven uit dit project: ruimt een gewoon project op", async ({ page }) => {
+  test.setTimeout(120_000);
+  await openStudio(page);
+  await zetModel(page, {
+    profielId: PROFIEL,
+    diagramId: "per-ongeluk",
+    diagramNaam: "Per ongeluk",
+    elementen: [{ id: "v1", naam: "bpmn-taak", type: "vorm", pos: { x: 40, y: 40 }, data: { renderer: "bpmn-taak" } }],
+  });
+  await menu(page, "Haal de weergaven uit dit project");
+  await page.getByRole("button", { name: "Verwijder", exact: true }).click();
+  await expect(page.locator(".studio-dialoog")).toContainText("1 weergave(n) en 1 diagram(men) verwijderd");
+  expect(await inStore(page, PROFIEL, `const s = store.getState(); return Object.keys(s.elements).length + Object.keys(s.diagrams).length;`)).toBe(0);
+});
+
+test("een koppeling: de BPMN-taak als ruit in de tabel, in de tool laden", async ({ page }) => {
+  test.setTimeout(120_000);
+  await openStudio(page);
+  await zetModel(page, { profielId: PROFIEL, diagramId: "leeg", diagramNaam: "Leeg" });
+  await menu(page, "Open het weergaveproject van de tool");
+  await page.getByRole("button", { name: "Openen", exact: true }).click();
+  await page.getByRole("button", { name: "Niet exporteren", exact: true }).click();
+  const stand = await page.evaluate(async (profielId) => {
+    const { getProfieltype } = await import(location.origin + "/viz/react/src/studio/profieltypeRegistry.js");
+    const { getDiagramType } = await import(location.origin + "/viz/react/src/diagramcore/types/typeRegistry.js");
+    const { menuBus } = await import(location.origin + "/viz/react/src/studio/menuBus.js");
+    const st = getProfieltype(profielId).useStore.getState();
+    const kp = Object.values(st.elements).find((e) => e.elementType === "koppeling" && e.data.profiel === "bpmn-motor" && !e.data.set);
+    const dg = Object.values(st.diagrams).find((d) => d.nodes.some((n) => n.elementId === kp.id));
+    menuBus.emit("studio:open-diagram", { profielId, diagramId: dg.id });
+    const taak = getDiagramType("bpmn-motor").elementTypes.find((et) => et.shape === "bpmn-taak");
+    return { kp: kp.id, taak: taak.id };
+  }, PROFIEL);
+  // De koppeling tekent zich als kaart met regels.
+  await expect(node(page, stand.kp).locator(".dc-weergave-koppeling text").first()).toBeVisible();
+  await node(page, stand.kp).click();
+  const cel = page.getByTestId(`koppeling-${stand.taak}-shape`);
+  await expect(cel).toHaveValue("bpmn-taak");
+  await cel.fill("ruit");
+  await menu(page, "Laad de weergaven uit dit project in de tool");
+  await page.getByRole("button", { name: "Laad", exact: true }).click();
+  const melding = page.locator(".studio-dialoog");
+  await expect(melding).toContainText("Koppelingen — toegepast:");
+  await expect(melding).not.toContainText("Niet geladen");
+  const shape = await page.evaluate(async (taak) => {
+    const { getDiagramType } = await import(location.origin + "/viz/react/src/diagramcore/types/typeRegistry.js");
+    return getDiagramType("bpmn-motor").elementTypes.find((et) => et.id === taak).shape;
+  }, stand.taak);
+  expect(shape).toBe("ruit");
 });

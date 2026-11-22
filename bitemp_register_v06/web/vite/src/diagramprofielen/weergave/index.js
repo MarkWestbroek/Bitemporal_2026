@@ -13,6 +13,11 @@
  *   - **vorm** — een ShapeType: de renderer op id (`renderer`), zijn `parameters`, de `minMaat`
  *     en de `ankers`. De renderer zelf blijft code (zoals de graaf-bol, die de velden van een
  *     element als satellieten tekent); het project wijst hem alleen aan, zoals bij code op id.
+ *   - **koppeling** (0.2.0, plan §7 stap 3) — hoe de elementtypen van één profiel getekend worden:
+ *     per elementtype de vorm, het icoon, de kleur en `achtergrond`, per relatie de lijn
+ *     (`edgePresentatie`), en de `typeWeergave` van het profiel. `set` leeg is de standaard; een
+ *     shape-set (een andere gedaante, zoals ArchiMate "Iconen als vorm") is een koppeling met een
+ *     set-id. In het M2 blijven deze waarden staan als standaard; de koppeling overschrijft ze.
  *
  * De naam van het element is de id van de weergave (bv. `bpmn-taak`). Op het canvas tekent een
  * weergave zichzelf (`vormen.js`): een icoon als tegel, een vorm in zijn eigen gedaante.
@@ -20,11 +25,14 @@
  * De ontwerper wijzigt weergaven, de modelleur niet (§6). Een nieuw profiel begint bij 0.1.0.
  */
 import { registreerDiagramType, getDiagramType } from "../../diagramcore/types/typeRegistry.js";
-import { ICOON_VORM, VORM_VORM } from "./vormen.js"; // registreert ook de ShapeTypes: canvas, documenten en render-svc
+import { ICOON_VORM, VORM_VORM, KOPPELING_VORM } from "./vormen.js"; // registreert ook de ShapeTypes: canvas, documenten en render-svc
 
 export const WEERGAVE_PROFIEL_ID = "weergave";
 export const ICOON_TYPE = "icoon";
 export const VORM_TYPE = "vorm";
+export const KOPPELING_TYPE = "koppeling";
+/** Het gegevenstype van de regels van een koppeling; de editor staat in weergaveEditors.jsx. */
+export const KOPPELING_REGELS_DATATYPE = "weergave-koppeling";
 /** Het gegevenstype van SVG-tekst; de editor staat in studio/activities/weergaveEditors.jsx. */
 export const SVG_DATATYPE = "svg";
 /** Samengestelde waarden (parameters, minMaat) als JSON, met de editor van de ontwerptaal. */
@@ -70,12 +78,39 @@ const elementTypes = [
       { key: "overig", label: "overige sleutels van de vorm (JSON)", datatype: JSON_DATATYPE },
     ],
   },
+  {
+    id: KOPPELING_TYPE,
+    label: "Koppeling",
+    lidwoord: "de",
+    omschrijving:
+      "Hoe de elementtypen van één profiel getekend worden: per elementtype de vorm en het icoon (op id, uit dit project of de code), de kleur en of het een achtergrond is; per relatie de lijn. Zonder set is het de standaard, met een set een andere gedaante.",
+    kort: "KP",
+    shape: KOPPELING_VORM,
+    icoon: "class-box",
+    properties: [
+      { key: "profiel", label: "profiel (id)", datatype: "string" },
+      { key: "set", label: "set (leeg = standaard)", datatype: "string" },
+      { key: "setLabel", label: "naam van de set", datatype: "string" },
+      {
+        key: "typeWeergave",
+        label: "type tonen",
+        datatype: "keuze",
+        opties: [
+          { waarde: "", label: "(zoals de tool)" },
+          { waarde: "geen", label: "geen" },
+          { waarde: "icoon", label: "icoon" },
+          { waarde: "tekst", label: "tekst" },
+        ],
+      },
+      { key: "regels", label: "per elementtype", datatype: KOPPELING_REGELS_DATATYPE },
+    ],
+  },
 ];
 
 export const weergaveDiagramType = {
   id: WEERGAVE_PROFIEL_ID,
   label: "Weergave",
-  versie: "0.1.0",
+  versie: "0.2.0", // 0.2.0 (22-11): koppeling
   style: "uml-klassiek",
   fieldTypes: [],
   elementTypes,

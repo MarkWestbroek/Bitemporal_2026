@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { vormNaarElement, elementNaarVorm, vormGebruik, weergaveProject, vormenUitProject, vormElementId, icoonElementId, iconenUitProject } from "./weergaveProject.js";
+import { vormNaarElement, elementNaarVorm, vormGebruik, weergaveProject, vormenUitProject, vormElementId, icoonElementId, iconenUitProject, koppelingenVan, koppelingenUitProject, laadKoppelingen, pasKoppelingToe } from "./weergaveProject.js";
 
 const kent = () => true;
 
@@ -102,4 +102,47 @@ test("iconenUitProject: zonder SVG en dubbel wordt gemeld; vormen tellen niet me
   const uit = iconenUitProject({ elements });
   assert.deepEqual(uit.iconen.map((i) => i.id), ["i"]);
   assert.deepEqual(uit.fouten, ['icoon "i" staat twee keer in het project', 'icoon "leeg": geen SVG']);
+});
+
+test("koppelingen: standaard uit het M2, een per shape-set; toepassen geeft hetzelfde profiel", () => {
+  const descriptor = {
+    id: "p",
+    label: "P",
+    typeWeergave: "geen",
+    elementTypes: [
+      { id: "a", shape: "class-box", icoon: "klasse", kleur: "#eee", properties: [] },
+      { id: "b", shape: "bol", achtergrond: true },
+      { id: "r", isConnector: true, shape: "edge", edgePresentatie: { lijn: "dash-4-3", markerEnd: "pijl-open" } },
+      { id: "n", shape: "note", _superprofiel: true },
+    ],
+    shapeSets: [{ id: "alt", label: "Anders", omschrijving: "x", shapes: { a: "rounded" } }],
+  };
+  const [standaard, set] = koppelingenVan(descriptor);
+  assert.deepEqual(standaard, {
+    profiel: "p",
+    set: "",
+    typeWeergave: "geen",
+    regels: { a: { shape: "class-box", icoon: "klasse", kleur: "#eee" }, b: { shape: "bol", achtergrond: true }, r: { lijn: "dash-4-3", markerEnd: "pijl-open" } },
+  });
+  assert.deepEqual(set, { profiel: "p", set: "alt", setLabel: "Anders", regels: { a: "rounded" }, overig: { omschrijving: "x" } });
+  // Via het project terug, en toegepast op een kopie: hetzelfde profiel.
+  const project = weergaveProject({ shapeTypes: [], descriptors: [descriptor] });
+  const model = project.profielen.weergave05;
+  assert.ok(Object.values(model.diagrams).some((d) => d.naam === "Koppeling van P"));
+  const { koppelingen, fouten } = koppelingenUitProject(model);
+  assert.deepEqual(fouten, []);
+  const kopie = JSON.parse(JSON.stringify(descriptor));
+  assert.deepEqual(laadKoppelingen(koppelingen, (id) => (id === "p" ? kopie : null)), { toegepast: ["p", "p/alt"], fouten: [] });
+  assert.deepEqual(kopie, descriptor);
+});
+
+test("pasKoppelingToe: vervangt per genoemd elementtype, laat de rest; meldt onbekende typen", () => {
+  const descriptor = { id: "p", elementTypes: [{ id: "a", shape: "class-box", icoon: "klasse" }, { id: "b", shape: "bol" }, { id: "r", isConnector: true, edgePresentatie: { lijn: "solid" } }] };
+  const meldingen = pasKoppelingToe(descriptor, { profiel: "p", set: "", regels: { a: { shape: "rounded", kleur: "#f00" }, r: {}, x: { shape: "bol" } } });
+  assert.deepEqual(descriptor.elementTypes, [{ id: "a", shape: "rounded", kleur: "#f00" }, { id: "b", shape: "bol" }, { id: "r", isConnector: true }]);
+  assert.deepEqual(meldingen, ['koppeling p: onbekend elementtype "x"']);
+  // Een set die er nog niet was, komt erbij; een onbekend profiel is een fout.
+  pasKoppelingToe(descriptor, { profiel: "p", set: "nieuw", regels: { a: "bol" } });
+  assert.deepEqual(descriptor.shapeSets, [{ id: "nieuw", shapes: { a: "bol" } }]);
+  assert.deepEqual(laadKoppelingen([{ profiel: "weg", set: "", regels: {} }], () => null).fouten, ['koppeling: onbekend profiel "weg"']);
 });

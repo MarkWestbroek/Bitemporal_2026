@@ -9,6 +9,8 @@
  *     id op (`data.renderer`) en tekent met `data.parameters`; zo zie je op het canvas precies wat
  *     de vorm in een ander profiel wordt. Een onbekende renderer geeft een rood gestippeld vak.
  *
+ * - `weergave-koppeling`: een kaart met de naam en per elementtype waar het naartoe wijst.
+ *
  * Pure `.js`.
  */
 import { registreerShapeType, registreerRenderer, getRenderer, vorm } from "../../diagramcore/types/shapeType.js";
@@ -19,6 +21,7 @@ import { vulVlakIn } from "../../diagramcore/shapes/iconenAlsSvg.js";
 
 export const ICOON_VORM = "weergave-icoon";
 export const VORM_VORM = "weergave-vorm";
+export const KOPPELING_VORM = "weergave-koppeling";
 
 const TEGEL_ICOON = 40;
 const NAAM_H = 26;
@@ -92,10 +95,47 @@ const vormVoorbeeld = {
 };
 registreerRenderer(VORM_VORM, vormVoorbeeld);
 
+/**
+ * Een koppeling: een kaart met de naam bovenaan en eronder per elementtype waar het naartoe wijst
+ * ("taak → bpmn-taak · taak-icoon"), zoveel als past; daaronder "+N meer".
+ */
+const KOP_H = 26;
+const REGEL_H = 14;
+/** De regels van een koppeling als tekstregels. */
+export function koppelingRegels(data) {
+  return Object.entries(data?.regels || {}).map(([et, r]) => {
+    const regel = r && typeof r === "object" ? r : {};
+    const delen = regel.shape || regel.icoon ? [regel.shape, regel.icoon].filter(Boolean) : [regel.lijn, regel.markerEnd].filter(Boolean);
+    return `${et} → ${delen.join(" · ") || "—"}`;
+  });
+}
+const koppeling = {
+  omtrek(ctx) {
+    const { w, h } = ctx.maat;
+    return vorm("g", {}, [
+      vorm("rect", { x: 0.75, y: 0.75, width: w - 1.5, height: h - 1.5, rx: 4, fill: ctx.thema.vulling, stroke: ctx.thema.rand, "stroke-width": 1.5 }),
+      vorm("line", { x1: 0.75, y1: KOP_H, x2: w - 0.75, y2: KOP_H, stroke: ctx.thema.rand, "stroke-width": 1 }),
+    ]);
+  },
+  inhoudsvak: (ctx) => ({ x: 6, y: 2, w: ctx.maat.w - 12, h: KOP_H - 4, uitlijning: "midden" }),
+  ornament(ctx) {
+    const regels = koppelingRegels(ctx.element?.data);
+    const past = Math.max(0, Math.floor((ctx.maat.h - KOP_H - 8) / REGEL_H));
+    const toon = regels.length > past ? regels.slice(0, Math.max(0, past - 1)) : regels;
+    const kleur = ctx.thema.text || ctx.thema.inkt;
+    const kinderen = toon.map((t, i) => vorm("text", { x: 8, y: KOP_H + 14 + i * REGEL_H, "font-size": 10, fill: kleur }, t));
+    if (toon.length < regels.length) kinderen.push(vorm("text", { x: 8, y: KOP_H + 14 + toon.length * REGEL_H, "font-size": 10, fill: kleur, "font-style": "italic" }, `+${regels.length - toon.length} meer`));
+    return vorm("g", { class: "dc-weergave-koppeling" }, kinderen);
+  },
+  rand: (ctx, hoek) => randRechthoek(ctx.maat, hoek),
+};
+registreerRenderer(KOPPELING_VORM, koppeling);
+
 /** @type {import("../../diagramcore/types/schema.js").ShapeType[]} */
 export const WEERGAVE_SHAPETYPES = [
   { id: ICOON_VORM, renderer: ICOON_VORM, parameters: { inhoud: "naam", naamGrootte: 11, uitlijning: "midden" }, minMaat: { w: 96, h: 84 } },
   { id: VORM_VORM, renderer: VORM_VORM, parameters: { inhoud: "naam", naamGrootte: 12, uitlijning: "midden" }, minMaat: { w: 130, h: 70 } },
+  { id: KOPPELING_VORM, renderer: KOPPELING_VORM, parameters: { inhoud: "naam", naamGrootte: 12, uitlijning: "midden" }, minMaat: { w: 280, h: 160 } },
 ];
 
 for (const st of WEERGAVE_SHAPETYPES) registreerShapeType(st);

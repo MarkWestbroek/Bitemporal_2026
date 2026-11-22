@@ -21,6 +21,16 @@
  * De naam van een element is de id van de vorm of het icoon; de element-id is daarvan afgeleid
  * (`wv_<id>`, `wi_<id>`), zodat een volgende export dezelfde elementen houdt.
  *
+ *   map Koppelingen           per profiel een diagram met zijn koppelingen (stap 3)
+ *
+ * **Koppeling** (stap 3): hoe de elementtypen van één profiel getekend worden — per elementtype
+ * `{shape, icoon, kleur, achtergrond}`, per relatie zijn `edgePresentatie`, en de `typeWeergave`.
+ * De standaard (zonder set) komt uit de waarden in het M2; elke shape-set van het profiel is een
+ * koppeling met een set-id (de shapes van de set, overlay zoals nu). `pasKoppelingToe` zet een
+ * koppeling op het geregistreerde profiel, op zijn plek (zoals profielen laden): wat de koppeling
+ * voor een elementtype noemt, vervangt de M2-waarde; een elementtype dat ze niet noemt, houdt de
+ * waarde uit het M2.
+ *
  * Iconen: de ingebouwde staan als SVG-tekst in `diagramcore/shapes/ingebouwdeIconen.js`
  * (gegenereerd uit de JSX, die de reserve blijft); `iconenUitProject` leest ze terug. Ze in de tool
  * zetten (registreerDataIcoon) doet de Studio (weergaveActivity.jsx), want de iconen zijn React.
@@ -31,7 +41,7 @@
  *
  * Puur, op het register van de vormen na (`laadVormen`).
  */
-import { WEERGAVE_PROFIEL_ID, VORM_TYPE, ICOON_TYPE } from "../diagramprofielen/weergave/index.js";
+import { WEERGAVE_PROFIEL_ID, VORM_TYPE, ICOON_TYPE, KOPPELING_TYPE } from "../diagramprofielen/weergave/index.js";
 import { getRenderer, getShapeType, registreerShapeType, valideerShapeType } from "../diagramcore/types/shapeType.js";
 import { versieVan } from "../diagramcore/types/profielVersie.js";
 import { PROJECT_FORMAAT, PROJECT_FORMAAT_VERSIE } from "./activities/projectSync.js";
@@ -52,6 +62,10 @@ const kopie = (v) => (v === undefined ? undefined : JSON.parse(JSON.stringify(v)
 export const vormElementId = (shapeId) => `wv_${veilig(shapeId)}`;
 /** De element-id van een icoon. */
 export const icoonElementId = (icoonId) => `wi_${veilig(icoonId)}`;
+/** De element-id van een koppeling: per profiel, en per set. */
+export const koppelingElementId = (profielId, set = "") => `wk_${veilig(profielId)}${set ? `__${veilig(set)}` : ""}`;
+/** De vormsleutels van een elementtype (geen relatie) die in een koppeling staan. */
+const NODE_SLEUTELS = ["shape", "icoon", "kleur", "achtergrond"];
 /** Standaardiconen per ShapeType (typeIconen.jsx `STANDAARD_ICOON_PREFIX`). */
 const STANDAARD = "vorm:";
 
@@ -138,6 +152,42 @@ export function icoonNaarElement({ id, svg, monochroom = false, label }) {
   const data = { svg, monochroom: !!monochroom };
   if (label) data.label = label;
   return { id: icoonElementId(id), naam: id, elementType: ICOON_TYPE, compartimenten: [], data };
+}
+
+/**
+ * De koppelingen van een profiel: de standaard uit de M2-waarden en een per shape-set.
+ * @param {any} descriptor
+ * @returns {{profiel: string, set: string, setLabel?: string, typeWeergave?: string, regels: Record<string, any>, overig?: any}[]}
+ */
+export function koppelingenVan(descriptor) {
+  const regels = {};
+  for (const et of descriptor?.elementTypes || []) {
+    if (et._superprofiel) continue;
+    if (et.isConnector) regels[et.id] = kopie(et.edgePresentatie || {});
+    else regels[et.id] = Object.fromEntries(NODE_SLEUTELS.filter((k) => et[k] !== undefined).map((k) => [k, kopie(et[k])]));
+  }
+  const standaard = { profiel: descriptor.id, set: "", regels };
+  if (descriptor.typeWeergave !== undefined) standaard.typeWeergave = descriptor.typeWeergave;
+  const sets = (descriptor.shapeSets || []).map((set) => {
+    const { id, label, shapes, ...overig } = set;
+    return { profiel: descriptor.id, set: id, ...(label ? { setLabel: label } : {}), regels: kopie(shapes || {}), ...(Object.keys(overig).length ? { overig: kopie(overig) } : {}) };
+  });
+  return [standaard, ...sets];
+}
+
+/**
+ * Een koppeling als element in het profiel Weergave.
+ * @param {ReturnType<typeof koppelingenVan>[number]} k
+ * @param {string} [profielLabel]
+ */
+export function koppelingNaarElement(k, profielLabel = k.profiel) {
+  const data = { profiel: k.profiel, regels: kopie(k.regels) };
+  if (k.set) data.set = k.set;
+  if (k.setLabel) data.setLabel = k.setLabel;
+  if (k.typeWeergave !== undefined) data.typeWeergave = k.typeWeergave;
+  if (k.overig) data.overig = kopie(k.overig);
+  const naam = k.set ? `${profielLabel} — ${k.setLabel || k.set}` : `${profielLabel} — standaard`;
+  return { id: koppelingElementId(k.profiel, k.set), naam, elementType: KOPPELING_TYPE, compartimenten: [], data };
 }
 
 /** Een raster van nodes. */
@@ -240,6 +290,29 @@ export function weergaveProject({ shapeTypes, iconen = {}, descriptors, taalDesc
     });
   }
 
+  // Koppelingen: per profiel een diagram met de standaard en de shape-sets, naast elkaar.
+  const metKoppeling = [...(descriptors || [])].filter((d) => d?.id && (d.elementTypes || []).length).sort((a, b) => String(a.label || a.id).localeCompare(String(b.label || b.id), "nl"));
+  if (metKoppeling.length) {
+    const mapId = map("map_koppelingen", "Koppelingen", null, 3);
+    for (const descriptor of metKoppeling) {
+      const ids = koppelingenVan(descriptor).map((k) => {
+        const el = koppelingNaarElement(k, descriptor.label || descriptor.id);
+        model.elements[el.id] = el;
+        plaatsing[`el::${WEERGAVE_ACTIVITEIT_ID}::${el.id}`] = mapId;
+        return el.id;
+      });
+      const id = `dg_koppeling_${veilig(descriptor.id)}`;
+      model.diagrams[id] = {
+        id,
+        naam: `Koppeling van ${descriptor.label || descriptor.id}`,
+        diagramType: WEERGAVE_PROFIEL_ID,
+        nodes: ids.map((elementId, i) => ({ elementId, position: { x: 40 + i * 330, y: 40 } })),
+        edges: [],
+      };
+      plaatsing[`${WEERGAVE_ACTIVITEIT_ID}::${id}`] = mapId;
+    }
+  }
+
   return {
     formaat: PROJECT_FORMAAT,
     versie: PROJECT_FORMAAT_VERSIE,
@@ -322,4 +395,93 @@ export function iconenUitProject(inhoud) {
     }
   }
   return { iconen, fouten };
+}
+
+/**
+ * De koppelingen uit een model in het profiel Weergave.
+ * @param {{elements?: Record<string, any>}} inhoud
+ * @returns {{koppelingen: ReturnType<typeof koppelingenVan>, fouten: string[]}}
+ */
+export function koppelingenUitProject(inhoud) {
+  const koppelingen = [];
+  const fouten = [];
+  const gezien = new Set();
+  for (const el of Object.values(inhoud?.elements || {})) {
+    if (el.elementType !== KOPPELING_TYPE) continue;
+    const d = el.data || {};
+    const profiel = String(d.profiel || "").trim();
+    const set = String(d.set || "").trim();
+    const wie = `koppeling "${el.naam || el.id}"`;
+    if (!profiel) fouten.push(`${wie}: geen profiel`);
+    else if (!isObject(d.regels)) fouten.push(`${wie}: de regels moeten een object zijn`);
+    else if (gezien.has(`${profiel}::${set}`)) fouten.push(`${wie}: ${profiel}${set ? ` (set ${set})` : ""} staat twee keer in het project`);
+    else {
+      gezien.add(`${profiel}::${set}`);
+      const k = { profiel, set, regels: kopie(d.regels) };
+      if (d.setLabel) k.setLabel = d.setLabel;
+      if (d.typeWeergave !== undefined) k.typeWeergave = d.typeWeergave;
+      if (isObject(d.overig)) k.overig = kopie(d.overig);
+      koppelingen.push(k);
+    }
+  }
+  return { koppelingen, fouten };
+}
+
+/**
+ * Een koppeling op een profiel zetten, op zijn plek (de activiteiten houden het descriptor-object
+ * vast). De standaard vervangt per genoemd elementtype de vormsleutels (een sleutel die ontbreekt,
+ * valt weg; `shape` blijft altijd); een set vervangt of maakt de shape-set met die id.
+ * @param {any} descriptor - het geregistreerde profiel
+ * @param {ReturnType<typeof koppelingenVan>[number]} k
+ * @returns {string[]} meldingen (bv. een elementtype dat het profiel niet kent)
+ */
+export function pasKoppelingToe(descriptor, k) {
+  const meldingen = [];
+  const typen = new Map((descriptor.elementTypes || []).filter((et) => !et._superprofiel).map((et) => [et.id, et]));
+  for (const etId of Object.keys(k.regels || {})) if (!typen.has(etId)) meldingen.push(`koppeling ${k.profiel}${k.set ? ` (set ${k.set})` : ""}: onbekend elementtype "${etId}"`);
+  if (k.set) {
+    const set = { id: k.set, ...(k.setLabel ? { label: k.setLabel } : {}), ...(k.overig ? kopie(k.overig) : {}), shapes: kopie(k.regels || {}) };
+    const sets = (descriptor.shapeSets ||= []);
+    const i = sets.findIndex((s) => s.id === k.set);
+    if (i >= 0) sets[i] = set;
+    else sets.push(set);
+    return meldingen;
+  }
+  for (const [etId, et] of typen) {
+    const regel = k.regels?.[etId];
+    if (!isObject(regel)) continue;
+    if (et.isConnector) {
+      if (Object.keys(regel).length) et.edgePresentatie = kopie(regel);
+      else delete et.edgePresentatie;
+      continue;
+    }
+    for (const sleutel of NODE_SLEUTELS) {
+      if (regel[sleutel] !== undefined && regel[sleutel] !== "") et[sleutel] = kopie(regel[sleutel]);
+      else if (sleutel !== "shape") delete et[sleutel];
+    }
+  }
+  if (k.typeWeergave !== undefined && k.typeWeergave !== "") descriptor.typeWeergave = k.typeWeergave;
+  else delete descriptor.typeWeergave;
+  return meldingen;
+}
+
+/**
+ * De koppelingen in de tool zetten.
+ * @param {ReturnType<typeof koppelingenVan>} koppelingen
+ * @param {(id: string) => any} getDescriptor - het geregistreerde profiel op id
+ * @returns {{toegepast: string[], fouten: string[]}} toegepast = "profiel" of "profiel/set"
+ */
+export function laadKoppelingen(koppelingen, getDescriptor) {
+  const toegepast = [];
+  const fouten = [];
+  for (const k of koppelingen || []) {
+    const descriptor = getDescriptor(k.profiel);
+    if (!descriptor) {
+      fouten.push(`koppeling: onbekend profiel "${k.profiel}"`);
+      continue;
+    }
+    fouten.push(...pasKoppelingToe(descriptor, k));
+    toegepast.push(k.set ? `${k.profiel}/${k.set}` : k.profiel);
+  }
+  return { toegepast, fouten };
 }

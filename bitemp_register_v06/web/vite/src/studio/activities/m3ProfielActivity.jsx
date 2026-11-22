@@ -11,9 +11,12 @@
  * - *Profiel (M3) → Activeer profiel…* maakt van het actieve diagram een activiteit (zoals in het
  *   Profiel-ontwerp);
  * - *Profiel (M3) → Laad een profiel als diagram…* zet een geregistreerd profiel erbij;
- * - *Profiel (M3) → Laad alle profielen van de tool* zet elk profiel van de tool als diagram in dit
- *   project, zoals in het sidecar-project (zelfde id's). Een profiel dat al als diagram in het
- *   project staat, blijft zoals het is, zodat eigen wijzigingen niet verloren gaan;
+ * - *Profiel (M3) → Open het sidecar-project van de tool* opent alle profielen en regelsets als
+ *   **eigen project** (`omnium-sidecar`). Is dat project al open, dan zet het elk profiel dat er nog
+ *   niet staat erbij (zelfde id's); wat er al staat, blijft zoals het is. Nooit in een gewoon
+ *   project (Mark 22-11);
+ * - *Profiel (M3) → Haal de profielen uit dit project* ruimt op als ze toch in een gewoon project
+ *   staan;
  * - *Profiel (M3) → Laad de profielen uit dit project in de tool* (PROF-1 stap d, opt-in): elk
  *   profiel-diagram wordt weer een profiel. Een profiel dat de tool kent, wordt op zijn plek
  *   vervangen; een onbekend profiel wordt een eigen profiel. Tot een herlaad.
@@ -22,10 +25,12 @@ import { IconProfielOntwerp05 } from "../icons";
 import { maakDiagramActiviteit } from "./maakDiagramActiviteit.jsx";
 import { maakGeneriekeMaakElement } from "./profielGereedschap.js";
 import { ontwerpDescriptor, registreerProfielOntwerp, M3_PROFIEL_ID } from "./m3Profiel.js";
+import { PROFIEL_ONTWERP_ID } from "./profielOntwerp.js";
 import { registreerM3Editors } from "./m3Editors.jsx";
 import ShapeSetPaneel from "./shapeSetPaneel.jsx";
 import { activeerProfiel, bekijkBestaandProfiel, exporteerSidecarProject, sidecarDescriptors } from "./profielOntwerpActivity.jsx";
-import { sidecarProject } from "../sidecarProject.js";
+import { sidecarProject, SIDECAR_PROJECT_ID } from "../sidecarProject.js";
+import { alleRegelsets } from "../../transformatie/regelsetCatalogus.js";
 import { kernenUitProject, laadKernen } from "../profielenUitProject.js";
 import { registreerProfielAlsActiviteit } from "./profielRegistratie.jsx";
 import { getProfieltypen, registreerProfieltype } from "../profieltypeRegistry.js";
@@ -40,6 +45,16 @@ registreerProfielOntwerp();
  * van de tool). Dezelfde opbouw en id's als het sidecar-project; een diagram dat er al is, blijft.
  */
 async function laadProfielenVanDeTool(useStore) {
+  const { huidigProjectId, openAlsProject } = await import("./modellerenActivity.jsx");
+  if (huidigProjectId() !== SIDECAR_PROJECT_ID) {
+    const project = sidecarProject({
+      descriptors: sidecarDescriptors(),
+      vermeldingen: alleRegelsets(),
+      taalDescriptors: { m3: getDiagramType(PROFIEL_ONTWERP_ID), transformatie: getDiagramType("transformatie") },
+    });
+    await openAlsProject({ ...project, geexporteerd: new Date().toISOString() });
+    return;
+  }
   // Per profiel apart opgebouwd, zodat we precies weten welke elementen bij welk diagram horen.
   const perProfiel = sidecarDescriptors().map((descriptor) => sidecarProject({ descriptors: [descriptor] }).profielen[M3_PROFIEL_ID]);
   const al = useStore.getState().diagrams;
@@ -66,6 +81,27 @@ async function laadProfielenVanDeTool(useStore) {
   });
 }
 
+/** De profielen (taal Profiel (M3)) uit dit project halen, als ze in een gewoon project terechtkwamen. */
+async function haalProfielenWeg(useStore) {
+  const st = useStore.getState();
+  const els = Object.keys(st.elements);
+  const dgs = Object.keys(st.diagrams);
+  if (!els.length && !dgs.length) {
+    toonMelding({ tekst: "Dit project heeft geen profielen in de taal Profiel (M3)." });
+    return;
+  }
+  const ok = await vraagBevestiging({
+    titel: "Profielen uit dit project halen",
+    tekst: `${dgs.length} profiel-diagram(men) en ${els.length} element(en) in de taal Profiel (M3) uit dit project verwijderen? De tool zelf verandert niet.`,
+    bevestig: "Verwijder",
+    gevaar: true,
+  });
+  if (!ok) return;
+  for (const id of dgs) useStore.getState().deleteDiagram(id);
+  for (const id of els) if (useStore.getState().elements[id]) useStore.getState().deleteElement(id);
+  toonMelding({ tekst: `${dgs.length} profiel-diagram(men) en ${els.length} element(en) verwijderd.` });
+}
+
 /** Alle profiel-diagrammen van dit project als profielen in de tool zetten (profielenUitProject.js). */
 async function laadInDeTool(useStore) {
   const st = useStore.getState();
@@ -77,7 +113,7 @@ async function laadInDeTool(useStore) {
         "Deze actie laadt de profiel-diagrammen van het huidige project in de tool, en dit project heeft er nog geen.",
         "",
         "Zo komt er een profiel in:",
-        "• Profiel (M3) → Laad alle profielen van de tool, of",
+        "• Profiel (M3) → Open het sidecar-project van de tool (alle profielen, als eigen project), of",
         "• Profiel (M3) → Laad een profiel als diagram… (één profiel).",
         "",
         "Wijzig het profiel en laad het daarna met deze actie in de tool.",
@@ -126,12 +162,13 @@ export default maakDiagramActiviteit({
   devHookNaam: "__m3Profiel05Store",
   browserAlleenActiefDiagram: true,
   onderPaneel: { id: "shapesets", label: "Shape-sets (vorm per elementtype)", Component: ShapeSetPaneel },
-  startActies: [{ id: "laad-alle", label: "Laad alle profielen van de tool", run: laadProfielenVanDeTool }],
+  startActies: [{ id: "laad-alle", label: "Open het sidecar-project van de tool", run: laadProfielenVanDeTool }],
   hoofdmenuExtra: [
     { id: "activeer", label: "Activeer profiel… (registreer/ververs)", run: activeerProfiel },
     { id: "laad-profiel", label: "Laad een profiel als diagram…", run: bekijkBestaandProfiel },
-    { id: "laad-alle", label: "Laad alle profielen van de tool", run: laadProfielenVanDeTool },
+    { id: "laad-alle", label: "Open het sidecar-project van de tool", run: laadProfielenVanDeTool },
     { id: "laad-in-tool", label: "Laad de profielen uit dit project in de tool", run: laadInDeTool },
     { id: "sidecar", label: "Exporteer het sidecar-project (profielen en transformaties)", run: exporteerSidecarProject },
+    { id: "haal-weg", label: "Haal de profielen uit dit project", run: haalProfielenWeg },
   ],
 });

@@ -2717,14 +2717,20 @@ tool* maakt van elk profiel-diagram weer een profiel (`studio/profielenUitProjec
   niet geladen en staat in de melding;
 - een leeg diagram is nog geen profiel en wordt stil overgeslagen.
 
-**Alle profielen van de tool in het project (22-11).** *Profiel (M3) → Laad alle profielen van de
-tool* (ook als startactie) zet elk profiel als diagram in het huidige project, met dezelfde opbouw en
-id's als het sidecar-project: de tegenhanger van *Weergave → Laad de vormen van de tool*. Een profiel
-dat al als diagram in het project staat, blijft zoals het is, zodat eigen wijzigingen niet verloren
-gaan. Zo is het rondje kort: alle profielen laden, er een wijzigen, *Laad de profielen uit dit project
-in de tool*. Mappen maakt deze actie niet; die komen via exporteren en importeren van het
-sidecar-project. Heeft het project nog geen profielen, dan wijst de melding van het laden naar deze
-actie.
+**Het sidecar-project van de tool openen (22-11).** *Profiel (M3) → Open het sidecar-project van de
+tool* (ook als startactie) opent alle profielen en regelsets als **eigen project** (`omnium-sidecar`,
+met de mappen), in plaats van het open project. De Studio heeft één project tegelijk: eerst de vraag
+of het huidige project als bestand bewaard moet worden als het niet op de server staat
+(`openAlsProject` in modellerenActivity.jsx). Is het sidecar-project al open, dan zet de actie elk
+profiel dat er nog niet staat erbij (zelfde id's); wat er al staat, blijft, zodat eigen wijzigingen
+niet verloren gaan. Het rondje: openen, een profiel wijzigen, *Laad de profielen uit dit project in de
+tool*.
+
+**Nooit in een gewoon project (Mark 22-11).** De eerste versie van deze actie (en van *Laad de
+weergaven van de tool*) zette alles in het open project, en zo belandden profielen en weergaven in
+een gewoon M1-project. Opruimen: *Profiel (M3) → Haal de profielen uit dit project* en *Weergave →
+Haal de weergaven uit dit project* verwijderen alles in die taal uit het open project (via de
+gewone verwijderacties, dus ook naar de server bij live sync).
 
 Het geldt tot een herlaad; de tool start nog met de profielen uit de code. De test
 `render-svc/sidecarLaden.test.mjs` laadt alle 27 profielen uit het sidecar-project in de tool en eist
@@ -2763,8 +2769,8 @@ gescheiden: een profiel zegt *wat* er is, het weergaveproject *hoe* het eruitzie
 - **Het project** (`studio/weergaveProject.js`, id `omnium-weergaven`): map *Vormen* met een map per
   profiel (vormen die alleen dat profiel gebruikt), *Gedeeld* en *Niet in een profiel*; per map een
   diagram, en het diagram van een profiel toont ook de gedeelde vormen. Element-id `wv_<vorm-id>`.
-- **Menu Weergave**: *Laad de weergaven van de tool* (in het open model), *Laad de weergaven uit
-  dit project in de tool* (vervangt op id, tot een herlaad: een concept uitproberen), *Exporteer het
+- **Menu Weergave**: *Open het weergaveproject van de tool* (als eigen project `omnium-weergaven`;
+  is dat al open, dan bijwerken), *Laad de weergaven uit dit project in de tool* (vervangt op id, tot een herlaad: een concept uitproberen), *Exporteer het
   weergaveproject*. Importeren gaat als elk project (*Project → Importeer project…*), met de mappen.
 - **Tests**: `render-svc/weergave.test.mjs` (elke vorm precies één keer; rondreis exact: uit het
   project laden geeft dezelfde vormen; een wijziging verandert de tool, een onbekende renderer
@@ -2795,16 +2801,38 @@ Gemeten: 97 vormen in render-svc (meer in de browser, met de eigen vormen), 56 k
   weergaveproject ook de standaardiconen vervangen. `alleIcoonIds` (de icoon-kiezer) laat ze weg.
 - Het **project** heeft nu ook een map *Iconen*: *Standaard per vorm*, een map per profiel (op
   `ElementType.icoon`), *Gedeeld* en *Niet in een profiel*. Element-id `wi_<icoon-id>`.
-- Menu: *Laad de weergaven van de tool* (vormen, ingebouwde iconen en de eigen data-iconen) en
+- Menu: *Open het weergaveproject van de tool* (vormen, ingebouwde iconen en de eigen data-iconen) en
   *Laad de weergaven uit dit project in de tool* (vormen en iconen; een icoon wordt een data-icoon,
   tot een herlaad).
 - Niet als icoon in het project: het icoon van een relatie zonder eigen icoon, dat uit zijn
   `edgePresentatie` getekend wordt (de markers en het streepjespatroon). Dat hangt van het
   elementtype af en is daarmee een renderer: code, zoals de graaf-bol.
 
-**Volgende stappen** (plan §7): de koppeling elementtype → vorm uit het M2 naar de weergaven; naam
-en versie van M2- en weergaveproject in de M1-projectkop (en daarmee een projectsoort: "dit is een
-weergaveproject"); de centrale plek; starten uit de projecten.
+**Stap 3 (gebouwd 22-11): de koppeling elementtype → vorm.**
+
+- Profiel Weergave **0.2.0**: elementtype **koppeling** — hoe de elementtypen van één profiel
+  getekend worden. Per elementtype `{shape, icoon, kleur, achtergrond}`, per relatie zijn
+  `edgePresentatie` (lijn, uiteinden, kleur, …), en de `typeWeergave` van het profiel. Zonder `set`
+  is het de **standaard**; elke **shape-set** van het profiel (zoals ArchiMate "Iconen als vorm") is
+  een koppeling met een set-id, met de shapes van de set (overlay, zoals nu).
+- **Het M2 blijft de standaard**: `koppelingenVan(descriptor)` maakt de koppelingen uit de waarden
+  in het M2; in het project staat per profiel een diagram *Koppeling van X* (map *Koppelingen*).
+- **Tabel-editor** (`weergaveEditors.jsx`, gegevenstype *weergave-koppeling*): een rij per
+  elementtype; vorm en icoon kiezen uit dit project of een id uit de code typen; leeg = de waarde
+  uit het profiel. Op het canvas tekent een koppeling zich als kaart met de regels.
+- **In de tool laden** (*Laad de weergaven uit dit project in de tool*): `pasKoppelingToe` zet de
+  koppeling op het geregistreerde profiel, op zijn plek. Wat de koppeling voor een elementtype
+  noemt, vervangt de M2-waarde (een sleutel die ontbreekt, valt weg; `shape` blijft); een
+  elementtype dat ze niet noemt, houdt de M2-waarde; een onbekend elementtype of profiel wordt
+  gemeld. Een set vervangt of maakt de shape-set met die id. Tot een herlaad.
+- **Rondreis exact** (`render-svc/weergave.test.mjs`): de koppelingen van alle profielen naar het
+  project en terug in de tool geven dezelfde profielen; een gewijzigde koppeling verandert het
+  profiel (de BPMN-taak als ruit). E2e: de tabel invullen en laden.
+- Niet in de koppeling: de vormen per diagram (shape-sets die een gebruiker op een diagram maakt,
+  `diagram.shapeSets`); die horen bij het model (M1).
+
+**Volgende stappen** (plan §7): naam en versie van M2- en weergaveproject in de M1-projectkop (en
+daarmee een projectsoort: "dit is een weergaveproject"); de centrale plek; starten uit de projecten.
 
 ## Activiteit Transformaties: regelsets bekijken en proefdraaien (2026-11-18)
 

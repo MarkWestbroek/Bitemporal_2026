@@ -38,7 +38,7 @@ import { registreerSysml, SYSML_ID } from "../web/vite/src/diagramprofielen/sysm
 import { registreerToegangsregelProfiel, TOEGANGSREGEL_ID } from "../web/vite/src/diagramprofielen/toegangsregel/index.js";
 import { registreerTransformatieProfiel, TRANSFORMATIE_PROFIEL_ID } from "../web/vite/src/diagramprofielen/transformatie/index.js";
 import { registreerWeergaveProfiel, WEERGAVE_PROFIEL_ID } from "../web/vite/src/diagramprofielen/weergave/index.js";
-import { weergaveProject, vormenUitProject, laadVormen, iconenUitProject } from "../web/vite/src/studio/weergaveProject.js";
+import { weergaveProject, vormenUitProject, laadVormen, iconenUitProject, koppelingenUitProject, laadKoppelingen } from "../web/vite/src/studio/weergaveProject.js";
 import { INGEBOUWDE_ICONEN } from "../web/vite/src/diagramcore/shapes/ingebouwdeIconen.js";
 import { alleShapeTypes } from "../web/vite/src/diagramcore/types/shapeType.js";
 import { registreerProfielOntwerp, PROFIEL_ONTWERP_ID } from "../web/vite/src/studio/activities/m3Profiel.js";
@@ -155,6 +155,9 @@ export function sidecarVerschillen(project = sidecarVanAlles()) {
 export function laadSidecarInDeTool(project) {
   return laadKernen(kernenUitProject(project.profielen.m3Profiel05));
 }
+
+/** De descriptor op zijn eigen id (zoals een koppeling hem noemt), of undefined. */
+export const diagramTypeVan = (id) => getDiagramType(id);
 
 /** De descriptor van een profiel-id uit een project, of undefined. */
 export function descriptorVan(profielId) {
@@ -348,8 +351,8 @@ export function samenvoegProjecten({ basis, tak, main, mapId = null, keuze = nul
 }
 
 /**
- * Het weergaveproject (plan 2026-11-21 Sidecar-project §7 stap 1 en 2): alle vormen en de
- * ingebouwde iconen van de tool als model in het profiel Weergave, gegroepeerd per profiel
+ * Het weergaveproject (plan 2026-11-21 Sidecar-project §7 stap 1–3): alle vormen, de
+ * ingebouwde iconen en per profiel de koppelingen van de tool als model in het profiel Weergave, gegroepeerd per profiel
  * (studio/weergaveProject.js).
  */
 export function weergaveVanAlles() {
@@ -363,7 +366,7 @@ export const iconenVanDeTool = () => ({ ...INGEBOUWDE_ICONEN });
 export const vormenVanDeTool = () => JSON.parse(JSON.stringify(alleShapeTypes()));
 
 /**
- * De vormen uit een weergaveproject in de tool zetten (vervangt op id). De iconen worden alleen
+ * De vormen en koppelingen uit een weergaveproject in de tool zetten (vervangt op id). De iconen worden alleen
  * gelezen: hier tekent niets met React-iconen (in de Studio registreert weergaveActivity ze).
  */
 export function laadWeergavenInDeTool(project) {
@@ -371,5 +374,8 @@ export function laadWeergavenInDeTool(project) {
   const { shapeTypes, fouten } = vormenUitProject(model);
   const uit = laadVormen(shapeTypes);
   const ic = iconenUitProject(model);
-  return { ...uit, iconen: ic.iconen, fouten: [...fouten, ...uit.fouten, ...ic.fouten] };
+  // Koppelingen (stap 3): op de geregistreerde profielen, op hun plek.
+  const kp = koppelingenUitProject(model);
+  const kl = laadKoppelingen(kp.koppelingen, (id) => getDiagramType(id));
+  return { ...uit, iconen: ic.iconen, koppelingen: kl.toegepast, fouten: [...fouten, ...uit.fouten, ...ic.fouten, ...kp.fouten, ...kl.fouten] };
 }
