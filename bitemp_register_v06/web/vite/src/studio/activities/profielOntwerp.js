@@ -35,6 +35,7 @@ import { handlerInfo } from "../../diagramcore/types/handlerCatalogus.js";
 import { AARD_CONNECTOR, AARD_ELEMENT } from "../../diagramcore/types/layoutStijl.js";
 import { M3, m3PropertyTypes, naarData, uitData, naamNaarData, naamUitData } from "./ontwerptaal.js";
 import { ALTIJD_SUPERPROFIEL, SUPERPROFIEL_IDS } from "../../diagramcore/types/superprofiel.js";
+import { PROFIEL_TYPE, BEVAT_TYPE, DIRECT_IN_PROFIEL, ontwerpStaatVan } from "./profielContainer.js";
 
 export const PROFIEL_ONTWERP_ID = "profiel-ontwerp";
 
@@ -50,8 +51,11 @@ const EIGENSCHAP_VELDEN = [
 export const profielOntwerpKern = {
   id: PROFIEL_ONTWERP_ID,
   label: "Profiel-ontwerp",
+  // 1.1.0 (22-11): Profiel als container (profielDef + bevat), plan Sidecar-project §9.
+  versie: "1.1.0",
   style: "uml-klassiek",
-  hierarchie: "compositie",
+  // De boom: Profiel ∋ elementtype (bevat), elementtype ◆ compartimenttype ◆ veldtype.
+  hierarchie: [BEVAT_TYPE, "compositie"],
   fieldTypes: [
     { id: "eigenschapDef", viewer: "naam-type", properties: EIGENSCHAP_VELDEN },
     // Alleen-lezen regels die tonen welk Implementation-domein (hooks,
@@ -68,6 +72,25 @@ export const profielOntwerpKern = {
     },
   ],
   elementTypes: [
+    {
+      // Mark 22-11: het M3 definieert Profiel als container, met de vorm map, zoals het domein
+      // (package) in het canonieke model. De eigenschappen zijn die van het DiagramType; de
+      // diagrammen eronder zijn views. De JSON is afgeleid en alleen-lezen (profielContainer.js).
+      id: PROFIEL_TYPE,
+      label: "Profiel",
+      lidwoord: "het",
+      kort: "PRF",
+      stereotype: "«profiel»",
+      shape: "package",
+      kleur: "#e0e7ff",
+      icoon: "package",
+      containerVoor: BEVAT_TYPE,
+      uitwerking: true,
+      standaardDichtInBoom: true,
+      properties: m3PropertyTypes("profiel"),
+      compartments: [],
+      hooks: { afgeleideEigenschappen: (el, ctx) => profielJsonRegels(el, ctx) },
+    },
     {
       id: "elementDef",
       label: "Elementtype",
@@ -188,6 +211,18 @@ export const profielOntwerpKern = {
       handleStijl: "onzichtbaar",
       properties: [{ key: "tekst", datatype: "tekst" }],
     },
+    {
+      // Het lidmaatschap van het profiel; je tekent hem meestal niet, de boom ordent ermee.
+      id: BEVAT_TYPE,
+      label: "Bevat (profiel)",
+      kort: "prf ∋",
+      shape: "edge",
+      icoon: "bevat",
+      isConnector: true,
+      bron: { elementTypes: [PROFIEL_TYPE] },
+      doel: { elementTypes: DIRECT_IN_PROFIEL },
+      edgePresentatie: { lijn: "dash-4-3", vorm: "hoekig", kleur: "#94a3b8" },
+    },
   ],
   taakbalken: [
     { id: "maken", label: "Maken", acties: "elementTypes" },
@@ -195,6 +230,21 @@ export const profielOntwerpKern = {
   ],
   layouts: [],
 };
+
+/**
+ * De JSON van een Profiel-element als afgeleide, alleen-lezen eigenschap (Mark 22-11): de descriptor
+ * die `bouwProfielUitOntwerp` uit de leden maakt. Een fout (nog geen elementtype, …) is de waarde.
+ */
+export function profielJsonRegels(el, { elements = {}, diagrams = {} } = {}) {
+  const id = el.data?.[`${M3}id`] || slug(el.naam);
+  let waarde;
+  try {
+    waarde = JSON.stringify(bouwProfielUitOntwerp(ontwerpStaatVan(el, { elements, diagrams }), { id, label: el.naam }), null, 2);
+  } catch (e) {
+    waarde = `(nog geen geldig profiel: ${e?.message || e})`;
+  }
+  return [{ key: "json", label: "JSON (afgeleid)", waarde, blok: true, uitleg: "alleen-lezen; bewerk het profiel via zijn elementen" }];
+}
 
 /** "Mijn Type!" → "mijn-type" (element-/compartiment-/veldtype-id's). */
 export function slug(tekst) {

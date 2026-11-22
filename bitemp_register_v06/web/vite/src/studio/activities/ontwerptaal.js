@@ -9,7 +9,9 @@
  *
  * Per knoop- of lijnsoort van het ontwerp één metaklasse:
  *
- *   profiel           (het diagram)        DiagramType — gegevens op het ontwerp-diagram, geen knoop
+ *   profiel           «profiel» (container) DiagramType — sinds 22-11 een Profiel-element dat zijn
+ *                                          elementen bevat (profielContainer.js); in een oud
+ *                                          ontwerp de gegevens op het diagram
  *   elementDef        «elementtype»        ElementType (geen connector)
  *   verbindingsregel  lijn                 ElementType (connector)
  *   compartimentDef   «compartimenttype»   CompartmentType

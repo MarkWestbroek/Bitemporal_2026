@@ -12,7 +12,8 @@
  *     (leeg = neemt de standaard over). Elke cel is een volledige "skin":
  *     shape + icoon + kleur.
  *
- * Data leeft op het ontwerp-diagram (Style-data, via updateDiagramStijl); bij
+ * Data leeft op het Profiel-element als het diagram een view van een Profiel is (22-11), anders op
+ * het ontwerp-diagram (Style-data, via updateDiagramStijl); bij
  * *Activeer profiel…* gaat het pass-through naar descriptor.shapeSets.
  */
 import { alleShapeTypeIds } from "../../diagramcore/types/shapeType.js";
@@ -192,7 +193,14 @@ export default function ShapeSetPaneel({ useStore }) {
       connGroepen[connIndex.get(key)].ids.push(el.id);
     }
   }
-  const sets = diagram.shapeSets || [];
+  // Sinds 22-11 (Mark): hangt het diagram onder een Profiel (een view), dan staan de shape-sets op het
+  // Profiel-element (profielContainer.js); anders, zoals voorheen, op het diagram.
+  const container = diagram.profiel ? elements[diagram.profiel] : null;
+  const sets = (container ? container.data?.shapeSets : diagram.shapeSets) || [];
+  const zetSets = (next) =>
+    container
+      ? useStore.getState().updateElement(container.id, { data: { shapeSets: next } })
+      : useStore.getState().updateDiagramStijl(actief, { shapeSets: next });
 
   // De standaard staat in de M3-velden van de knoop (ontwerptaal.js): m3:shape, m3:icoon, m3:kleur.
   const standaardVan = (el) => ({
@@ -228,25 +236,23 @@ export default function ShapeSetPaneel({ useStore }) {
       else delete shapes[sleutel];
       return { ...set, shapes };
     });
-    useStore.getState().updateDiagramStijl(actief, { shapeSets: next });
+    zetSets(next);
   };
 
   const nieuweSet = async () => {
     const label = await vraagNaam({ titel: "Nieuwe gedaante (shape-set)", label: "Naam", waarde: `Stijl ${sets.length + 1}`, bevestig: "Maak" });
     if (!label) return;
-    useStore.getState().updateDiagramStijl(actief, {
-      shapeSets: [...sets, { id: slug(label), label, shapes: {} }],
-    });
+    zetSets([...sets, { id: slug(label), label, shapes: {} }]);
   };
   const hernoemSet = async (i) => {
     const label = await vraagNaam({ titel: "Gedaante hernoemen", label: "Nieuwe naam", waarde: sets[i].label || sets[i].id, bevestig: "Hernoem" });
     if (!label) return;
     const next = sets.map((set, j) => (j === i ? { ...set, label } : set));
-    useStore.getState().updateDiagramStijl(actief, { shapeSets: next });
+    zetSets(next);
   };
   const verwijderSet = async (i) => {
     if (!(await vraagBevestiging({ titel: "Gedaante verwijderen", tekst: `Gedaante "${sets[i].label || sets[i].id}" verwijderen?`, bevestig: "Verwijder", gevaar: true }))) return;
-    useStore.getState().updateDiagramStijl(actief, { shapeSets: sets.filter((_, j) => j !== i) });
+    zetSets(sets.filter((_, j) => j !== i));
   };
 
   const kopStijl = {

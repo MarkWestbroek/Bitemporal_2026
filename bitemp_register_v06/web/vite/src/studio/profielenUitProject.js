@@ -23,16 +23,32 @@ import { bouwProfielUitOntwerp, slug, PROFIEL_ONTWERP_ID } from "./activities/pr
 import { vertaalHooks } from "./activities/profielGereedschap.js";
 import { getDiagramType, valideerDiagramType, vervangDiagramType } from "../diagramcore/types/typeRegistry.js";
 import { kopieVoorNormalisatie } from "../diagramcore/types/erfenis.js";
+import { profielenIn, ontwerpStaatVan } from "./activities/profielContainer.js";
 
 /**
- * De kernen van alle diagrammen in de M3-taal.
+ * De kernen van alle profielen in de M3-taal: per Profiel-element, en (oude projecten) per diagram
+ * zonder Profiel.
  * @param {{elements: Record<string, any>, diagrams: Record<string, any>}} inhoud - de profielinhoud (`profielen.m3Profiel05`, of de store)
  * @returns {{diagramId: string, naam: string, kern: any|null, fout: string|null}[]}
  */
 export function kernenUitProject(inhoud) {
   const uit = [];
+  // Sinds 22-11 (Mark): het Profiel-element is het profiel, de diagrammen eronder zijn views
+  // (profielContainer.js). Eén kern per Profiel.
+  for (const profiel of profielenIn(inhoud?.elements)) {
+    const id = profiel.data?.["m3:id"] || slug(profiel.naam);
+    try {
+      const kern = bouwProfielUitOntwerp(ontwerpStaatVan(profiel, { elements: inhoud.elements, diagrams: inhoud.diagrams }), { id, label: profiel.naam });
+      uit.push({ profielId: profiel.id, naam: profiel.naam, kern, fout: null });
+    } catch (fout) {
+      uit.push({ profielId: profiel.id, naam: profiel.naam, kern: null, fout: String(fout?.message || fout) });
+    }
+  }
+  // Een oud project: een diagram zonder Profiel erboven is zelf het profiel (zoals voor 22-11).
   for (const diagram of Object.values(inhoud?.diagrams || {})) {
     if (diagram.diagramType && diagram.diagramType !== PROFIEL_ONTWERP_ID) continue;
+    // Een losse view in een nieuw project (zonder eigen m3Profiel) is geen profiel.
+    if (diagram.profiel || (uit.length && !diagram.m3Profiel)) continue;
     // Een leeg diagram is (nog) geen profiel: overslaan in plaats van als fout melden.
     if (!(diagram.nodes || []).length) continue;
     const op = new Set((diagram.nodes || []).map((n) => n.elementId));

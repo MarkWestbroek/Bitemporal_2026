@@ -46,6 +46,7 @@ import "../web/vite/src/studio/activities/regelsetsIngebouwd.js";
 import { alleRegelsets } from "../web/vite/src/transformatie/regelsetCatalogus.js";
 import { sidecarProject } from "../web/vite/src/studio/sidecarProject.js";
 import { bouwProfielUitOntwerp } from "../web/vite/src/studio/activities/profielOntwerp.js";
+import { profielenIn, ontwerpStaatVan } from "../web/vite/src/studio/activities/profielContainer.js";
 import { verschillenMetKern } from "../web/vite/src/studio/activities/profielRondreis.js";
 import { kernenUitProject, laadKernen } from "../web/vite/src/studio/profielenUitProject.js";
 import { registreerUseCase, USECASE_ID } from "../web/vite/src/diagramprofielen/usecase/index.js";
@@ -139,10 +140,9 @@ export function sidecarVerschillen(project = sidecarVanAlles()) {
   for (const [pid, typeId] of typeIds) {
     if (typeId === PROFIEL_ONTWERP_ID || typeId === TRANSFORMATIE_PROFIEL_ID) continue;
     const descriptor = getDiagramType(typeId);
-    const diagram = Object.values(m3.diagrams).find((d) => d.naam === (descriptor.label || descriptor.id));
-    const op = new Set(diagram.nodes.map((n) => n.elementId));
-    const elements = Object.fromEntries(Object.entries(m3.elements).filter(([id, el]) => op.has(id) || (op.has(el.source) && op.has(el.target))));
-    const kern = bouwProfielUitOntwerp({ elements, shapeSets: diagram.shapeSets, typeWeergave: diagram.typeWeergave, m3Profiel: diagram.m3Profiel }, { id: descriptor.id, label: descriptor.label });
+    // Het Profiel-element (de container, Mark 22-11) draagt het profiel; zijn diagram is een view.
+    const profiel = profielenIn(m3.elements).find((p) => p.data?.["m3:id"] === descriptor.id);
+    const kern = bouwProfielUitOntwerp(ontwerpStaatVan(profiel, m3), { id: descriptor.id, label: descriptor.label });
     uit[pid] = verschillenMetKern(descriptor, kern);
   }
   return uit;

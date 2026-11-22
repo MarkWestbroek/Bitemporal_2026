@@ -20,6 +20,9 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 - **De projectkop noemt wat een project gebruikt**: soort (model, profielen of weergaven), de versie van een profielen-
   of weergaveproject, en met welke profielen en weergaven een project is bewaard. Wijkt dat af van wat er nu geladen
   is, dan krijg je bij het openen een waarschuwing. *Project → Projectinformatie…* laat het zien.
+- **Een profiel is een container** (M3-taal 1.1.0): in het profielenproject staat elk profiel als *Profiel*-element (vorm
+  map) met zijn elementtypen erin; de diagrammen eronder zijn views. Een profiel kan zo meerdere diagrammen hebben. De
+  JSON van het profiel zie je, alleen-lezen, bij de eigenschappen van het Profiel.
 - **Starten met profielen of weergaven uit een project**: na *Laad … uit dit project in de tool* kun je kiezen ermee te
   starten (in deze browser). Lukt dat niet, dan gebruikt de tool de code; *Start weer uit de code* zet het terug.
 - **Profielen uit het project laden** (PROF-1): *Profiel (M3) → Laad de profielen uit dit project in de tool* maakt

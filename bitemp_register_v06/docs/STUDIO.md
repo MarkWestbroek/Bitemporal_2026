@@ -2871,8 +2871,32 @@ Gemeten: 97 vormen in render-svc (meer in de browser, met de eigen vormen), 56 k
 - Tests: `startUitProject.test.js`; e2e `74-studio-projectkop-gebruikt` (bewaren, herladen: de tool
   tekent met de bewaarde vorm; zonder stand weer de code).
 
-**Volgende stappen** (plan §7–§8): de centrale plek (stap 5; open vragen: welke instantie, toegang
-voor de andere instanties, vastpinnen of volgen, een klant met een eigen centrale).
+**Stap 9, eerste deel (gebouwd 22-11): het profiel is een container** (`studio/activities/profielContainer.js`).
+
+Mark 22-11: het M3 definieert *Profiel* als container, met de vorm map, zoals het domein (package)
+in het canonieke model; de diagrammen zijn views, het model is één.
+
+- **M3-taal 1.1.0** (`profielOntwerp.js`): elementtype *Profiel* (`profielDef`, «profiel», vorm
+  package, `containerVoor: bevat`, `uitwerking`) met de DiagramType-eigenschappen (`m3:*`), en de
+  lijn *Bevat (profiel)*. De hiërarchie is `[bevat, compositie]`: in de boom hangt een elementtype
+  onder zijn Profiel, een compartiment- en veldtype onder zijn elementtype.
+- **Lidmaatschap** (`ledenVan`): wat het Profiel `bevat`, wat daaraan hangt via ◆, en de knopen op
+  zijn views (`diagram.profiel`), zodat wat je op een view tekent meteen meetelt.
+- **Kop**: `m3Profiel`, `shapeSets` en `typeWeergave` staan op het Profiel-element, niet meer op het
+  diagram. Het paneel *Shape-sets* schrijft bij een view naar het Profiel.
+- **JSON** is een afgeleide, alleen-lezen eigenschap van het Profiel (inspector, met kopieerknop;
+  Mark: niet bewerken, te veel constraints). De afgeleide-eigenschappen-hook krijgt nu ook
+  `diagrams` mee; een regel met `blok: true` toont als schuifbaar blok.
+- **Sidecar-project**: per profiel een Profiel-element in de map Profielen, zijn diagram eronder
+  (uitwerking); geen submap per profiel meer. Laden (`kernenUitProject`) maakt één profiel per
+  Profiel, hoeveel views het ook heeft; *Activeer profiel* op een view activeert het hele Profiel.
+- Een oud project (profiel op het diagram) laadt nog zoals voorheen.
+- Tests: `profielContainer.test.js`, `sidecarProject.test.js`, render-svc `sidecar.test.mjs` (de
+  rondreis van alle profielen via de container is exact); e2e `75-studio-profiel-container`.
+
+**Volgende stappen** (plan §7–§10): stap 9, tweede deel (de activiteiten Profielen en Transformaties
+als gefilterde bomen op het ene project; de JSON-ingang *Profiel (0.5)* vervalt); daarna stap 5
+(de centrale plek op app).
 
 ## Activiteit Transformaties: regelsets bekijken en proefdraaien (2026-11-18)
 

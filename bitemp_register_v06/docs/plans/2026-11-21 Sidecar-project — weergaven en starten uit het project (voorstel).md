@@ -165,8 +165,11 @@ Een **nieuw profiel begint bij 0.1.0** (Mark 21-11); ook het profiel *Weergave*.
    opgehaalde versie" zodra stap 5 er is.
 7. De rol ontwerper: concepten in een branch, de beheerder brengt uit.
 8. Klantaanpassingen (+ en −) los bewaren en de klantversie genereren.
-9. De projectbrowser in Profielen en Transformaties (stap e).
-10. De stamboom van M3-, M2- en weergaveprojecten en klantaanpassingen.
+9. De projectbrowser in Profielen en Transformaties (stap e). **Eerste deel gebouwd 22-11**:
+   Profiel als container in de M3-taal (1.1.0), diagrammen als views, JSON afgeleid (§9). Tweede
+   deel open: de activiteiten als gefilterde bomen op één project.
+10. Versie- en releasebeheer van de M2+T-projecten: een graaf van versies, liefst lineair, met
+    forks en terugmergen (§10).
 
 ## 8. Stap 5 uitgewerkt: de centrale plek (voorstel 22-11, open vragen)
 
@@ -207,3 +210,86 @@ starten uit een bewaard project.
 4. **Klant met een eigen centrale** (lokaal ingesteld, "liever niet"): alleen een andere URL in de
    configuratie, of ook een eigen beheerder? Voorstel: alleen de URL, tot de klantaanpassingen
    (stap 8) er zijn.
+
+**Besluiten Mark 22-11.**
+
+1. De centrale is **app**.
+2. Andere instanties lezen met een **leestoken** per instantie (niet publiek).
+3. Een release **pint exact** de versies vast.
+4. (Mark vroeg: wat denk jij?) Voorstel Claude: een klant-centrale is een **spiegel**, geen eigen
+   bron. Ze krijgt de uitgebrachte versies van app (ophalen met haar leestoken, of als bestand voor
+   een afgeschermde omgeving) en bedient de eigen instanties met dezelfde endpoints; in de
+   configuratie alleen een andere URL. Niemand wijzigt daar de centrale projecten; wat de klant
+   anders wil, is een klantaanpassing (stap 8), met een eigen beheerder alleen voor die aanpassing.
+   **Bevestigd door Mark 22-11**, met een aanvulling: de klant-centrale kan **interne voorstellen**
+   doen (een wijziging die de klant centraal wil), en die **beoordelen we centraal**. Een
+   aangenomen voorstel komt in een centrale versie; daarmee krimpt de klantdelta (stap 8).
+
+## 9. Stap 9: één project voor profielen en transformaties (Mark 22-11)
+
+Nu zijn er drie ingangen: de profiel-ontwerper (JSON), Profiel (M3) (de profielen als diagrammen)
+en Transformaties. Mark: in plaats daarvan **één project "profielen en transformaties"** (het
+sidecar-project). Functioneel zijn het andere dingen, dus de activiteiten mogen gescheiden blijven,
+maar ze kijken in hetzelfde project:
+
+- **Profielen** filtert de M2-mappen, met hun diagram(men) en elementen;
+- **Transformaties** filtert de t's, ook in mappen met diagram(men) en elementen.
+
+Elk dus een eigen, gefilterde boom op één project.
+
+**JSON is een eigenschap van de map, geen eigen editor** (Mark 22-11). Een profiel bewerk je via
+het model; de JSON (de descriptor) zie je bij de map met de betekenis M2, afgeleid uit de elementen
+in die map, en blijft daarnaast export/import. De aparte profiel-ontwerper (JSON) vervalt als
+ingang.
+
+**De map is het profiel, het diagram een view** (Mark 22-11). Nu draagt het *diagram* het profiel
+(`m3Profiel`, `shapeSets`, `typeWeergave` op het diagram; `kernenUitProject` bouwt één profiel per
+diagram). Mark: een profiel kan ingewikkeld zijn en meerdere views vragen; het model is één. Dus in
+het profielenproject is een map een **container met de betekenis M2 (taalprofiel)**: het profiel =
+alle elementen in die map, de diagrammen erin zijn views. De kopgegevens (id, label, versie, code-id's)
+gaan van het diagram naar de map. Het sidecar-project maakt al een map per profiel met precies één
+diagram, dus de overgang is mechanisch.
+
+**Besluiten Mark 22-11.**
+
+1. **Het M3 definieert *Profiel* als container**, met de vorm map (of een andere vorm), zoals het
+   *domein* in het canonieke model. Het profiel is dus een element in de M3-taal, met zijn
+   kopgegevens als eigenschappen (en dus met historie); de elementen erin vormen het profiel. Geen
+   kenmerk op een gewone map.
+2. **De JSON is alleen-lezen**: afgeleid, te kopiëren en te exporteren, niet te bewerken (er
+   zitten te veel constraints op). Een descriptor binnenhalen blijft een import die elementen
+   maakt.
+
+## 10. Stappen 7, 8 en 10 toegelicht (22-11)
+
+- **7. De rol ontwerper.** Een rol tussen modelleur en beheerder: mag een branch maken van een
+  centraal project en daarin werken (een concept), niet samenvoegen naar MAIN en niet uitbrengen.
+  Voorstel: een rol erbij in het bestaande rollenstelsel; bouwbaar na stap 5.
+- **8. Klantaanpassingen. Besluit Mark 22-11:** een klantaanpassing is **de delta** van de
+  klant-branch op het basisprofiel, op de vastgepinde versie daarvan. We bewaren **alleen de
+  delta** (met de basisversie waarop hij is gemaakt), geen kopie van de klantversie; die wordt
+  gegenereerd (basis + delta). Evolueert de basis, dan pas je de delta toe op de nieuwe basis
+  (mergen op een andere base) en zie je per wijziging:
+  - **past**: de delta gaat er schoon op;
+  - **botst**: de basis wijzigde hetzelfde anders (clash, de beheerder kiest, zoals bij
+    samenvoegen per veld);
+  - **al opgenomen**: de basis bevat de wijziging nu zelf, die valt uit de delta; de delta wordt
+    kleiner, of **nul** (de klant kan dan gewoon de centrale versie gebruiken).
+  De delta is dus zelf een beheerd stuk met versie en historie (§6). Een regelset in het profiel
+  Transformatie kan later, voor aanpassingen die je als regel wilt uitdrukken.
+- **10. Versie- en releasebeheer van de M2+T-projecten (Mark 22-11).** Geen stamboom maar een
+  **graaf** van uitgebrachte versies. Liefst compact en lineair (één lijn 0.1.0 → 0.2.0 → …),
+  maar er kunnen **forks** ontstaan (een tak die apart verder gaat, bv. voor een klant of een
+  experiment), die eventueel weer **terugmergen** naar één lijn. Elke uitgebrachte versie noemt
+  dus haar ouder(s): één bij een gewone opvolger, twee bij een merge. De graaf toont per versie
+  het nummer, de ouders en welke releases (§8: exact vastgepind) en klantdelta's (stap 8) erop
+  steunen.
+
+  **Nummering (voorstel Claude 22-11, na vraag Mark: komt een nummer maar één keer voor?).** Een
+  versienummer is uniek per project. Met stap 8 heeft een klant geen fork nodig: zijn aanpassing
+  is een delta, geen eigen lijn. Een fork in de centrale graaf is dan alleen nog een
+  **onderhoudslijn**: de hoofdlijn gaat naar 0.5.0, terwijl op 0.4 nog een reparatie nodig is →
+  0.4.1. Elke lijn houdt zo een eigen reeks (0.4.x tegenover 0.5 en verder), dus elk nummer komt
+  één keer voor en zegt meteen waar het hoort. Experimenten blijven concepten in een branch en
+  worden niet uitgebracht. Terugmergen: de reparatie gaat ook mee in de volgende versie van de
+  hoofdlijn (twee ouders).

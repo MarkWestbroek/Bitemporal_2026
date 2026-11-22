@@ -845,6 +845,10 @@
 .dc-inspector-uit { font-size: 11px; color: var(--s-fg-muted, #64748b); font-style: italic; }
 /* Afgeleide eigenschap (hooks.afgeleideEigenschappen, 08-11): tekst, geen invoer. */
 .dc-inspector-afgeleid { flex: 1; min-width: 0; font-size: 13px; padding: 4px 0; }
+/* Lange afgeleide waarde (JSON van een Profiel, 22-11): alleen-lezen, schuifbaar. */
+.dc-inspector-rij.is-blok { flex-direction: column; align-items: stretch; }
+.dc-inspector-blok { margin: 4px 0; max-height: 320px; overflow: auto; font-size: 11px; line-height: 1.35; padding: 6px 8px; border: 1px solid var(--s-border, #e2e8f0); border-radius: 4px; background: var(--s-panel-2, #f8fafc); white-space: pre; user-select: text; }
+.dc-inspector-kopieer { margin-left: 6px; font-size: 11px; padding: 0 6px; }
 .dc-inspector-uiteinden { margin: -4px 0 8px; font-size: 12px; color: var(--s-fg-muted, #64748b); }
 .dc-inspector-uiteinde strong { color: var(--s-fg, inherit); font-weight: 600; }
 

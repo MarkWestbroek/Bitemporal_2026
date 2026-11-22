@@ -34,8 +34,8 @@ test("een bekend profiel wordt op zijn plek vervangen, ook zijn code (op id)", (
 
 test("een onbekend profiel komt terug als kern; een onbekende code-id is een fout", () => {
   const inhoud = projectInhoud();
-  const diagram = Object.values(inhoud.diagrams)[0];
-  diagram.m3Profiel["m3:id"] = "laadproef-kopie";
+  const profiel = Object.values(inhoud.elements).find((e) => e.elementType === "profielDef");
+  profiel.data["m3:id"] = "laadproef-kopie";
   assert.deepEqual(laadKernen(kernenUitProject(inhoud)).nieuw.map((k) => k.id), ["laadproef-kopie"]);
 
   const kapot = projectInhoud();
