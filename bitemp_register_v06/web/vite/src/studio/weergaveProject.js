@@ -4,19 +4,26 @@
  * docs/plans/2026-11-21 Sidecar-project — weergaven en starten uit het project, §2–§3 en §7 stap 1).
  *
  * Vier soorten project (besluit Mark 21-11): M1 → weergaven → M2 + transformaties → M3. Dit is het
- * weergaveproject. Stap 1: de **vormen** (ShapeTypes). Iconen volgen in stap 2.
+ * weergaveproject: de **vormen** (ShapeTypes, stap 1) en de **iconen** (SVG-tekst, stap 2).
  *
  *   map Vormen
  *     map <profiel>             de vormen die alleen dit profiel gebruikt
  *     map Gedeeld               vormen die meer profielen gebruiken
  *     map Niet in een profiel   vormen die geen profiel aanwijst (basisvormen, eigen vormen)
+ *   map Iconen
+ *     map Standaard per vorm    het icoon van een elementtype zonder eigen icoon (`vorm:<shape>`)
+ *     map <profiel> / Gedeeld / Niet in een profiel   idem als bij de vormen, op `ElementType.icoon`
  *
- * Elke map heeft een diagram. Het diagram van een profiel toont álle vormen die het gebruikt, ook
- * de gedeelde: een element staat in één map maar kan op meer diagrammen voorkomen. Zo blijft de
- * groepering per profiel zichtbaar zonder dat een vorm dubbel bestaat.
+ * Elke map heeft een diagram. Het diagram van een profiel toont álle vormen (iconen) die het
+ * gebruikt, ook de gedeelde: een element staat in één map maar kan op meer diagrammen voorkomen. Zo
+ * blijft de groepering per profiel zichtbaar zonder dat iets dubbel bestaat.
  *
- * De naam van een element is de id van de vorm; de element-id is daarvan afgeleid (`wv_<id>`),
- * zodat een volgende export dezelfde elementen houdt.
+ * De naam van een element is de id van de vorm of het icoon; de element-id is daarvan afgeleid
+ * (`wv_<id>`, `wi_<id>`), zodat een volgende export dezelfde elementen houdt.
+ *
+ * Iconen: de ingebouwde staan als SVG-tekst in `diagramcore/shapes/ingebouwdeIconen.js`
+ * (gegenereerd uit de JSX, die de reserve blijft); `iconenUitProject` leest ze terug. Ze in de tool
+ * zetten (registreerDataIcoon) doet de Studio (weergaveActivity.jsx), want de iconen zijn React.
  *
  * `vormenUitProject` en `laadVormen` doen de omgekeerde weg: de vormen uit het project in de tool
  * (op hun plek vervangen; het register zoekt bij elke tekening op id). Een vorm met een renderer
@@ -24,7 +31,7 @@
  *
  * Puur, op het register van de vormen na (`laadVormen`).
  */
-import { WEERGAVE_PROFIEL_ID, VORM_TYPE } from "../diagramprofielen/weergave/index.js";
+import { WEERGAVE_PROFIEL_ID, VORM_TYPE, ICOON_TYPE } from "../diagramprofielen/weergave/index.js";
 import { getRenderer, getShapeType, registreerShapeType, valideerShapeType } from "../diagramcore/types/shapeType.js";
 import { versieVan } from "../diagramcore/types/profielVersie.js";
 import { PROJECT_FORMAAT, PROJECT_FORMAAT_VERSIE } from "./activities/projectSync.js";
@@ -43,6 +50,10 @@ const kopie = (v) => (v === undefined ? undefined : JSON.parse(JSON.stringify(v)
 
 /** De element-id van een vorm. */
 export const vormElementId = (shapeId) => `wv_${veilig(shapeId)}`;
+/** De element-id van een icoon. */
+export const icoonElementId = (icoonId) => `wi_${veilig(icoonId)}`;
+/** Standaardiconen per ShapeType (typeIconen.jsx `STANDAARD_ICOON_PREFIX`). */
+const STANDAARD = "vorm:";
 
 /**
  * Een ShapeType als element in het profiel Weergave.
@@ -100,6 +111,35 @@ export function vormGebruik(descriptors) {
   return gebruik;
 }
 
+/**
+ * Welke profielen wijzen welk icoon aan (`ElementType.icoon`, ook bij relaties).
+ * @param {any[]} descriptors
+ * @returns {Map<string, string[]>} icoon-id → profiel-labels (in volgorde, uniek)
+ */
+export function icoonGebruik(descriptors) {
+  const gebruik = new Map();
+  for (const d of descriptors || []) {
+    const naam = d.label || d.id;
+    for (const et of d.elementTypes || []) {
+      if (et._superprofiel || !et.icoon) continue;
+      const lijst = gebruik.get(et.icoon) || [];
+      if (!lijst.includes(naam)) lijst.push(naam);
+      gebruik.set(et.icoon, lijst);
+    }
+  }
+  return gebruik;
+}
+
+/**
+ * Een icoon als element in het profiel Weergave.
+ * @param {{id: string, svg: string, monochroom?: boolean, label?: string}} icoon
+ */
+export function icoonNaarElement({ id, svg, monochroom = false, label }) {
+  const data = { svg, monochroom: !!monochroom };
+  if (label) data.label = label;
+  return { id: icoonElementId(id), naam: id, elementType: ICOON_TYPE, compartimenten: [], data };
+}
+
 /** Een raster van nodes. */
 const raster = (elementIds) =>
   elementIds.map((elementId, i) => ({ elementId, position: { x: 40 + (i % KOLOMMEN) * CEL.w, y: 40 + Math.floor(i / KOLOMMEN) * CEL.h } }));
@@ -108,13 +148,14 @@ const raster = (elementIds) =>
  * Het weergaveproject.
  * @param {Object} invoer
  * @param {any[]} invoer.shapeTypes - alle vormen van de tool (types/shapeType.js `alleShapeTypes`)
+ * @param {Record<string, string|{svg: string, monochroom?: boolean, label?: string}>} [invoer.iconen] -
+ *   icoon-id → SVG-tekst (of een data-icoon); de ingebouwde staan in ingebouwdeIconen.js
  * @param {any[]} invoer.descriptors - de profielen (voor de groepering)
  * @param {any} [invoer.taalDescriptor] - het profiel Weergave (voor zijn versie)
  * @param {string} [invoer.naam]
  * @returns {Record<string, any>} een werkbestand (formaat studio-project)
  */
-export function weergaveProject({ shapeTypes, descriptors, taalDescriptor = null, naam = "Omnium weergaven" }) {
-  const gebruik = vormGebruik(descriptors);
+export function weergaveProject({ shapeTypes, iconen = {}, descriptors, taalDescriptor = null, naam = "Omnium weergaven" }) {
   const mappen = {};
   const plaatsing = {};
   const model = { diagramTypeId: WEERGAVE_PROFIEL_ID, elements: {}, diagrams: {}, actiefDiagramId: null, meta: {} };
@@ -122,41 +163,82 @@ export function weergaveProject({ shapeTypes, descriptors, taalDescriptor = null
     mappen[id] = { id, naam: mapNaam, ouderId, volgorde };
     return id;
   };
-  const vormenMap = map("map_vormen", "Vormen", null, 1);
   const diagram = (id, diagramNaam, mapId, elementIds) => {
     model.diagrams[id] = { id, naam: diagramNaam, diagramType: WEERGAVE_PROFIEL_ID, nodes: raster(elementIds), edges: [] };
     model.actiefDiagramId ??= id;
     plaatsing[`${WEERGAVE_ACTIVITEIT_ID}::${id}`] = mapId;
   };
 
-  const bekend = new Set();
+  /**
+   * Eén soort (vormen of iconen) in een hoofdmap, met een submap per profiel, Gedeeld en Niet in
+   * een profiel; `vooraf` = eigen submappen vóór de rest (id's die dan niet meer meetellen).
+   */
+  const groepeer = ({ sleutel, mapNaam, volgorde, ids, gebruik, elementId, woord, vooraf = [] }) => {
+    const hoofd = map(`map_${sleutel}`, mapNaam, null, volgorde);
+    const bekend = new Set(ids);
+    const elementMap = {};
+    let nr = 0;
+    for (const { naam: submap, ids: eigen } of vooraf) {
+      const lijst = eigen.filter((id) => bekend.has(id));
+      if (!lijst.length) continue;
+      const mapId = map(`map_${sleutel}_${veilig(submap)}`, submap, hoofd, ++nr);
+      for (const id of lijst) {
+        elementMap[elementId(id)] = mapId;
+        bekend.delete(id);
+      }
+      diagram(`dg_${sleutel}_${veilig(submap)}`, submap, mapId, lijst.map(elementId));
+    }
+    const profielen = [...new Set([...gebruik.values()].flat())].sort((a, b) => a.localeCompare(b, "nl"));
+    for (const profiel of profielen) {
+      const mapId = map(`map_${sleutel}_${veilig(profiel)}`, profiel, hoofd, ++nr);
+      const lijst = [...gebruik].filter(([id, wie]) => wie.includes(profiel) && bekend.has(id)).map(([id]) => id);
+      for (const [id, wie] of gebruik) if (wie.length === 1 && wie[0] === profiel && bekend.has(id)) elementMap[elementId(id)] = mapId;
+      if (lijst.length) diagram(`dg_${sleutel}_${veilig(profiel)}`, `${woord} van ${profiel}`, mapId, lijst.map(elementId));
+    }
+    const gedeeld = [...gebruik].filter(([id, wie]) => wie.length > 1 && bekend.has(id)).map(([id]) => id);
+    if (gedeeld.length) {
+      const mapId = map(`map_${sleutel}_gedeeld`, "Gedeeld", hoofd, ++nr);
+      for (const id of gedeeld) elementMap[elementId(id)] = mapId;
+      diagram(`dg_${sleutel}_gedeeld`, `Gedeelde ${woord.toLowerCase()}`, mapId, gedeeld.map(elementId));
+    }
+    const los = [...bekend].filter((id) => !gebruik.has(id));
+    if (los.length) {
+      const mapId = map(`map_${sleutel}_los`, "Niet in een profiel", hoofd, ++nr);
+      for (const id of los) elementMap[elementId(id)] = mapId;
+      diagram(`dg_${sleutel}_los`, `${woord} die geen profiel aanwijst`, mapId, los.map(elementId));
+    }
+    for (const [id, mapId] of Object.entries(elementMap)) plaatsing[`el::${WEERGAVE_ACTIVITEIT_ID}::${id}`] = mapId;
+  };
+
+  const vormIds = [];
   for (const st of shapeTypes || []) {
-    if (bekend.has(st.id)) continue;
-    bekend.add(st.id);
+    if (model.elements[vormElementId(st.id)]) continue;
     const el = vormNaarElement(st);
     model.elements[el.id] = el;
+    vormIds.push(st.id);
   }
-  const profielen = [...new Set([...gebruik.values()].flat())].sort((a, b) => a.localeCompare(b, "nl"));
-  const elementMap = {};
-  profielen.forEach((profiel, i) => {
-    const mapId = map(`map_vormen_${veilig(profiel)}`, profiel, vormenMap, i + 1);
-    const ids = [...gebruik].filter(([shapeId, lijst]) => lijst.includes(profiel) && bekend.has(shapeId)).map(([shapeId]) => vormElementId(shapeId));
-    for (const [shapeId, lijst] of gebruik) if (lijst.length === 1 && lijst[0] === profiel && bekend.has(shapeId)) elementMap[vormElementId(shapeId)] = mapId;
-    if (ids.length) diagram(`dg_vormen_${veilig(profiel)}`, `Vormen van ${profiel}`, mapId, ids);
-  });
-  const gedeeld = [...gebruik].filter(([shapeId, lijst]) => lijst.length > 1 && bekend.has(shapeId)).map(([shapeId]) => vormElementId(shapeId));
-  if (gedeeld.length) {
-    const mapId = map("map_vormen_gedeeld", "Gedeeld", vormenMap, profielen.length + 1);
-    for (const id of gedeeld) elementMap[id] = mapId;
-    diagram("dg_vormen_gedeeld", "Gedeelde vormen", mapId, gedeeld);
+  groepeer({ sleutel: "vormen", mapNaam: "Vormen", volgorde: 1, ids: vormIds, gebruik: vormGebruik(descriptors), elementId: vormElementId, woord: "Vormen" });
+
+  const icoonIds = [];
+  for (const [id, waarde] of Object.entries(iconen || {})) {
+    const def = typeof waarde === "string" ? { id, svg: waarde } : { ...waarde, id };
+    if (!def.svg) continue;
+    const el = icoonNaarElement(def);
+    model.elements[el.id] = el;
+    icoonIds.push(id);
   }
-  const los = [...bekend].filter((shapeId) => !gebruik.has(shapeId)).map(vormElementId);
-  if (los.length) {
-    const mapId = map("map_vormen_los", "Niet in een profiel", vormenMap, profielen.length + 2);
-    for (const id of los) elementMap[id] = mapId;
-    diagram("dg_vormen_los", "Vormen die geen profiel aanwijst", mapId, los);
+  if (icoonIds.length) {
+    groepeer({
+      sleutel: "iconen",
+      mapNaam: "Iconen",
+      volgorde: 2,
+      ids: icoonIds,
+      gebruik: icoonGebruik(descriptors),
+      elementId: icoonElementId,
+      woord: "Iconen",
+      vooraf: [{ naam: "Standaard per vorm", ids: icoonIds.filter((id) => id.startsWith(STANDAARD)) }],
+    });
   }
-  for (const [elementId, mapId] of Object.entries(elementMap)) plaatsing[`el::${WEERGAVE_ACTIVITEIT_ID}::${elementId}`] = mapId;
 
   return {
     formaat: PROJECT_FORMAAT,
@@ -216,4 +298,28 @@ export function laadVormen(shapeTypes) {
     }
   }
   return { vervangen, nieuw, fouten };
+}
+
+/**
+ * De iconen uit een model in het profiel Weergave.
+ * @param {{elements?: Record<string, any>}} inhoud
+ * @returns {{iconen: {id: string, svg: string, monochroom: boolean, label?: string}[], fouten: string[]}}
+ */
+export function iconenUitProject(inhoud) {
+  const iconen = [];
+  const fouten = [];
+  const gezien = new Set();
+  for (const el of Object.values(inhoud?.elements || {})) {
+    if (el.elementType !== ICOON_TYPE) continue;
+    const id = String(el.naam || "").trim();
+    const svg = String(el.data?.svg || "").trim();
+    if (!id) fouten.push("icoon zonder naam (de naam is de id)");
+    else if (!svg) fouten.push(`icoon "${id}": geen SVG`);
+    else if (gezien.has(id)) fouten.push(`icoon "${id}" staat twee keer in het project`);
+    else {
+      gezien.add(id);
+      iconen.push({ id, svg, monochroom: el.data?.monochroom === true, ...(el.data?.label ? { label: el.data.label } : {}) });
+    }
+  }
+  return { iconen, fouten };
 }

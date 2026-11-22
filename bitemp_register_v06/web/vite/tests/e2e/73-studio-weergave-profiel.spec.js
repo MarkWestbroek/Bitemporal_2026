@@ -1,8 +1,8 @@
 // Studio — het profiel Weergave (plan 2026-11-21 Sidecar-project §7 stap 1).
-//  1. Weergave → "Laad de vormen van de tool" zet alle vormen als model neer, met een diagram per
+//  1. Weergave → "Laad de weergaven van de tool" zet alle vormen en iconen als model neer, met een diagram per
 //     profiel; een vorm tekent zich op het canvas in zijn eigen gedaante.
-//  2. Een vorm wijzigen in het model en "Laad de vormen uit dit project in de tool": de tool
-//     tekent daarmee (een concept uitproberen).
+//  2. Een vorm en een icoon wijzigen in het model en "Laad de weergaven uit dit project in de
+//     tool": de tool tekent daarmee (een concept uitproberen).
 //  3. Een icoon met de SVG-editor: het voorbeeld toont alleen de geschoonde SVG.
 //  4. Het geëxporteerde weergaveproject importeren: de mappen en alle vormen komen terug.
 import { test, expect } from "@playwright/test";
@@ -21,9 +21,9 @@ test("de vormen als model laden, een vorm wijzigen en in de tool laden", async (
   test.setTimeout(120_000);
   await openStudio(page);
   await zetModel(page, { profielId: PROFIEL, diagramId: "leeg", diagramNaam: "Leeg" });
-  await menu(page, "Laad de vormen van de tool");
+  await menu(page, "Laad de weergaven van de tool");
   const melding = page.locator(".studio-dialoog");
-  await expect(melding).toContainText("vormen in");
+  await expect(melding).toContainText("iconen in");
   await melding.getByRole("button", { name: "OK" }).click();
 
   const stand = await inStore(
@@ -32,9 +32,19 @@ test("de vormen als model laden, een vorm wijzigen en in de tool laden", async (
     `const st = store.getState();
      const els = Object.values(st.elements);
      const bpmn = Object.values(st.diagrams).find((d) => d.naam === "Vormen van BPMN");
-     return { vormen: els.filter((e) => e.elementType === "vorm").length, bpmn: bpmn.id, taak: els.find((e) => e.naam === "bpmn-taak").id };`
+     return { vormen: els.filter((e) => e.elementType === "vorm").length, iconen: els.filter((e) => e.elementType === "icoon").length, bpmn: bpmn.id, taak: els.find((e) => e.naam === "bpmn-taak").id, klasse: els.find((e) => e.naam === "klasse").id };`
   );
   expect(stand.vormen).toBeGreaterThan(80);
+  expect(stand.iconen).toBeGreaterThan(150);
+  // Het icoon tekent zich als tegel op zijn eigen diagram.
+  await page.evaluate(async ({ profielId }) => {
+    const { menuBus } = await import(location.origin + "/viz/react/src/studio/menuBus.js");
+    const { getProfieltype } = await import(location.origin + "/viz/react/src/studio/profieltypeRegistry.js");
+    const d = Object.values(getProfieltype(profielId).useStore.getState().diagrams).find((x) => x.naam === "Standaard per vorm");
+    menuBus.emit("studio:open-diagram", { profielId, diagramId: d.id });
+  }, { profielId: PROFIEL });
+  const standaard = await inStore(page, PROFIEL, `return Object.values(store.getState().elements).find((e) => e.naam === "vorm:class-box").id;`);
+  await expect(node(page, standaard).locator(".dc-weergave-icoon rect").first()).toBeVisible();
 
   // Het diagram van BPMN: de taak staat er in zijn eigen gedaante (afgeronde rechthoek met naam).
   await page.evaluate(async ({ profielId, diagramId }) => {
@@ -46,18 +56,21 @@ test("de vormen als model laden, een vorm wijzigen en in de tool laden", async (
   const gateway = await inStore(page, PROFIEL, `return Object.values(store.getState().elements).find((e) => e.naam === "bpmn-gateway").id;`);
   await expect(node(page, gateway).locator(`svg path[d^="M17 2 L32 17"]`).first()).toBeVisible();
 
-  // De taak krijgt in het model een andere kleinste maat; in de tool laden.
+  // De taak krijgt in het model een andere kleinste maat, het klasse-icoon een andere SVG; in de tool laden.
   await inStore(page, PROFIEL, `store.getState().updateElement(arg, { data: { minMaat: { w: 260, h: 90 } } });`, stand.taak);
-  await menu(page, "Laad de vormen uit dit project in de tool");
+  await inStore(page, PROFIEL, `store.getState().updateElement(arg, { data: { svg: '<svg viewBox="0 0 14 14"><circle cx="7" cy="7" r="5"/></svg>' } });`, stand.klasse);
+  await menu(page, "Laad de weergaven uit dit project in de tool");
   await page.getByRole("button", { name: "Laad", exact: true }).click();
-  await expect(melding).toContainText("Vervangen: ");
-  await expect(melding).toContainText("Nieuw: 0");
+  await expect(melding).toContainText("Vormen — vervangen: ");
+  await expect(melding).toContainText("nieuw: 0");
+  await expect(melding).not.toContainText("Niet geladen");
   await melding.getByRole("button", { name: "OK" }).click();
-  const minMaat = await page.evaluate(async () => {
+  const naLaden = await page.evaluate(async () => {
     const { getShapeType } = await import(location.origin + "/viz/react/src/diagramcore/types/shapeType.js");
-    return getShapeType("bpmn-taak").minMaat;
+    const { getTypeIcoon } = await import(location.origin + "/viz/react/src/diagramcore/shapes/typeIconen.jsx");
+    return { minMaat: getShapeType("bpmn-taak").minMaat, icoon: getTypeIcoon("klasse").name };
   });
-  expect(minMaat).toEqual({ w: 260, h: 90 });
+  expect(naLaden).toEqual({ minMaat: { w: 260, h: 90 }, icoon: "DataIcoon" });
 });
 
 test("een icoon met de SVG-editor: het voorbeeld is geschoond", async ({ page }) => {

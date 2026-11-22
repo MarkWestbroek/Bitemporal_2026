@@ -9,8 +9,14 @@
  * DataIcoon-schema: { id, label, svg, monochroom?: boolean }
  *   svg        — volledige <svg>…</svg>-markup (bv. uit een .svg-bestand)
  *   monochroom — true → eigen fills/strokes weg, alles currentColor
+ *
+ * De SVG gaat eerst door svgSchoon (geen scripts, gebeurtenissen of verwijzingen naar buiten): een
+ * icoon kan uit een weergaveproject komen dat iemand anders wijzigt. `$vlak` wordt de paneelkleur
+ * (iconenAlsSvg.js).
  */
 import { registreerTypeIcoon } from "./typeIconen.jsx";
+import { schoonSvg } from "./svgSchoon.js";
+import { vulVlakIn } from "./iconenAlsSvg.js";
 
 /** Haal viewBox + binnen-markup uit een SVG-string (met nette fallbacks). */
 export function ontleedSvg(svgTekst) {
@@ -35,7 +41,7 @@ export function ontleedSvg(svgTekst) {
 
 /** Maak een icoon-component (contract: ({maat}) => JSX) uit een DataIcoon. */
 export function maakDataIcoonComponent(def) {
-  const { viewBox, inner } = ontleedSvg(def.svg);
+  const { viewBox, inner } = ontleedSvg(vulVlakIn(schoonSvg(def.svg).svg));
   // Monochroom: verwijder eigen fill/stroke-kleuren zodat currentColor wint.
   const markup = def.monochroom
     ? inner.replace(/(fill|stroke)\s*=\s*["'](?!none)[^"']*["']/gi, "")

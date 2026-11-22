@@ -15,6 +15,7 @@ import { registreerShapeType, registreerRenderer, getRenderer, vorm } from "../.
 import { randRechthoek } from "../../diagramcore/tekenaar/bibliotheek.js";
 import { kleurenVoor } from "../../diagramcore/tekenaar/voorkomen.js";
 import { svgNaarVormBoom } from "../../diagramcore/shapes/svgSchoon.js";
+import { vulVlakIn } from "../../diagramcore/shapes/iconenAlsSvg.js";
 
 export const ICOON_VORM = "weergave-icoon";
 export const VORM_VORM = "weergave-vorm";
@@ -32,7 +33,8 @@ const icoon = {
   ornament(ctx) {
     const svg = ctx.element?.data?.svg;
     if (!svg) return null;
-    const { viewBox, kinderen } = svgNaarVormBoom(svg);
+    // `$vlak` (een open vlak in het icoon) krijgt de vulling van de tegel.
+    const { viewBox, kinderen } = svgNaarVormBoom(vulVlakIn(svg, ctx.thema.vulling || "#fff"));
     const [vx, vy, vw, vh] = String(viewBox).split(/[\s,]+/).map(Number);
     if (!(vw > 0 && vh > 0)) return null;
     const ruimte = Math.min(TEGEL_ICOON, ctx.maat.w - 16, ctx.maat.h - NAAM_H - 10);

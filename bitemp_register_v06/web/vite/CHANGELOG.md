@@ -12,6 +12,8 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 - **Profiel Weergave en het weergaveproject**: de vormen van de tool als model, met een diagram per profiel. Een vorm
   tekent zich op het canvas in zijn eigen gedaante. *Weergave → Laad de vormen uit dit project in de tool* probeert een
   gewijzigde vorm uit tot je de pagina herlaadt. Iconen als SVG met een eigen editor; de SVG wordt altijd geschoond.
+  Ook alle ingebouwde iconen staan erin (als SVG-tekst; de iconen in de code blijven de reserve), zodat je een icoon
+  kunt aanpassen en uitproberen. *Profiel (M3) → Laad alle profielen van de tool* doet hetzelfde voor de profielen.
 - **Profielen uit het project laden** (PROF-1): *Profiel (M3) → Laad de profielen uit dit project in de tool* maakt
   van de profiel-diagrammen in je project weer profielen. Pas je in het sidecar-project een profiel aan (een kleur, een
   eigenschap, een verbindingsregel) en laad je het, dan tekent de tool daarmee, tot je de pagina herlaadt.

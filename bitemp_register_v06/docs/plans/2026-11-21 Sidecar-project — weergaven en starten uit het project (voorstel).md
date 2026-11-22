@@ -12,7 +12,7 @@ hiervan stap 1 (§7).
 | (b) rondreis exact | gebouwd 20/21-11: meetlat 0, ook code (code op id, `diagramcore/types/codeRegister.js`) en volgorde |
 | (c) sidecar-project | gebouwd 21-11: export, taal *Profiel (M3)* in Modelleren |
 | (d) laden uit het project | eerste deel 21-11 (opt-in menu-actie); de tool start nog uit de code |
-| weergaven in een project | stap 1 gebouwd 21-11: profiel *Weergave* 0.1.0 en het weergaveproject met alle vormen (STUDIO.md "Het weergaveproject"); de rest is dit voorstel |
+| weergaven in een project | stap 1 gebouwd 21-11: profiel *Weergave* 0.1.0 en het weergaveproject met alle vormen; stap 2 gebouwd 22-11: de iconen als SVG-tekst (187, met rondreistest) ook in het project (STUDIO.md "Het weergaveproject"); de rest is dit voorstel |
 | (e) projectbrowser in Profielen en Transformaties | open |
 
 Bewezen: alle 27 profielen uit het sidecar-project laden geeft dezelfde tool (zelfde vingerafdruk,
@@ -145,7 +145,9 @@ Een **nieuw profiel begint bij 0.1.0** (Mark 21-11); ook het profiel *Weergave*.
 ## 7. Volgorde
 
 1. Profiel *Weergave* met de drie soorten en de SVG-widget; vormen in het project. **Gebouwd 21-11.**
-2. Iconen naar SVG-tekst, met de volledige reserve in de code en een rondreistest.
+2. Iconen naar SVG-tekst, met de volledige reserve in de code en een rondreistest. **Gebouwd 22-11**
+   (`ingebouwdeIconen.js`, `render-svc: npm run iconen`; het icoon van een relatie uit zijn
+   `edgePresentatie` blijft code, als renderer).
 3. De koppeling elementtype → vorm uit het M2 naar de weergaven (M2-waarden blijven standaard).
 4. Naam en versie van M2- en weergaveproject in de M1-projectkop, met de waarschuwing.
 5. De centrale plek: de projecten op één server, versies verplicht, een release noemt zijn versies.

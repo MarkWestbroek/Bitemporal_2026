@@ -2,7 +2,7 @@
 // model in het profiel Weergave, en terug. Eigen proces (node --test): het register verandert.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { weergaveVanAlles, vormenVanDeTool, laadWeergavenInDeTool, descriptorVan, tekenDiagram, naarSvg } from "./dist/studio-profielen.mjs";
+import { weergaveVanAlles, vormenVanDeTool, iconenVanDeTool, laadWeergavenInDeTool, descriptorVan, tekenDiagram, naarSvg } from "./dist/studio-profielen.mjs";
 
 const perId = (lijst) => Object.fromEntries(lijst.map((st) => [st.id, st]));
 
@@ -10,7 +10,7 @@ test("elke vorm van de tool staat precies één keer in het project, in een map"
   const project = weergaveVanAlles();
   const model = project.profielen.weergave05;
   const vormen = vormenVanDeTool();
-  const namen = Object.values(model.elements).map((e) => e.naam);
+  const namen = Object.values(model.elements).filter((e) => e.elementType === "vorm").map((e) => e.naam);
   assert.equal(namen.length, vormen.length);
   assert.deepEqual([...namen].sort(), vormen.map((st) => st.id).sort());
   const { plaatsing, mappen } = project.structuur;
@@ -30,6 +30,22 @@ test("rondreis: de vormen uit het project zijn exact de vormen van de tool", () 
   assert.deepEqual(nieuw, []);
   assert.equal(vervangen.length, Object.keys(voor).length);
   assert.deepEqual(perId(vormenVanDeTool()), voor);
+});
+
+test("iconen: elk ingebouwd icoon staat in het project, in een map, en komt exact terug", () => {
+  const project = JSON.parse(JSON.stringify(weergaveVanAlles()));
+  const model = project.profielen.weergave05;
+  const tool = iconenVanDeTool();
+  const iconen = Object.values(model.elements).filter((e) => e.elementType === "icoon");
+  assert.equal(iconen.length, Object.keys(tool).length);
+  const { plaatsing, mappen } = project.structuur;
+  for (const el of iconen) assert.ok(mappen[plaatsing[`el::weergave05::${el.id}`]], `${el.naam} staat in een map`);
+  assert.ok(Object.values(model.diagrams).some((d) => d.naam === "Iconen van ArchiMate"));
+  assert.ok(Object.values(model.diagrams).some((d) => d.naam === "Standaard per vorm"));
+  const { iconen: terug, fouten } = laadWeergavenInDeTool(project);
+  assert.deepEqual(fouten, []);
+  assert.deepEqual(Object.fromEntries(terug.map((i) => [i.id, i.svg])), tool);
+  assert.ok(terug.every((i) => i.monochroom === false));
 });
 
 test("een gewijzigde vorm in het project verandert de tool; een onbekende renderer niet", () => {

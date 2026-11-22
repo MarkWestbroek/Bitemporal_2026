@@ -2763,9 +2763,9 @@ gescheiden: een profiel zegt *wat* er is, het weergaveproject *hoe* het eruitzie
 - **Het project** (`studio/weergaveProject.js`, id `omnium-weergaven`): map *Vormen* met een map per
   profiel (vormen die alleen dat profiel gebruikt), *Gedeeld* en *Niet in een profiel*; per map een
   diagram, en het diagram van een profiel toont ook de gedeelde vormen. Element-id `wv_<vorm-id>`.
-- **Menu Weergave**: *Laad de vormen van de tool* (in het open model), *Laad de vormen uit dit
-  project in de tool* (vervangt op id, tot een herlaad: een concept uitproberen), *Exporteer het
-  weergaveproject*.
+- **Menu Weergave**: *Laad de weergaven van de tool* (in het open model), *Laad de weergaven uit
+  dit project in de tool* (vervangt op id, tot een herlaad: een concept uitproberen), *Exporteer het
+  weergaveproject*. Importeren gaat als elk project (*Project → Importeer project…*), met de mappen.
 - **Tests**: `render-svc/weergave.test.mjs` (elke vorm precies één keer; rondreis exact: uit het
   project laden geeft dezelfde vormen; een wijziging verandert de tool, een onbekende renderer
   niet; een weergave tekent zichzelf zonder scripts), unit-tests `svgSchoon.test.js` en
@@ -2773,9 +2773,38 @@ gescheiden: een profiel zegt *wat* er is, het weergaveproject *hoe* het eruitzie
 
 Gemeten: 97 vormen in render-svc (meer in de browser, met de eigen vormen), 56 kB.
 
-**Volgende stappen** (plan §7): iconen naar SVG-tekst met de volledige reserve in de code; de
-koppeling elementtype → vorm uit het M2 naar de weergaven; naam en versie van M2- en
-weergaveproject in de M1-projectkop; de centrale plek; starten uit de projecten.
+**Stap 2 (gebouwd 22-11): de iconen als SVG-tekst.**
+
+- De iconen blijven in de code als JSX (`typeIconen.jsx`, `diagramprofielen/*/iconen.jsx`): dat is
+  de **reserve** (niveau 3, volledig voor alles). Daarnaast staat elk icoon als SVG-tekst in
+  `diagramcore/shapes/ingebouwdeIconen.js`, **gegenereerd** met `cd render-svc && npm run iconen`
+  (renderToStaticMarkup van elke component, `render-svc/iconenSvg.mjs`; React komt uit
+  `web/vite/node_modules`, dus alleen in de ontwikkelomgeving). 187 iconen, 65 kB: 175
+  geregistreerde plus 12 **standaardiconen per vorm** (`vorm:<shape>`, het icoon van een elementtype
+  zonder eigen icoon).
+- **Wijzig je een JSX-icoon, draai dan `npm run iconen`**: `npm test` in render-svc
+  (`iconenSvg.test.mjs`) faalt als code en tekst uit elkaar lopen, eist dat svgSchoon niets weglaat,
+  en doet de **rondreis** SVG-tekst → data-icoon (zoals de Studio tekent) → dezelfde SVG-tekst.
+- Vorm van de tekst (`iconenAlsSvg.js`): de presentatie van de buitenste `<svg>` (fill none, stroke
+  currentColor, lijndikte) staat in een `<g>`, want een data-icoon neemt alleen de viewBox en de
+  binnenkant over. **`$vlak`** (een vlak dat open moet ogen, bv. bij de ArchiMate-component) is een
+  afspraak van het data-icoon: bij het tekenen wordt het de paneelkleur.
+- Een **data-icoon** tekent nu altijd geschoonde SVG (`dataIcoon.jsx` via svgSchoon); de eigen
+  data-iconen in `web/vite/iconen/` komen er ongeschonden door.
+- `TypeIcoon` zoekt eerst een geregistreerd `vorm:<shape>` en valt dan terug op de code; zo kan een
+  weergaveproject ook de standaardiconen vervangen. `alleIcoonIds` (de icoon-kiezer) laat ze weg.
+- Het **project** heeft nu ook een map *Iconen*: *Standaard per vorm*, een map per profiel (op
+  `ElementType.icoon`), *Gedeeld* en *Niet in een profiel*. Element-id `wi_<icoon-id>`.
+- Menu: *Laad de weergaven van de tool* (vormen, ingebouwde iconen en de eigen data-iconen) en
+  *Laad de weergaven uit dit project in de tool* (vormen en iconen; een icoon wordt een data-icoon,
+  tot een herlaad).
+- Niet als icoon in het project: het icoon van een relatie zonder eigen icoon, dat uit zijn
+  `edgePresentatie` getekend wordt (de markers en het streepjespatroon). Dat hangt van het
+  elementtype af en is daarmee een renderer: code, zoals de graaf-bol.
+
+**Volgende stappen** (plan §7): de koppeling elementtype → vorm uit het M2 naar de weergaven; naam
+en versie van M2- en weergaveproject in de M1-projectkop (en daarmee een projectsoort: "dit is een
+weergaveproject"); de centrale plek; starten uit de projecten.
 
 ## Activiteit Transformaties: regelsets bekijken en proefdraaien (2026-11-18)
 
