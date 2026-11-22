@@ -4,7 +4,7 @@
 //  2. De inspector toont de M3-eigenschappen, met een JSON-invoer voor samengestelde waarden.
 //  3. Een M3-waarde wijzigen en het profiel activeren: de wijziging zit in het geregistreerde profiel.
 import { test, expect } from "@playwright/test";
-import { openStudio } from "./helpers/studio.js";
+import { openStudio, kiesActiviteit } from "./helpers/studio.js";
 
 test.use({ viewport: { width: 1700, height: 1000 } });
 
@@ -25,7 +25,7 @@ test("een profiel als ontwerp in de M3-taal: laden, bekijken, wijzigen en active
   // Activeren schrijft in de dev-server een bestand naar web/vite/profielen/ (en dat herlaadt de
   // pagina); in deze test niet.
   await page.route("**/__studio05/profielen/**", (r) => (r.request().method() === "PUT" ? r.fulfill({ status: 200, json: {} }) : r.continue()));
-  await page.locator(".studio-activitybar [title^='Profiel-ontwerp']").first().click();
+  await kiesActiviteit(page, "profielOntwerp05");
   await page.waitForFunction(() => !!window.__profielOntwerpStore);
   await menu(page, "Bekijk bestaand profiel als ontwerp…");
   await dialoog(page, "erd");

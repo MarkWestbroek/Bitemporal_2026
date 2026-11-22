@@ -67,6 +67,7 @@ import transformatiesActivity from "./transformatiesActivity";
 import transformatieProfielActivity from "./transformatieProfielActivity";
 import weergaveActivity from "./weergaveActivity";
 import m3ProfielActivity from "./m3ProfielActivity";
+import { profielenZicht, transformatiesZicht } from "./projectZicht.jsx";
 
 // ── Nog te bouwen functies: uniforme placeholder met de drie-slot-structuur ──
 const apiActivity = maakPlaceholderActiviteit({
@@ -158,9 +159,11 @@ registreerActiviteiten([
   // presentatie
   formulierActivity, // visuele FormulierDefinitie-editor (F41)
   // beheer (onderaan de balk)
+  profielenZicht, // "Profielen" — het profielen- en transformatieproject, boom gefilterd op de profielen (stap 9, Mark 22-11)
+  transformatiesZicht, // "Transformaties" — hetzelfde project, boom gefilterd op de transformaties
   profielActivity, // "Profiel-editor" — meta-editor trede 1 (JSON, §8.9)
   profielOntwerpActivity, // "Profiel-ontwerp" — meta-editor trede 2 (tekenen, §8.9)
-  transformatiesActivity, // "Transformaties" — regelsets (M2) bekijken en proefdraaien (TRANS-1 stap 1)
+  transformatiesActivity, // "Regelsets proefdraaien" — regelsets (M2) lezen en proefdraaien (TRANS-1 stap 1); knop in Transformaties
   gebruikersActivity, // "Gebruikers" — accounts, rollen, wachtwoorden (domein beheer, AUTH_DEVELOPER_GUIDE §11)
   aiToegangActivity, // "AI-toegang" — toegangscodes voor de AI-proxy (docs/AI_ASSISTENT.md)
   studioInstellingenActivity, // globale vorm-/icoon-galerij (P07-vervolg)

@@ -9,6 +9,9 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 ## [Unreleased]
 
 ### Toegevoegd
+- **Profielen en Transformaties als zicht op één project**: twee activiteiten op de Modelleren-host met een gefilterde
+  projectboom: Profielen toont alleen de profielen, Transformaties alleen de regelsets. Het Profiel-ontwerp en de lezer
+  (nu *Regelsets proefdraaien*, knop in Transformaties) staan standaard niet meer in de balk.
 - **Profiel Weergave en het weergaveproject**: de vormen van de tool als model, met een diagram per profiel. Een vorm
   tekent zich op het canvas in zijn eigen gedaante. *Weergave → Laad de vormen uit dit project in de tool* probeert een
   gewijzigde vorm uit tot je de pagina herlaadt. Iconen als SVG met een eigen editor; de SVG wordt altijd geschoond.

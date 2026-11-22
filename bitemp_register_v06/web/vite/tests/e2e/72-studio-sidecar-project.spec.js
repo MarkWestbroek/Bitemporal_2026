@@ -7,7 +7,7 @@
 //  3. Profiel (M3) → Open het sidecar-project van de tool: een eigen project met elk profiel als
 //     diagram (nooit in het gewone project, Mark 22-11), en exact terug.
 import { test, expect } from "@playwright/test";
-import { openStudio, zetModel, inStore } from "./helpers/studio.js";
+import { openStudio, zetModel, inStore, kiesActiviteit } from "./helpers/studio.js";
 
 test.use({ viewport: { width: 1700, height: 1000 } });
 
@@ -18,7 +18,7 @@ test("het sidecar-project exporteren, importeren en een profiel eruit activeren"
   await page.route("**/__studio05/profielen/**", (r) => (r.request().method() === "PUT" ? r.fulfill({ status: 200, json: {} }) : r.continue()));
 
   // 1. Exporteren vanuit het Profiel-ontwerp.
-  await page.locator(".studio-activitybar [title^='Profiel-ontwerp']").first().click();
+  await kiesActiviteit(page, "profielOntwerp05");
   await page.waitForFunction(() => !!window.__profielOntwerpStore);
   await page.locator(".studio-menubar").getByText("Ontwerp", { exact: true }).click();
   const download = page.waitForEvent("download");
