@@ -8,7 +8,10 @@
  * leunen op elkaar en staan daarom samen in één project:
  *
  *   map Profielen
- *     map <profiel>          één diagram in de M3-taal (`m3Profiel05`), met zijn elementen
+ *     Profiel <profiel>      een container in de M3-taal (`m3Profiel05`, profielContainer.js): de
+ *                            kopgegevens als eigenschappen, `bevat` zijn elementen; zijn diagram
+ *                            (een view) hangt eronder (Mark 22-11: de map is het profiel, het
+ *                            diagram een view)
  *   map Transformaties       één diagram in het profiel Transformatie (`transformatie05`)
  *
  * Een profiel is een model in het M3 (`ontwerpUitProfiel`, `studio/activities/ontwerptaal.js`), een
@@ -23,6 +26,7 @@
  * Puur: geen stores, geen DOM.
  */
 import { ontwerpUitProfiel } from "./activities/profielOntwerp.js";
+import { metProfielContainer } from "./activities/profielContainer.js";
 import { M3_PROFIEL_ID, PROFIEL_ONTWERP_ID } from "./activities/m3Profiel.js";
 import { regelsetsNaarModel } from "../transformatie/regelsetModel.js";
 import { TRANSFORMATIE_PROFIEL_ID } from "../diagramprofielen/transformatie/index.js";
@@ -53,21 +57,26 @@ export function sidecarProject({ descriptors, vermeldingen = [], taalDescriptors
   };
   const profielenMap = map("map_profielen", "Profielen", null, 1);
 
-  // Profielen: per profiel een map met één diagram in de M3-taal.
+  // Profielen: per profiel een Profiel-element (de container) met zijn diagram eronder als view.
+  // De leden hangen in de boom onder het Profiel via `bevat` en ◆; ze krijgen geen eigen plaatsing.
   const m3 = { diagramTypeId: PROFIEL_ONTWERP_ID, elements: {}, diagrams: {}, actiefDiagramId: null, meta: {} };
   const gesorteerd = [...(descriptors || [])].sort((a, b) => String(a.label || a.id).localeCompare(String(b.label || b.id), "nl"));
-  gesorteerd.forEach((descriptor, i) => {
+  for (const descriptor of gesorteerd) {
     const sleutel = veilig(descriptor.id);
-    const mapId = map(`map_profiel_${sleutel}`, descriptor.label || descriptor.id, profielenMap, i + 1);
+    const naam = descriptor.label || descriptor.id;
     const ontwerp = ontwerpUitProfiel(descriptor, { prefix: `p_${sleutel}` });
     const basis = Object.values(ontwerp.diagrams)[0];
     const diagramId = `dg_${sleutel}`;
-    m3.diagrams[diagramId] = { ...basis, id: diagramId, naam: descriptor.label || descriptor.id, diagramType: PROFIEL_ONTWERP_ID };
+    const { elements, diagrams, profielId } = metProfielContainer(
+      { elements: ontwerp.elements, diagrams: { [diagramId]: { ...basis, id: diagramId, naam, diagramType: PROFIEL_ONTWERP_ID } } },
+      { prefix: `p_${sleutel}`, naam }
+    );
+    Object.assign(m3.elements, elements);
+    Object.assign(m3.diagrams, diagrams);
     m3.actiefDiagramId ??= diagramId;
-    Object.assign(m3.elements, ontwerp.elements);
-    plaatsing[`${M3_PROFIEL_ID}::${diagramId}`] = mapId;
-    for (const n of basis.nodes) plaatsing[`el::${M3_PROFIEL_ID}::${n.elementId}`] = mapId;
-  });
+    plaatsing[`el::${M3_PROFIEL_ID}::${profielId}`] = profielenMap;
+    plaatsing[`${M3_PROFIEL_ID}::${diagramId}`] = `el::${M3_PROFIEL_ID}::${profielId}`;
+  }
 
   // Transformaties: één diagram met alle regelsets, hun bronnen en doelen.
   const transformaties = { diagramTypeId: TRANSFORMATIE_PROFIEL_ID, elements: {}, diagrams: {}, actiefDiagramId: null, meta: {} };

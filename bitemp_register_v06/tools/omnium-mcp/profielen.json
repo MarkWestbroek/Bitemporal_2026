@@ -7281,6 +7281,36 @@
    "diagramTypeId": "profiel-ontwerp",
    "elementen": [
     {
+     "id": "profielDef",
+     "label": "Profiel",
+     "container": "bevat",
+     "uitwerking": true,
+     "eigenschappen": [
+      "m3:id",
+      "m3:versie",
+      "m3:oudeBeschrijvingSleutels",
+      "m3:assistent",
+      "m3:style",
+      "m3:shapeTypes",
+      "m3:hooks",
+      "m3:hierarchie",
+      "m3:randAanhechting",
+      "m3:referenceTypes",
+      "m3:referenceResolvers",
+      "m3:taakbalken",
+      "m3:layouts",
+      "m3:leesvolgorde",
+      "m3:superprofiel",
+      "m3:hernoemdeTypen",
+      "m3:meerdereVoorkomens"
+     ],
+     "leden": [
+      "elementDef",
+      "facetDef",
+      "layoutStijlDef"
+     ]
+    },
+    {
      "id": "elementDef",
      "label": "Elementtype",
      "eigenschappen": [
@@ -7512,6 +7542,7 @@
         "constraint"
        ],
        "doel": [
+        "profielDef",
         "elementDef",
         "compartimentDef",
         "fieldDef",
@@ -7544,6 +7575,10 @@
    ],
    "layoutTypen": [
     {
+     "id": "profielDef",
+     "containerVoor": "bevat"
+    },
+    {
      "id": "elementDef"
     },
     {
@@ -7574,6 +7609,10 @@
      "id": "notitie",
      "minBreedte": 100,
      "minHoogte": 44
+    },
+    {
+     "id": "bevat",
+     "isConnector": true
     },
     {
      "id": "constraint",

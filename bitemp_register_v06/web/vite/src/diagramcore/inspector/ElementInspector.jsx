@@ -249,7 +249,7 @@ export default function ElementInspector({
 
   // Afgeleide eigenschappen (M3-hook, 08-11): alleen-lezen regels die het profiel uitrekent, bv.
   // het domein uit het package in de boom. Eén met inOndertitel staat ook in de ondertitel.
-  const afgeleid = elementType?.hooks?.afgeleideEigenschappen?.(element, { elements: editorContext?.elements || {} }) || [];
+  const afgeleid = elementType?.hooks?.afgeleideEigenschappen?.(element, { elements: editorContext?.elements || {}, diagrams: editorContext?.diagrams || {} }) || [];
   const inOndertitel = afgeleid.find((r) => r.inOndertitel);
   const ondertitel = inOndertitel ? inOndertitel.waarde : element.data?.domein;
 
@@ -304,7 +304,20 @@ export default function ElementInspector({
         />
       </div>
 
-      {afgeleid.map((r) => (
+      {afgeleid.map((r) =>
+        r.blok ? (
+          // Een lange afgeleide waarde (bv. de JSON van een Profiel, 22-11): alleen-lezen blok met kopieerknop.
+          <div className="dc-inspector-rij is-afgeleid is-blok" key={`afg-${r.key}`} data-testid={`inspector-afgeleid-${r.key}`} title={r.uitleg || undefined}>
+            <label className="dc-veldlabel">
+              {r.label || r.key}{" "}
+              <button type="button" className="dc-inspector-kopieer" onClick={() => navigator.clipboard?.writeText(String(r.waarde || ""))} title="Kopieer naar het klembord">
+                Kopieer
+              </button>
+            </label>
+            <pre className="dc-inspector-blok">{r.waarde || "—"}</pre>
+            {r.uitleg && <span className="dc-inspector-uit">{r.uitleg}</span>}
+          </div>
+        ) : (
         <div className="dc-inspector-rij is-afgeleid" key={`afg-${r.key}`} data-testid={`inspector-afgeleid-${r.key}`} title={r.uitleg || undefined}>
           <label className="dc-veldlabel">{r.label || r.key}</label>
           <span className="dc-inspector-afgeleid">
@@ -312,7 +325,8 @@ export default function ElementInspector({
             {r.uitleg && <span className="dc-inspector-uit"> · {r.uitleg}</span>}
           </span>
         </div>
-      ))}
+        )
+      )}
 
       {/* PropertyTypes van het ElementType (tekst, expressie, kleur, …), met
           vooraan de vaste M3-beschrijving (diagramcore/model/beschrijving.js)

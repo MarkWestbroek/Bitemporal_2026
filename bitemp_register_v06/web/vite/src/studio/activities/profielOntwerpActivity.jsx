@@ -22,6 +22,7 @@ import ShapeSetPaneel from "./shapeSetPaneel.jsx";
 import { registreerM3Editors } from "./m3Editors.jsx";
 import { maakGeneriekeMaakElement } from "./profielGereedschap.js";
 import { ontwerpDescriptor, registreerProfielOntwerp } from "./m3Profiel.js";
+import { ontwerpStaatVan } from "./profielContainer.js";
 import "./regelsetsIngebouwd.js";
 import { alleRegelsets } from "../../transformatie/regelsetCatalogus.js";
 import { sidecarProject } from "../sidecarProject.js";
@@ -72,13 +73,18 @@ export async function activeerProfiel(useStore) {
     // pass-through mee.
     const staat = useStore.getState();
     const diag = staat.diagrams[staat.actiefDiagramId] || {};
+    // Sinds 22-11: hangt het diagram onder een Profiel (een view), dan is het hele Profiel het
+    // profiel, met al zijn views (profielContainer.js). Anders, zoals voorheen, het diagram.
+    const container = diag.profiel ? staat.elements[diag.profiel] : null;
     const kern = bouwProfielUitOntwerp(
-      {
-        elements: elementenVanDiagram(staat, staat.actiefDiagramId),
-        shapeSets: diag.shapeSets,
-        typeWeergave: diag.typeWeergave,
-        m3Profiel: diag.m3Profiel,
-      },
+      container
+        ? ontwerpStaatVan(container, staat)
+        : {
+            elements: elementenVanDiagram(staat, staat.actiefDiagramId),
+            shapeSets: diag.shapeSets,
+            typeWeergave: diag.typeWeergave,
+            m3Profiel: diag.m3Profiel,
+          },
       { id, label }
     );
     if (embleem) kern.embleem = embleem;
