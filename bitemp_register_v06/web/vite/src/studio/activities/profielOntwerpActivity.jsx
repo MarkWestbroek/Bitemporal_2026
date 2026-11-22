@@ -162,8 +162,11 @@ function bewaarLayoutAlsStandaard(useStore) {
  * de catalogus als één projectbestand. Openen met Project → Importeer project…; dan staan ze in
  * Modelleren onder Profielen en Transformaties.
  */
+/** De profielen die in het sidecar-project horen: alles behalve de M3-taal zelf en Transformatie. */
+export const sidecarDescriptors = () => alleDiagramTypes().filter((dt) => dt.id !== PROFIEL_ONTWERP_ID && dt.id !== "transformatie");
+
 export function exporteerSidecarProject() {
-  const descriptors = alleDiagramTypes().filter((dt) => dt.id !== PROFIEL_ONTWERP_ID && dt.id !== "transformatie");
+  const descriptors = sidecarDescriptors();
   const project = sidecarProject({
     descriptors,
     vermeldingen: alleRegelsets(),

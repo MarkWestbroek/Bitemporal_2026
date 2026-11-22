@@ -45,3 +45,11 @@ test("een onbekend profiel komt terug als kern; een onbekende code-id is een fou
   assert.deepEqual(vervangen, []);
   assert.match(fouten[0], /onbekende edgeLabels-hook "bestaat:niet"/);
 });
+
+test("een leeg diagram is geen profiel en geen fout", () => {
+  const inhoud = projectInhoud();
+  inhoud.diagrams.leeg = { id: "leeg", naam: "Leeg", diagramType: "profiel-ontwerp", nodes: [], edges: [] };
+  const kernen = kernenUitProject(inhoud);
+  assert.deepEqual(kernen.map((k) => k.naam), ["Laadproef"]);
+  assert.ok(kernen.every((k) => !k.fout));
+});

@@ -10741,6 +10741,115 @@
    ]
   },
   {
+   "id": "weergave05",
+   "naam": "Weergave",
+   "diagramTypeId": "weergave",
+   "elementen": [
+    {
+     "id": "icoon",
+     "label": "Icoon",
+     "omschrijving": "Een icoon als SVG-tekst. De naam is de id waarmee een elementtype het icoon aanwijst.",
+     "eigenschappen": [
+      "label",
+      "svg",
+      "monochroom"
+     ]
+    },
+    {
+     "id": "vorm",
+     "label": "Vorm",
+     "omschrijving": "Een vorm (ShapeType): een renderer uit de code, aangewezen op id, met parameters. De naam is de id waarmee een elementtype de vorm aanwijst.",
+     "eigenschappen": [
+      "renderer",
+      "parameters",
+      "minMaat",
+      "ankers",
+      "overig"
+     ]
+    },
+    {
+     "id": "constraint",
+     "label": "Constraint",
+     "omschrijving": "Regel die het standaardarsenaal niet kan uitdrukken (UML Constraint), tussen {…}; koppel hem met annotatie-lijnen aan wat hij beperkt (bv. {xor} tussen twee relaties).",
+     "eigenschappen": [
+      "specificatie",
+      "taal"
+     ]
+    },
+    {
+     "id": "diagramverwijzing",
+     "label": "Diagramverwijzing",
+     "omschrijving": "Verwijst naar een ander diagram (ook in een andere taal); dubbelklik opent het."
+    }
+   ],
+   "connectoren": [
+    {
+     "id": "notitielijn",
+     "label": "Annotatie-lijn",
+     "omschrijving": "Van een notitie of constraint naar het element waar hij over gaat (UML annotatedElement / constrainedElement).",
+     "regels": [
+      {
+       "bron": [
+        "constraint"
+       ],
+       "doel": [
+        "icoon",
+        "vorm",
+        "constraint",
+        "diagramverwijzing"
+       ]
+      }
+     ]
+    }
+   ],
+   "layouts": [
+    {
+     "id": "leesvolgorde-tb",
+     "label": "Leesvolgorde, van boven naar beneden (standaard)"
+    },
+    {
+     "id": "leesvolgorde-lr",
+     "label": "Leesvolgorde, van links naar rechts"
+    },
+    {
+     "id": "leesvolgorde-bt",
+     "label": "Leesvolgorde, van onder naar boven"
+    },
+    {
+     "id": "leesvolgorde-rl",
+     "label": "Leesvolgorde, van rechts naar links"
+    }
+   ],
+   "layoutTypen": [
+    {
+     "id": "icoon"
+    },
+    {
+     "id": "vorm"
+    },
+    {
+     "id": "notitie",
+     "minBreedte": 100,
+     "minHoogte": 44
+    },
+    {
+     "id": "constraint",
+     "minBreedte": 100,
+     "minHoogte": 44
+    },
+    {
+     "id": "notitielijn",
+     "isConnector": true,
+     "aard": "annotatie"
+    },
+    {
+     "id": "diagramverwijzing",
+     "minBreedte": 120,
+     "minHoogte": 44
+    }
+   ]
+  },
+  {
    "id": "wsdl05",
    "naam": "WSDL",
    "diagramTypeId": "wsdl",

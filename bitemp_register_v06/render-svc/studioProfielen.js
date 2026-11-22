@@ -37,6 +37,9 @@ import { registreerStateMachine, STATEMACHINE_ID } from "../web/vite/src/diagram
 import { registreerSysml, SYSML_ID } from "../web/vite/src/diagramprofielen/sysml/index.js";
 import { registreerToegangsregelProfiel, TOEGANGSREGEL_ID } from "../web/vite/src/diagramprofielen/toegangsregel/index.js";
 import { registreerTransformatieProfiel, TRANSFORMATIE_PROFIEL_ID } from "../web/vite/src/diagramprofielen/transformatie/index.js";
+import { registreerWeergaveProfiel, WEERGAVE_PROFIEL_ID } from "../web/vite/src/diagramprofielen/weergave/index.js";
+import { weergaveProject, vormenUitProject, laadVormen } from "../web/vite/src/studio/weergaveProject.js";
+import { alleShapeTypes } from "../web/vite/src/diagramcore/types/shapeType.js";
 import { registreerProfielOntwerp, PROFIEL_ONTWERP_ID } from "../web/vite/src/studio/activities/m3Profiel.js";
 import "../web/vite/src/studio/activities/regelsetsIngebouwd.js";
 import { alleRegelsets } from "../web/vite/src/transformatie/regelsetCatalogus.js";
@@ -77,6 +80,7 @@ const PROFIELEN = [
   ["transformatie05", registreerTransformatieProfiel, TRANSFORMATIE_PROFIEL_ID],
   ["m3Profiel05", registreerProfielOntwerp, PROFIEL_ONTWERP_ID],
   ["usecase05", registreerUseCase, USECASE_ID],
+  ["weergave05", registreerWeergaveProfiel, WEERGAVE_PROFIEL_ID],
   ["wsdl05", registreerWsdl, wsdlDiagramType.id],
   ["xsd05", registreerXsd, xsdDiagramType.id],
 ];
@@ -340,4 +344,23 @@ export function samenvoegProjecten({ basis, tak, main, mapId = null, keuze = nul
     throw new Error(`Het samenvoegen klopt niet na naspelen: ${wat.join("; ")}`);
   }
   return { ...kern, opsMain, opsTak, basis: naMain.werkbestand };
+}
+
+/**
+ * Het weergaveproject (plan 2026-11-21 Sidecar-project §7 stap 1): alle vormen van de tool als
+ * model in het profiel Weergave, gegroepeerd per profiel (studio/weergaveProject.js).
+ */
+export function weergaveVanAlles() {
+  return weergaveProject({ shapeTypes: alleShapeTypes(), descriptors: [...typeIds.values()].map((id) => getDiagramType(id)), taalDescriptor: getDiagramType(WEERGAVE_PROFIEL_ID) });
+}
+
+/** Alle vormen van de tool, voor de rondreistest (kopie: het register blijft ongemoeid). */
+export const vormenVanDeTool = () => JSON.parse(JSON.stringify(alleShapeTypes()));
+
+/** De vormen uit een weergaveproject in de tool zetten (vervangt op id). */
+export function laadWeergavenInDeTool(project) {
+  const model = project.profielen.weergave05;
+  const { shapeTypes, fouten } = vormenUitProject(model);
+  const uit = laadVormen(shapeTypes);
+  return { ...uit, fouten: [...fouten, ...uit.fouten] };
 }
