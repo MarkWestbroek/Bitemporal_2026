@@ -3731,7 +3731,8 @@ function meldProfielVersies(data) {
 export const huidigProjectKop = () => ({ ...useModellerenStore.getState().project });
 
 /** Project → Projectinformatie: soort, versie, wat het gebruikt en wat er nu geladen is. */
-function toonProjectInformatie() {
+async function toonProjectInformatie() {
+  const { leesStart } = await import("../startUitProject.js");
   const { project } = useModellerenStore.getState();
   const soort = soortVan(project);
   const regels = [`Naam: ${project.naam}`, `Soort: ${soort === SOORT_MODEL ? "model (gewoon project)" : soort}`];
@@ -3740,6 +3741,8 @@ function toonProjectInformatie() {
     regels.push("", `${s[0].toUpperCase()}${s.slice(1)}:`);
     regels.push(`  nu geladen: ${beschrijf(geladen(s))}`);
     regels.push(`  bij het laatste bewaren: ${project.gebruikt?.[s] ? beschrijf(project.gebruikt[s]) : "(nog niet genoteerd)"}`);
+    const start = await leesStart(s);
+    regels.push(`  bij het starten van de Studio: ${start ? beschrijf({ bron: "project", ...start.kop }) : "uit de code"}`);
   }
   toonMelding({ titel: "Projectinformatie", tekst: regels.join("\n") });
 }

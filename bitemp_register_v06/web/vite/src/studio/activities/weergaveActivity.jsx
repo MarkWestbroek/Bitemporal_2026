@@ -31,6 +31,7 @@ import { getProfieltypen, registreerProfieltype } from "../profieltypeRegistry.j
 import { downloadJson } from "../studioUtils.js";
 import { toonMelding, vraagBevestiging } from "../naamDialog.jsx";
 import { zetGeladen, SOORT_WEERGAVEN } from "../projectGebruik.js";
+import { bewaarStart, leesStart, wisStart } from "../startUitProject.js";
 
 registreerWeergaveProfiel();
 registreerM3Editors();
@@ -103,6 +104,51 @@ async function haalWeergavenWeg(useStore) {
   toonMelding({ tekst: `${els.length} weergave(n) en ${dgs.length} diagram(men) verwijderd.` });
 }
 
+/**
+ * De weergaven uit een model (de elementen) in de tool zetten: vormen, iconen, koppelingen. Ook
+ * gebruikt bij het starten (startUitProject.js).
+ * @returns {{vormen: any, iconen: any, koppelingen: any, fouten: string[]}}
+ */
+export function zetWeergavenInDeTool(elements) {
+  const { shapeTypes, fouten } = vormenUitProject({ elements });
+  const ic = iconenUitProject({ elements });
+  const kp = koppelingenUitProject({ elements });
+  const uit = laadVormen(shapeTypes);
+  const uitIc = laadIconen(ic.iconen);
+  // Koppelingen op de geregistreerde profielen, op hun plek (na de vormen en iconen die ze noemen).
+  const uitKp = laadKoppelingen(kp.koppelingen, (pid) => getDiagramType(pid));
+  // Opnieuw aanmelden laat de canvassen en taakbalken opnieuw tekenen.
+  for (const p of getProfieltypen()) registreerProfieltype(p);
+  return { vormen: uit, iconen: uitIc, koppelingen: uitKp, fouten: [...fouten, ...uit.fouten, ...ic.fouten, ...kp.fouten, ...uitKp.fouten] };
+}
+
+/** Na het laden: ook bij het starten van de Studio gebruiken (startUitProject.js, plan §7 stap 6)? */
+async function vraagStart(soort, kop, inhoud, wat) {
+  const ja = await vraagBevestiging({
+    titel: "Ook bij het starten?",
+    tekst: `De Studio ook voortaan starten met de ${wat} uit "${kop.naam || kop.id}" (in deze browser)? Lukt dat bij het starten niet, dan gebruikt de tool de code. Terug naar de code kan met "Start weer uit de code".`,
+    bevestig: "Bij het starten gebruiken",
+    annuleer: "Alleen nu",
+  });
+  if (!ja) return;
+  try {
+    await bewaarStart(soort, { kop: { id: kop.id, naam: kop.naam, versie: kop.versie, concept: true }, inhoud });
+    toonMelding({ tekst: `De Studio start voortaan met de ${wat} uit "${kop.naam || kop.id}".` });
+  } catch (e) {
+    toonMelding({ tekst: `Bewaren voor het starten lukte niet: ${e?.message || e}` });
+  }
+}
+
+async function startUitDeCode(soort, wat) {
+  const stand = await leesStart(soort);
+  if (!stand) {
+    toonMelding({ tekst: `De Studio start al met de ${wat} uit de code.` });
+    return;
+  }
+  await wisStart(soort);
+  toonMelding({ tekst: `Vanaf de volgende keer start de Studio weer met de ${wat} uit de code (was: "${stand.kop?.naam || stand.kop?.id}"). Herlaad de pagina om dat nu te doen.` });
+}
+
 /** De vormen en iconen van dit project in de tool zetten, tot een herlaad. */
 async function laadInDeTool(useStore) {
   const elements = useStore.getState().elements;
@@ -124,20 +170,12 @@ async function laadInDeTool(useStore) {
     }))
   )
     return;
-  const uit = laadVormen(shapeTypes);
-  const uitIc = laadIconen(ic.iconen);
-  // Koppelingen op de geregistreerde profielen, op hun plek (na de vormen en iconen die ze noemen).
-  const uitKp = laadKoppelingen(kp.koppelingen, (pid) => getDiagramType(pid));
+  const { vormen: uit, iconen: uitIc, koppelingen: uitKp, fouten: alle } = zetWeergavenInDeTool(elements);
   // De tool draait nu op dit project (projectGebruik.js): een concept tot het is uitgebracht (keuze A, Mark 22-11).
-  {
-    const { huidigProjectKop } = await import("./modellerenActivity.jsx");
-    const kop = huidigProjectKop();
-    zetGeladen(SOORT_WEERGAVEN, { id: kop.id, naam: kop.naam, versie: kop.versie, concept: true });
-  }
-  // Opnieuw aanmelden laat de canvassen en taakbalken opnieuw tekenen.
-  for (const p of getProfieltypen()) registreerProfieltype(p);
-  const alle = [...fouten, ...uit.fouten, ...ic.fouten, ...kp.fouten, ...uitKp.fouten];
-  toonMelding({
+  const { huidigProjectKop } = await import("./modellerenActivity.jsx");
+  const kop = huidigProjectKop();
+  zetGeladen(SOORT_WEERGAVEN, { id: kop.id, naam: kop.naam, versie: kop.versie, concept: true });
+  await toonMelding({
     titel: "Weergaven geladen",
     tekst: [
       `Vormen — vervangen: ${uit.vervangen.length}, nieuw: ${uit.nieuw.length}`,
@@ -146,6 +184,7 @@ async function laadInDeTool(useStore) {
       ...(alle.length ? ["", "Niet geladen:", ...alle] : []),
     ].join("\n"),
   });
+  await vraagStart(SOORT_WEERGAVEN, kop, { elements }, "weergaven");
 }
 
 function exporteer() {
@@ -173,6 +212,7 @@ export default maakDiagramActiviteit({
     { id: "laad-in-tool", label: "Laad de weergaven uit dit project in de tool", run: laadInDeTool },
     { id: "exporteer", label: "Exporteer het weergaveproject", run: () => exporteer() },
     { id: "haal-weg", label: "Haal de weergaven uit dit project", run: haalWeergavenWeg },
+    { id: "start-code", label: "Start weer uit de code (weergaven)", run: () => startUitDeCode(SOORT_WEERGAVEN, "weergaven") },
   ],
   startActies: [{ id: "laad-vormen", label: "Open het weergaveproject van de tool", run: laadVormenVanDeTool }],
 });

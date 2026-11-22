@@ -2854,8 +2854,25 @@ Gemeten: 97 vormen in render-svc (meer in de browser, met de eigen vormen), 56 k
 - `normaliseerProjectData` laat `soort`, `versie` en `gebruikt` in de kop staan (voorheen alleen id
   en naam). Tests: `projectGebruik.test.js`, e2e `74-studio-projectkop-gebruikt`.
 
-**Volgende stappen** (plan §7): de centrale plek (de projecten op één server, versies verplicht,
-uitbrengen); starten uit de centrale projecten.
+**Stap 6, het lokale deel (gebouwd 22-11): starten uit het project** (`studio/startUitProject.js`).
+
+- Na *Laad de weergaven/profielen uit dit project in de tool* vraagt de Studio: **ook bij het
+  starten gebruiken?** (in deze browser). Zo ja, dan bewaart hij het model (elementen en
+  diagrammen) met de kop in IndexedDB, per soort één stand.
+- **Bij het starten** (`studio/activities/index.jsx`) zet de Studio die standen in de tool: eerst de
+  profielen (`zetProfielenInDeTool`), dan de weergaven (`zetWeergavenInDeTool`; de koppeling noemt
+  elementtypen van de profielen). Per soort apart; lukt het niet, dan blijft voor die soort de code
+  gelden en volgt een melding. `gebruikt` in de projectkop noemt dan het project, als concept.
+- **Terug naar de code**: *Weergave → Start weer uit de code (weergaven)* en *Profiel (M3) → Start
+  weer uit de code (profielen)*; vanaf de volgende keer (of na een herlaad).
+- **Projectinformatie** toont per soort ook waarmee de Studio start.
+- Dit wordt de "laatst opgehaalde versie" uit het besluit van 21-11 zodra de centrale plek er is
+  (stap 5; voorstel en open vragen in het plan, §8).
+- Tests: `startUitProject.test.js`; e2e `74-studio-projectkop-gebruikt` (bewaren, herladen: de tool
+  tekent met de bewaarde vorm; zonder stand weer de code).
+
+**Volgende stappen** (plan §7–§8): de centrale plek (stap 5; open vragen: welke instantie, toegang
+voor de andere instanties, vastpinnen of volgen, een klant met een eigen centrale).
 
 ## Activiteit Transformaties: regelsets bekijken en proefdraaien (2026-11-18)
 

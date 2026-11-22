@@ -156,8 +156,54 @@ Een **nieuw profiel begint bij 0.1.0** (Mark 21-11); ook het profiel *Weergave*.
    22-11** (`studio/projectGebruik.js`): `soort`, `versie` (keuze A: alleen omhoog bij uitbrengen,
    daartussen concept) en `gebruikt` in de kop; waarschuwing bij het openen; Projectinformatie.
 5. De centrale plek: de projecten op één server, versies verplicht, een release noemt zijn versies.
+   **Uitgewerkt als voorstel in §8, met open vragen voor Mark** (niet gebouwd: welke server en welke
+   toegang liggen bij Mark).
 6. Starten uit de centrale projecten (met de laatst opgehaalde versie en de code als reserve).
+   **Lokaal deel gebouwd 22-11** (`studio/startUitProject.js`): na *Laad … in de tool* kun je kiezen
+   ermee te starten; de Studio bewaart het project in IndexedDB en zet het bij het starten in de
+   tool (eerst de profielen, dan de weergaven), met de code als reserve. Dit wordt de "laatst
+   opgehaalde versie" zodra stap 5 er is.
 7. De rol ontwerper: concepten in een branch, de beheerder brengt uit.
 8. Klantaanpassingen (+ en −) los bewaren en de klantversie genereren.
 9. De projectbrowser in Profielen en Transformaties (stap e).
 10. De stamboom van M3-, M2- en weergaveprojecten en klantaanpassingen.
+
+## 8. Stap 5 uitgewerkt: de centrale plek (voorstel 22-11, open vragen)
+
+Nachtwerk 22-11; niets hiervan is gebouwd. De stappen 1–4 en het lokale deel van 6 maken dit
+klein: een project weet zijn soort en versie, een model noemt wat het gebruikt, en de Studio kan
+starten uit een bewaard project.
+
+**Voorstel.**
+
+1. **Eén instantie is de centrale.** Daar staan de profielen- en weergaveprojecten als gewone
+   serverprojecten (soort in de kop), beheerd zoals nu: branches voor concepten (de ontwerper),
+   samenvoegen naar MAIN (de beheerder).
+2. **Uitbrengen** (de beheerder): `POST /projecten/{id}/uitbrengen {versie}` legt de huidige MAIN
+   vast als onveranderlijke versie (een kopie van de snapshot met `versie`, niet meer te wijzigen).
+   De server weigert een versie die niet hoger is dan de vorige (versiebeheer verplicht). In de
+   Studio: *Project → Breng versie uit…*, alleen voor profielen- en weergaveprojecten en alleen
+   voor de beheerder; het nummer kiest hij (patch, minor, major), zoals bij de profielversies.
+3. **Ophalen** (elke instantie): `GET /centraal/{soort}` geeft de lijst van uitgebrachte versies,
+   `GET /centraal/{soort}/{versie}` het werkbestand. De Studio haalt bij het starten de versie op
+   die bij zijn release hoort, bewaart die lokaal (dat is het lokale deel van stap 6) en start
+   ermee; lukt ophalen niet, dan de laatst opgehaalde, en anders de code.
+4. **Een release noemt zijn versies**: een klein bestand bij de Studio-build, bv.
+   `centraal.json` = `{ "profielen": "0.3.0", "weergaven": "0.2.0" }`. De releasemelding aan
+   FUNDAMENT/BACKEND noemt ze ook.
+5. **Concept uitproberen** blijft zoals nu: een ontwerper laadt zijn branch in zijn eigen Studio
+   (*Laad … uit dit project in de tool*); de kop noteert "+ concept".
+
+**Open vragen voor Mark.**
+
+1. **Welke instantie is de centrale?** Voor de hand ligt app (daar draait het meeste al); een eigen
+   kleine instantie kan ook.
+2. **Toegang voor de andere instanties** (Fundament, pf): publiek leesbaar (de profielen en
+   weergaven zijn geen geheim, de repo is ook publiek), of een leestoken per instantie?
+3. **Vastpinnen of volgen:** noemt een release exact de versies (`0.3.0`), of "de laatste
+   uitgebrachte binnen 0.3" (dan komt een patch zonder nieuwe release binnen)? Voorstel: exact
+   vastpinnen; een nieuwe projectversie = een (kleine) release. Past bij "release en projecten
+   gaan samen".
+4. **Klant met een eigen centrale** (lokaal ingesteld, "liever niet"): alleen een andere URL in de
+   configuratie, of ook een eigen beheerder? Voorstel: alleen de URL, tot de klantaanpassingen
+   (stap 8) er zijn.
