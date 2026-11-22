@@ -17,6 +17,11 @@ De single source of truth voor het nummer is `package.json` `"version"`.
   krijgt, in een tabel. *Weergave → Open het weergaveproject van de tool* en *Profiel (M3) → Open het sidecar-project van
   de tool* openen die als eigen project, nooit in je gewone project; *Haal de weergaven/profielen uit dit project* ruimt
   op als ze daar toch staan.
+- **De projectkop noemt wat een project gebruikt**: soort (model, profielen of weergaven), de versie van een profielen-
+  of weergaveproject, en met welke profielen en weergaven een project is bewaard. Wijkt dat af van wat er nu geladen
+  is, dan krijg je bij het openen een waarschuwing. *Project → Projectinformatie…* laat het zien.
+- **Starten met profielen of weergaven uit een project**: na *Laad … uit dit project in de tool* kun je kiezen ermee te
+  starten (in deze browser). Lukt dat niet, dan gebruikt de tool de code; *Start weer uit de code* zet het terug.
 - **Profielen uit het project laden** (PROF-1): *Profiel (M3) → Laad de profielen uit dit project in de tool* maakt
   van de profiel-diagrammen in je project weer profielen. Pas je in het sidecar-project een profiel aan (een kleur, een
   eigenschap, een verbindingsregel) en laad je het, dan tekent de tool daarmee, tot je de pagina herlaadt.

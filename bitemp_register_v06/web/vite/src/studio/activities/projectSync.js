@@ -83,7 +83,18 @@ export function normaliseerProjectData(data, { bestandsnaam = "" } = {}) {
       : projectNaamUitBestandsnaam(bestandsnaam);
   return {
     ok: true,
-    data: { ...data, versie: PROJECT_FORMAAT_VERSIE, project: { id, naam } },
+    // soort, versie en gebruikt (plan Sidecar-project §7 stap 4, studio/projectGebruik.js) gaan mee.
+    data: {
+      ...data,
+      versie: PROJECT_FORMAAT_VERSIE,
+      project: {
+        id,
+        naam,
+        ...(typeof project.soort === "string" && project.soort ? { soort: project.soort } : {}),
+        ...(typeof project.versie === "string" && project.versie ? { versie: project.versie } : {}),
+        ...(project.gebruikt && typeof project.gebruikt === "object" ? { gebruikt: project.gebruikt } : {}),
+      },
+    },
   };
 }
 

@@ -194,3 +194,25 @@ registreerActiviteitAlsProfieltype(berichtActivity, {
   kleur: "#34d399",
   documenten: [{ id: "berichtdefinities", naam: "Berichtdefinities" }],
 });
+
+// ── Starten uit het project (plan Sidecar-project §7 stap 6, het lokale deel) ──
+// Is er in deze browser gekozen om met profielen of weergaven uit een project te starten, dan
+// komen die nu in de tool: eerst de profielen, dan de weergaven. Lukt het niet, dan blijft de
+// code gelden en volgt een melding (startUitProject.js).
+void (async () => {
+  try {
+    const [{ pasStartToe }, { zetProfielenInDeTool }, { zetWeergavenInDeTool }, { toonMelding }] = await Promise.all([
+      import("../startUitProject.js"),
+      import("./m3ProfielActivity.jsx"),
+      import("./weergaveActivity.jsx"),
+      import("../naamDialog.jsx"),
+    ]);
+    const uit = await pasStartToe({
+      profielen: (inhoud) => zetProfielenInDeTool(inhoud),
+      weergaven: (inhoud) => zetWeergavenInDeTool(inhoud.elements),
+    });
+    if (uit.fouten.length) toonMelding({ titel: "Starten uit het project", tekst: uit.fouten.join("\n") });
+  } catch (e) {
+    console.warn("[studio] starten uit het project mislukt; de tool gebruikt de code", e);
+  }
+})();

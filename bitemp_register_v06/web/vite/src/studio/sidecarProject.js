@@ -28,6 +28,7 @@ import { regelsetsNaarModel } from "../transformatie/regelsetModel.js";
 import { TRANSFORMATIE_PROFIEL_ID } from "../diagramprofielen/transformatie/index.js";
 import { versieVan } from "../diagramcore/types/profielVersie.js";
 import { PROJECT_FORMAAT, PROJECT_FORMAAT_VERSIE } from "./activities/projectSync.js";
+import { kopUitDeCode, SOORT_PROFIELEN } from "./projectGebruik.js";
 
 export const SIDECAR_PROJECT_ID = "omnium-sidecar";
 export const TRANSFORMATIE_ACTIVITEIT_ID = "transformatie05";
@@ -85,7 +86,8 @@ export function sidecarProject({ descriptors, vermeldingen = [], taalDescriptors
   return {
     formaat: PROJECT_FORMAAT,
     versie: PROJECT_FORMAAT_VERSIE,
-    project: { id: SIDECAR_PROJECT_ID, naam },
+    // Soort en versie in de kop (projectGebruik.js): uit de code = de versie van de Studio.
+    project: { id: SIDECAR_PROJECT_ID, naam, ...kopUitDeCode(SOORT_PROFIELEN) },
     structuur: { mappen, plaatsing, plaatsingVolgorde: Object.keys(plaatsing) },
     kruisverbanden: [],
     profielVersies: {

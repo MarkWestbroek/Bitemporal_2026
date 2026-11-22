@@ -36,6 +36,8 @@ import { registreerProfielAlsActiviteit } from "./profielRegistratie.jsx";
 import { getProfieltypen, registreerProfieltype } from "../profieltypeRegistry.js";
 import { getDiagramType } from "../../diagramcore/types/typeRegistry.js";
 import { toonMelding, vraagBevestiging } from "../naamDialog.jsx";
+import { zetGeladen, SOORT_PROFIELEN } from "../projectGebruik.js";
+import { bewaarStart, leesStart, wisStart } from "../startUitProject.js";
 
 registreerM3Editors();
 registreerProfielOntwerp();
@@ -102,6 +104,54 @@ async function haalProfielenWeg(useStore) {
   toonMelding({ tekst: `${dgs.length} profiel-diagram(men) en ${els.length} element(en) verwijderd.` });
 }
 
+/**
+ * De profiel-diagrammen uit een model in de tool zetten: bekende profielen op hun plek, onbekende als
+ * eigen activiteit. Ook gebruikt bij het starten (startUitProject.js).
+ * @returns {{vervangen: string[], nieuw: any[], fouten: string[]}}
+ */
+export function zetProfielenInDeTool({ elements, diagrams }) {
+  const { vervangen, nieuw, fouten } = laadKernen(kernenUitProject({ elements, diagrams }));
+  for (const kern of nieuw) {
+    try {
+      registreerProfielAlsActiviteit(kern);
+    } catch (e) {
+      fouten.push(`${kern.label || kern.id}: ${e?.message || e}`);
+    }
+  }
+  // De activiteiten houden hun descriptor vast (op zijn plek vervangen); opnieuw aanmelden laat
+  // Modelleren en de canvassen opnieuw tekenen.
+  const geraakt = new Set(vervangen.map((id) => getDiagramType(id)));
+  for (const p of getProfieltypen()) if (geraakt.has(p.descriptor)) registreerProfieltype(p);
+  return { vervangen, nieuw, fouten };
+}
+
+/** Na het laden: ook bij het starten van de Studio gebruiken (startUitProject.js, plan §7 stap 6)? */
+async function vraagStart(soort, kop, inhoud, wat) {
+  const ja = await vraagBevestiging({
+    titel: "Ook bij het starten?",
+    tekst: `De Studio ook voortaan starten met de ${wat} uit "${kop.naam || kop.id}" (in deze browser)? Lukt dat bij het starten niet, dan gebruikt de tool de code. Terug naar de code kan met "Start weer uit de code".`,
+    bevestig: "Bij het starten gebruiken",
+    annuleer: "Alleen nu",
+  });
+  if (!ja) return;
+  try {
+    await bewaarStart(soort, { kop: { id: kop.id, naam: kop.naam, versie: kop.versie, concept: true }, inhoud });
+    toonMelding({ tekst: `De Studio start voortaan met de ${wat} uit "${kop.naam || kop.id}".` });
+  } catch (e) {
+    toonMelding({ tekst: `Bewaren voor het starten lukte niet: ${e?.message || e}` });
+  }
+}
+
+async function startUitDeCode(soort, wat) {
+  const stand = await leesStart(soort);
+  if (!stand) {
+    toonMelding({ tekst: `De Studio start al met de ${wat} uit de code.` });
+    return;
+  }
+  await wisStart(soort);
+  toonMelding({ tekst: `Vanaf de volgende keer start de Studio weer met de ${wat} uit de code (was: "${stand.kop?.naam || stand.kop?.id}"). Herlaad de pagina om dat nu te doen.` });
+}
+
 /** Alle profiel-diagrammen van dit project als profielen in de tool zetten (profielenUitProject.js). */
 async function laadInDeTool(useStore) {
   const st = useStore.getState();
@@ -127,22 +177,16 @@ async function laadInDeTool(useStore) {
     bevestig: "Laad",
   });
   if (!ok) return;
-  const { vervangen, nieuw, fouten } = laadKernen(kernen);
-  for (const kern of nieuw) {
-    try {
-      registreerProfielAlsActiviteit(kern);
-    } catch (e) {
-      fouten.push(`${kern.label || kern.id}: ${e?.message || e}`);
-    }
-  }
-  // De activiteiten houden hun descriptor vast (op zijn plek vervangen); opnieuw aanmelden laat
-  // Modelleren en de canvassen opnieuw tekenen.
-  const geraakt = new Set(vervangen.map((id) => getDiagramType(id)));
-  for (const p of getProfieltypen()) if (geraakt.has(p.descriptor)) registreerProfieltype(p);
-  toonMelding({
+  const { vervangen, nieuw, fouten } = zetProfielenInDeTool({ elements: st.elements, diagrams: st.diagrams });
+  // De tool draait nu op dit project (projectGebruik.js): een concept tot het is uitgebracht (keuze A, Mark 22-11).
+  const { huidigProjectKop } = await import("./modellerenActivity.jsx");
+  const kop = huidigProjectKop();
+  zetGeladen(SOORT_PROFIELEN, { id: kop.id, naam: kop.naam, versie: kop.versie, concept: true });
+  await toonMelding({
     titel: "Profielen geladen",
     tekst: [`Vervangen: ${vervangen.length}`, `Nieuw: ${nieuw.length}`, ...(fouten.length ? ["", "Niet geladen:", ...fouten] : [])].join("\n"),
   });
+  await vraagStart(SOORT_PROFIELEN, kop, { elements: st.elements, diagrams: st.diagrams }, "profielen");
 }
 
 export default maakDiagramActiviteit({
@@ -170,5 +214,6 @@ export default maakDiagramActiviteit({
     { id: "laad-in-tool", label: "Laad de profielen uit dit project in de tool", run: laadInDeTool },
     { id: "sidecar", label: "Exporteer het sidecar-project (profielen en transformaties)", run: exporteerSidecarProject },
     { id: "haal-weg", label: "Haal de profielen uit dit project", run: haalProfielenWeg },
+    { id: "start-code", label: "Start weer uit de code (profielen)", run: () => startUitDeCode(SOORT_PROFIELEN, "profielen") },
   ],
 });

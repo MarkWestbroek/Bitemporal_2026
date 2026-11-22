@@ -86,6 +86,10 @@ import { importeerQeaInProject } from "../../diagramprofielen/ea/importQeaProjec
 import { plaatsEaInProjectboomPlan } from "../../diagramprofielen/ea/eaProjectboom.js";
 import { importeerV3InProject } from "./v3ImportProject.js";
 import { weergaveNaam } from "../../diagramcore/model/weergaveNaam.js";
+import { zetToolVersie, noteerGebruikt, soortVan, vergelijkGebruikt, gebruiktMelding, geladen, beschrijf, afhankelijkVan, SOORT_MODEL } from "../projectGebruik.js";
+
+// "Uit de code" = deze Studio-versie (projectGebruik.js; release en de centrale projecten gaan samen).
+zetToolVersie(typeof __APP_VERSION__ !== "undefined" ? __APP_VERSION__ : "dev");
 
 const ELEMENTEN_HOOGTE_SLEUTEL = "studio05-project-elementen-hoogte";
 function leesElementenHoogte() {
@@ -3708,13 +3712,39 @@ function beschikbareProfielVersies() {
   );
 }
 
-/** Meld het als het project met een nieuwere profielversie is bewaard dan deze Studio heeft. */
+/**
+ * Meld het als het project met een nieuwere profielversie is bewaard dan deze Studio heeft, of met
+ * andere profielen of weergaven dan er nu geladen zijn (projectGebruik.js; een waarschuwing).
+ */
 function meldProfielVersies(data) {
   const tekst = profielVersieMelding(
     beoordeelProfielVersies(data?.profielVersies, beschikbareProfielVersies()),
     (pid) => getProfieltype(pid)?.label || pid,
   );
-  if (tekst) toonMelding({ titel: "Nieuwere profielversie", tekst });
+  const gebruikt = gebruiktMelding(vergelijkGebruikt(data?.project));
+  if (tekst && gebruikt) toonMelding({ titel: "Andere versies", tekst: `${tekst}\n\n${gebruikt}` });
+  else if (tekst) toonMelding({ titel: "Nieuwere profielversie", tekst });
+  else if (gebruikt) toonMelding({ titel: "Andere profielen of weergaven", tekst: gebruikt });
+}
+
+/** De kop van het open project (id, naam, soort, versie, …). */
+export const huidigProjectKop = () => ({ ...useModellerenStore.getState().project });
+
+/** Project → Projectinformatie: soort, versie, wat het gebruikt en wat er nu geladen is. */
+async function toonProjectInformatie() {
+  const { leesStart } = await import("../startUitProject.js");
+  const { project } = useModellerenStore.getState();
+  const soort = soortVan(project);
+  const regels = [`Naam: ${project.naam}`, `Soort: ${soort === SOORT_MODEL ? "model (gewoon project)" : soort}`];
+  if (soort !== SOORT_MODEL) regels.push(`Versie: ${project.versie || "(geen)"}`);
+  for (const s of afhankelijkVan(soort)) {
+    regels.push("", `${s[0].toUpperCase()}${s.slice(1)}:`);
+    regels.push(`  nu geladen: ${beschrijf(geladen(s))}`);
+    regels.push(`  bij het laatste bewaren: ${project.gebruikt?.[s] ? beschrijf(project.gebruikt[s]) : "(nog niet genoteerd)"}`);
+    const start = await leesStart(s);
+    regels.push(`  bij het starten van de Studio: ${start ? beschrijf({ bron: "project", ...start.kop }) : "uit de code"}`);
+  }
+  toonMelding({ titel: "Projectinformatie", tekst: regels.join("\n") });
 }
 
 function bouwProjectData() {
@@ -3743,7 +3773,13 @@ function bouwProjectData() {
     formaat: PROJECT_FORMAAT,
     versie: PROJECT_FORMAAT_VERSIE,
     geexporteerd: new Date().toISOString(),
-    project: { id: s.project.id, naam: s.project.naam },
+    // De kop: soort en versie (profielen- en weergaveproject) en wat het nu gebruikt (projectGebruik.js).
+    project: {
+      id: s.project.id,
+      naam: s.project.naam,
+      ...(soortVan(s.project) !== SOORT_MODEL ? { soort: s.project.soort, ...(s.project.versie ? { versie: s.project.versie } : {}) } : {}),
+      gebruikt: noteerGebruikt(soortVan(s.project)),
+    },
     // plaatsingVolgorde: de boomvolgorde expliciet — jsonb op de server bewaart
     // de sleutelvolgorde van `plaatsing` niet (gemeld 2026-10-08).
     structuur: { mappen: s.mappen, plaatsing, plaatsingVolgorde: Object.keys(plaatsing), ...(Object.keys(s.bundels || {}).length ? { bundels: s.bundels } : {}) },
@@ -3783,6 +3819,10 @@ function pasProjectToe(data, { serverVersie = null, laatsteVolgnummer = 0, herko
   useModellerenStore.getState().zetProject({
     id: data.project.id,
     naam: data.project.naam,
+    // Soort, versie en wat het gebruikte (projectGebruik.js); null wist die van het vorige project.
+    soort: data.project.soort || null,
+    versie: data.project.versie || null,
+    gebruikt: data.project.gebruikt || null,
     serverVersie,
     laatsteVolgnummer,
     totVolgnummer: laatsteVolgnummer,
@@ -3847,7 +3887,7 @@ function leegProject({ naam = STANDAARD_PROJECTNAAM } = {}) {
   _geladenProfielVersies = {};
   // Eerst naar het nieuwe project, dan leegmaken: andersom zou het leegmaken in de werkkopie
   // van het vorige project landen (TAB-1, 11-11).
-  useModellerenStore.getState().zetProject({ id: nieuwProjectId(), naam, serverVersie: null, laatsteVolgnummer: 0, totVolgnummer: 0, liveSync: true, laatsteSync: null, herkomst: null, ouderNaam: null, recht: null });
+  useModellerenStore.getState().zetProject({ id: nieuwProjectId(), naam, serverVersie: null, laatsteVolgnummer: 0, totVolgnummer: 0, liveSync: true, laatsteSync: null, herkomst: null, ouderNaam: null, recht: null, soort: null, versie: null, gebruikt: null });
   zonderVastleggen(() => {
     for (const p of getProfieltypen()) {
       if (p.klassiek) continue;
@@ -4583,6 +4623,7 @@ function menus(ctx) {
           ]
         : []),
       { id: "proj-hernoem", label: "Hernoem project…", onClick: hernoemProject },
+      { id: "proj-info", label: "Projectinformatie…", uitleg: "Soort, versie en welke profielen en weergaven dit project gebruikt.", onClick: toonProjectInformatie },
       { id: "proj-nieuw", label: "Nieuw project… (huidige parkeren)", uitleg: "Begin leeg; het huidige project blijft in deze browser bewaard.", onClick: nieuwProject },
       { type: "separator" },
       { id: "proj-push", label: "Naar server sturen (snapshot)", uitleg: "Zet het project op de server, zodat anderen erin kunnen meewerken.", onClick: stuurNaarServer },
