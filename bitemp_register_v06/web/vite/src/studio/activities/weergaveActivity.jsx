@@ -30,6 +30,7 @@ import { alleDiagramTypes, getDiagramType } from "../../diagramcore/types/typeRe
 import { getProfieltypen, registreerProfieltype } from "../profieltypeRegistry.js";
 import { downloadJson } from "../studioUtils.js";
 import { toonMelding, vraagBevestiging } from "../naamDialog.jsx";
+import { zetGeladen, SOORT_WEERGAVEN } from "../projectGebruik.js";
 
 registreerWeergaveProfiel();
 registreerM3Editors();
@@ -127,6 +128,12 @@ async function laadInDeTool(useStore) {
   const uitIc = laadIconen(ic.iconen);
   // Koppelingen op de geregistreerde profielen, op hun plek (na de vormen en iconen die ze noemen).
   const uitKp = laadKoppelingen(kp.koppelingen, (pid) => getDiagramType(pid));
+  // De tool draait nu op dit project (projectGebruik.js): een concept tot het is uitgebracht (keuze A, Mark 22-11).
+  {
+    const { huidigProjectKop } = await import("./modellerenActivity.jsx");
+    const kop = huidigProjectKop();
+    zetGeladen(SOORT_WEERGAVEN, { id: kop.id, naam: kop.naam, versie: kop.versie, concept: true });
+  }
   // Opnieuw aanmelden laat de canvassen en taakbalken opnieuw tekenen.
   for (const p of getProfieltypen()) registreerProfieltype(p);
   const alle = [...fouten, ...uit.fouten, ...ic.fouten, ...kp.fouten, ...uitKp.fouten];

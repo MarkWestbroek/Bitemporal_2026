@@ -2831,8 +2831,31 @@ Gemeten: 97 vormen in render-svc (meer in de browser, met de eigen vormen), 56 k
 - Niet in de koppeling: de vormen per diagram (shape-sets die een gebruiker op een diagram maakt,
   `diagram.shapeSets`); die horen bij het model (M1).
 
-**Volgende stappen** (plan §7): naam en versie van M2- en weergaveproject in de M1-projectkop (en
-daarmee een projectsoort: "dit is een weergaveproject"); de centrale plek; starten uit de projecten.
+**Stap 4 (gebouwd 22-11): de projectkop noemt wat een project gebruikt** (`studio/projectGebruik.js`).
+
+- **Soort**: `project.soort` is `profielen` (het sidecar-project), `weergaven`, of ontbreekt (een
+  gewoon project, "model"). De tool weet zo zelf dat iets een weergaveproject is.
+- **Versie**: alleen bij profielen en weergaven (`project.versie`). Besluit Mark 22-11 (keuze A):
+  de versie gaat alleen omhoog bij **uitbrengen** door de beheerder; daartussen is het een concept
+  ("0.3.0 + concept"). Een project dat de tool uit de code maakt (*Open het weergaveproject / het
+  sidecar-project van de tool*), krijgt de versie van de Studio: release en projecten gaan samen.
+- **Gebruikt**: bij elk bewaren noteert de kop wat er geladen is — een model `{profielen,
+  weergaven}`, een weergaveproject `{profielen}` (de koppeling noemt elementtype-id's), een
+  profielenproject niets (het M3 is nog code). Elk is `{bron: "code", versie}` of `{bron:
+  "project", id, naam, versie, concept}`. Standaard is dat de code; *Laad de weergaven/profielen
+  uit dit project in de tool* zet het open project als geladen, als concept (er is nog geen
+  uitbrengen).
+- **Waarschuwing bij het openen** (importeren, van de server, *Open … van de tool*): wijkt
+  `gebruikt` af van wat er nu geladen is, dan een melding ("weergaven: gemaakt met 0.3.0 uit
+  Omnium weergaven, nu uit de code (Studio 0.47.0)"); het project opent gewoon. Code tegenover code
+  in een andere Studio-versie waarschuwt niet: dat doen de profielversies per profiel al.
+- **Project → Projectinformatie…** toont soort, versie, wat er nu geladen is en wat bij het laatste
+  bewaren genoteerd stond.
+- `normaliseerProjectData` laat `soort`, `versie` en `gebruikt` in de kop staan (voorheen alleen id
+  en naam). Tests: `projectGebruik.test.js`, e2e `74-studio-projectkop-gebruikt`.
+
+**Volgende stappen** (plan §7): de centrale plek (de projecten op één server, versies verplicht,
+uitbrengen); starten uit de centrale projecten.
 
 ## Activiteit Transformaties: regelsets bekijken en proefdraaien (2026-11-18)
 

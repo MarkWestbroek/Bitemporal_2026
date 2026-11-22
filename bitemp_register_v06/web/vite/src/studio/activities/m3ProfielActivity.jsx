@@ -36,6 +36,7 @@ import { registreerProfielAlsActiviteit } from "./profielRegistratie.jsx";
 import { getProfieltypen, registreerProfieltype } from "../profieltypeRegistry.js";
 import { getDiagramType } from "../../diagramcore/types/typeRegistry.js";
 import { toonMelding, vraagBevestiging } from "../naamDialog.jsx";
+import { zetGeladen, SOORT_PROFIELEN } from "../projectGebruik.js";
 
 registreerM3Editors();
 registreerProfielOntwerp();
@@ -128,6 +129,12 @@ async function laadInDeTool(useStore) {
   });
   if (!ok) return;
   const { vervangen, nieuw, fouten } = laadKernen(kernen);
+  // De tool draait nu op dit project (projectGebruik.js): een concept tot het is uitgebracht (keuze A, Mark 22-11).
+  {
+    const { huidigProjectKop } = await import("./modellerenActivity.jsx");
+    const kop = huidigProjectKop();
+    zetGeladen(SOORT_PROFIELEN, { id: kop.id, naam: kop.naam, versie: kop.versie, concept: true });
+  }
   for (const kern of nieuw) {
     try {
       registreerProfielAlsActiviteit(kern);

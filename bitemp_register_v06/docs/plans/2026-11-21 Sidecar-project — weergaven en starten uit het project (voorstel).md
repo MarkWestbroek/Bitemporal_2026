@@ -12,7 +12,7 @@ hiervan stap 1 (§7).
 | (b) rondreis exact | gebouwd 20/21-11: meetlat 0, ook code (code op id, `diagramcore/types/codeRegister.js`) en volgorde |
 | (c) sidecar-project | gebouwd 21-11: export, taal *Profiel (M3)* in Modelleren |
 | (d) laden uit het project | eerste deel 21-11 (opt-in menu-actie); de tool start nog uit de code |
-| weergaven in een project | stap 1 gebouwd 21-11: profiel *Weergave* 0.1.0 en het weergaveproject met alle vormen; stap 2 gebouwd 22-11: de iconen als SVG-tekst (187, met rondreistest) ook in het project; stap 3 gebouwd 22-11: de koppeling elementtype → vorm (STUDIO.md "Het weergaveproject"); de rest is dit voorstel |
+| weergaven in een project | stap 1 gebouwd 21-11: profiel *Weergave* 0.1.0 en het weergaveproject met alle vormen; stap 2 gebouwd 22-11: de iconen als SVG-tekst (187, met rondreistest) ook in het project; stap 3 gebouwd 22-11: de koppeling elementtype → vorm; stap 4 gebouwd 22-11: soort, versie en gebruikt in de projectkop (STUDIO.md "Het weergaveproject"); de rest is dit voorstel |
 | (e) projectbrowser in Profielen en Transformaties | open |
 
 Bewezen: alle 27 profielen uit het sidecar-project laden geeft dezelfde tool (zelfde vingerafdruk,
@@ -152,7 +152,9 @@ Een **nieuw profiel begint bij 0.1.0** (Mark 21-11); ook het profiel *Weergave*.
    **Gebouwd 22-11**: elementtype *koppeling* in Weergave 0.2.0, een per profiel en per shape-set,
    tabel-editor, toepassen op het profiel; rondreis exact. Daarbij: het weergave- en sidecar-project
    openen als eigen project, nooit in een gewoon project (Mark 22-11).
-4. Naam en versie van M2- en weergaveproject in de M1-projectkop, met de waarschuwing.
+4. Naam en versie van M2- en weergaveproject in de M1-projectkop, met de waarschuwing. **Gebouwd
+   22-11** (`studio/projectGebruik.js`): `soort`, `versie` (keuze A: alleen omhoog bij uitbrengen,
+   daartussen concept) en `gebruikt` in de kop; waarschuwing bij het openen; Projectinformatie.
 5. De centrale plek: de projecten op één server, versies verplicht, een release noemt zijn versies.
 6. Starten uit de centrale projecten (met de laatst opgehaalde versie en de code als reserve).
 7. De rol ontwerper: concepten in een branch, de beheerder brengt uit.

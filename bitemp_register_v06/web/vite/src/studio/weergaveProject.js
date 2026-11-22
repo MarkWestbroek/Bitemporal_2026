@@ -45,6 +45,7 @@ import { WEERGAVE_PROFIEL_ID, VORM_TYPE, ICOON_TYPE, KOPPELING_TYPE } from "../d
 import { getRenderer, getShapeType, registreerShapeType, valideerShapeType } from "../diagramcore/types/shapeType.js";
 import { versieVan } from "../diagramcore/types/profielVersie.js";
 import { PROJECT_FORMAAT, PROJECT_FORMAAT_VERSIE } from "./activities/projectSync.js";
+import { kopUitDeCode, SOORT_WEERGAVEN } from "./projectGebruik.js";
 
 export const WEERGAVE_PROJECT_ID = "omnium-weergaven";
 export const WEERGAVE_ACTIVITEIT_ID = "weergave05";
@@ -316,7 +317,8 @@ export function weergaveProject({ shapeTypes, iconen = {}, descriptors, taalDesc
   return {
     formaat: PROJECT_FORMAAT,
     versie: PROJECT_FORMAAT_VERSIE,
-    project: { id: WEERGAVE_PROJECT_ID, naam },
+    // Soort en versie in de kop (projectGebruik.js): uit de code = de versie van de Studio.
+    project: { id: WEERGAVE_PROJECT_ID, naam, ...kopUitDeCode(SOORT_WEERGAVEN) },
     structuur: { mappen, plaatsing, plaatsingVolgorde: Object.keys(plaatsing) },
     kruisverbanden: [],
     profielVersies: { [WEERGAVE_ACTIVITEIT_ID]: versieVan(taalDescriptor) },
