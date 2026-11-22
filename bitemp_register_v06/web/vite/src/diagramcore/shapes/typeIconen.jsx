@@ -169,15 +169,31 @@ const perShape = {
 
 const _registraties = new Map();
 
+/**
+ * Standaardiconen per ShapeType hebben in de registry de id `vorm:<shape>` (plan 2026-11-21
+ * Sidecar-project §7 stap 2). Zo kan een weergaveproject ook die overschrijven; zonder
+ * registratie tekent `perShape` hierboven (de reserve in de code).
+ */
+export const STANDAARD_ICOON_PREFIX = "vorm:";
+
 /** @param {string} id @param {Function} Component - ({maat}) => JSX */
 export function registreerTypeIcoon(id, Component) {
   _registraties.set(id, Component);
 }
 
-/** Alle geregistreerde icoon-ids (voor de icoon-kiezer in de PE). */
+/** Het geregistreerde icoon met deze id, of undefined. */
+export const getTypeIcoon = (id) => _registraties.get(id);
+
+/** Alle geregistreerde icoon-ids (voor de icoon-kiezer in de PE); zonder de standaardiconen. */
 export function alleIcoonIds() {
-  return [..._registraties.keys()].sort();
+  return [..._registraties.keys()].filter((id) => !id.startsWith(STANDAARD_ICOON_PREFIX)).sort();
 }
+
+/** De standaardiconen uit de code, als `[vorm:<shape>, Component]` (voor het weergaveproject). */
+export const standaardIconen = () => Object.entries(perShape).map(([shape, C]) => [STANDAARD_ICOON_PREFIX + shape, C]);
+
+/** Het standaardicoon voor een shape: een overschrijving uit een project, anders de code. */
+const standaardVoor = (shape) => _registraties.get(STANDAARD_ICOON_PREFIX + shape) || perShape[shape];
 
 /** Icoon voor een ElementType: expliciete `icoon`-id wint, anders de shape.
  * Connectors met edgePresentatie krijgen hun eigen notatie als icoon. */
@@ -187,6 +203,6 @@ export function TypeIcoon({ elementType, maat = 14 }) {
     return <IcoonEdgePresentatie maat={maat} presentatie={elementType.edgePresentatie} />;
   }
   const Component =
-    expliciet || (elementType?.isConnector ? IcoonLijn : perShape[elementType?.shape]) || IcoonBox;
+    expliciet || (elementType?.isConnector ? standaardVoor("edge") : standaardVoor(elementType?.shape)) || standaardVoor("class-box");
   return <Component maat={maat} />;
 }

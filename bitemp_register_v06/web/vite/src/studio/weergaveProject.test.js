@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { vormNaarElement, elementNaarVorm, vormGebruik, weergaveProject, vormenUitProject, vormElementId } from "./weergaveProject.js";
+import { vormNaarElement, elementNaarVorm, vormGebruik, weergaveProject, vormenUitProject, vormElementId, icoonElementId, iconenUitProject } from "./weergaveProject.js";
 
 const kent = () => true;
 
@@ -64,4 +64,42 @@ test("vormenUitProject: dubbele id wordt gemeld, iconen tellen niet mee", () => 
   const uit = vormenUitProject({ elements }, { kentRenderer: kent });
   assert.deepEqual(uit.shapeTypes, [{ id: "v", renderer: "r" }]);
   assert.deepEqual(uit.fouten, ['vorm "v" staat twee keer in het project']);
+});
+
+test("iconen: map Standaard per vorm, per profiel op ElementType.icoon, en terug", () => {
+  const iconen = { "vorm:class-box": "<svg>a</svg>", klasse: "<svg>b</svg>", actor: { svg: "<svg>c</svg>", label: "Actor" }, eigen: "<svg>d</svg>" };
+  const descriptors = [
+    { id: "a", label: "A", elementTypes: [{ id: "x", shape: "class-box", icoon: "klasse" }, { id: "y", shape: "bol", icoon: "actor" }] },
+    { id: "b", label: "B", elementTypes: [{ id: "z", shape: "class-box", icoon: "klasse" }, { id: "n", icoon: "eigen", _superprofiel: true }] },
+  ];
+  const project = weergaveProject({ shapeTypes: [], iconen, descriptors });
+  const { mappen, plaatsing } = project.structuur;
+  const mapVan = (id) => mappen[plaatsing[`el::weergave05::${icoonElementId(id)}`]].naam;
+  assert.deepEqual(["vorm:class-box", "klasse", "actor", "eigen"].map(mapVan), ["Standaard per vorm", "Gedeeld", "A", "Niet in een profiel"]);
+  assert.equal(mappen[plaatsing[`el::weergave05::${icoonElementId("klasse")}`]].ouderId, "map_iconen");
+  const model = project.profielen.weergave05;
+  const opDiagram = (naam) => Object.values(model.diagrams).find((d) => d.naam === naam).nodes.map((n) => model.elements[n.elementId].naam);
+  assert.deepEqual(opDiagram("Iconen van A"), ["klasse", "actor"]);
+  assert.deepEqual(opDiagram("Standaard per vorm"), ["vorm:class-box"]);
+  assert.deepEqual(iconenUitProject(model), {
+    iconen: [
+      { id: "vorm:class-box", svg: "<svg>a</svg>", monochroom: false },
+      { id: "klasse", svg: "<svg>b</svg>", monochroom: false },
+      { id: "actor", svg: "<svg>c</svg>", monochroom: false, label: "Actor" },
+      { id: "eigen", svg: "<svg>d</svg>", monochroom: false },
+    ],
+    fouten: [],
+  });
+});
+
+test("iconenUitProject: zonder SVG en dubbel wordt gemeld; vormen tellen niet mee", () => {
+  const elements = {
+    a: { naam: "i", elementType: "icoon", data: { svg: "<svg/>" } },
+    b: { naam: "i", elementType: "icoon", data: { svg: "<svg/>" } },
+    c: { naam: "leeg", elementType: "icoon", data: {} },
+    d: { naam: "v", elementType: "vorm", data: { renderer: "r" } },
+  };
+  const uit = iconenUitProject({ elements });
+  assert.deepEqual(uit.iconen.map((i) => i.id), ["i"]);
+  assert.deepEqual(uit.fouten, ['icoon "i" staat twee keer in het project', 'icoon "leeg": geen SVG']);
 });

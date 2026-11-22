@@ -38,7 +38,8 @@ import { registreerSysml, SYSML_ID } from "../web/vite/src/diagramprofielen/sysm
 import { registreerToegangsregelProfiel, TOEGANGSREGEL_ID } from "../web/vite/src/diagramprofielen/toegangsregel/index.js";
 import { registreerTransformatieProfiel, TRANSFORMATIE_PROFIEL_ID } from "../web/vite/src/diagramprofielen/transformatie/index.js";
 import { registreerWeergaveProfiel, WEERGAVE_PROFIEL_ID } from "../web/vite/src/diagramprofielen/weergave/index.js";
-import { weergaveProject, vormenUitProject, laadVormen } from "../web/vite/src/studio/weergaveProject.js";
+import { weergaveProject, vormenUitProject, laadVormen, iconenUitProject } from "../web/vite/src/studio/weergaveProject.js";
+import { INGEBOUWDE_ICONEN } from "../web/vite/src/diagramcore/shapes/ingebouwdeIconen.js";
 import { alleShapeTypes } from "../web/vite/src/diagramcore/types/shapeType.js";
 import { registreerProfielOntwerp, PROFIEL_ONTWERP_ID } from "../web/vite/src/studio/activities/m3Profiel.js";
 import "../web/vite/src/studio/activities/regelsetsIngebouwd.js";
@@ -347,20 +348,28 @@ export function samenvoegProjecten({ basis, tak, main, mapId = null, keuze = nul
 }
 
 /**
- * Het weergaveproject (plan 2026-11-21 Sidecar-project §7 stap 1): alle vormen van de tool als
- * model in het profiel Weergave, gegroepeerd per profiel (studio/weergaveProject.js).
+ * Het weergaveproject (plan 2026-11-21 Sidecar-project §7 stap 1 en 2): alle vormen en de
+ * ingebouwde iconen van de tool als model in het profiel Weergave, gegroepeerd per profiel
+ * (studio/weergaveProject.js).
  */
 export function weergaveVanAlles() {
-  return weergaveProject({ shapeTypes: alleShapeTypes(), descriptors: [...typeIds.values()].map((id) => getDiagramType(id)), taalDescriptor: getDiagramType(WEERGAVE_PROFIEL_ID) });
+  return weergaveProject({ shapeTypes: alleShapeTypes(), iconen: INGEBOUWDE_ICONEN, descriptors: [...typeIds.values()].map((id) => getDiagramType(id)), taalDescriptor: getDiagramType(WEERGAVE_PROFIEL_ID) });
 }
+
+/** De ingebouwde iconen als SVG-tekst (kopie). */
+export const iconenVanDeTool = () => ({ ...INGEBOUWDE_ICONEN });
 
 /** Alle vormen van de tool, voor de rondreistest (kopie: het register blijft ongemoeid). */
 export const vormenVanDeTool = () => JSON.parse(JSON.stringify(alleShapeTypes()));
 
-/** De vormen uit een weergaveproject in de tool zetten (vervangt op id). */
+/**
+ * De vormen uit een weergaveproject in de tool zetten (vervangt op id). De iconen worden alleen
+ * gelezen: hier tekent niets met React-iconen (in de Studio registreert weergaveActivity ze).
+ */
 export function laadWeergavenInDeTool(project) {
   const model = project.profielen.weergave05;
   const { shapeTypes, fouten } = vormenUitProject(model);
   const uit = laadVormen(shapeTypes);
-  return { ...uit, fouten: [...fouten, ...uit.fouten] };
+  const ic = iconenUitProject(model);
+  return { ...uit, iconen: ic.iconen, fouten: [...fouten, ...uit.fouten, ...ic.fouten] };
 }
