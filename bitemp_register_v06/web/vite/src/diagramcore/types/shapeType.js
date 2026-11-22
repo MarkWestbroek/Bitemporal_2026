@@ -162,6 +162,9 @@ export const getRenderer = (id) => _renderers.get(id);
  * registratie: basisvormen, profielvormen en eigen vormen. Voor galerijen en vormkiezers.
  * @returns {string[]}
  */
+/** Alle geregistreerde ShapeTypes, in volgorde van registratie (ook zonder renderer); voor het weergaveproject. */
+export const alleShapeTypes = () => [..._shapeTypes.values()];
+
 export const alleShapeTypeIds = () => [..._shapeTypes.keys()].filter((id) => _renderers.has(_shapeTypes.get(id).renderer));
 
 /**

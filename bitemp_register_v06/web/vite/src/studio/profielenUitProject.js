@@ -33,6 +33,8 @@ export function kernenUitProject(inhoud) {
   const uit = [];
   for (const diagram of Object.values(inhoud?.diagrams || {})) {
     if (diagram.diagramType && diagram.diagramType !== PROFIEL_ONTWERP_ID) continue;
+    // Een leeg diagram is (nog) geen profiel: overslaan in plaats van als fout melden.
+    if (!(diagram.nodes || []).length) continue;
     const op = new Set((diagram.nodes || []).map((n) => n.elementId));
     const elements = Object.fromEntries(Object.entries(inhoud.elements || {}).filter(([id, el]) => op.has(id) || (op.has(el.source) && op.has(el.target))));
     const id = diagram.m3Profiel?.["m3:id"] || slug(diagram.naam);

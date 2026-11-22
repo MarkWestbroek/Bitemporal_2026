@@ -327,6 +327,18 @@ export const IconTransformatie = (p) => (
 );
 
 /**
+ * Weergave: een vorm en een icoon naast elkaar op een palet (plan 2026-11-21 Sidecar-project §3).
+ */
+export const IconWeergave = (p) => (
+  <svg {...base} {...p}>
+    <rect x="3" y="4" width="8" height="7" rx="1.5" />
+    <circle cx="17" cy="7.5" r="3.5" />
+    <path d="M4 20l3.5-6 3.5 6z" />
+    <path d="M14 14h6v6h-6z" fill="currentColor" fillOpacity="0.2" />
+  </svg>
+);
+
+/**
  * OmniumMark — het productmerk-logo (de "O" als orbit met facet-knooppunten rond
  * een centrale hub). Eigen kleurstijl (gradient-spectrum), los van de currentColor-
  * iconenset, zodat het merk altijd herkenbaar blijft. Gebruikt in de menubalk.

@@ -1,7 +1,8 @@
 # Sidecar-project — weergaven en starten uit het project (voorstel)
 
-Stand 21-11 (nacht, OMNIUM-UI). Vervolg op BACKLOG PROF-1 en TRANSFORMATIES.md §9.5. Wat hier
-staat is een voorstel met vragen voor Mark; er is niets van gebouwd.
+Stand 21-11, OMNIUM-UI. Vervolg op BACKLOG PROF-1 en TRANSFORMATIES.md §9.5. Herschreven na het
+gesprek met Mark op 21-11: alle vragen uit de eerste versie zijn beantwoord (§3, §4, §6). Gebouwd is
+hiervan stap 1 (§7).
 
 ## 1. Waar we staan
 
@@ -11,74 +12,145 @@ staat is een voorstel met vragen voor Mark; er is niets van gebouwd.
 | (b) rondreis exact | gebouwd 20/21-11: meetlat 0, ook code (code op id, `diagramcore/types/codeRegister.js`) en volgorde |
 | (c) sidecar-project | gebouwd 21-11: export, taal *Profiel (M3)* in Modelleren |
 | (d) laden uit het project | eerste deel 21-11 (opt-in menu-actie); de tool start nog uit de code |
-| weergaven in het project | open, dit voorstel |
+| weergaven in een project | stap 1 gebouwd 21-11: profiel *Weergave* 0.1.0 en het weergaveproject met alle vormen (STUDIO.md "Het weergaveproject"); de rest is dit voorstel |
 | (e) projectbrowser in Profielen en Transformaties | open |
 
 Bewezen: alle 27 profielen uit het sidecar-project laden geeft dezelfde tool (zelfde vingerafdruk,
 zelfde objecten; `render-svc/sidecarLaden.test.mjs`).
 
-## 2. De weergaven
+## 2. Vier soorten project (besluit Mark 21-11)
 
-Mark 19-11: "we vergeten nog de weergaven: moeten die dan niet ook in het sidecar project landen?"
-en "de svg's moeten dan in het project zitten (stap 2)".
+| Project | Inhoud | Hangt af van | Ontbreekt het? |
+|---|---|---|---|
+| **M1** | de modellen: het gewone project | M2 + transformaties, weergaven | — (er is altijd een M1-project) |
+| **weergaven** | de bibliotheek (vormen, iconen, renderers op id) en de koppeling: welk elementtype van welk profiel hoe getekend wordt | M2 (de koppeling noemt elementtype-id's) | de code tekent |
+| **M2 + transformaties** | de profielen en de regelsets (het huidige sidecar-project) | M3 | de profielen uit de code |
+| **M3** | het ene metametamodel; in feite een view op de code | — | de code |
 
-Gemeten over de 27 profielen: **73 vormen** (ShapeType-id's) en **179 iconen** in gebruik.
+Dit is ook de volgorde van afhankelijkheid: elk project leunt op het project eronder. De onderste
+drie mogen elk ontbreken; dan valt de tool terug op de code.
 
-Wat er al is:
+**Inhoud en vorm gescheiden.** Een M2 zegt alleen *wat* er is (een entiteit met deze velden en deze
+verbindingsregels). Het weergaveproject zegt *hoe* het eruitziet, als eigen laag van het
+tool-model bovenop de modelinhoud. Wat een descriptor nu aan vorm meedraagt (`shape`, `icoon`,
+`kleur`, de shape-sets en `typeWeergave`), verhuist naar de koppeling in de weergaven; in het M2
+blijft het staan als standaardwaarde, zodat er niets breekt. Gevolg: dezelfde profielen zijn met
+een andere huisstijl te leveren (een klant met eigen iconen, zonder eigen M2).
 
-- **Vormen** zijn sinds "één tekenaar" (04-11) gegevens: een ShapeType = `{id, renderer, parameters,
-  minMaat}` op een kleine set renderers (code). 20 profielbestanden registreren ze
-  (`diagramprofielen/*/vormen.js`). Het M3 kent ShapeType al (pakket Stijl), en
-  `DiagramType.shapeTypes` staat al in de ontwerptaal (als JSON). Er zijn ook **data-vormen**
-  (`web/vite/vormen/*.json`, renderer `data-vorm`), te maken in Studio-instellingen → Eigen vormen.
-- **Iconen** zijn React-componenten (10 bestanden met `registreerTypeIcoon`). Er zijn ook
-  **data-iconen**: een SVG-tekst (`web/vite/iconen/*.json`, `dataIcoon.jsx`), te maken in
-  Studio-instellingen → Eigen iconen.
+**Het M1-project noemt wat het gebruikt.** De projectkop krijgt naam en versie van het M2-project
+en van het weergaveproject. Bij het openen vergelijkt de tool dat met wat er geladen is; bij een
+verschil een **waarschuwing**, geen fout. Zo is ook later te zien op welke profielen een model is
+gemaakt.
 
-Voorstel, in twee delen:
+**Beheerd, en weinig.** M2- en weergaveprojecten worden beheerd (§6); er moeten er niet
+veel van komen. Elk draagt zijn herkomst (afgeleid van welk project, welke versie); samen is dat een
+**stamboom**, centraal bij te houden. Een variant is een branch of een afgeleide met een
+aanwijsbare ouder.
 
-1. **Vormen**: de ShapeTypes die een profiel gebruikt, gaan als gegevens mee in het project (de
-   renderer op id, zoals de hooks). Dat is klein werk: de vorm-registry levert ze, het M3 beschrijft
-   ze al. Een vorm die meerdere profielen delen, staat één keer in het project (een map *Vormen*).
-2. **Iconen**: elk ingebouwd icoon eenmalig omzetten naar een data-icoon (SVG-tekst), met
-   `renderToStaticMarkup` in render-svc, en die in het project zetten (een map *Iconen*). Daarna zijn
-   ingebouwde en eigen iconen hetzelfde soort ding, en kan een klant zijn eigen iconenset meekrijgen.
+## 3. De weergaven als profiel (vraag 1 beantwoord: element, geen bijlage)
 
-**Vraag 1.** Een icoon of vorm als **element in het project** (een eigen taal "Weergave", met een
-voorbeeld op het canvas), of als **bijlage van het project** (een lijst naast de modellen, zoals de
-marks)? Mijn voorkeur: een element, dan reist het mee met sync, historie en branches zonder nieuw
-mechanisme, en zie je het.
+Vormen en iconen worden **elementen** in een eigen, voor de modelleur niet bewerkbaar M2
+*Weergave*. Daarmee reizen ze mee met sync, historie, branches en samenvoegen per veld zonder
+eigen spoor (kruisverbanden en marks staan wel in het project, maar elk met een eigen sectie,
+store, sync-operatie en samenvoeg-code; dat willen we hier niet nog eens).
 
-**Vraag 2.** Moeten de ingebouwde iconen echt **uit de code**, of is "in het project, met de code als
-reserve" genoeg? Dat laatste is minder werk en houdt de tool bruikbaar zonder sidecar-project.
+Drie soorten ding, dezelfde splitsing als bij de hooks:
 
-## 3. Starten uit het project
+| Soort | In het project | In de code |
+|---|---|---|
+| **icoon** | de SVG-tekst (`{id, svg, monochroom}`, zoals een data-icoon) | reserve |
+| **vorm** (ShapeType) | `{id, renderer, parameters, minMaat}` | reserve |
+| **renderer** | alleen de verwijzing op id (bv. `tekenaar:bol`) | de code zelf, zoals code op id |
 
-Nu start de tool met de profielen uit de code; *Laad de profielen uit dit project in de tool* zet er
-een project overheen tot een herlaad.
+Een renderer is code omdat hij van het element afhangt: de graaf-bol (`bol` in
+`diagramcore/tekenaar/bibliotheek.js`) zet de velden van het element als satellieten om de kern,
+en de BPMN-event, sequence-levenslijn en ArchiMate-box zijn ook renderers. `data-vorm` is de
+renderer die zelf gegevens leest; daarmee komen nieuwe vormen erbij zonder code. Een renderer-id
+die de tool niet kent, geeft dezelfde duidelijke fout als een onbekende hook.
 
-**Vraag 3.** Waar woont het sidecar-project van een instantie?
+- **Groepering blijft**: een map per profiel of set, met diagrammen waarop de iconen en vormen als
+  tegels staan.
+- **SVG-editor**: een eigen widget voor het gegevenstype *svg* (zoals `m3-json` nu): de inhoud is
+  het gegevenstype, de editor is de vorm.
+- **Kleur**: iconen volgen `currentColor`; de ArchiMate-plaatshouder `$vlak` (paneelkleur) wordt een
+  afspraak van het data-icoon.
+- **Veiligheid**: SVG uit een project wordt geschoond (geen `<script>`, geen `on…`-attributen).
 
-- (a) **als project op de server** (app), met een vaste id: bij het opstarten haalt de Studio het op
-  en laadt het, vóór de rest. Een instantie zonder dat project valt terug op de code.
-- (b) **als bestand bij de build** (zoals `web/vite/profielen/*.json` nu): meegebakken, geen
-  server nodig; wijzigen = een nieuwe build.
-- (c) beide: het bestand als standaard, het serverproject als aanpassing per instantie.
+## 4. Reserve in de code (vraag 2 beantwoord: drie niveaus, het derde)
 
-Mijn voorkeur is (c): dat past bij "een hele profielinrichting kan naar een instantie" (Mark 19-11),
-en de tool start altijd.
+Mark 21-11: een standaard-elementicoon en een standaard-lijnweergave in de code zijn sowieso nodig
+(kip en ei: het profiel Weergave moet zelf ook getekend kunnen worden). Drie mogelijke niveaus:
 
-**Vraag 4.** Wie mag het sidecar-project wijzigen? Besluit 16-10 zegt: profielen alleen-lezen voor
-de modelleur. Voorstel: het project is alleen-lezen voor iedereen behalve de beheerder, met
-branches voor een conceptversie van een profiel (zoals in PROF-1 beschreven).
+1. één standaardicoon en één standaardlijn;
+2. uitgebreider voor de standaard-elementtypen;
+3. **volledig voor alles** — gekozen, het meest robuust: een kapot of ontbrekend
+   weergaveproject geeft nooit een onleesbare tool.
 
-**Vraag 5.** Een profiel dat uit het project komt, heeft een versie. Als het project een profiel
-wijzigt zonder de versie op te hogen, wat dan? Voorstel: dezelfde bewaking als in render-svc
-(`profielVersies`): weigeren te laden met een duidelijke melding.
+Prijs: elke weergave staat twee keer (code en project) en kan uit elkaar lopen. Een rondreistest
+zoals de meetlat van de profielen bewaakt dat: het project geeft dezelfde tekening als de reserve,
+tenzij het bewust afwijkt.
 
-## 4. Volgorde die ik voorstel
+**Gemeten** over de 27 profielen: **73 vormen** en **179 iconen** in gebruik. De ingebouwde iconen
+zijn nu met de hand geschreven SVG in JSX (`diagramprofielen/*/iconen.jsx`, `typeIconen.jsx`);
+ArchiMate staat al als gegevens (`archimate/glyphs.js`). Omzetten naar SVG-tekst is mechanisch
+(`renderToStaticMarkup` in render-svc).
 
-1. Vormen in het project (klein; geen vraag nodig behalve vraag 1).
-2. Iconen naar data-iconen (na vraag 1 en 2).
-3. Starten uit het project (na vraag 3 tot 5).
-4. De projectbrowser in Profielen en Transformaties (stap e).
+## 5. Per element en per relatie (Mark 21-11)
+
+Nu: per element alleen de **kleur** (`data.kleur`); per relatie de lijnvorm (`data.vorm`:
+bezier/recht/haaks) en de boomstijl, en dat is route, geen opmaak. Lijndikte, lettertype en
+tekstkleur zijn per element niet in te stellen; dat blijft zo.
+
+- **Optie**: per element een andere vorm kiezen uit het weergaveproject (klein, omdat vormen dan
+  op id in het project staan).
+- **Later overwegen**: afbeeldingen zoals in EA, op een instantie of los op een diagram (opstap: de
+  gedeelde plaatjes in MinIO).
+
+## 6. Waar de projecten wonen, wie ze wijzigt, versies (besluiten Mark 21-11)
+
+**Centraal, op één server.** Het M3-project, de M2-projecten en de weergaveprojecten staan op
+**één** centrale plek, voor alle instanties: app, Fundament en pf (als die is bijgewerkt) leunen op
+dezelfde stamboom van M3, M2 en weergaven. Ze zijn verweven met wat de applicatie kan (de code
+achter hooks en renderers), dus **een release en deze projecten gaan samen**: een release noemt de
+versies van de centrale projecten waar hij bij hoort, en een nieuwe versie van een project vraagt
+soms een release.
+
+- Een instantie haalt de projecten bij het opstarten centraal op. Is de centrale plek niet
+  bereikbaar, dan start ze met de laatst opgehaalde versie, en anders met de reserve uit de code
+  (§4, niveau 3).
+- **Bij een klant** kan het lokaal worden ingesteld, maar liever niet.
+
+**Klantversies: transformeren, niet vermenigvuldigen** (Mark: *practice what you preach*, EYODF).
+Een klantversie is een **uitbreiding** (+: een profiel, een elementtype, een eigen icoon erbij) of
+een **uitdunning** (−: een eenvoudiger toolset) van een centrale versie. We bewaren niet een kopie
+per klant, maar **de aanpassing per klant, los en met historie**, en genereren daaruit de
+klantversie. Komt er een nieuwe centrale versie, dan levert opnieuw genereren de nieuwe klantversie,
+met de aanpassing erop. Ook de aanpassingen zijn beheerd en staan in de stamboom.
+
+Open: de vorm van zo'n aanpassing. Voor de hand ligt een regelset in het profiel Transformatie
+(centraal project in, klantproject uit), of een delta zoals de branch-vergelijking die al levert.
+
+**Wie wijzigt.** De modelleur leest alleen (besluit 16-10). De **beheerder** beheert de centrale
+projecten en brengt versies uit. Transformaties en nieuwe profielen maakt ook een rol daaronder:
+de **ontwerper**, ook voor weergaven. De ontwerper werkt in een branch van een centraal project (een
+conceptversie); de beheerder voegt samen en brengt uit. **Concepten moeten uit te proberen zijn**
+(Mark 21-11): een ontwerper laadt een concept in zijn eigen Studio (zoals *Laad de profielen uit
+dit project in de tool* nu al kan), zonder dat andere gebruikers het zien.
+
+**Versiebeheer is verplicht.** Elk M3-, M2- en weergaveproject, en elke klantaanpassing, heeft een
+versie. Een wijziging zonder hogere versie wordt geweigerd, met een duidelijke melding (dezelfde
+bewaking als `profielVersies` in render-svc). Het M1-project noemt de versies die het gebruikt (§2).
+Een **nieuw profiel begint bij 0.1.0** (Mark 21-11); ook het profiel *Weergave*.
+
+## 7. Volgorde
+
+1. Profiel *Weergave* met de drie soorten en de SVG-widget; vormen in het project. **Gebouwd 21-11.**
+2. Iconen naar SVG-tekst, met de volledige reserve in de code en een rondreistest.
+3. De koppeling elementtype → vorm uit het M2 naar de weergaven (M2-waarden blijven standaard).
+4. Naam en versie van M2- en weergaveproject in de M1-projectkop, met de waarschuwing.
+5. De centrale plek: de projecten op één server, versies verplicht, een release noemt zijn versies.
+6. Starten uit de centrale projecten (met de laatst opgehaalde versie en de code als reserve).
+7. De rol ontwerper: concepten in een branch, de beheerder brengt uit.
+8. Klantaanpassingen (+ en −) los bewaren en de klantversie genereren.
+9. De projectbrowser in Profielen en Transformaties (stap e).
+10. De stamboom van M3-, M2- en weergaveprojecten en klantaanpassingen.

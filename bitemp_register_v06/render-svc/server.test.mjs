@@ -72,7 +72,7 @@ test("taal=studio: elk diagram van een echt project voldoet aan de eisen, byte-g
 
 test("taal=studio: alle profielen registreren zonder browser", { skip: zonderBundel }, async () => {
   const { profielIds, descriptorVan } = await import(bundelUrl);
-  assert.equal(profielIds.length, 29); // 29 sinds de M3-taal als modelleertaal (20-11); 28 sinds het profiel Transformatie (19-11); 27 sinds het simulatiemodel (16-11); 26 sinds het SHACL-profiel (studio 0.34.0)
+  assert.equal(profielIds.length, 30); // 30 sinds het profiel Weergave (21-11); 29 sinds de M3-taal als modelleertaal (20-11); 28 sinds het profiel Transformatie (19-11); 27 sinds het simulatiemodel (16-11); 26 sinds het SHACL-profiel (studio 0.34.0)
   for (const id of profielIds) assert.ok(descriptorVan(id)?.elementTypes?.length, id);
 });
 

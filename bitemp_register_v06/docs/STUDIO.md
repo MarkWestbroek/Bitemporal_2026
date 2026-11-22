@@ -2714,7 +2714,17 @@ tool* maakt van elk profiel-diagram weer een profiel (`studio/profielenUitProjec
   voortaan met het profiel uit het project (ze worden opnieuw aangemeld zodat ze hertekenen);
 - een onbekend profiel wordt een eigen profiel (een activiteit erbij, zoals bij *Activeer profiel*);
 - een profiel dat niet te bouwen of niet geldig is (bv. een code-id die deze tool niet kent), wordt
-  niet geladen en staat in de melding.
+  niet geladen en staat in de melding;
+- een leeg diagram is nog geen profiel en wordt stil overgeslagen.
+
+**Alle profielen van de tool in het project (22-11).** *Profiel (M3) → Laad alle profielen van de
+tool* (ook als startactie) zet elk profiel als diagram in het huidige project, met dezelfde opbouw en
+id's als het sidecar-project: de tegenhanger van *Weergave → Laad de vormen van de tool*. Een profiel
+dat al als diagram in het project staat, blijft zoals het is, zodat eigen wijzigingen niet verloren
+gaan. Zo is het rondje kort: alle profielen laden, er een wijzigen, *Laad de profielen uit dit project
+in de tool*. Mappen maakt deze actie niet; die komen via exporteren en importeren van het
+sidecar-project. Heeft het project nog geen profielen, dan wijst de melding van het laden naar deze
+actie.
 
 Het geldt tot een herlaad; de tool start nog met de profielen uit de code. De test
 `render-svc/sidecarLaden.test.mjs` laadt alle 27 profielen uit het sidecar-project in de tool en eist
@@ -2725,8 +2735,47 @@ superprofiel op hun plek, en geen vangnet-veldtype als niets het nodig heeft. De
 nu ook (`type erbij`, `volgorde`).
 
 **Nog niet**: kruisverbanden tussen een «taal» en het profiel waar hij naar wijst (een profiel heeft
-geen eigen element), de weergaven (vormen, iconen als SVG), en starten uit het project in plaats
-van uit de code.
+geen eigen element), de iconen als SVG, en starten uit het project in plaats van uit de code. De
+vormen staan sinds 21-11 in een eigen weergaveproject (hieronder).
+
+## Het weergaveproject en het profiel Weergave (2026-11-21)
+
+Plan: `docs/plans/2026-11-21 Sidecar-project — weergaven en starten uit het project (voorstel).md`.
+Besluiten Mark 21-11: vier soorten project in volgorde van afhankelijkheid, **M1 → weergaven → M2 +
+transformaties → M3**; de onderste drie mogen ontbreken (dan tekent de code). Inhoud en vorm zijn
+gescheiden: een profiel zegt *wat* er is, het weergaveproject *hoe* het eruitziet. "Weergave":
+één weergave, meer weergaven.
+
+**Stap 1 (gebouwd 21-11): de vormen.**
+
+- Profiel **Weergave** (`diagramprofielen/weergave/`, versie 0.1.0, activiteit `weergave05`,
+  standaard verborgen): elementtypen **icoon** (SVG-tekst, monochroom) en **vorm** (een ShapeType:
+  renderer op id, `parameters`, `minMaat`, `ankers`, en overige sleutels als JSON). De naam van het
+  element is de id van de weergave. De renderer blijft code (zoals de graaf-bol, die de velden van
+  een element als satellieten tekent); het project wijst hem alleen aan.
+- Een weergave **tekent zichzelf** (`weergave/vormen.js`): een vorm in zijn eigen gedaante (de
+  renderer `weergave-vorm` geeft door aan de renderer die het element noemt; een onbekende geeft
+  een rood gestippeld vak), een icoon als tegel met de SVG erin.
+- **SVG alleen geschoond**: `diagramcore/shapes/svgSchoon.js` leest SVG-tekst naar een VormBoom
+  met alleen de toegestane elementen, zonder `style`, `on…`-attributen of verwijzingen naar buiten.
+  Het gegevenstype *svg* heeft een eigen editor met voorbeeld en de lijst van wat niet getekend
+  wordt (`studio/activities/weergaveEditors.jsx`).
+- **Het project** (`studio/weergaveProject.js`, id `omnium-weergaven`): map *Vormen* met een map per
+  profiel (vormen die alleen dat profiel gebruikt), *Gedeeld* en *Niet in een profiel*; per map een
+  diagram, en het diagram van een profiel toont ook de gedeelde vormen. Element-id `wv_<vorm-id>`.
+- **Menu Weergave**: *Laad de vormen van de tool* (in het open model), *Laad de vormen uit dit
+  project in de tool* (vervangt op id, tot een herlaad: een concept uitproberen), *Exporteer het
+  weergaveproject*.
+- **Tests**: `render-svc/weergave.test.mjs` (elke vorm precies één keer; rondreis exact: uit het
+  project laden geeft dezelfde vormen; een wijziging verandert de tool, een onbekende renderer
+  niet; een weergave tekent zichzelf zonder scripts), unit-tests `svgSchoon.test.js` en
+  `weergaveProject.test.js`, e2e `73-studio-weergave-profiel`.
+
+Gemeten: 97 vormen in render-svc (meer in de browser, met de eigen vormen), 56 kB.
+
+**Volgende stappen** (plan §7): iconen naar SVG-tekst met de volledige reserve in de code; de
+koppeling elementtype → vorm uit het M2 naar de weergaven; naam en versie van M2- en
+weergaveproject in de M1-projectkop; de centrale plek; starten uit de projecten.
 
 ## Activiteit Transformaties: regelsets bekijken en proefdraaien (2026-11-18)
 
