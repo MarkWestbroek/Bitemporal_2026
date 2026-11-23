@@ -190,6 +190,26 @@ export const vergelijkMetMain = (id) => roep(`/api/studio/projecten/${encodeURIC
 export const samenvoegenMetMain = (id, { ookBuitenMap = false, keuze = null } = {}) =>
   roep(`/api/studio/projecten/${encodeURIComponent(id)}/samenvoegen`, { methode: "POST", body: { ookBuitenMap, ...(keuze ? { keuze } : {}) } });
 
+// ── De centrale plek (plan Sidecar-project §8, stap 5; handlers/studio_centraal.go) ──
+
+/**
+ * Een versie van het profielen- of weergaveproject uitbrengen (beheerder, op de centrale). `inhoud`
+ * is het werkbestand, `totVolgnummer` het laatste volgnummer dat het bevat. → 201 de uitgave. 409
+ * met `reden` achterstand | versie_niet_hoger | ander_project | spiegel.
+ */
+export const brengVersieUit = (id, { versie, inhoud, totVolgnummer, notitie = "", ouders = null }) =>
+  roep(`/api/studio/projecten/${encodeURIComponent(id)}/uitbrengen`, {
+    methode: "POST",
+    body: { versie, inhoud, totVolgnummer, notitie, ...(ouders?.length ? { ouders } : {}) },
+  });
+
+/** De uitgebrachte versies (zonder inhoud): `{centrale, fout?, versies: [{soort, versie, ouders, hier, …}]}`. */
+export const centraleVersies = () => roep("/api/studio/centraal");
+
+/** Eén uitgebrachte versie met `inhoud` (het werkbestand); een spiegel haalt hem bij de centrale. */
+export const haalCentraleVersie = (soort, versie) =>
+  roep(`/api/studio/centraal/${encodeURIComponent(soort)}/${encodeURIComponent(versie)}`);
+
 /** Aanmaken (versie 1). 409 als het id al bestaat. */
 export const maakProjectAan = ({ id, naam, inhoud }) =>
   roep("/api/studio/projecten", { methode: "POST", body: { id, naam, inhoud } });

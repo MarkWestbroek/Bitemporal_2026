@@ -39,6 +39,7 @@ import { bestaandeBranch, standaardBranchNaam, waaromGeenBranch } from "../takke
 import { koppelStore, zonderVastleggen, rebaseStand, herschikOpVolgorde, structuurNet, STRUCTUUR_OPS, STRUCTUUR_VELDEN, isStil } from "../sync/operaties.js";
 import { volgDiagram, bouwHierarchie } from "../boomRegels.js";
 import { mappenInZicht, inZicht } from "../boomZicht.js";
+import { brengVersieUitActie, toonCentraleVersiesActie } from "./centraalActies.jsx";
 import { waaromNietOnder, boomRelatieVoor, boomRelatiesVan, REDEN_NIET_OMHANGEN } from "../../diagramcore/model/omhangen.js";
 import VerwezenDoorPaneel from "../VerwezenDoorPaneel.jsx";
 import { startBeeldWachter } from "../gedeeldeBeelden.js";
@@ -4650,6 +4651,23 @@ function menus(ctx) {
         : []),
       { id: "proj-hernoem", label: "Hernoem project…", onClick: hernoemProject },
       { id: "proj-info", label: "Projectinformatie…", uitleg: "Soort, versie en welke profielen en weergaven dit project gebruikt.", onClick: toonProjectInformatie },
+      // De centrale plek (plan Sidecar-project §8, stap 5; centraalActies.jsx).
+      ...(soortVan(project) !== SOORT_MODEL
+        ? [{
+            id: "proj-uitbrengen",
+            label: "Breng versie uit…",
+            uitleg: "De huidige stand als onveranderlijke versie op de server (beheerder, op de centrale).",
+            disabled: project.serverVersie == null,
+            onClick: () =>
+              brengVersieUitActie({
+                huidig: () => useModellerenStore.getState().project,
+                verzend,
+                bouwInhoud: bouwProjectData,
+                zetProject: (patch) => useModellerenStore.getState().zetProject(patch),
+              }),
+          }]
+        : []),
+      { id: "proj-centraal", label: "Centrale versies…", uitleg: "De uitgebrachte versies van de profielen en weergaven; laden of openen.", onClick: () => toonCentraleVersiesActie({ openAlsProject }) },
       { id: "proj-nieuw", label: "Nieuw project… (huidige parkeren)", uitleg: "Begin leeg; het huidige project blijft in deze browser bewaard.", onClick: nieuwProject },
       { type: "separator" },
       { id: "proj-push", label: "Naar server sturen (snapshot)", uitleg: "Zet het project op de server, zodat anderen erin kunnen meewerken.", onClick: stuurNaarServer },

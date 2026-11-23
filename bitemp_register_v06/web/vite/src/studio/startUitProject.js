@@ -54,17 +54,66 @@ export async function wisStart(soort, kv = standaardKv()) {
   if (kv) await kv.del(SLEUTEL(soort));
 }
 
+const CENTRAAL_SLEUTEL = (soort) => `centraal:${soort}`;
+
+/** De laatst opgehaalde centrale versie van een soort (de reserve als ophalen mislukt), of null. */
+export async function leesCentraal(soort, kv = standaardKv()) {
+  if (!kv) return null;
+  try {
+    return (await kv.get(CENTRAAL_SLEUTEL(soort))) || null;
+  } catch {
+    return null;
+  }
+}
+
 /**
- * Bij het starten: per soort de bewaarde stand toepassen.
+ * De stand waarmee een soort start, in volgorde (plan §6/§8, stap 5 en 6):
+ *   1. een lokale keuze in deze browser (*Laad … in de tool* → ook bij het starten): een concept;
+ *   2. de vastgepinde centrale versie: ophalen, en lokaal bewaren als reserve;
+ *   3. lukt ophalen niet: de laatst opgehaalde, als dat dezelfde versie is;
+ *   4. anders null: de code.
+ * @param {{pins?: Record<string, string|null>, haal?: (soort: string, versie: string) => Promise<{kop: any, inhoud: any}>}|null} centraal
+ * @returns {Promise<{stand: any, melding?: string}>}
+ */
+async function standVoor(soort, kv, centraal) {
+  const lokaal = await leesStart(soort, kv);
+  if (lokaal) return { stand: lokaal };
+  const pin = centraal?.pins?.[soort];
+  if (!pin || !centraal?.haal) return { stand: null };
+  try {
+    const { kop, inhoud } = await centraal.haal(soort, pin);
+    const stand = { kop: { ...kop, versie: pin, concept: false }, inhoud: { elements: inhoud.elements || {}, diagrams: inhoud.diagrams || {} }, bewaard: new Date().toISOString() };
+    if (kv) {
+      try {
+        await kv.put(CENTRAAL_SLEUTEL(soort), stand);
+      } catch {
+        /* geen reserve; het starten zelf gaat door */
+      }
+    }
+    return { stand };
+  } catch (e) {
+    const reserve = await leesCentraal(soort, kv);
+    if (reserve?.kop?.versie === pin) return { stand: reserve, melding: `${soort}: versie ${pin} ophalen mislukte (${e?.message || e}); de laatst opgehaalde kopie wordt gebruikt` };
+    return { stand: null, melding: `${soort}: versie ${pin} ophalen mislukte (${e?.message || e}); de tool gebruikt de code` };
+  }
+}
+
+/**
+ * Bij het starten: per soort de stand toepassen (een lokale keuze, anders de vastgepinde centrale
+ * versie, anders de code; zie `standVoor`).
  * @param {Record<string, (inhoud: any) => {fouten?: string[]}|Promise<{fouten?: string[]}>>} toepassers - per soort
+ * @param {any} [kv]
+ * @param {{pins?: Record<string, string|null>, haal?: (soort: string, versie: string) => Promise<{kop: any, inhoud: any}>}|null} [centraal]
  * @returns {Promise<{toegepast: string[], fouten: string[]}>}
  */
-export async function pasStartToe(toepassers, kv = standaardKv()) {
+export async function pasStartToe(toepassers, kv = standaardKv(), centraal = null) {
   const toegepast = [];
   const fouten = [];
   for (const soort of START_VOLGORDE) {
-    const stand = await leesStart(soort, kv);
-    if (!stand || !toepassers[soort]) continue;
+    if (!toepassers[soort]) continue;
+    const { stand, melding } = await standVoor(soort, kv, centraal);
+    if (melding) fouten.push(melding);
+    if (!stand) continue;
     try {
       const uit = (await toepassers[soort](stand.inhoud)) || {};
       zetGeladen(soort, stand.kop);

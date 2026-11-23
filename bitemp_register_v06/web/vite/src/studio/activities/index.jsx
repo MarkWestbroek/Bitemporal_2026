@@ -204,16 +204,28 @@ registreerActiviteitAlsProfieltype(berichtActivity, {
 // code gelden en volgt een melding (startUitProject.js).
 void (async () => {
   try {
-    const [{ pasStartToe }, { zetProfielenInDeTool }, { zetWeergavenInDeTool }, { toonMelding }] = await Promise.all([
+    const [{ pasStartToe }, { zetProfielenInDeTool }, { zetWeergavenInDeTool }, { toonMelding }, centraal, { haalCentraleVersie }] = await Promise.all([
       import("../startUitProject.js"),
       import("./m3ProfielActivity.jsx"),
       import("./weergaveActivity.jsx"),
       import("../naamDialog.jsx"),
+      import("../centraal.js"),
+      import("./projectSync.js"),
     ]);
-    const uit = await pasStartToe({
-      profielen: (inhoud) => zetProfielenInDeTool(inhoud),
-      weergaven: (inhoud) => zetWeergavenInDeTool(inhoud.elements),
-    });
+    // Stap 5: de vastgepinde centrale versies van deze build (centraalVersies.js; null = de code).
+    // De API van deze instantie levert ze; is zij niet de centrale, dan haalt zij ze daar.
+    const haal = async (soort, versie) => {
+      const rec = await haalCentraleVersie(soort, versie);
+      return { kop: { id: rec.projectId, naam: rec.projectNaam }, inhoud: centraal.modelUitWerkbestand(soort, rec.inhoud) };
+    };
+    const uit = await pasStartToe(
+      {
+        profielen: (inhoud) => zetProfielenInDeTool(inhoud),
+        weergaven: (inhoud) => zetWeergavenInDeTool(inhoud.elements),
+      },
+      undefined,
+      { pins: centraal.vastgepind(), haal }
+    );
     if (uit.fouten.length) toonMelding({ titel: "Starten uit het project", tekst: uit.fouten.join("\n") });
   } catch (e) {
     console.warn("[studio] starten uit het project mislukt; de tool gebruikt de code", e);
