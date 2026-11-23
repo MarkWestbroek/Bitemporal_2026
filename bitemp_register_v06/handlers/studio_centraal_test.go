@@ -155,6 +155,18 @@ func TestStudioCentraal_UitbrengenEnOphalen(t *testing.T) {
 	if rec = studioDoe(r, http.MethodGet, "/api/studio/centraal/profielen/9.9.9", nil); rec.Code != http.StatusNotFound {
 		t.Fatalf("onbekende versie: %d", rec.Code)
 	}
+	// Ook de kop van het project zelf draagt nu 0.2.0, zonder concept (rooktest 23-11).
+	var p model.StudioProject
+	if err := db.NewSelect().Model(&p).Where("id = ?", "test-centraal-p").Scan(t.Context()); err != nil {
+		t.Fatal(err)
+	}
+	var pdoc struct {
+		Project map[string]any `json:"project"`
+	}
+	_ = json.Unmarshal(p.Inhoud, &pdoc)
+	if pdoc.Project["versie"] != "0.2.0" || pdoc.Project["concept"] != nil || pdoc.Project["soort"] != "profielen" {
+		t.Fatalf("projectkop: %+v", pdoc.Project)
+	}
 }
 
 func TestStudioCentraal_Spiegel(t *testing.T) {
