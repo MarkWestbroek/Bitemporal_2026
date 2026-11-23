@@ -8,6 +8,47 @@
 
 ---
 
+## api 0.32.0 / studio 0.48.0 / render 0.6.0 (2026-11-23)
+
+Akkoord Mark 23-11 ("mijn ja op pushen en uitrollen"). De centrale projecten (plan "Sidecar-project
+— weergaven en starten uit het project", stappen 1–10) plus wat er sinds studio 0.47.0 op `main`
+kwam. Details per onderdeel in `web/vite/CHANGELOG.md` en `docs/STUDIO.md`.
+
+API (0.32.0):
+- **De centrale plek** (stap 5): `POST /api/studio/projecten/:id/uitbrengen` (beheerder) maakt
+  van een profielen- of weergaveproject een onveranderlijke versie met ouders, en zet het nummer
+  in de projectkop; `GET /api/studio/centraal` en `…/:soort/:versie`; met `CENTRAAL_URL` +
+  `CENTRAAL_TOKEN` is een instantie een spiegel die versies bij de centrale haalt.
+- **De rol ontwerper** (stap 7): op de MAIN van een centraal project (een project met een hier
+  uitgebrachte versie) houdt wie geen beheerder is alleen leesrecht; een branch daarvan vraagt
+  minstens ontwerper; uitbrengen niet vanaf een branch.
+- **Klantaanpassingen** (stap 8): `POST/GET /api/studio/klantaanpassingen` — de delta van een
+  klant op een basisversie, onveranderlijk, met versies per klant.
+- **Versiegraaf** (stap 10): hoofdlijn en onderhoudslijnen (patch op een oudere X.Y uit een eigen
+  project), hooguit twee ouders (terugmergen).
+
+Studio 0.48.0 en render 0.6.0: zie `web/vite/CHANGELOG.md` (sidecar-project, weergaven en iconen
+als SVG, code op id, profiel als container, ordening in mappen, transformaties in/tussen/uit,
+de menu-acties voor uitbrengen, centrale versies, klantaanpassingen en de versiegraaf). render
+0.6.0 is de code van studio 0.48.0 met de nieuwe profielversies (o.a. Transformatie 1.1.0).
+
+Getest: Go `./handlers` en `./middleware` tegen PostgreSQL; Studio-unit 1917/1917; render-svc
+49/49; e2e 218/220 (02 faalt al op main, 22 slaagt los); een rooktest van de Studio tegen een
+echte API met een verse database (uitbrengen, opnieuw openen, onderhoudslijn, klantaanpassing),
+die een fout vond en na de fix slaagde (de versie in de projectkop).
+
+Uitrol:
+- **Schemawijziging: ja, automatisch.** Twee nieuwe tabellen, `studio_project_uitgaven` en
+  `studio_klant_aanpassingen`, worden bij de start aangemaakt. Alleen toevoegingen.
+- **Rebuild uit het Studio-project: nee.**
+- **Andere stap: nee.** Er verandert niets voor gebruikers tot een beheerder de eerste versie
+  uitbrengt; pas dan wordt de MAIN van dat project alleen-lezen voor wie geen beheerder is.
+- App: `bitemp-go-api:0.32.0`, `bitemp-viz-frontend:0.48.0`, `bitemp-render-svc:0.6.0` via
+  `update.sh`. pf: niet uitgerold. Fundament: devloop (api 0.32.0 + studio 0.48.0 + render 0.6.0),
+  door FUNDAMENT.
+
+---
+
 ## api 0.31.0 / devloop 0.34.0 (2026-11-19)
 
 Akkoord Mark 19-11 ("ja, graag C&M&release. zoals gewoonlijk app wel, pf niet, fundament

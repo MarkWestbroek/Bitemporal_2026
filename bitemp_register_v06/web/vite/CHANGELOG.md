@@ -8,6 +8,12 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
 
+## [studio/v0.48.0] — 2026-11-23
+
+Samen met api 0.32.0 en render 0.6.0. De centrale projecten (plan "Sidecar-project", stappen 1–10):
+profielen, transformaties en weergaven als projecten met uitgebrachte versies, klantaanpassingen als
+delta en een versiegraaf.
+
 ### Toegevoegd
 - **Versiegraaf** (vraagt api met de lijnregels): *Project → Versiegraaf…* toont de uitgebrachte versies per soort als
   graaf (hoofdlijn, onderhoudslijnen, merges), met de vastgepinde versie en de klantaanpassingen. *Onderhoudslijn

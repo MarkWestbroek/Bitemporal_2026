@@ -61,7 +61,9 @@ dat, en forceert `git branch -D` het (met opzet).
 ## 6. Huidige stand
 
 - Generatie **v06**; Studio-release = `web/vite/package.json` (bron van waarheid),
-  getagd met prefix `studio/` (§7). Laatst getagd: **`studio/v0.47.0`**
+  getagd met prefix `studio/` (§7). Laatst getagd: **`studio/v0.48.0`**
+  (2026-11-23: de centrale projecten — sidecar-project, weergaven, uitbrengen, klantaanpassingen,
+  versiegraaf; samen met api 0.32.0 en render 0.6.0), na **`studio/v0.47.0`**
   (2026-11-18: marks — eigen lagen met delen, kiezen op label, beheer in het menu Project; samen met
   render 0.5.1), na **`studio/v0.46.0`**
   (2026-11-18: marks (MDA) — lagen, sectie in Eigenschappen, tekens op het canvas, eigen marksoorten,
@@ -158,7 +160,9 @@ dat, en forceert `git branch -D` het (met opzet).
   **`studio/v0.14.0`** (2026-10-07: project op de server, operatielaag, projectboom-fixes) en
   **`studio/v0.13.0`** (2026-10-07: canvas-bediening — inline hernoemen, verbind-modus, kaders,
   taakbalken op een rij); zie `web/vite/CHANGELOG.md`.
-- Backend: **`api/v0.31.0`** (2026-11-19: zoektabellen — een `ZoekDefinitie` als inrichting laat de API een
+- Backend: **`api/v0.32.0`** (2026-11-23: de centrale plek — uitbrengen, centrale versies en spiegel,
+  de rol ontwerper op centrale projecten, klantaanpassingen als delta, versiegraaf; twee nieuwe tabellen).
+  Daarvoor **`api/v0.31.0`** (2026-11-19: zoektabellen — een `ZoekDefinitie` als inrichting laat de API een
   zoektabel bijhouden voor een lijst binnen één relatie, gesorteerd op één veld; devloop-image 0.34.0).
   Daarvoor **`api/v0.30.1`** (2026-11-18: herstel sorteren bij veel gelijke waarden — index op (waarde,
   entiteit-id), de id volgt de sorteerrichting, met een filter eerst filteren; devloop-image 0.33.1).
@@ -206,7 +210,8 @@ dat, en forceert `git branch -D` het (met opzet).
   brekende wijzigingen). Daarvoor **`api/v0.11.0`** (2026-10-07: Studio-projecten op de server,
   tabel `studio_projecten`); zie `RELEASE.md`.
 - Generator: **`codegen/v0.1.0`**; sindsdien geen release.
-- Render-sidecar: **`render/v0.5.1`** (2026-11-18: de code van studio 0.47.0 — eigen lagen van marks;
+- Render-sidecar: **`render/v0.6.0`** (2026-11-23: de code van studio 0.48.0 — nieuwe profielversies
+  (o.a. Transformatie 1.1.0, Weergave), iconen als SVG; image `bitemp-render-svc:0.6.0`), na **`render/v0.5.1`** (2026-11-18: de code van studio 0.47.0 — eigen lagen van marks;
   geen wijziging in de routes; image `bitemp-render-svc:0.5.1`), na **`render/v0.5.0`** (2026-11-18: de code van studio 0.46.0 — marks in
   `/export/v3` (`marks`, `markContext`) en in het naspelen; image `bitemp-render-svc:0.5.0`), na **`render/v0.4.9`** (2026-11-16: de code van studio 0.45.0 — 27 profielen met
   Simulatiemodel, DMN DRD 1.1.0, Object 1.1.0; image `bitemp-render-svc:0.4.9`), na **`render/v0.4.8`** (2026-11-15: de code van studio 0.44.0 — samenvoegen per veld,
