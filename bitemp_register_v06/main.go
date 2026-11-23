@@ -411,6 +411,12 @@ func NewRouter() *gin.Engine {
 	// Branch terugmergen, stap 1 (studio_project_samenvoegen.go): schrijven op de branch (hier) en
 	// op de ouder (in de handler), plus de rol modelleur.
 	router.POST("/api/studio/projecten/:id/samenvoegen", modelleur, pSchrijven, handlers.MaakStudioProjectSamenvoegenHandler())
+	// De centrale plek (plan Sidecar-project §8, stap 5): een versie van het profielen- of
+	// weergaveproject uitbrengen (beheerder), en de uitgebrachte versies lezen (ingelogd; een
+	// andere instantie met haar leestoken). Met CENTRAAL_URL is deze instantie een spiegel.
+	router.POST("/api/studio/projecten/:id/uitbrengen", middleware.RequireRol("beheerder"), pLezen, handlers.MaakStudioProjectUitbrengenHandler())
+	router.GET("/api/studio/centraal", ingelogd, handlers.MaakStudioCentraalLijstHandler())
+	router.GET("/api/studio/centraal/:soort/:versie", ingelogd, handlers.MaakStudioCentraalOphalenHandler())
 	// Actuele stand van één profiel, nagespeeld door de render-sidecar (studio_project_model.go).
 	router.GET("/api/studio/projecten/:id/model/:profiel", ingelogd, pLezen, handlers.MaakStudioProjectModelHandler())
 	// SSE-kanaal (stap 2, onderdeel 5): live operaties van anderen; de hub hangt aan het log.

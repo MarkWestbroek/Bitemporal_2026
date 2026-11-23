@@ -9,6 +9,10 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 ## [Unreleased]
 
 ### Toegevoegd
+- **De centrale plek voor profielen en weergaven** (vraagt api met `/api/studio/centraal`): *Project → Breng versie
+  uit…* maakt van de huidige stand een onveranderlijke versie (beheerder), *Project → Centrale versies…* toont ze met
+  hun ouders en laadt er een in de tool. `centraalVersies.js` pint per soort de versie waarmee de Studio start; nu
+  nog niets (de code).
 - **Profielen en Transformaties als zicht op één project**: twee activiteiten op de Modelleren-host met een gefilterde
   projectboom: Profielen toont alleen de profielen, Transformaties alleen de regelsets. Het Profiel-ontwerp en de lezer
   (nu *Regelsets proefdraaien*, knop in Transformaties) staan standaard niet meer in de balk.

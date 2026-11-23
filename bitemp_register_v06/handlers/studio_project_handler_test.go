@@ -78,6 +78,9 @@ func studioTestDB(t *testing.T) *bun.DB {
 	if _, err := db.NewCreateTable().Model((*model.StudioWerkruimte)(nil)).IfNotExists().Exec(ctx); err != nil {
 		t.Fatalf("werkruimte-tabel aanmaken: %v", err)
 	}
+	if _, err := db.NewCreateTable().Model((*model.StudioProjectUitgave)(nil)).IfNotExists().Exec(ctx); err != nil {
+		t.Fatalf("uitgaven-tabel aanmaken: %v", err)
+	}
 	for _, m := range []any{(*model.StudioProjectToegang)(nil), (*model.StudioMigratie)(nil)} {
 		if _, err := db.NewCreateTable().Model(m).IfNotExists().Exec(ctx); err != nil {
 			t.Fatalf("toegang-tabellen aanmaken: %v", err)
@@ -86,6 +89,7 @@ func studioTestDB(t *testing.T) *bun.DB {
 	t.Cleanup(func() {
 		_, _ = db.NewDelete().Model((*model.StudioProjectToegang)(nil)).Where("project_id LIKE 'test-%'").Exec(ctx)
 		_, _ = db.NewDelete().Model((*model.StudioProjectBasis)(nil)).Where("project_id LIKE 'test-%'").Exec(ctx)
+		_, _ = db.NewDelete().Model((*model.StudioProjectUitgave)(nil)).Where("project_id LIKE 'test-%'").Exec(ctx)
 		_, _ = db.NewDelete().Model((*model.StudioWerkruimte)(nil)).Where("project_id LIKE 'test-%'").Exec(ctx)
 		_, _ = db.NewDelete().Model((*model.StudioProjectOp)(nil)).Where("project_id LIKE 'test-%'").Exec(ctx)
 		_, _ = db.NewDelete().Model((*model.StudioProject)(nil)).Where("id LIKE 'test-%'").Exec(ctx)

@@ -156,8 +156,7 @@ Een **nieuw profiel begint bij 0.1.0** (Mark 21-11); ook het profiel *Weergave*.
    22-11** (`studio/projectGebruik.js`): `soort`, `versie` (keuze A: alleen omhoog bij uitbrengen,
    daartussen concept) en `gebruikt` in de kop; waarschuwing bij het openen; Projectinformatie.
 5. De centrale plek: de projecten op één server, versies verplicht, een release noemt zijn versies.
-   **Uitgewerkt als voorstel in §8, met open vragen voor Mark** (niet gebouwd: welke server en welke
-   toegang liggen bij Mark).
+   **Uitgewerkt in §8, besluiten Mark 22-11; gebouwd 23-11** (nog niet uitgebracht).
 6. Starten uit de centrale projecten (met de laatst opgehaalde versie en de code als reserve).
    **Lokaal deel gebouwd 22-11** (`studio/startUitProject.js`): na *Laad … in de tool* kun je kiezen
    ermee te starten; de Studio bewaart het project in IndexedDB en zet het bij het starten in de
@@ -167,7 +166,7 @@ Een **nieuw profiel begint bij 0.1.0** (Mark 21-11); ook het profiel *Weergave*.
 8. Klantaanpassingen (+ en −) los bewaren en de klantversie genereren.
 9. De projectbrowser in Profielen en Transformaties (stap e). **Eerste deel gebouwd 22-11**:
    Profiel als container in de M3-taal (1.1.0), diagrammen als views, JSON afgeleid (§9). Tweede
-   deel open: de activiteiten als gefilterde bomen op één project.
+   deel gebouwd 22-11: de activiteiten als gefilterde bomen op één project.
 10. Versie- en releasebeheer van de M2+T-projecten: een graaf van versies, liefst lineair, met
     forks en terugmergen (§10).
 
@@ -224,6 +223,18 @@ starten uit een bewaard project.
    **Bevestigd door Mark 22-11**, met een aanvulling: de klant-centrale kan **interne voorstellen**
    doen (een wijziging die de klant centraal wil), en die **beoordelen we centraal**. Een
    aangenomen voorstel komt in een centrale versie; daarmee krimpt de klantdelta (stap 8).
+
+**Gebouwd 23-11 (nog niet uitgebracht).** Zoals voorgesteld, met deze invulling:
+- `POST /api/studio/projecten/:id/uitbrengen` (beheerder) en `GET /api/studio/centraal[/:soort/:versie]`
+  (`handlers/studio_centraal.go`, tabel `studio_project_uitgaven`). Een versie is onveranderlijk
+  en noemt vanaf de eerste haar ouders.
+- Het leestoken is een persoonlijk API-token van een lezer-account op app, één per instantie.
+- Een instantie met `CENTRAAL_URL` + `CENTRAAL_TOKEN` is een spiegel: haar API haalt een versie bij
+  de centrale en bewaart haar; de Studio praat alleen met zijn eigen API.
+- Vastpinnen in `web/vite/src/studio/centraalVersies.js` (geen JSON, zodat de Node-tests en
+  render-svc het ook lezen).
+- Open: interne voorstellen van een klant-centrale (§8 punt 4), en versoepeling van "hoger dan
+  alle vorige" voor onderhoudslijnen (stap 10). Zie STUDIO.md.
 
 ## 9. Stap 9: één project voor profielen en transformaties (Mark 22-11)
 

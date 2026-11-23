@@ -2918,8 +2918,51 @@ gefilterde boom.
 Nog open: de startpagina in een zicht toont alle talen; *Beeld → Typering* schrijft nog op het
 diagram; een nieuwe view krijgt nog geen plaats onder zijn Profiel.
 
-**Volgende stappen** (plan §7–§10): stap 5 (de centrale plek op app: uitbrengen en ophalen met een
-leestoken, exact vastpinnen, elke versie met haar ouders), daarna 7, 8 en 10.
+**Stap 5 (gebouwd 23-11, nog niet uitgebracht): de centrale plek.** Besluiten Mark 22-11: de
+centrale is app, andere instanties lezen met een leestoken, een release pint exact vast, een
+klant-centrale is een spiegel (plan §8).
+
+- **Server** (`handlers/studio_centraal.go`, tabel `studio_project_uitgaven`, model
+  `StudioProjectUitgave`):
+  - `POST /api/studio/projecten/:id/uitbrengen {versie, inhoud, totVolgnummer, notitie?, ouders?}`
+    (rol beheerder): het werkbestand wordt een **onveranderlijke** versie, met de versie in de
+    projectkop en zonder `concept`. Geweigerd (409, `reden`): `achterstand` (het werkbestand mist
+    operaties), `versie_niet_hoger` (voorlopig één lijn: hoger dan alle vorige), `ander_project`
+    (één centraal project per soort), `spiegel`.
+  - Elke versie noemt vanaf de eerste haar **ouders** (stap 10): zonder opgave de hoogste vorige.
+  - `GET /api/studio/centraal` (de versies, zonder inhoud) en `GET /api/studio/centraal/:soort/:versie`
+    (met inhoud), voor iedereen die is ingelogd.
+  - Een uitgave blijft bestaan als het project wordt verwijderd.
+- **Andere instanties en spiegels**: zet `CENTRAAL_URL` (het adres van app, zonder `/api`) en
+  `CENTRAAL_TOKEN`. Het leestoken is een persoonlijk API-token van een account met de rol *lezer*
+  op app, één account per instantie (*Mijn API-tokens*). De API haalt een gevraagde versie dan bij
+  de centrale en bewaart haar (onveranderlijk, dus veilig); de lijst toont ook wat daar staat. Een
+  spiegel brengt niet uit. De Studio kent het token niet: hij vraagt alles aan zijn eigen API.
+- **Studio**:
+  - *Project → Breng versie uit…* (profielen- of weergaveproject op de server): eerst de outbox
+    leeg, dan minor/patch/major na de laatst uitgebrachte (eerste: 0.1.0), een notitie; de
+    projectkop krijgt het nummer.
+  - *Project → Centrale versies…*: de versies met ouders, wie en wanneer, en wat deze Studio
+    vastpint; een versie in de tool laden (tot een herlaad) of als project openen.
+- **Vastpinnen**: `web/vite/src/studio/centraalVersies.js` noemt per soort de versie waarmee deze
+  build start (`null` = de code; zo staat het nu). Bij het starten
+  (`startUitProject.js`, `pasStartToe`) geldt per soort:
+  1. een lokale keuze in deze browser (een concept);
+  2. anders de vastgepinde versie, opgehaald en lokaal bewaard als reserve;
+  3. lukt ophalen niet, dan de laatst opgehaalde kopie van dezelfde versie;
+  4. anders de code, met een melding.
+- **Tests**: Go `handlers/studio_centraal_test.go` (zuiver, en tegen PostgreSQL: uitbrengen,
+  achterstand, ouders, ophalen, en de spiegel tegen een nep-centrale met leestoken); unit
+  `centraal.test.js` en `startUitProject.test.js`; e2e `77-studio-centrale-versies`.
+
+Nog open voor stap 5:
+- de eerste versies echt uitbrengen op app en vastpinnen;
+- de leesaccounts en tokens per instantie (Fundament, pf) aanmaken en `CENTRAAL_*` zetten;
+- de transformaties uit het project laden bij het starten (nu alleen profielen en weergaven);
+- interne voorstellen van een klant-centrale.
+
+**Volgende stappen** (plan §7–§10): 7 (de rol ontwerper; de rol bestaat al in het rollenstelsel,
+niveau 3), 8 en 10.
 
 ## Activiteit Transformaties: regelsets bekijken en proefdraaien (2026-11-18)
 
