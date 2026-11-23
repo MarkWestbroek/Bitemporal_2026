@@ -17,8 +17,8 @@ func TestAftoppenCentraal(t *testing.T) {
 		centraal bool
 		wil      ProjectRecht
 	}{
-		{RechtBeheren, "ontwerper", true, RechtLezen},  // eigenaar, maar geen beheerder
-		{RechtSchrijven, "bouwer", true, RechtLezen},   // ook een bouwer niet
+		{RechtBeheren, "ontwerper", true, RechtLezen},   // eigenaar, maar geen beheerder
+		{RechtSchrijven, "bouwer", true, RechtLezen},    // ook een bouwer niet
 		{RechtBeheren, "beheerder", true, RechtBeheren}, // de beheerder wel
 		{RechtBeheren, "admin", true, RechtBeheren},     // alias
 		{RechtSchrijven, "ontwerper", false, RechtSchrijven},

@@ -3017,7 +3017,41 @@ beheerder (`handlers/studio_centraal_rol.go`):
   een branch geweigerd); e2e `78-studio-centraal-ontwerper`.
 - Een release van de API is nodig (geen schemawijziging).
 
-**Volgende stappen** (plan §7–§10): 8 (klantaanpassingen als delta) en 10 (de versiegraaf).
+**Stap 8 (gebouwd 23-11): klantaanpassingen als delta.** Besluit Mark 22-11: van een klant
+bewaren we alleen de **delta** op de vastgepinde basisversie; de klantversie is basis + delta.
+
+- **De delta** (`web/vite/src/studio/takken/klantDelta.js`, puur): een lijst eenheden, dezelfde
+  als bij het samenvoegen van een branch (element, diagram, map, plaatsing, bundel,
+  kruisverband, koppelsoorten, marks, en de kop van een profiel), per eenheid de waarde van de
+  klant of `weg`. Geen operaties: basis + delta (`pasDeltaToe`) gaat zonder stores, overal.
+- **Op een nieuwe basis** (`zetOpNieuweBasis`): per eenheid **past** (de basis liet haar staan, of
+  veranderde andere velden van hetzelfde element), **botst** (de basis veranderde hetzelfde
+  anders; de beheerder kiest basis of klant) of **al opgenomen** (de nieuwe basis heeft de
+  wijziging zelf; ze valt uit de delta). Het samenvoegen zelf is `voegSamen`, per veld. Een
+  delta kan zo leeg worden: dan gebruikt de klant de centrale versie.
+- **Server** (`handlers/studio_klantaanpassing.go`, tabel `studio_klant_aanpassingen`,
+  onveranderlijk): `POST /api/studio/klantaanpassingen {klant, soort, versie, basisVersie, delta,
+  notitie}` (beheerder, ook op een spiegel; de basisversie moet hier staan; versie hoger dan de
+  vorige van die klant en soort, die als ouder meegaat); `GET /api/studio/klantaanpassingen` en
+  `…/:klant/:soort/:versie` (met delta). De server speelt niets af.
+- **Studio** (`activities/klantActies.jsx`):
+  - *Project → Klantaanpassing vastleggen…*: in een geopende centrale versie (of klantversie)
+    is de delta wat er anders is dan de basisversie uit de projectkop; klant, versie, notitie.
+  - *Project → Klantaanpassingen…*: de klantversie openen als project of in de tool laden, of
+    de aanpassing **op een nieuwe basis zetten** (verslag past/botst/al opgenomen, keuze bij een
+    botsing, vastleggen als nieuwe versie op de nieuwe basisversie).
+  - Een gegenereerde klantversie draagt `klant: {naam, versie}` in de projectkop.
+- Tests: `klantDelta.test.js` (heen en terug, past/botst/opgenomen, per veld, leeg worden),
+  Go `studio_klantaanpassing_test.go` (ook tegen PostgreSQL), e2e `79-studio-klantaanpassing`
+  (een net geopende centrale versie geeft een lege delta: geen schijnverschillen).
+- Release: nieuwe tabel `studio_klant_aanpassingen` (de API maakt hem bij het starten aan;
+  schemawijziging ja, additief; geen rebuild).
+
+Nog open voor stap 8: starten met een klantversie (pin = basisversie + klantaanpassing, bv. per
+instantie in de configuratie), keuze per botsing in plaats van één keuze voor alle, en de
+"interne voorstellen" van een klant-centrale (§8).
+
+**Volgende stap** (plan §10): 10, de versiegraaf.
 
 ## Activiteit Transformaties: regelsets bekijken en proefdraaien (2026-11-18)
 

@@ -262,6 +262,11 @@ func CreateTables(db bun.IDB) error {
 	if _, err = db.NewCreateTable().Model((*model.StudioProjectUitgave)(nil)).IfNotExists().Exec(ctx); err != nil {
 		return err
 	}
+	// Klantaanpassingen: de delta van een klant op een uitgebrachte versie, onveranderlijk
+	// (handlers/studio_klantaanpassing.go; plan Sidecar-project §10, stap 8).
+	if _, err = db.NewCreateTable().Model((*model.StudioKlantAanpassing)(nil)).IfNotExists().Exec(ctx); err != nil {
+		return err
+	}
 	// Werkruimte per gebruiker per project (tabs, open mappen): van jou, laatste schrijver wint.
 	_, err = db.NewCreateTable().Model((*model.StudioWerkruimte)(nil)).IfNotExists().Exec(ctx)
 	if err != nil {

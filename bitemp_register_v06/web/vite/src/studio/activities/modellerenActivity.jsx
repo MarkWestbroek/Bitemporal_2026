@@ -40,6 +40,7 @@ import { koppelStore, zonderVastleggen, rebaseStand, herschikOpVolgorde, structu
 import { volgDiagram, bouwHierarchie } from "../boomRegels.js";
 import { mappenInZicht, inZicht } from "../boomZicht.js";
 import { brengVersieUitActie, toonCentraleVersiesActie } from "./centraalActies.jsx";
+import { legKlantAanpassingVastActie, toonKlantAanpassingenActie } from "./klantActies.jsx";
 import { overzichtPerGroep } from "../profielGroepen.js";
 import { waaromNietOnder, boomRelatieVoor, boomRelatiesVan, REDEN_NIET_OMHANGEN } from "../../diagramcore/model/omhangen.js";
 import VerwezenDoorPaneel from "../VerwezenDoorPaneel.jsx";
@@ -3813,7 +3814,7 @@ function bouwProjectData() {
     project: {
       id: s.project.id,
       naam: s.project.naam,
-      ...(soortVan(s.project) !== SOORT_MODEL ? { soort: s.project.soort, ...(s.project.versie ? { versie: s.project.versie } : {}) } : {}),
+      ...(soortVan(s.project) !== SOORT_MODEL ? { soort: s.project.soort, ...(s.project.versie ? { versie: s.project.versie } : {}), ...(s.project.klant ? { klant: s.project.klant } : {}) } : {}),
       gebruikt: noteerGebruikt(soortVan(s.project)),
     },
     // plaatsingVolgorde: de boomvolgorde expliciet — jsonb op de server bewaart
@@ -3859,6 +3860,8 @@ function pasProjectToe(data, { serverVersie = null, laatsteVolgnummer = 0, herko
     soort: data.project.soort || null,
     versie: data.project.versie || null,
     gebruikt: data.project.gebruikt || null,
+    // Een gegenereerde klantversie (stap 8, klantActies.jsx): {naam, versie} van de aanpassing.
+    klant: data.project.klant || null,
     serverVersie,
     laatsteVolgnummer,
     totVolgnummer: laatsteVolgnummer,
@@ -3923,7 +3926,7 @@ function leegProject({ naam = STANDAARD_PROJECTNAAM } = {}) {
   _geladenProfielVersies = {};
   // Eerst naar het nieuwe project, dan leegmaken: andersom zou het leegmaken in de werkkopie
   // van het vorige project landen (TAB-1, 11-11).
-  useModellerenStore.getState().zetProject({ id: nieuwProjectId(), naam, serverVersie: null, laatsteVolgnummer: 0, totVolgnummer: 0, liveSync: true, laatsteSync: null, herkomst: null, ouderNaam: null, recht: null, soort: null, versie: null, gebruikt: null });
+  useModellerenStore.getState().zetProject({ id: nieuwProjectId(), naam, serverVersie: null, laatsteVolgnummer: 0, totVolgnummer: 0, liveSync: true, laatsteSync: null, herkomst: null, ouderNaam: null, recht: null, soort: null, versie: null, gebruikt: null, klant: null });
   zonderVastleggen(() => {
     for (const p of getProfieltypen()) {
       if (p.klassiek) continue;
@@ -4688,6 +4691,17 @@ function menus(ctx) {
           }]
         : []),
       { id: "proj-centraal", label: "Centrale versies…", uitleg: "De uitgebrachte versies van de profielen en weergaven; laden of openen.", onClick: () => toonCentraleVersiesActie({ openAlsProject }) },
+      // Klantaanpassingen als delta (stap 8; klantActies.jsx).
+      ...(soortVan(project) !== SOORT_MODEL
+        ? [{
+            id: "proj-klant-vastleggen",
+            label: "Klantaanpassing vastleggen…",
+            uitleg: "Wat er anders is dan de basisversie, als delta van een klant (beheerder).",
+            disabled: !project.versie,
+            onClick: () => legKlantAanpassingVastActie({ huidig: () => useModellerenStore.getState().project, bouwInhoud: bouwProjectData }),
+          }]
+        : []),
+      { id: "proj-klant", label: "Klantaanpassingen…", uitleg: "De delta's per klant: de klantversie openen of laden, of op een nieuwe basis zetten.", onClick: () => toonKlantAanpassingenActie({ openAlsProject }) },
       { id: "proj-nieuw", label: "Nieuw project… (huidige parkeren)", uitleg: "Begin leeg; het huidige project blijft in deze browser bewaard.", onClick: nieuwProject },
       { type: "separator" },
       { id: "proj-push", label: "Naar server sturen (snapshot)", uitleg: "Zet het project op de server, zodat anderen erin kunnen meewerken.", onClick: stuurNaarServer },
