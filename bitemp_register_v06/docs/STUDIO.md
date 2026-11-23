@@ -2926,7 +2926,8 @@ klant-centrale is een spiegel (plan §8).
   `StudioProjectUitgave`):
   - `POST /api/studio/projecten/:id/uitbrengen {versie, inhoud, totVolgnummer, notitie?, ouders?}`
     (rol beheerder): het werkbestand wordt een **onveranderlijke** versie, met de versie in de
-    projectkop en zonder `concept`. Geweigerd (409, `reden`): `achterstand` (het werkbestand mist
+    projectkop en zonder `concept`. Ook de kop van het project zelf krijgt het nummer (rooktest
+    23-11: de kop gaat niet als operatie mee). Geweigerd (409, `reden`): `achterstand` (het werkbestand mist
     operaties), `versie_niet_hoger` (bestaat al, of past op geen lijn; zie stap 10),
     `ander_project` (de hoofdlijn komt uit één project per soort), `spiegel`.
   - Elke versie noemt vanaf de eerste haar **ouders** (stap 10): zonder opgave de hoogste vorige.

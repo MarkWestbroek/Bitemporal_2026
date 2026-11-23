@@ -266,6 +266,15 @@ func MaakStudioProjectUitbrengenHandler() gin.HandlerFunc {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Uitbrengen mislukt: " + err.Error()})
 			return
 		}
+		// Ook de kop van het project zelf krijgt het nummer (zonder concept). De kop gaat niet als
+		// operatie mee, dus zonder dit zag wie het project later opent nog de oude versie (rooktest
+		// 23-11). De blob-versie (optimistische vergrendeling) blijft: de inhoud verandert verder niet.
+		if _, err := tx.NewRaw(`UPDATE studio_projecten
+			SET inhoud = jsonb_set(inhoud #- '{project,concept}', '{project,versie}', to_jsonb(?::text), true)
+			WHERE id = ? AND jsonb_typeof(inhoud->'project') = 'object'`, in.Versie, id).Exec(ctx); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Projectkop bijwerken mislukt: " + err.Error()})
+			return
+		}
 		if err := tx.Commit(); err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Commit mislukt: " + err.Error()})
 			return
