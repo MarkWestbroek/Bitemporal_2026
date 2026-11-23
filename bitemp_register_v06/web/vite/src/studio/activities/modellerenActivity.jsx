@@ -4509,6 +4509,17 @@ Niet te zien of te bewerken hier, maar ze blijven bewaard en gaan ongewijzigd me
     // Ook wat er ná de snapshot in het log kwam (van een oudere Studio) krijgt zijn uuid's.
     planUuidAanvulling();
     if (n) menuBus.emit("menu:ververs");
+    // Stap 7 (handlers/studio_centraal_rol.go): de MAIN van een centraal project is van de beheerder.
+    if (rec.centraal && rec.recht === "lezen") {
+      toonMelding({
+        titel: "Centraal project",
+        tekst: [
+          `"${rec.naam}" is een centraal project: alleen de beheerder wijzigt het, voegt branches samen en brengt versies uit.`,
+          "Als ontwerper werk je in een branch: rechtsklik op een map → Branch maken…. Daar is het jouw concept.",
+          "Wat je hier verandert, gaat niet naar de server.",
+        ].join("\n\n"),
+      });
+    }
     return true;
   } catch (e) {
     toonMelding({ tekst: `Ophalen mislukt: ${e?.message || e}` });

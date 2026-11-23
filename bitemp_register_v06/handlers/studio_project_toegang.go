@@ -136,8 +136,28 @@ func projectRechtVan(c *gin.Context, projectID, eigenaar string) (ProjectRecht, 
 	if err != nil {
 		return RechtGeen, err
 	}
-	return besluitProjectRecht(true, claims.Rol, claims.Gebruikersnaam, eigenaar, acl[projectID]), nil
+	r := besluitProjectRecht(true, claims.Rol, claims.Gebruikersnaam, eigenaar, acl[projectID])
+	// Stap 7 (studio_centraal_rol.go): de MAIN van een centraal project is van de beheerder.
+	if r > RechtLezen && !middleware.IsBeheerder(claims.Rol) {
+		ctx := c.Request.Context()
+		ouder, err := ouderVan(ctx, DB, projectID)
+		if err != nil {
+			return RechtGeen, err
+		}
+		centraal, err := isCentraalMain(ctx, DB, projectID, ouder)
+		if err != nil {
+			return RechtGeen, err
+		}
+		if afgetopt := aftoppenCentraal(r, claims.Rol, centraal); afgetopt != r {
+			c.Set(centraalAfgetoptSleutel, true)
+			r = afgetopt
+		}
+	}
+	return r, nil
 }
+
+// centraalAfgetoptSleutel: het recht is door de centrale regel afgetopt (voor de melding).
+const centraalAfgetoptSleutel = "studioCentraalAfgetopt"
 
 const projectRechtSleutel = "studioProjectRecht"
 
@@ -174,6 +194,10 @@ func VereisProjectRecht(minimaal ProjectRecht) gin.HandlerFunc {
 		}
 		if recht < RechtLezen {
 			c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": "Project niet gevonden."})
+			return
+		}
+		if recht < minimaal && c.GetBool(centraalAfgetoptSleutel) {
+			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": CentraalMeldingMain, "reden": "centraal", "recht": recht.String()})
 			return
 		}
 		if recht < minimaal {

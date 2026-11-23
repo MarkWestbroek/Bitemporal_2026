@@ -116,6 +116,10 @@ func MaakStudioProjectAfsplitsenHandler() gin.HandlerFunc {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Project lezen mislukt: " + err.Error()})
 			return
 		}
+		// Stap 7: een branch van een centraal project vraagt minstens de rol ontwerper.
+		if weigerCentraalAfsplitsen(c, ctx, tx, ouder) {
+			return
+		}
 		// Eén branch per ouder + map (besluit Mark 10-11): de Studio ("Branch maken") en de
 		// werkplaats (automatisch per dienstmap) moeten op dezelfde branch uitkomen. Het slot op
 		// de ouder maakt deze controle atomair. Zonder mapId mogen er meer zijn.

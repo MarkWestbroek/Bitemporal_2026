@@ -2993,8 +2993,31 @@ Transformaties
 - Tests: `profielGroepen.test.js`, `sidecarProject.test.js`, `regelsetModel.test.js` (rondreis als
   uitwerking voor elke ingebouwde regelset), e2e 68, 72, 76.
 
-**Volgende stappen** (plan §7–§10): 7 (de rol ontwerper; de rol bestaat al in het rollenstelsel,
-niveau 3), 8 en 10.
+**Stap 7 (gebouwd 23-11): de rol ontwerper.** Een **centraal project** is het profielen- of
+weergaveproject waarvan op deze instantie een versie is uitgebracht. Zijn MAIN is van de
+beheerder (`handlers/studio_centraal_rol.go`):
+
+| Wie | Op MAIN van een centraal project | Branch maken | In de eigen branch | Samenvoegen naar MAIN | Uitbrengen |
+|---|---|---|---|---|---|
+| lezer, modelleur | lezen | nee (403 `centraal_ontwerper`) | — | nee | nee |
+| ontwerper, bouwer | lezen (ook als eigenaar) | ja | ja (eigenaar) | nee | nee |
+| beheerder | alles | ja | ja | ja | ja (alleen vanaf MAIN) |
+
+- Het mechanisme is één regel: `projectRechtVan` topt het recht op zo'n MAIN af tot *lezen* voor
+  wie geen beheerder is. Daardoor weigeren PUT, POST …/ops, samenvoegen (dat schrijven op de ouder
+  vraagt) en verwijderen vanzelf (403, `reden: "centraal"`, met uitleg), en tonen de lijst en de
+  projectmeta `recht: "lezen"` en `centraal: true`.
+- Vóór de eerste uitgebrachte versie is een project nog niet centraal; de server kijkt niet in de
+  blob (de soort in de kop), want elke operatie gaat door deze controle.
+- Uitbrengen vanaf een branch wordt geweigerd (409 `branch`): eerst samenvoegen.
+- De Studio meldt bij het openen van zo'n MAIN met alleen leesrecht dat je als ontwerper in een
+  branch werkt (rechtsklik op een map → *Branch maken…*).
+- Tests: Go `studio_centraal_rol_test.go` (de regel; en tegen PostgreSQL: eigenaar-ontwerper wordt
+  lezer na uitbrengen, modelleur mag geen branch, ontwerper wel en schrijft erin, uitbrengen vanaf
+  een branch geweigerd); e2e `78-studio-centraal-ontwerper`.
+- Een release van de API is nodig (geen schemawijziging).
+
+**Volgende stappen** (plan §7–§10): 8 (klantaanpassingen als delta) en 10 (de versiegraaf).
 
 ## Activiteit Transformaties: regelsets bekijken en proefdraaien (2026-11-18)
 

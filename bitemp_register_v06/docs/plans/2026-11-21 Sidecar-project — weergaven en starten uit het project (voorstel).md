@@ -162,7 +162,10 @@ Een **nieuw profiel begint bij 0.1.0** (Mark 21-11); ook het profiel *Weergave*.
    ermee te starten; de Studio bewaart het project in IndexedDB en zet het bij het starten in de
    tool (eerst de profielen, dan de weergaven), met de code als reserve. Dit wordt de "laatst
    opgehaalde versie" zodra stap 5 er is.
-7. De rol ontwerper: concepten in een branch, de beheerder brengt uit.
+7. De rol ontwerper: concepten in een branch, de beheerder brengt uit. **Gebouwd 23-11**: op de
+   MAIN van een centraal project (een uitgebrachte versie) houdt wie geen beheerder is alleen
+   leesrecht; een branch maken vraagt minstens ontwerper; uitbrengen alleen vanaf MAIN
+   (`handlers/studio_centraal_rol.go`, STUDIO.md).
 8. Klantaanpassingen (+ en −) los bewaren en de klantversie genereren.
 9. De projectbrowser in Profielen en Transformaties (stap e). **Eerste deel gebouwd 22-11**:
    Profiel als container in de M3-taal (1.1.0), diagrammen als views, JSON afgeleid (§9). Tweede
