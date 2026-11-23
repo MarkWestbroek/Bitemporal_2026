@@ -78,7 +78,8 @@ export function laadKernen(kernen) {
       fouten.push(`${naam}: ${fout}`);
       continue;
     }
-    // De M3-taal en het profiel Transformatie zijn de talen van het project zelf: niet vervangen.
+    // De M3-taal en het profiel Transformatie zijn de talen van het project zelf: niet vervangen
+    // (Transformatie staat sinds 23-11 wel in het project, onder Plumbing, om te bekijken).
     if (kern.id === PROFIEL_ONTWERP_ID || kern.id === "transformatie") continue;
     let descriptor;
     try {

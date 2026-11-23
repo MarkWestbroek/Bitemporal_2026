@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { alleRegelsets, regelsetsPerRichting, getRegelsetVermelding, regelRijen, controleer, proefdraai, alsTekst, actieTekst, toetsTekst, heeftRegels } from "./regelsetCatalogus.js";
+import { alleRegelsets, regelsetsPerRichting, getRegelsetVermelding, regelRijen, controleer, proefdraai, alsTekst, actieTekst, toetsTekst, heeftRegels, normaliseerRichting } from "./regelsetCatalogus.js";
 import "../studio/activities/regelsetsIngebouwd.js";
 import { geenProefUitleg } from "../studio/activities/regelsetsIngebouwd.js";
 
@@ -16,10 +16,18 @@ test("de catalogus kent de elf ingebouwde regelsets, in twee vormen, alle geldig
   }
 });
 
-test("de lijst is ingedeeld op richting: import, export, inrichting", () => {
+test("de lijst is ingedeeld op richting: in, tussen, uit (Mark 23-11; tussen is nog leeg)", () => {
   const groepen = regelsetsPerRichting();
-  assert.deepEqual(groepen.map((g) => [g.id, g.vermeldingen.length]), [["import", 4], ["export", 2], ["inrichting", 5]]);
-  assert.deepEqual(groepen[1].vermeldingen.map((v) => v.regelset.id).sort(), ["toegangsspraak-naar-odrl-ap-nl", "usecase-naar-mermaid-flowchart"]);
+  assert.deepEqual(groepen.map((g) => [g.id, g.vermeldingen.length]), [["in", 4], ["uit", 7]]);
+  assert.ok(groepen[1].vermeldingen.some((v) => v.regelset.id === "usecase-naar-mermaid-flowchart"));
+});
+
+test("een oude richting leest als de nieuwe", () => {
+  assert.equal(normaliseerRichting("import"), "in");
+  assert.equal(normaliseerRichting("export"), "uit");
+  assert.equal(normaliseerRichting("inrichting"), "uit");
+  assert.equal(normaliseerRichting("tussen"), "tussen");
+  assert.equal(normaliseerRichting("zijwaarts"), null);
 });
 
 test("een regel in woorden: voorwaarden en actie", () => {

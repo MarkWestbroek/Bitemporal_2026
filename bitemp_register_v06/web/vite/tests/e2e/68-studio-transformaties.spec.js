@@ -17,9 +17,10 @@ async function open(page) {
 test("de lijst toont de ingebouwde regelsets en een regelset toont zijn regels", async ({ page }) => {
   await open(page);
   await expect(page.getByTestId("regelset-lijst").locator("button")).toHaveCount(11);
-  await expect(page.locator('[data-richting="import"] button')).toHaveCount(4);
-  await expect(page.locator('[data-richting="export"] button')).toHaveCount(2);
-  await expect(page.locator('[data-richting="inrichting"] button')).toHaveCount(5);
+  // In, tussen, uit (Mark 23-11); tussen heeft nog geen regelset en staat er dan niet.
+  await expect(page.locator('[data-richting="in"] button')).toHaveCount(4);
+  await expect(page.locator('[data-richting="tussen"]')).toHaveCount(0);
+  await expect(page.locator('[data-richting="uit"] button')).toHaveCount(7);
   await page.locator('[data-regelset="mermaid-flowchart-naar-usecase"]').first().click();
   const main = page.getByTestId("regelset");
   await expect(main).toContainText("Mermaid flowchart → use case-model");

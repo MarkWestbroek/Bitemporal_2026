@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import "../studio/activities/regelsetsIngebouwd.js";
 import { alleRegelsets } from "./regelsetCatalogus.js";
 import { valideerRegelset } from "./regels.js";
-import { regelsetNaarElement, regelsetsNaarModel, modelNaarRegelset, transformatieId } from "./regelsetModel.js";
+import { regelsetNaarElement, regelsetsNaarModel, modelNaarRegelset, transformatieId, regelsetAlsUitwerking } from "./regelsetModel.js";
 import { transformatieDiagramType, maakElement, TRANSFORMATIE_TYPE } from "../diagramprofielen/transformatie/index.js";
 import { valideerDiagramType } from "../diagramcore/types/typeRegistry.js";
 import { profielOntwerpKern } from "../studio/activities/profielOntwerp.js";
@@ -23,6 +23,20 @@ test("elke ingebouwde regelset gaat zonder verlies naar het model en terug", () 
     assert.equal(terug.richting, v.richting);
     assert.equal(terug.schrijver, v.schrijver);
     if (v.vorm === "regels") assert.deepEqual(valideerRegelset(terug.regelset), []);
+  }
+});
+
+test("als uitwerking (een container met eigen bron en doel): ook zonder verlies terug", () => {
+  for (const v of alleRegelsets()) {
+    const { element, elements, leden, nodes } = JSON.parse(JSON.stringify(regelsetAlsUitwerking(v, { isProfiel })));
+    const terug = modelNaarRegelset(element, elements);
+    assert.deepEqual(terug.fouten, [], v.regelset.id);
+    assert.deepEqual(terug.regelset, v.regelset, v.regelset.id);
+    assert.equal(terug.richting, v.richting);
+    assert.ok(["in", "tussen", "uit"].includes(terug.richting));
+    const eindpunten = (v.regelset.bron !== undefined ? 1 : 0) + (v.regelset.doel !== undefined ? 1 : 0);
+    assert.equal(leden.length, eindpunten, v.regelset.id);
+    assert.equal(nodes.length, 1 + eindpunten);
   }
 });
 

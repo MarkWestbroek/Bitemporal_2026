@@ -2940,7 +2940,7 @@ klant-centrale is een spiegel (plan §8).
   spiegel brengt niet uit. De Studio kent het token niet: hij vraagt alles aan zijn eigen API.
 - **Studio**:
   - *Project → Breng versie uit…* (profielen- of weergaveproject op de server): eerst de outbox
-    leeg, dan minor/patch/major na de laatst uitgebrachte (eerste: 0.1.0), een notitie; de
+    leeg, dan minor/patch/major na de laatst uitgebrachte (eerste: 1.0.0, of 0.1.0), een notitie; de
     projectkop krijgt het nummer.
   - *Project → Centrale versies…*: de versies met ouders, wie en wanneer, en wat deze Studio
     vastpint; een versie in de tool laden (tot een herlaad) of als project openen.
@@ -2960,6 +2960,38 @@ Nog open voor stap 5:
 - de leesaccounts en tokens per instantie (Fundament, pf) aanmaken en `CENTRAAL_*` zetten;
 - de transformaties uit het project laden bij het starten (nu alleen profielen en weergaven);
 - interne voorstellen van een klant-centrale.
+
+**Stap 9, derde deel (23-11): ordening in mappen; transformaties in, tussen en uit.** Mark 23-11:
+nu een profiel een container is, kun je er mappen omheen zetten; en een transformatie is altijd
+*in* (van buiten naar een of meer M1's), *tussen* (M1 → M1) of *uit* (M1 → buiten), en binnen die
+indeling een container. Het sidecar-project (`studio/sidecarProject.js`) ziet er nu zo uit:
+
+```
+Profielen
+  UML / Statisch, Dynamisch · Gegevensmodellering · ArchiMate · Schema's · Business · UI ·
+  Linked data · SysML · Plumbing · Overig          (studio/profielGroepen.js)
+    Profiel <naam>   (container in de M3-taal, met zijn diagrammen als views)
+Transformaties
+  In · Tussen · Uit
+    «transformatie»  (container: uitwerking in het profiel Transformatie 1.1.0)
+      bron, doel     (eigen elementen per transformatie, niet gedeeld)
+      diagram        bron → transformatie → doel
+```
+
+- De **indeling van de profielen** is een eerste voorstel (Mark denkt erover na). Niet door Mark
+  genoemd en door Claude ingedeeld: Canoniek datamodel bij Gegevensmodellering, SysML en
+  Requirements als eigen groep. Een profiel zonder groep (een eigen profiel) komt in *Overig*.
+  Statisch/dynamisch is nu een map, nog geen eigenschap van het profiel (BACKLOG PROF-2).
+- Het **profiel Transformatie** staat nu ook in het project (Plumbing), om te bekijken en te
+  bewerken; net als het M3 laadt het niet uit het project in de tool.
+- De **richting** van een regelset heet nu `in`, `tussen` of `uit` (was import, export en
+  inrichting; oude waarden lezen als de nieuwe, `normaliseerRichting`). Tussen is nog leeg: OAS →
+  canoniek en SHACL ↔ canoniek zijn nog code, geen regelset.
+- De eerste uitgebrachte versie wordt voorgesteld als **1.0.0** (0.1.0 blijft te kiezen).
+- Het **overzicht in Modelleren** (geen open diagrammen: "begin met een nieuw diagram") volgt dezelfde
+  groepen, op het bovenste niveau (UML in één groep; `overzichtPerGroep`).
+- Tests: `profielGroepen.test.js`, `sidecarProject.test.js`, `regelsetModel.test.js` (rondreis als
+  uitwerking voor elke ingebouwde regelset), e2e 68, 72, 76.
 
 **Volgende stappen** (plan §7–§10): 7 (de rol ontwerper; de rol bestaat al in het rollenstelsel,
 niveau 3), 8 en 10.

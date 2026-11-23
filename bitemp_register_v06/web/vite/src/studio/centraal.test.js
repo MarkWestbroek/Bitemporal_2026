@@ -7,8 +7,8 @@ test("vastgepind: per soort een versie of null (nu: de code)", () => {
   assert.deepEqual(Object.keys(vastgepind()).sort(), ["profielen", "weergaven"]);
 });
 
-test("volgende versies; zonder eerdere versie 0.1.0", () => {
-  assert.deepEqual(volgendeVersies(""), { patch: "0.1.0", minor: "0.1.0", major: "1.0.0" });
+test("volgende versies; zonder eerdere versie 1.0.0 (of 0.1.0)", () => {
+  assert.deepEqual(volgendeVersies(""), { patch: "1.0.0", minor: "1.0.0", major: "1.0.0", eerste: ["1.0.0", "0.1.0"] });
   assert.deepEqual(volgendeVersies("0.9.3"), { patch: "0.9.4", minor: "0.10.0", major: "1.0.0" });
 });
 

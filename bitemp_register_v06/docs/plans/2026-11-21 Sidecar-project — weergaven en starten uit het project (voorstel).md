@@ -166,7 +166,8 @@ Een **nieuw profiel begint bij 0.1.0** (Mark 21-11); ook het profiel *Weergave*.
 8. Klantaanpassingen (+ en −) los bewaren en de klantversie genereren.
 9. De projectbrowser in Profielen en Transformaties (stap e). **Eerste deel gebouwd 22-11**:
    Profiel als container in de M3-taal (1.1.0), diagrammen als views, JSON afgeleid (§9). Tweede
-   deel gebouwd 22-11: de activiteiten als gefilterde bomen op één project.
+   deel gebouwd 22-11: de activiteiten als gefilterde bomen op één project. Derde deel gebouwd
+   23-11: groepsmappen voor de profielen, transformaties in In/Tussen/Uit als container.
 10. Versie- en releasebeheer van de M2+T-projecten: een graaf van versies, liefst lineair, met
     forks en terugmergen (§10).
 
@@ -276,6 +277,14 @@ diagrammen als views, de JSON als afgeleide eigenschap (`profielContainer.js`). 
 activiteiten *Profielen* en *Transformaties* zijn de Modelleren-host met een gefilterde boom
 (`projectZicht.jsx`, `boomZicht.js`); de JSON-editor, het kladblok *Profiel-ontwerp* en de lezer
 (nu *Regelsets proefdraaien*) staan standaard niet meer in de balk. Zie STUDIO.md.
+
+**Derde deel (23-11, Mark): ordening.** De profielen in groepsmappen (UML met Statisch en
+Dynamisch, Gegevensmodellering, ArchiMate, Schema's, Business, UI, Linked data, Plumbing; door
+Claude erbij: SysML, Overig), de transformaties in de mappen In, Tussen en Uit, met elke
+transformatie als container (uitwerking) met haar eigen bron, doel en diagram. De eerste
+uitgebrachte versie wordt **1.0.0** (voorstel Claude 23-11): de profielen draaien al in productie;
+het projectnummer staat los van de versies van de profielen erin. Zie STUDIO.md en
+TRANSFORMATIES.md §9.9.
 
 ## 10. Stappen 7, 8 en 10 toegelicht (22-11)
 

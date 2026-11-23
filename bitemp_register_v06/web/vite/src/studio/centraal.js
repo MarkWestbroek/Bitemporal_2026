@@ -46,12 +46,15 @@ export function vergelijkVersie(a, b) {
 
 /**
  * De voorstellen voor de volgende versie na `hoogste` (de laatst uitgebrachte). Zonder eerdere
- * versie: 0.1.0 (Mark 21-11: een nieuw profiel start op 0.1.0).
- * @returns {{patch: string, minor: string, major: string}}
+ * versie: 1.0.0 (voorstel Claude 23-11): de profielen en weergaven draaien al in productie, en
+ * vanaf 1.0.0 betekent een major in semver echt "raakt bestaande modellen". Het projectnummer
+ * staat los van de versies van de profielen erin (die houden elk hun eigen nummer). 0.1.0 blijft
+ * te kiezen (`eerste`).
+ * @returns {{patch: string, minor: string, major: string, eerste?: string[]}}
  */
 export function volgendeVersies(hoogste) {
   const v = parseVersie(hoogste);
-  if (!v) return { patch: "0.1.0", minor: "0.1.0", major: "1.0.0" };
+  if (!v) return { patch: "1.0.0", minor: "1.0.0", major: "1.0.0", eerste: ["1.0.0", "0.1.0"] };
   return { patch: `${v[0]}.${v[1]}.${v[2] + 1}`, minor: `${v[0]}.${v[1] + 1}.0`, major: `${v[0] + 1}.0.0` };
 }
 

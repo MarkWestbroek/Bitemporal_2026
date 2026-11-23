@@ -70,32 +70,34 @@ const DMN_VOORBEELD = `<?xml version="1.0" encoding="UTF-8"?>
 const SAMENGESTELD = "De bron is samengesteld (canoniek model, e-dienst en soms een referentielijst); proefdraaien hier volgt met het bereik van een transformatie.";
 
 registreerRegelset(MERMAID_NAAR_USECASE, {
-  richting: "import",
+  richting: "in",
   bestand: "diagramprofielen/usecase/mermaidRegels.js",
   proef: { soort: "tekst", lees: (tekst) => leesMermaidFlowcharts(tekst), voorbeeld: MERMAID_VOORBEELD, uitleg: "Plak een Mermaid flowchart." },
 });
 registreerRegelset(USECASE_NAAR_MERMAID, {
+  richting: "uit",
   bestand: "diagramprofielen/usecase/mermaidExportRegels.js",
   proef: { soort: "map", profielId: "usecase05", schrijf: (plan) => planNaarMermaid(plan, { titel: "proef" }), uitleg: "Kies een map met een use case-model, of het hele model." },
 });
 registreerRegelset(BPMN_XML_NAAR_BPMN, {
-  richting: "import",
+  richting: "in",
   bestand: "diagramprofielen/bpmn/bpmnXmlRegels.js",
   proef: { soort: "tekst", lees: (tekst, opties) => [leesBpmn(tekst, opties)], voorbeeld: BPMN_VOORBEELD, uitleg: "Plak BPMN 2.0 XML." },
 });
 registreerRegelset(DMN_XML_NAAR_DRD, {
-  richting: "import",
+  richting: "in",
   bestand: "diagramprofielen/dmn-drd/dmnXmlRegels.js",
   proef: { soort: "tekst", lees: (tekst, opties) => [leesDmn(tekst, opties)], voorbeeld: DMN_VOORBEELD, uitleg: "Plak DMN XML." },
 });
 registreerRegelset(TOEGANGSSPRAAK_NAAR_ODRL_AP_NL, {
+  richting: "uit",
   bestand: "toegangsspraak/odrlApNlRegels.js",
   proef: null,
 });
 // De terugweg. Het plan wordt hier uit de structuur een beleid in klare taal (de bouwer); de
 // import zelf (toegangsspraak/odrlImport.js) neemt daarnaast de meegegeven brontekst over als die klopt.
 registreerRegelset(ODRL_AP_NL_NAAR_TOEGANGSSPRAAK, {
-  richting: "import",
+  richting: "in",
   bestand: "toegangsspraak/odrlNaarToegangsspraakRegels.js",
   proef: {
     soort: "tekst",
@@ -110,12 +112,12 @@ registreerRegelset(ODRL_AP_NL_NAAR_TOEGANGSSPRAAK, {
     uitleg: "Plak ODRL in Turtle (ODRL-AP-NL).",
   },
 });
-registreerRegelset(CANONIEK_NAAR_OBJECTTYPE, { richting: "inrichting", bestand: "diagramprofielen/canoniek-uml/objecttypeRegels.js" });
-registreerRegelset(CANONIEK_NAAR_FORMULIER, { richting: "inrichting", bestand: "diagramprofielen/canoniek-uml/formulierRegels.js" });
-registreerRegelset(CANONIEK_NAAR_ZAAKTYPE, { richting: "inrichting", bestand: "diagramprofielen/canoniek-uml/zaaktypeRegels.js", schema: ZAAKTYPE_SCHRIJVER_SCHEMA, schrijver: "zaaktype-schrijver (diagramprofielen/canoniek-uml/zaaktypeArtefact.js)" });
-registreerRegelset(CANONIEK_NAAR_DOSSIER, { richting: "inrichting", bestand: "diagramprofielen/canoniek-uml/dossierRegels.js", schema: DOSSIER_SCHRIJVER_SCHEMA, schrijver: "dossierbundel-schrijver (diagramprofielen/canoniek-uml/dossierArtefact.js)" });
+registreerRegelset(CANONIEK_NAAR_OBJECTTYPE, { richting: "uit", bestand: "diagramprofielen/canoniek-uml/objecttypeRegels.js" });
+registreerRegelset(CANONIEK_NAAR_FORMULIER, { richting: "uit", bestand: "diagramprofielen/canoniek-uml/formulierRegels.js" });
+registreerRegelset(CANONIEK_NAAR_ZAAKTYPE, { richting: "uit", bestand: "diagramprofielen/canoniek-uml/zaaktypeRegels.js", schema: ZAAKTYPE_SCHRIJVER_SCHEMA, schrijver: "zaaktype-schrijver (diagramprofielen/canoniek-uml/zaaktypeArtefact.js)" });
+registreerRegelset(CANONIEK_NAAR_DOSSIER, { richting: "uit", bestand: "diagramprofielen/canoniek-uml/dossierRegels.js", schema: DOSSIER_SCHRIJVER_SCHEMA, schrijver: "dossierbundel-schrijver (diagramprofielen/canoniek-uml/dossierArtefact.js)" });
 // Een stand van de BPMN-schrijver: het schema hoort bij de schrijver (de motor), niet bij GZAC.
-registreerRegelset(BPMN_NAAR_GZAC, { richting: "inrichting", bestand: "diagramprofielen/bpmn/bpmnGzacRegels.js", schema: BPMN_SCHRIJVER_SCHEMA, schrijver: "BPMN-schrijver (transformatie/bpmnXmlSchrijver.js)" });
+registreerRegelset(BPMN_NAAR_GZAC, { richting: "uit", bestand: "diagramprofielen/bpmn/bpmnGzacRegels.js", schema: BPMN_SCHRIJVER_SCHEMA, schrijver: "BPMN-schrijver (transformatie/bpmnXmlSchrijver.js)" });
 
 /** Waarom een regelset (nog) geen proefbron heeft, voor het scherm. */
 export function geenProefUitleg(vermelding) {

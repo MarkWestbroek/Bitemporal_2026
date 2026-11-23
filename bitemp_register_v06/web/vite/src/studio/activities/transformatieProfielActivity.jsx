@@ -64,7 +64,7 @@ function meldAan(useStore) {
       vindplaats: "model",
       bestand: null,
       proef: was?.proef || null,
-      richting: uit.richting || was?.richting || "export",
+      richting: uit.richting || was?.richting || "uit",
       schema: was?.schema || null,
       schrijver: uit.schrijver || was?.schrijver || null,
     });

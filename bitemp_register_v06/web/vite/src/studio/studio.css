@@ -330,7 +330,10 @@
 }
 .studio-tab__sluit:hover { background: var(--s-hover); color: var(--s-fg); }
 .studio-modelleren__leeg { padding: 32px; color: var(--s-fg-muted); max-width: 560px; }
-.studio-modelleren__leeg-knoppen { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.studio-modelleren__leeg-knoppen { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+/* Per groep, zoals de mappen in het profielenproject (profielGroepen.js). */
+.studio-modelleren__leeg-groep { margin-top: 14px; }
+.studio-modelleren__leeg-groepnaam { font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--s-fg-muted, #64748b); }
 .studio-modelleren__leeg-knop {
   display: inline-flex; align-items: center; gap: 8px;
   padding: 8px 12px;
