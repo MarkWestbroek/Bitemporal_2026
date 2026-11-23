@@ -9,6 +9,11 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 ## [Unreleased]
 
 ### Toegevoegd
+- **Versiegraaf** (vraagt api met de lijnregels): *Project → Versiegraaf…* toont de uitgebrachte versies per soort als
+  graaf (hoofdlijn, onderhoudslijnen, merges), met de vastgepinde versie en de klantaanpassingen. *Onderhoudslijn
+  starten* maakt een eigen project voor een patch op een oudere lijn; bij de volgende hoofdversie kun je zo'n reparatie
+  als tweede ouder noemen (terugmergen).
+
 - **Klantaanpassingen als delta** (vraagt api met `/api/studio/klantaanpassingen`): *Project → Klantaanpassing
   vastleggen…* bewaart alleen wat een klant anders heeft dan de centrale versie; *Project → Klantaanpassingen…*
   genereert de klantversie (basis + delta) of zet de aanpassing op een nieuwe centrale versie, met per wijziging past,
@@ -99,6 +104,9 @@ De single source of truth voor het nummer is `package.json` `"version"`.
   proceskoppeling), met uitleg per instelling, schakelaars voor ja/nee en gekleurde placeholders. Alleen-lezen.
   Ook de *GZAC-dossierbundel* (ingedeeld per onderdeel van de bundel) en het *zaaktype* (afleidingen en
   volgnummers) tonen hun instellingen zo.
+
+### Hersteld
+- Een project dat je van de server opent, houdt zijn kop (soort en versie van een profielen- of weergaveproject).
 
 ### Gewijzigd
 - **ArchiMate equipment: een tandwiel in plaats van een zonnetje** (Mark 22-11): één omtrek met acht tanden en een as,

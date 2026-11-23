@@ -2927,8 +2927,8 @@ klant-centrale is een spiegel (plan §8).
   - `POST /api/studio/projecten/:id/uitbrengen {versie, inhoud, totVolgnummer, notitie?, ouders?}`
     (rol beheerder): het werkbestand wordt een **onveranderlijke** versie, met de versie in de
     projectkop en zonder `concept`. Geweigerd (409, `reden`): `achterstand` (het werkbestand mist
-    operaties), `versie_niet_hoger` (voorlopig één lijn: hoger dan alle vorige), `ander_project`
-    (één centraal project per soort), `spiegel`.
+    operaties), `versie_niet_hoger` (bestaat al, of past op geen lijn; zie stap 10),
+    `ander_project` (de hoofdlijn komt uit één project per soort), `spiegel`.
   - Elke versie noemt vanaf de eerste haar **ouders** (stap 10): zonder opgave de hoogste vorige.
   - `GET /api/studio/centraal` (de versies, zonder inhoud) en `GET /api/studio/centraal/:soort/:versie`
     (met inhoud), voor iedereen die is ingelogd.
@@ -3051,7 +3051,40 @@ Nog open voor stap 8: starten met een klantversie (pin = basisversie + klantaanp
 instantie in de configuratie), keuze per botsing in plaats van één keuze voor alle, en de
 "interne voorstellen" van een klant-centrale (§8).
 
-**Volgende stap** (plan §10): 10, de versiegraaf.
+**Stap 10 (gebouwd 23-11): de versiegraaf.** Mark 22-11: geen stamboom maar een graaf van
+uitgebrachte versies, liefst lineair, met forks en terugmergen; nummering volgens het voorstel van
+22-11 (semver per lijn, een nummer komt één keer voor).
+
+- **Regels bij uitbrengen** (`handlers/studio_versiegraaf.go`, zuiver en getest):
+  - *hoofdlijn*: hoger dan alle vorige; ouder de hoogste; alleen vanuit het project van de
+    hoogste versie (één hoofdproject per soort);
+  - *onderhoud*: een patch op een oudere lijn X.Y die al een versie heeft, hoger dan de hoogste
+    in die lijn (0.4.1 terwijl de hoofdlijn op 0.5.0 staat); ouder de hoogste in die lijn; mag
+    vanuit een eigen project. Een nieuwe minor of major onder de hoofdlijn bestaat niet;
+  - *terugmergen*: hooguit twee ouders, die bestaan en lager zijn (0.6.0 na 0.5.0 en 0.4.1).
+  - Het antwoord noemt de `lijn` (hoofd of onderhoud).
+- **Studio** (`studio/versieGraaf.js` puur, `activities/VersieGraafDialoog.jsx`):
+  - *Project → Versiegraaf…*: per soort de graaf (kolom = volgorde van uitbrengen, rij = lijn,
+    gestippeld = de tweede ouder), met de vastgepinde versie en het aantal klantaanpassingen per
+    basisversie; per oudere lijn *Onderhoudslijn X.Y.x starten*: een eigen project op de server
+    (`<project>-X-Y`, kop `onderhoudslijn: "X.Y"`) met de inhoud van de hoogste versie in die lijn.
+  - *Breng versie uit…* in een onderhoudsproject: alleen de volgende patch op die lijn. In het
+    hoofdproject: vraagt bij reparaties die nog niet in de hoofdlijn zitten of er een is
+    opgenomen; dan gaan twee ouders mee.
+- **Hersteld**: een project dat je van de server opende, verloor zijn kop (soort, versie): het
+  werd als modelproject gezien. Nu blijft de kop staan (ook `klant` en `onderhoudslijn`, ook bij
+  importeren).
+- Tests: Go `studio_versiegraaf_test.go` (regels; en tegen PostgreSQL: onderhoud uit een eigen
+  project, hoofdlijn daaruit geweigerd, merge met twee ouders); unit `versieGraaf.test.js`,
+  `projectSync.test.js` (kop); e2e `80-studio-versiegraaf`.
+- Release: nieuwe API (geen schemawijziging) en Studio.
+
+Nog open voor stap 10: de reparatie inhoudelijk overnemen in het hoofdproject (nu doet de
+beheerder dat zelf en noemt haar daarna als tweede ouder; kan met de delta-machinerie van stap 8:
+de delta van 0.4.0 → 0.4.1 op de huidige stand zetten), en een graaf die ook branches (concepten)
+en releases (welke instantie pint wat) laat zien.
+
+**Na de stappen**: een wrap-up met de besluiten van 21–23-11 als ADR's (BACKLOG ADR-1).
 
 ## Activiteit Transformaties: regelsets bekijken en proefdraaien (2026-11-18)
 

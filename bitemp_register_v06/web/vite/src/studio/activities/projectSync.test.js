@@ -113,3 +113,16 @@ test("metRechtVoor: zet, wijzigt en haalt het recht van één gebruiker; de rest
   assert.deepEqual(metRechtVoor(rijen, "hugo", ""), [{ subject: "*", recht: "lezen" }]);
   assert.deepEqual(metRechtVoor([], "hugo", ""), []);
 });
+
+test("de kop: klant (stap 8) en onderhoudslijn (stap 10) gaan mee; een ongeldige lijn niet", () => {
+  const uit = normaliseerProjectData({
+    formaat: "studio-project",
+    versie: 4,
+    project: { id: "p-1", naam: "P", soort: "profielen", versie: "0.4.1", klant: { naam: "gemeente-x", versie: "1.0.0" }, onderhoudslijn: "0.4" },
+    profielen: {},
+  });
+  assert.equal(uit.ok, true);
+  assert.deepEqual(uit.data.project, { id: "p-1", naam: "P", soort: "profielen", versie: "0.4.1", klant: { naam: "gemeente-x", versie: "1.0.0" }, onderhoudslijn: "0.4" });
+  const fout = normaliseerProjectData({ formaat: "studio-project", versie: 4, project: { id: "p-1", naam: "P", onderhoudslijn: "vier" }, profielen: {} });
+  assert.equal(fout.data.project.onderhoudslijn, undefined);
+});

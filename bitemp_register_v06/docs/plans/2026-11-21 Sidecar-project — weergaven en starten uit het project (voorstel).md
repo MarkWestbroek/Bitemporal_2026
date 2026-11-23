@@ -176,7 +176,10 @@ Een **nieuw profiel begint bij 0.1.0** (Mark 21-11); ook het profiel *Weergave*.
    deel gebouwd 22-11: de activiteiten als gefilterde bomen op één project. Derde deel gebouwd
    23-11: groepsmappen voor de profielen, transformaties in In/Tussen/Uit als container.
 10. Versie- en releasebeheer van de M2+T-projecten: een graaf van versies, liefst lineair, met
-    forks en terugmergen (§10).
+    forks en terugmergen (§10). **Gebouwd 23-11**: hoofdlijn en onderhoudslijnen (patch op een
+    oudere X.Y, uit een eigen project), terugmergen met twee ouders, *Project → Versiegraaf…*
+    (`handlers/studio_versiegraaf.go`, `studio/versieGraaf.js`). Open: de reparatie inhoudelijk
+    overnemen (met de delta van stap 8).
 
 ## 8. Stap 5 uitgewerkt: de centrale plek (voorstel 22-11, open vragen)
 
