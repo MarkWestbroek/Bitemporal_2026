@@ -17,6 +17,9 @@ de documentatie (`.github/copilot-instructions.md`, `docs/OMNIUM_WALKTHROUGH.md`
 
 ## Bestanden
 
+- `adr/` — de architectuurbeslissingen (ADR's), één per bestand; eerst als document, later
+  mogelijk als model in een ADR-profiel (BACKLOG ADR-1). Eerste reeks: de centrale projecten (21–23-11).
+
 - **Op app.omnium-ide.nl** staat het project (eigenaar `claude`, id `a2e7a101-…`; Mark heeft
   schrijfrecht). Dáár wordt het bijgehouden: Studio → *Project → Van server ophalen…*.
 - `omnium-architectuur.studio-project.json` — export van de stand op app (werkbestand

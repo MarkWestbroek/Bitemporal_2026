@@ -44,8 +44,9 @@ Uitrol:
 - **Andere stap: nee.** Er verandert niets voor gebruikers tot een beheerder de eerste versie
   uitbrengt; pas dan wordt de MAIN van dat project alleen-lezen voor wie geen beheerder is.
 - App: `bitemp-go-api:0.32.0`, `bitemp-viz-frontend:0.48.0`, `bitemp-render-svc:0.6.0` via
-  `update.sh`. pf: niet uitgerold. Fundament: devloop (api 0.32.0 + studio 0.48.0 + render 0.6.0),
-  door FUNDAMENT.
+  `update.sh`. pf: niet uitgerold. Fundament: `bitemp-devloop:0.35.0` (api 0.32.0 + studio 0.48.0,
+  gebouwd door OMNIUM-UI uit 98301f1d); FUNDAMENT vraagt Mark akkoord voor de uitrol, want de
+  sprong vanaf devloop 0.32.0 neemt ook de schemawijzigingen van 0.33.x en 0.34.0 mee.
 
 ---
 
