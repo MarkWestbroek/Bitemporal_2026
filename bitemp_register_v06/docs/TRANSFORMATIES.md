@@ -966,6 +966,26 @@ het profiel zelf; dat komt met het sidecar-project (PROF-1), waar een profiel oo
 De transformaties zelf draaien nog op de regelset uit de code (§9.5 stap 4); aanmelden verandert
 dus alleen wat de view toont en proefdraait.
 
+### 9.9 In, tussen, uit; een transformatie als container (2026-11-23)
+
+Mark 23-11: een transformatie gaat doorgaans van of naar één M1, dus één profiel, maar dat hoeft
+niet. Wat altijd geldt: ze is **in** (iets van buiten → een of meer M1's), **tussen** (M1 → M1) of
+**uit** (M1 → buiten). Die indeling is logischer dan import, export en inrichting: inrichting is
+een *uit* naar een artefact voor een component, export een *uit* naar een formaat dat je deelt.
+
+- `RICHTINGEN` in de catalogus is nu `in`, `tussen`, `uit`; `normaliseerRichting` leest de oude
+  namen (import → in, export en inrichting → uit), ook uit een model dat nog de oude waarde draagt.
+- Het profiel Transformatie 1.1.0: de keuze *richting* met de nieuwe waarden, en «transformatie»
+  draagt een **uitwerking** (M3): in de boom hangen haar bron, doel en diagrammen eronder.
+- In het sidecar-project staat per richting een map, per regelset een «transformatie» met eigen
+  bron en doel en een eigen diagram (`regelsetAlsUitwerking`; rondreis zonder verlies voor elke
+  ingebouwde regelset). `regelsetsNaarModel` (alles op één diagram, gedeelde eindpunten) blijft
+  voor *Laad de ingebouwde regelsets*.
+- **Tussen** is nog leeg: OAS → canoniek, SHACL ↔ canoniek en sequence ↔ communication zijn
+  transformaties in code zonder regelset.
+- Nog niet: een transformatie die stappen combineert (eerst t1, dan t2, dan t3), een *T-set* of
+  *T-script* (BACKLOG TRANS-2).
+
 ## 10. BPMN 2.0 XML en DMN XML → eigen model (2026-10-10)
 
 Opdracht Mark (via EA-SYNC): de native uitwisselformaten van BPMN en DMN naar

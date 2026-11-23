@@ -9890,6 +9890,7 @@
      "id": "transformatie",
      "label": "Transformatie",
      "omschrijving": "Een regelset: hoe een model in de ene taal of het ene formaat in het andere uitkomt. De regels staan in volgorde; de eerste die past wint.",
+     "uitwerking": true,
      "eigenschappen": [
       "code",
       "versie",

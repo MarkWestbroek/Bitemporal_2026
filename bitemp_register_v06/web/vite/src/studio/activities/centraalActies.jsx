@@ -54,7 +54,10 @@ export async function brengVersieUitActie({ huidig, verzend, bouwInhoud, zetProj
         { waarde: v.patch, label: `${v.patch} — patch: een correctie, niets nieuws` },
         { waarde: v.major, label: `${v.major} — major: iets wat bestaande modellen raakt` },
       ]
-    : [{ waarde: v.patch, label: `${v.patch} — de eerste versie` }];
+    : [
+        { waarde: "1.0.0", label: "1.0.0 — de eerste versie (in gebruik; aanbevolen)" },
+        { waarde: "0.1.0", label: "0.1.0 — de eerste versie, nog niet stabiel" },
+      ];
   const versie = await vraagKeuze({
     titel: `Versie uitbrengen: ${project.naam}`,
     label: hoogste ? `Laatst uitgebracht: ${hoogste}. Nieuwe versie:` : "Nog niets uitgebracht. Eerste versie:",

@@ -9,6 +9,11 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 ## [Unreleased]
 
 ### Toegevoegd
+- **Ordening in het profielen- en transformatieproject**: de profielen staan in groepsmappen (UML met Statisch en
+  Dynamisch, Gegevensmodellering, Schema's, Business, …, Plumbing), de transformaties in de mappen In, Tussen en Uit,
+  elk als container met haar eigen bron, doel en diagram. Het profiel Transformatie staat er nu ook in. De richting van
+  een regelset heet in, tussen of uit (was import, export, inrichting); profiel Transformatie 1.1.0. Een eerste
+  uitgebrachte versie wordt voorgesteld als 1.0.0. Het overzicht "begin met een nieuw diagram" volgt dezelfde groepen.
 - **De centrale plek voor profielen en weergaven** (vraagt api met `/api/studio/centraal`): *Project → Breng versie
   uit…* maakt van de huidige stand een onveranderlijke versie (beheerder), *Project → Centrale versies…* toont ze met
   hun ouders en laadt er een in de tool. `centraalVersies.js` pint per soort de versie waarmee de Studio start; nu

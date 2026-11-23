@@ -35,7 +35,7 @@ import { onbekendePlaceholders } from "../vormen/schemaPaneel.js";
  * @property {any} regelset
  * @property {"regels"|"instellingen"} vorm
  * @property {string} vindplaats
- * @property {"import"|"export"|"inrichting"} richting - import: extern formaat → model; export: model → extern formaat; inrichting: model → artefact voor een component
+ * @property {"in"|"tussen"|"uit"} richting - in: iets van buiten → model; tussen: model → model; uit: model → buiten (een formaat om te delen of een artefact voor een component)
  * @property {string|null} bestand           - waar hij in de code staat (voor de ingebouwde)
  * @property {Proef|null} proef
  * @property {any|null} schema               - bij instellingen: het schema van de schrijver waarvoor dit een stand is
@@ -55,9 +55,10 @@ export const heeftRegels = (regelset) => Array.isArray(regelset?.regels);
  * @param {any} regelset
  * @param {{vindplaats?: string, bestand?: string|null, proef?: Proef|null, richting?: string}} [opties]
  */
-export function registreerRegelset(regelset, { vindplaats = "ingebouwd", bestand = null, proef = null, richting = "export", schema = null, schrijver = null } = {}) {
+export function registreerRegelset(regelset, { vindplaats = "ingebouwd", bestand = null, proef = null, richting: opgegeven = "uit", schema = null, schrijver = null } = {}) {
   if (!regelset?.id) throw new Error("Regelset zonder id kan niet in de catalogus.");
-  if (!RICHTINGEN.some((r) => r.id === richting)) throw new Error(`Regelset ${regelset.id}: onbekende richting "${richting}".`);
+  const richting = normaliseerRichting(opgegeven);
+  if (!richting) throw new Error(`Regelset ${regelset.id}: onbekende richting "${opgegeven}".`);
   _vermeldingen.set(regelset.id, { regelset, vorm: heeftRegels(regelset) ? "regels" : "instellingen", vindplaats, bestand, proef, richting, schema, schrijver });
 }
 
@@ -70,15 +71,27 @@ export function standVan(regelset) {
 }
 
 /**
- * De richtingen, in de volgorde van de lijst. Het model staat in het midden: een import komt van
- * buiten het model in, een export gaat eruit naar een formaat dat je deelt, en een
- * inrichtingsartefact gaat eruit naar een component die het uitvoert.
+ * De richtingen, in de volgorde van de lijst (Mark 23-11). Het model (een of meer M1's) staat in
+ * het midden: **in** komt van buiten het model in (een formaat, een bestand, wat dan ook),
+ * **tussen** gaat van model naar model (M1 → M1, dus tussen profielen), **uit** gaat eruit naar
+ * buiten: een formaat dat je deelt (vroeger "export") of een artefact voor een component die het
+ * uitvoert (vroeger "inrichting"). Een transformatie die stappen combineert (eerst t1, dan t2)
+ * bestaat nog niet: BACKLOG TRANS-2 (T-sets).
  */
 export const RICHTINGEN = [
-  { id: "import", label: "Import", uitleg: "extern formaat → model" },
-  { id: "export", label: "Export", uitleg: "model → extern formaat" },
-  { id: "inrichting", label: "Inrichting", uitleg: "model → artefact voor een component" },
+  { id: "in", label: "In", uitleg: "van buiten → model" },
+  { id: "tussen", label: "Tussen", uitleg: "model → model" },
+  { id: "uit", label: "Uit", uitleg: "model → buiten (formaat of artefact)" },
 ];
+
+/** De oude namen (tot 23-11) op de nieuwe. */
+const OUDE_RICHTINGEN = { import: "in", export: "uit", inrichting: "uit" };
+
+/** Een richting op zijn huidige naam (`in`, `tussen`, `uit`), ook uit de oude namen; anders null. */
+export function normaliseerRichting(richting) {
+  const r = OUDE_RICHTINGEN[richting] || richting;
+  return RICHTINGEN.some((x) => x.id === r) ? r : null;
+}
 
 /** De vermeldingen per richting, lege richtingen weggelaten. */
 export function regelsetsPerRichting() {

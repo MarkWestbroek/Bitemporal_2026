@@ -41,17 +41,19 @@ test("Profielen en Transformaties filteren de boom van één project", async ({ 
   await balk("Profielen").click();
   await expect(page.getByTestId("zicht-geen-profielenproject")).toHaveCount(0);
   await expect(page.locator('[data-boomsleutel="el:el::m3Profiel05::p_erd_profiel"]')).toBeVisible();
-  expect(await mapnamen()).toEqual(["Profielen"]);
+  // De map Profielen met de groep van ERD (Mark 23-11); geen transformaties.
+  await expect.poll(mapnamen).toEqual(["Profielen", "Gegevensmodellering"]);
 
   // Transformaties: alleen de map Transformaties, geen Profiel.
   await balk("Transformaties").click();
   await expect(page.getByTestId("zicht-transformatiesZicht")).toBeVisible();
-  await expect.poll(mapnamen).toEqual(["Transformaties"]);
+  // De map Transformaties met in en uit (tussen is leeg en valt in het zicht weg; Mark 23-11).
+  await expect.poll(mapnamen).toEqual(["Transformaties", "In", "Uit"]);
   await expect(page.locator('[data-boomsleutel="el:el::m3Profiel05::p_erd_profiel"]')).toHaveCount(0);
 
   // Modelleren toont nog steeds alles.
   await balk("Modelleren").click();
-  await expect.poll(async () => (await mapnamen()).sort()).toEqual(["Profielen", "Transformaties"]);
+  await expect.poll(async () => (await mapnamen()).sort()).toEqual(["Gegevensmodellering", "In", "Profielen", "Transformaties", "Tussen", "Uit"]);
 
   // 3. Proefdraaien… opent de lezer.
   await balk("Transformaties").click();

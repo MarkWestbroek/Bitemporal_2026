@@ -99,6 +99,9 @@ const elementTypes = [
     stereotype: "«transformatie»",
     shape: "class-box",
     kleur: "#fecdd3",
+    // M3 uitwerking (Mark 23-11: binnen in, tussen en uit is een transformatie een container): in
+    // de boom hangen haar bron, haar doel en haar diagrammen (views) eronder.
+    uitwerking: true,
     properties: [
       { key: "code", label: "code (id van de regelset)", datatype: "string" },
       { key: "versie", label: "versie", datatype: "string" },
@@ -108,9 +111,9 @@ const elementTypes = [
         label: "richting",
         datatype: "keuze",
         opties: [
-          { waarde: "import", label: "import (extern formaat → model)" },
-          { waarde: "export", label: "export (model → extern formaat)" },
-          { waarde: "inrichting", label: "inrichting (model → artefact voor een component)" },
+          { waarde: "in", label: "in (van buiten → model)" },
+          { waarde: "tussen", label: "tussen (model → model)" },
+          { waarde: "uit", label: "uit (model → buiten: een formaat of een artefact voor een component)" },
         ],
       },
       { key: "schrijver", label: "schrijver (de motor waarvan de instellingen de stand zijn)", datatype: "string" },
@@ -168,7 +171,9 @@ const elementTypes = [
 export const transformatieDiagramType = {
   id: TRANSFORMATIE_PROFIEL_ID,
   label: "Transformatie",
-  versie: "1.0.0",
+  // 1.1.0 (23-11): richting in/tussen/uit (was import/export/inrichting); «transformatie» draagt
+  // een uitwerking.
+  versie: "1.1.0",
   style: "uml-klassiek",
   fieldTypes,
   elementTypes,

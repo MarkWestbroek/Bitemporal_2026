@@ -8,11 +8,17 @@
  * leunen op elkaar en staan daarom samen in één project:
  *
  *   map Profielen
- *     Profiel <profiel>      een container in de M3-taal (`m3Profiel05`, profielContainer.js): de
+ *     map <groep>            ordening (Mark 23-11, profielGroepen.js): UML (Statisch, Dynamisch),
+ *                            Gegevensmodellering, Schema's, Business, … Plumbing, Overig
+ *       Profiel <profiel>    een container in de M3-taal (`m3Profiel05`, profielContainer.js): de
  *                            kopgegevens als eigenschappen, `bevat` zijn elementen; zijn diagram
  *                            (een view) hangt eronder (Mark 22-11: de map is het profiel, het
  *                            diagram een view)
- *   map Transformaties       één diagram in het profiel Transformatie (`transformatie05`)
+ *   map Transformaties
+ *     map In / Tussen / Uit  de richting (Mark 23-11)
+ *       «transformatie»      een container (uitwerking) in het profiel Transformatie
+ *                            (`transformatie05`): eronder haar eigen bron en doel en haar diagram
+ *                            bron → transformatie → doel (regelsetAlsUitwerking)
  *
  * Een profiel is een model in het M3 (`ontwerpUitProfiel`, `studio/activities/ontwerptaal.js`), een
  * regelset een model in het profiel Transformatie (`regelsetsNaarModel`). De id's zijn vast
@@ -28,7 +34,9 @@
 import { ontwerpUitProfiel } from "./activities/profielOntwerp.js";
 import { metProfielContainer } from "./activities/profielContainer.js";
 import { M3_PROFIEL_ID, PROFIEL_ONTWERP_ID } from "./activities/m3Profiel.js";
-import { regelsetsNaarModel } from "../transformatie/regelsetModel.js";
+import { regelsetAlsUitwerking } from "../transformatie/regelsetModel.js";
+import { RICHTINGEN, normaliseerRichting } from "../transformatie/regelsetCatalogus.js";
+import { groepeerProfielen } from "./profielGroepen.js";
 import { TRANSFORMATIE_PROFIEL_ID } from "../diagramprofielen/transformatie/index.js";
 import { versieVan } from "../diagramcore/types/profielVersie.js";
 import { PROJECT_FORMAAT, PROJECT_FORMAAT_VERSIE } from "./activities/projectSync.js";
@@ -56,6 +64,8 @@ export function sidecarProject({ descriptors, vermeldingen = [], taalDescriptors
     return id;
   };
   const profielenMap = map("map_profielen", "Profielen", null, 1);
+  const groepen = groepeerProfielen([...profielIds], { ouderId: profielenMap });
+  for (const g of groepen.mappen) map(g.id, g.naam, g.ouderId, g.volgorde);
 
   // Profielen: per profiel een Profiel-element (de container) met zijn diagram eronder als view.
   // De leden hangen in de boom onder het Profiel via `bevat` en ◆; ze krijgen geen eigen plaatsing.
@@ -74,21 +84,27 @@ export function sidecarProject({ descriptors, vermeldingen = [], taalDescriptors
     Object.assign(m3.elements, elements);
     Object.assign(m3.diagrams, diagrams);
     m3.actiefDiagramId ??= diagramId;
-    plaatsing[`el::${M3_PROFIEL_ID}::${profielId}`] = profielenMap;
+    plaatsing[`el::${M3_PROFIEL_ID}::${profielId}`] = groepen.mapVan[descriptor.id] || profielenMap;
     plaatsing[`${M3_PROFIEL_ID}::${diagramId}`] = `el::${M3_PROFIEL_ID}::${profielId}`;
   }
 
-  // Transformaties: één diagram met alle regelsets, hun bronnen en doelen.
+  // Transformaties: per richting een map (in, tussen, uit; ook leeg, zodat de indeling zichtbaar
+  // is), per regelset een «transformatie» als container met haar bron, doel en diagram eronder.
   const transformaties = { diagramTypeId: TRANSFORMATIE_PROFIEL_ID, elements: {}, diagrams: {}, actiefDiagramId: null, meta: {} };
   if (vermeldingen.length) {
-    const mapId = map("map_transformaties", "Transformaties", null, 2);
-    const model = regelsetsNaarModel(vermeldingen, { isProfiel: (n) => profielIds.has(n) });
-    const diagramId = "dg_transformaties";
-    transformaties.elements = model.elements;
-    transformaties.diagrams[diagramId] = { id: diagramId, naam: "Regelsets", diagramType: TRANSFORMATIE_PROFIEL_ID, nodes: model.nodes, edges: [] };
-    transformaties.actiefDiagramId = diagramId;
-    plaatsing[`${TRANSFORMATIE_ACTIVITEIT_ID}::${diagramId}`] = mapId;
-    for (const n of model.nodes) plaatsing[`el::${TRANSFORMATIE_ACTIVITEIT_ID}::${n.elementId}`] = mapId;
+    const tMap = map("map_transformaties", "Transformaties", null, 2);
+    const perRichting = Object.fromEntries(RICHTINGEN.map((r, i) => [r.id, map(`map_tr_${r.id}`, r.label, tMap, i + 1)]));
+    const el = (id) => `el::${TRANSFORMATIE_ACTIVITEIT_ID}::${id}`;
+    for (const v of vermeldingen) {
+      const { element, elements, leden, nodes } = regelsetAlsUitwerking(v, { isProfiel: (n) => profielIds.has(n) });
+      Object.assign(transformaties.elements, elements);
+      const diagramId = `dg_${element.id}`;
+      transformaties.diagrams[diagramId] = { id: diagramId, naam: element.naam, diagramType: TRANSFORMATIE_PROFIEL_ID, nodes, edges: [] };
+      transformaties.actiefDiagramId ??= diagramId;
+      plaatsing[el(element.id)] = perRichting[normaliseerRichting(v.richting) || "uit"];
+      for (const lid of leden) plaatsing[el(lid)] = el(element.id);
+      plaatsing[`${TRANSFORMATIE_ACTIVITEIT_ID}::${diagramId}`] = el(element.id);
+    }
   }
 
   const profielen = { [M3_PROFIEL_ID]: m3, ...(vermeldingen.length ? { [TRANSFORMATIE_ACTIVITEIT_ID]: transformaties } : {}) };

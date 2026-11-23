@@ -35,6 +35,7 @@ import {
   COMP_REGELS,
   COMP_INSTELLINGEN,
 } from "../diagramprofielen/transformatie/index.js";
+import { normaliseerRichting } from "./regelsetCatalogus.js";
 
 export { TRANSFORMATIE_TYPE };
 
@@ -171,6 +172,41 @@ export function regelsetsNaarModel(vermeldingen, { isProfiel = () => false, acht
 }
 
 /**
+ * Eén regelset als **uitwerking** (Mark 23-11: een transformatie is een container): het element
+ * «transformatie» met een **eigen** bron en doel (niet gedeeld met andere regelsets) en een diagram
+ * bron → transformatie → doel. In de boom hangen bron, doel en diagram onder de transformatie; wie
+ * een taal bedoelt, ziet dat aan de naam (het id van het profiel).
+ *
+ * @param {{regelset: any, richting?: string, schrijver?: string|null}} vermelding
+ * @param {{isProfiel?: (naam: string) => boolean}} [opties]
+ * @returns {{element: any, elements: Record<string, any>, leden: string[], nodes: any[]}}
+ *   `elements` met de transformatie, `leden` de id's van bron en doel (voor de boom)
+ */
+export function regelsetAlsUitwerking(vermelding, { isProfiel = () => false } = {}) {
+  const r = vermelding.regelset;
+  const element = regelsetNaarElement(r, { id: transformatieId(r.id), richting: normaliseerRichting(vermelding.richting) || vermelding.richting, schrijver: vermelding.schrijver });
+  const elements = { [element.id]: element };
+  const leden = [];
+  const nodes = [{ elementId: element.id, position: { x: 340, y: 40 } }];
+  const eind = (naam, rol, x) => {
+    const id = `${element.id}__${rol}`;
+    elements[id] = { id, naam, elementType: isProfiel(naam) ? TAAL_TYPE : FORMAAT_TYPE, compartimenten: [], data: {} };
+    leden.push(id);
+    nodes.push({ elementId: id, position: { x, y: 40 } });
+    return id;
+  };
+  if (r.bron !== undefined) {
+    const bron = eind(r.bron, "bron", 40);
+    elements[`${element.id}__van`] = { id: `${element.id}__van`, naam: "", elementType: VAN_TYPE, source: bron, target: element.id, compartimenten: [], data: {} };
+  }
+  if (r.doel !== undefined) {
+    const doel = eind(r.doel, "doel", 720);
+    elements[`${element.id}__naar`] = { id: `${element.id}__naar`, naam: "", elementType: NAAR_TYPE, source: element.id, target: doel, compartimenten: [], data: {} };
+  }
+  return { element, elements, leden, nodes };
+}
+
+/**
  * Het element «transformatie» → regelset. `elements` is het model eromheen: de bron en het doel
  * komen uit de connectoren "van" en "naar". Wat niet te lezen is (kapotte JSON, een regel zonder
  * actie, twee bronnen) komt als melding terug en wordt nooit stil weggelaten; `regelset` is dan
@@ -237,5 +273,6 @@ export function modelNaarRegelset(element, elements = {}) {
     });
   }
 
-  return { regelset: fouten.length ? null : regelset, richting: data.richting || null, schrijver: data.schrijver || null, fouten };
+  // Een oude richting (import/export/inrichting, tot 23-11) leest als de nieuwe (in/tussen/uit).
+  return { regelset: fouten.length ? null : regelset, richting: normaliseerRichting(data.richting) || null, schrijver: data.schrijver || null, fouten };
 }

@@ -40,6 +40,7 @@ import { koppelStore, zonderVastleggen, rebaseStand, herschikOpVolgorde, structu
 import { volgDiagram, bouwHierarchie } from "../boomRegels.js";
 import { mappenInZicht, inZicht } from "../boomZicht.js";
 import { brengVersieUitActie, toonCentraleVersiesActie } from "./centraalActies.jsx";
+import { overzichtPerGroep } from "../profielGroepen.js";
 import { waaromNietOnder, boomRelatieVoor, boomRelatiesVan, REDEN_NIET_OMHANGEN } from "../../diagramcore/model/omhangen.js";
 import VerwezenDoorPaneel from "../VerwezenDoorPaneel.jsx";
 import { startBeeldWachter } from "../gedeeldeBeelden.js";
@@ -3386,8 +3387,13 @@ function LegeStaat() {
         Geen open diagrammen. Kies links een diagram in de projectbrowser, of begin
         met een nieuw diagram in een van de profielen:
       </p>
-      <div className="studio-modelleren__leeg-knoppen" data-tour="nieuw-diagram">
-        {profielen.filter((p) => !p.vasteDocumenten).map((p) => (
+      {/* Per groep, zoals de mappen in het profielenproject (profielGroepen.js; Mark 23-11). */}
+      <div data-tour="nieuw-diagram">
+      {overzichtPerGroep(profielen.filter((p) => !p.vasteDocumenten), (p) => p.descriptor?.id || p.id).map((groep) => (
+      <div key={groep.id} className="studio-modelleren__leeg-groep" data-groep={groep.id}>
+      <div className="studio-modelleren__leeg-groepnaam">{groep.naam}</div>
+      <div className="studio-modelleren__leeg-knoppen">
+        {groep.items.map((p) => (
           <button
             key={p.id}
             type="button"
@@ -3408,6 +3414,9 @@ function LegeStaat() {
             <ProfielIcoon profiel={p} /> {p.label}
           </button>
         ))}
+      </div>
+      </div>
+      ))}
       </div>
     </div>
   );

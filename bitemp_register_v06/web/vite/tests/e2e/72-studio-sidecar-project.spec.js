@@ -166,7 +166,8 @@ test("Open het sidecar-project van de tool: elk profiel als diagram, daarna exac
   // Terug in de tool: alles bekend, niets nieuw, geen fouten.
   await menu("Laad de profielen uit dit project in de tool");
   await page.getByRole("button", { name: "Laad", exact: true }).click();
-  await expect(melding).toContainText(`Vervangen: ${aantal}`);
+  // Transformatie staat sinds 23-11 in het project (Plumbing), maar laadt niet in de tool, net als het M3.
+  await expect(melding).toContainText(`Vervangen: ${aantal - 1}`);
   await expect(melding).toContainText("Nieuw: 0");
   await expect(melding).not.toContainText("Niet geladen");
 });
