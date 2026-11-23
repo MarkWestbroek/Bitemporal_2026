@@ -9,6 +9,9 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 ## [Unreleased]
 
 ### Toegevoegd
+- **De rol ontwerper op centrale projecten** (vraagt api met de centrale regel): open je het profielen- of
+  weergaveproject waarvan een versie is uitgebracht en ben je geen beheerder, dan legt de Studio uit dat je in een
+  branch werkt; de server houdt MAIN dan alleen-lezen.
 - **Ordening in het profielen- en transformatieproject**: de profielen staan in groepsmappen (UML met Statisch en
   Dynamisch, Gegevensmodellering, Schema's, Business, …, Plumbing), de transformaties in de mappen In, Tussen en Uit,
   elk als container met haar eigen bron, doel en diagram. Het profiel Transformatie staat er nu ook in. De richting van

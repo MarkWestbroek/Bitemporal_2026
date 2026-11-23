@@ -186,13 +186,19 @@ func MaakStudioProjectUitbrengenHandler() gin.HandlerFunc {
 
 		// Het project vergrendelen (zelfde slot als POST /ops en PUT): geen operaties tussendoor.
 		p := new(model.StudioProject)
-		err = tx.NewSelect().Model(p).Column("id", "naam", "tot_volgnummer").Where("id = ?", id).For("UPDATE").Scan(ctx)
+		err = tx.NewSelect().Model(p).Column("id", "naam", "tot_volgnummer", "ouder_project_id").Where("id = ?", id).For("UPDATE").Scan(ctx)
 		if errors.Is(err, sql.ErrNoRows) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "Project niet gevonden."})
 			return
 		}
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Project lezen mislukt: " + err.Error()})
+			return
+		}
+		// Stap 7: een branch is een concept; uitbrengen gaat vanaf MAIN, na het samenvoegen.
+		if p.OuderProjectID != "" {
+			c.JSON(http.StatusConflict, gin.H{"reden": "branch",
+				"error": "Dit is een branch (een concept). Voeg hem eerst samen met het centrale project en breng daar de versie uit."})
 			return
 		}
 		if laatste := laatsteVolgnummerVan(ctx, tx, id); in.TotVolgnummer < laatste {

@@ -189,14 +189,20 @@ func MaakStudioProjectenLijstHandler() gin.HandlerFunc {
 		if claims := middleware.GetClaims(c); claims != nil {
 			rol, gebruiker = claims.Rol, claims.Gebruikersnaam
 		}
+		centraal := map[string]bool{}
 		if authAan {
 			if acl, err = aclVoor(c.Request.Context(), DB, gebruiker, ""); err != nil {
 				c.JSON(http.StatusInternalServerError, gin.H{"error": "Toegang lezen mislukt: " + err.Error()})
 				return
 			}
+			if centraal, err = centraleMainIDs(c.Request.Context(), DB); err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Centrale versies lezen mislukt: " + err.Error()})
+				return
+			}
 		}
 		for _, m := range lijst {
 			r := besluitProjectRecht(authAan, rol, gebruiker, m.Eigenaar, acl[m.ID])
+			r = aftoppenCentraal(r, rol, centraal[m.ID] && m.OuderProjectID == "") // stap 7
 			if r >= RechtLezen {
 				m.Recht = r.String()
 				m.Herkomst = projectHerkomst(m.OuderProjectID, m.BasisVolgnummer, m.MapID, m.Aangemaakt, m.Eigenaar, m.Gearchiveerd)
@@ -238,6 +244,7 @@ func MaakStudioProjectOphalenHandler() gin.HandlerFunc {
 			"aangemaakt": p.Aangemaakt, "bijgewerkt": p.Bijgewerkt, "bijgewerkt_door": p.BijgewerktDoor,
 			"tot_volgnummer": p.TotVolgnummer, "laatste_volgnummer": laatsteVolgnummerVan(c.Request.Context(), DB, p.ID),
 			"recht":    huidigProjectRecht(c).String(),
+			"centraal": c.GetBool(centraalAfgetoptSleutel) || isCentraalMainStil(c.Request.Context(), p.ID, p.OuderProjectID), // stap 7
 			"herkomst": herkomstVan(p),
 		})
 	}
