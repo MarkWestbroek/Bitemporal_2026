@@ -140,7 +140,9 @@ func inhoudVoorUitgave(inhoud json.RawMessage, versie string) (json.RawMessage, 
 }
 
 // centraleURL en centraalToken: de configuratie van een spiegel ("" = deze instantie is zelf de centrale).
-func centraleURL() string   { return strings.TrimRight(strings.TrimSpace(os.Getenv("CENTRAAL_URL")), "/") }
+func centraleURL() string {
+	return strings.TrimRight(strings.TrimSpace(os.Getenv("CENTRAAL_URL")), "/")
+}
 func centraalToken() string { return strings.TrimSpace(os.Getenv("CENTRAAL_TOKEN")) }
 
 // MaakStudioProjectUitbrengenHandler — POST /api/studio/projecten/:id/uitbrengen
@@ -214,34 +216,40 @@ func MaakStudioProjectUitbrengenHandler() gin.HandlerFunc {
 		}
 		versies := make([]string, 0, len(eerder))
 		bestaat := map[string]bool{}
+		projectVan := map[string]string{}
 		for _, u := range eerder {
-			if u.ProjectID != id {
-				c.JSON(http.StatusConflict, gin.H{"reden": "ander_project", "projectId": u.ProjectID,
-					"error": fmt.Sprintf("Er zijn al %s uitgebracht vanuit een ander project; de centrale heeft één project per soort.", soort)})
-				return
-			}
 			versies = append(versies, u.Versie)
 			bestaat[u.Versie] = true
+			projectVan[u.Versie] = u.ProjectID
 		}
-		hoogste := hoogsteVersie(versies)
-		// Voorlopig één lijn: elke versie hoger dan alle vorige. Stap 10 (onderhoudslijnen, 0.4.x
-		// naast 0.5+) versoepelt dit tot "hoger dan zijn ouder en nog niet bestaand".
-		if hoogste != "" && vergelijkSemver(in.Versie, hoogste) <= 0 {
-			c.JSON(http.StatusConflict, gin.H{"reden": "versie_niet_hoger", "hoogste": hoogste,
-				"error": fmt.Sprintf("Versie %s is niet hoger dan de laatst uitgebrachte (%s).", in.Versie, hoogste)})
+		// Stap 10 (studio_versiegraaf.go): hoofdlijn of onderhoudslijn.
+		lijn, standaardOuder, reden, melding := beoordeelNieuweVersie(in.Versie, versies)
+		if reden != "" {
+			c.JSON(http.StatusConflict, gin.H{"reden": reden, "hoogste": hoogsteVersie(versies), "error": melding})
+			return
+		}
+		// De hoofdlijn komt uit één project per soort (dat van de hoogste versie); een onderhoudslijn
+		// mag uit een eigen project.
+		if hoogste := hoogsteVersie(versies); lijn == LijnHoofd && hoogste != "" && projectVan[hoogste] != id {
+			c.JSON(http.StatusConflict, gin.H{"reden": "ander_project", "projectId": projectVan[hoogste],
+				"error": fmt.Sprintf("De hoofdlijn van de %s wordt uitgebracht vanuit een ander project; de centrale heeft één hoofdproject per soort. Vanuit dit project kan alleen een patch op een oudere lijn (onderhoud).", soort)})
 			return
 		}
 		ouders := []uitgaveOuder{}
 		if len(in.Ouders) > 0 {
+			lijst := make([]string, 0, len(in.Ouders))
 			for _, o := range in.Ouders {
-				if !bestaat[strings.TrimSpace(o)] {
-					c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("Ouder %q is geen uitgebrachte versie van %s.", o, soort)})
-					return
-				}
-				ouders = append(ouders, uitgaveOuder{Versie: strings.TrimSpace(o)})
+				lijst = append(lijst, strings.TrimSpace(o))
 			}
-		} else if hoogste != "" {
-			ouders = append(ouders, uitgaveOuder{Versie: hoogste})
+			if msg := controleerOuders(in.Versie, lijst, bestaat); msg != "" {
+				c.JSON(http.StatusBadRequest, gin.H{"error": msg})
+				return
+			}
+			for _, o := range lijst {
+				ouders = append(ouders, uitgaveOuder{Versie: o})
+			}
+		} else if standaardOuder != "" {
+			ouders = append(ouders, uitgaveOuder{Versie: standaardOuder})
 		}
 		oudersJSON, _ := json.Marshal(ouders)
 
@@ -263,7 +271,8 @@ func MaakStudioProjectUitbrengenHandler() gin.HandlerFunc {
 			return
 		}
 		u.Inhoud = nil
-		c.JSON(http.StatusCreated, u)
+		c.JSON(http.StatusCreated, gin.H{"soort": u.Soort, "versie": u.Versie, "projectId": u.ProjectID, "projectNaam": u.ProjectNaam,
+			"ouders": u.Ouders, "notitie": u.Notitie, "uitgebracht": u.Uitgebracht, "uitgebrachtDoor": u.UitgebrachtDoor, "lijn": lijn})
 	}
 }
 

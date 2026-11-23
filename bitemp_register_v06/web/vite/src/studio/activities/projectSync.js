@@ -93,6 +93,9 @@ export function normaliseerProjectData(data, { bestandsnaam = "" } = {}) {
         ...(typeof project.soort === "string" && project.soort ? { soort: project.soort } : {}),
         ...(typeof project.versie === "string" && project.versie ? { versie: project.versie } : {}),
         ...(project.gebruikt && typeof project.gebruikt === "object" ? { gebruikt: project.gebruikt } : {}),
+        // Een gegenereerde klantversie (stap 8) en een onderhoudsproject (stap 10).
+        ...(project.klant && typeof project.klant === "object" ? { klant: project.klant } : {}),
+        ...(typeof project.onderhoudslijn === "string" && /^\d+\.\d+$/.test(project.onderhoudslijn) ? { onderhoudslijn: project.onderhoudslijn } : {}),
       },
     },
   };
@@ -203,8 +206,23 @@ export const brengVersieUit = (id, { versie, inhoud, totVolgnummer, notitie = ""
     body: { versie, inhoud, totVolgnummer, notitie, ...(ouders?.length ? { ouders } : {}) },
   });
 
+/**
+ * Een 404 op een route die de API pas sinds kort heeft: de API is ouder dan deze Studio. Een
+ * leesbare melding in plaats van "Serverfout 404" (Mark 23-11, tegen een oude lokale API).
+ */
+async function nieuweRoute(pad, wat) {
+  try {
+    return await roep(pad);
+  } catch (e) {
+    if (e?.status === 404 && !e?.reden) {
+      throw new ProjectSyncFout(`De API achter deze Studio kent ${wat} nog niet (${pad} geeft 404): ze is ouder dan deze Studio. Start de API van dezelfde versie.`, 404);
+    }
+    throw e;
+  }
+}
+
 /** De uitgebrachte versies (zonder inhoud): `{centrale, fout?, versies: [{soort, versie, ouders, hier, …}]}`. */
-export const centraleVersies = () => roep("/api/studio/centraal");
+export const centraleVersies = () => nieuweRoute("/api/studio/centraal", "de centrale plek");
 
 /** Eén uitgebrachte versie met `inhoud` (het werkbestand); een spiegel haalt hem bij de centrale. */
 export const haalCentraleVersie = (soort, versie) =>
@@ -219,7 +237,7 @@ export const legKlantAanpassingVast = ({ klant, soort, versie, basisVersie, delt
   roep("/api/studio/klantaanpassingen", { methode: "POST", body: { klant, soort, versie, basisVersie, delta, notitie } });
 
 /** Alle klantaanpassingen, zonder delta: `{aanpassingen: [{klant, soort, versie, basisVersie, eenheden, ouders, …}]}`. */
-export const klantAanpassingen = () => roep("/api/studio/klantaanpassingen");
+export const klantAanpassingen = () => nieuweRoute("/api/studio/klantaanpassingen", "klantaanpassingen");
 
 /** Eén klantaanpassing met `delta`. */
 export const haalKlantAanpassing = (klant, soort, versie) =>

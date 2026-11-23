@@ -39,7 +39,8 @@ import { bestaandeBranch, standaardBranchNaam, waaromGeenBranch } from "../takke
 import { koppelStore, zonderVastleggen, rebaseStand, herschikOpVolgorde, structuurNet, STRUCTUUR_OPS, STRUCTUUR_VELDEN, isStil } from "../sync/operaties.js";
 import { volgDiagram, bouwHierarchie } from "../boomRegels.js";
 import { mappenInZicht, inZicht } from "../boomZicht.js";
-import { brengVersieUitActie, toonCentraleVersiesActie } from "./centraalActies.jsx";
+import { brengVersieUitActie, toonCentraleVersiesActie, toonVersieGraafActie } from "./centraalActies.jsx";
+import VersieGraafDialoog from "./VersieGraafDialoog.jsx";
 import { legKlantAanpassingVastActie, toonKlantAanpassingenActie } from "./klantActies.jsx";
 import { overzichtPerGroep } from "../profielGroepen.js";
 import { waaromNietOnder, boomRelatieVoor, boomRelatiesVan, REDEN_NIET_OMHANGEN } from "../../diagramcore/model/omhangen.js";
@@ -3450,6 +3451,7 @@ function Main() {
       <TransformatiePaneel />
       <ProjectServerDialoog />
       <VerschilMetMainDialoog />
+      <VersieGraafDialoog />
     </div>
   );
 }
@@ -3814,7 +3816,7 @@ function bouwProjectData() {
     project: {
       id: s.project.id,
       naam: s.project.naam,
-      ...(soortVan(s.project) !== SOORT_MODEL ? { soort: s.project.soort, ...(s.project.versie ? { versie: s.project.versie } : {}), ...(s.project.klant ? { klant: s.project.klant } : {}) } : {}),
+      ...(soortVan(s.project) !== SOORT_MODEL ? { soort: s.project.soort, ...(s.project.versie ? { versie: s.project.versie } : {}), ...(s.project.klant ? { klant: s.project.klant } : {}), ...(s.project.onderhoudslijn ? { onderhoudslijn: s.project.onderhoudslijn } : {}) } : {}),
       gebruikt: noteerGebruikt(soortVan(s.project)),
     },
     // plaatsingVolgorde: de boomvolgorde expliciet — jsonb op de server bewaart
@@ -3862,6 +3864,8 @@ function pasProjectToe(data, { serverVersie = null, laatsteVolgnummer = 0, herko
     gebruikt: data.project.gebruikt || null,
     // Een gegenereerde klantversie (stap 8, klantActies.jsx): {naam, versie} van de aanpassing.
     klant: data.project.klant || null,
+    // Een onderhoudsproject (stap 10, centraalActies.jsx): de lijn "X.Y" waarop het patches uitbrengt.
+    onderhoudslijn: data.project.onderhoudslijn || null,
     serverVersie,
     laatsteVolgnummer,
     totVolgnummer: laatsteVolgnummer,
@@ -3926,7 +3930,7 @@ function leegProject({ naam = STANDAARD_PROJECTNAAM } = {}) {
   _geladenProfielVersies = {};
   // Eerst naar het nieuwe project, dan leegmaken: andersom zou het leegmaken in de werkkopie
   // van het vorige project landen (TAB-1, 11-11).
-  useModellerenStore.getState().zetProject({ id: nieuwProjectId(), naam, serverVersie: null, laatsteVolgnummer: 0, totVolgnummer: 0, liveSync: true, laatsteSync: null, herkomst: null, ouderNaam: null, recht: null, soort: null, versie: null, gebruikt: null, klant: null });
+  useModellerenStore.getState().zetProject({ id: nieuwProjectId(), naam, serverVersie: null, laatsteVolgnummer: 0, totVolgnummer: 0, liveSync: true, laatsteSync: null, herkomst: null, ouderNaam: null, recht: null, soort: null, versie: null, gebruikt: null, klant: null, onderhoudslijn: null });
   zonderVastleggen(() => {
     for (const p of getProfieltypen()) {
       if (p.klassiek) continue;
@@ -4455,7 +4459,8 @@ async function herlaadSnapshotStil() {
     const rec = await haalProjectOp(project.id);
     const uit = normaliseerProjectData(rec.inhoud);
     if (!uit.ok) return;
-    const data = { ...uit.data, project: { id: rec.id, naam: rec.naam } };
+    // De kop (soort, versie, …) uit het werkbestand houden; naam en id van de server zijn leidend.
+    const data = { ...uit.data, project: { ...uit.data.project, id: rec.id, naam: rec.naam } };
     pasProjectToe(data, { serverVersie: rec.versie, laatsteVolgnummer: rec.tot_volgnummer || 0, herkomst: rec.herkomst ?? null, recht: rec.recht ?? null });
     await haalBinnen({ inclusiefEigen: true });
     useModellerenStore.getState().zetProject({ laatsteSync: new Date().toISOString() });
@@ -4500,7 +4505,8 @@ async function openServerProject(id) {
       return false;
     }
     // Naam en id van de server zijn leidend (hernoemd op de server telt).
-    const data = { ...uit.data, project: { id: rec.id, naam: rec.naam } };
+    // De kop (soort, versie, …) uit het werkbestand houden; naam en id van de server zijn leidend.
+    const data = { ...uit.data, project: { ...uit.data.project, id: rec.id, naam: rec.naam } };
     const onbekend = Object.keys(data.profielen || {}).filter((pid) => !getProfieltype(pid));
     if (onbekend.length) toonMelding({ tekst: `Profielen onbekend in deze Studio: ${onbekend.join(", ")}.
 Niet te zien of te bewerken hier, maar ze blijven bewaard en gaan ongewijzigd mee terug naar de server.` });
@@ -4691,6 +4697,7 @@ function menus(ctx) {
           }]
         : []),
       { id: "proj-centraal", label: "Centrale versies…", uitleg: "De uitgebrachte versies van de profielen en weergaven; laden of openen.", onClick: () => toonCentraleVersiesActie({ openAlsProject }) },
+      { id: "proj-graaf", label: "Versiegraaf…", uitleg: "De versies als graaf: hoofdlijn, onderhoudslijnen, merges; een onderhoudslijn starten.", onClick: () => toonVersieGraafActie({ openServerProject }) },
       // Klantaanpassingen als delta (stap 8; klantActies.jsx).
       ...(soortVan(project) !== SOORT_MODEL
         ? [{
