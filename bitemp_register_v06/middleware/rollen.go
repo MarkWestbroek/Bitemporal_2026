@@ -26,6 +26,19 @@ var ToekenbareRollen = []string{"lezer", "modelleur", "ontwerper", "bouwer", "be
 // RolNiveau geeft het niveau van een rol (0 = onbekend of leeg).
 func RolNiveau(rol string) int { return rolNiveaus[rol] }
 
+// rolAliassen: oude naam → de naam die je nu toekent.
+var rolAliassen = map[string]string{"viewer": "lezer", "editor": "bouwer", "admin": "beheerder"}
+
+// ToekenbareNaam geeft de naam van een rol zoals de UI en een beheerder hem kennen: een oude
+// alias (viewer, editor, admin) wordt lezer, bouwer of beheerder; andere namen blijven gelijk.
+// Voor meldingen: "Vereist: editor" zegt niemand iets meer (FUNDAMENT 23-11).
+func ToekenbareNaam(rol string) string {
+	if nieuw, ok := rolAliassen[rol]; ok {
+		return nieuw
+	}
+	return rol
+}
+
 // IsBeheerder: beheerder of admin.
 func IsBeheerder(rol string) bool { return RolNiveau(rol) >= 5 }
 

@@ -1,8 +1,12 @@
 package middleware
 
 import (
+	"net/http/httptest"
 	"reflect"
+	"strings"
 	"testing"
+
+	"github.com/gin-gonic/gin"
 )
 
 func TestRolNiveauEnAliassen(t *testing.T) {
@@ -47,5 +51,41 @@ func TestRollenTotEnMet(t *testing.T) {
 	}
 	if RollenTotEnMet("") != nil {
 		t.Error("lege rol: nil")
+	}
+}
+
+// Een melding noemt de rol zoals de UI hem kent: de oude aliassen worden de nieuwe namen,
+// met hetzelfde niveau (FUNDAMENT 23-11: "Vereist: editor" bestond niet in de keuzelijst).
+func TestToekenbareNaam(t *testing.T) {
+	for alias, nieuw := range map[string]string{"viewer": "lezer", "editor": "bouwer", "admin": "beheerder"} {
+		if got := ToekenbareNaam(alias); got != nieuw {
+			t.Errorf("%s: %q, verwacht %q", alias, got, nieuw)
+		}
+		if RolNiveau(alias) != RolNiveau(nieuw) || !IsToekenbareRol(nieuw) {
+			t.Errorf("%s → %s: ander niveau of niet toekenbaar", alias, nieuw)
+		}
+	}
+	for _, r := range append(ToekenbareRollen, "onbekend", "") {
+		if ToekenbareNaam(r) != r {
+			t.Errorf("%q hoort gelijk te blijven", r)
+		}
+	}
+}
+
+func TestControleerRol_MeldingNoemtNieuweNaam(t *testing.T) {
+	t.Setenv("AUTH_ENABLED", "true")
+	gin.SetMode(gin.TestMode)
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+	c.Request = httptest.NewRequest("POST", "/api/registratie/", nil)
+	c.Set(ContextKeyGebruiker, &JWTClaims{Rol: "modelleur"})
+	if ControleerRol(c, "editor") {
+		t.Fatal("modelleur hoort geen editor-route te mogen")
+	}
+	if w.Code != 403 || !strings.Contains(w.Body.String(), "Vereist: bouwer, huidig: modelleur") {
+		t.Errorf("melding: %d %s", w.Code, w.Body.String())
+	}
+	if strings.Contains(w.Body.String(), "editor") {
+		t.Errorf("de oude naam hoort niet in de melding: %s", w.Body.String())
 	}
 }

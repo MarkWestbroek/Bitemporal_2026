@@ -216,7 +216,7 @@ func ControleerRol(c *gin.Context, minimaalRol string) bool {
 	claims := val.(*JWTClaims)
 	if !rolToegestaan(claims.Rol, minimaalRol) {
 		c.AbortWithStatusJSON(http.StatusForbidden, gin.H{
-			"error": fmt.Sprintf("Onvoldoende rechten. Vereist: %s, huidig: %s.", minimaalRol, claims.Rol),
+			"error": fmt.Sprintf("Onvoldoende rechten. Vereist: %s, huidig: %s.", ToekenbareNaam(minimaalRol), ToekenbareNaam(claims.Rol)),
 		})
 		return false
 	}

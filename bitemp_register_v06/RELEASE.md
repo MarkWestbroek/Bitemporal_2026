@@ -8,6 +8,16 @@
 
 ---
 
+## Nog niet uitgebracht (api)
+
+- **Rolnamen in de 403-melding** (FUNDAMENT 23-11): "Onvoldoende rechten. Vereist: …, huidig: …"
+  noemt de rol nu zoals de UI hem kent (`bouwer`, `lezer`, `beheerder`) in plaats van de oude
+  alias (`editor`, `viewer`, `admin`) waarop de routes intern nog controleren. Wie "Vereist:
+  editor" kreeg, kon die rol nergens kiezen. `middleware.ToekenbareNaam`; geen gedragswijziging.
+  Geen schemawijziging, geen rebuild, geen extra stap.
+
+---
+
 ## api 0.32.0 / studio 0.48.0 / render 0.6.0 (2026-11-23)
 
 Akkoord Mark 23-11 ("mijn ja op pushen en uitrollen"). De centrale projecten (plan "Sidecar-project

@@ -295,7 +295,7 @@ func NewRouter() *gin.Engine {
 	// registerdata af; alleen publieke opgeslagen documenten, configuratie en naslag blijven open.
 	if middleware.LeesToegangAlleenDocumenten() {
 		if middleware.IsAuthEnabled() {
-			fmt.Println("leestoegang: documenten — anoniem alleen publieke QueryDefinities, configuratie en referentielijsten; overige registerdata vereist minimaal rol viewer")
+			fmt.Println("leestoegang: documenten — anoniem alleen publieke QueryDefinities, configuratie en referentielijsten; overige registerdata vereist minimaal rol lezer")
 		} else {
 			fmt.Println("WARN: LEESTOEGANG=documenten heeft geen effect zolang AUTH_ENABLED=false")
 		}
