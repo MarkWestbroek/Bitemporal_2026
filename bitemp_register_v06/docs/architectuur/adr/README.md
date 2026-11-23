@@ -8,6 +8,12 @@ De eerste reeks is de wrap-up van 21–23 november 2026: de centrale projecten (
 — weergaven en starten uit het project*), uitgebracht als api 0.32.0 / studio 0.48.0 / render 0.6.0.
 Waar een besluit een voorstel van Claude was dat Mark niet tegensprak, staat dat bij *Besloten door*.
 
+**Ook op app** (23-11, op Marks verzoek): in het project *Omnium architectuur*, map
+*4 Besluiten (ADR)*, diagram *ADR's centrale projecten (21–23-11)*. Zolang er geen ADR-profiel is,
+staat elk ADR daar als **requirement** met `soort` ADR, `reqId` ADR-00xx, `status` en een korte
+besluittekst met de bron. Onderling: *refine* = werkt uit, *trace* = hangt samen met. Deze
+bestanden blijven de volledige tekst; een nieuw of gewijzigd ADR zet je op beide plekken.
+
 | Nr | Besluit | Status | Datum |
 |---|---|---|---|
 | [0001](0001-vier-soorten-project.md) | Vier soorten project: M1, weergaven, M2 + transformaties, M3 | Aanvaard | 2026-11-21 |
