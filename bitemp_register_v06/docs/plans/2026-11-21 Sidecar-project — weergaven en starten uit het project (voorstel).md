@@ -166,7 +166,11 @@ Een **nieuw profiel begint bij 0.1.0** (Mark 21-11); ook het profiel *Weergave*.
    MAIN van een centraal project (een uitgebrachte versie) houdt wie geen beheerder is alleen
    leesrecht; een branch maken vraagt minstens ontwerper; uitbrengen alleen vanaf MAIN
    (`handlers/studio_centraal_rol.go`, STUDIO.md).
-8. Klantaanpassingen (+ en −) los bewaren en de klantversie genereren.
+8. Klantaanpassingen (+ en −) los bewaren en de klantversie genereren. **Gebouwd 23-11**: de
+   delta als lijst eenheden (`takken/klantDelta.js`), basis + delta, op een nieuwe basis zetten
+   met past/botst/al opgenomen; onveranderlijke versies per klant op de server
+   (`handlers/studio_klantaanpassing.go`); *Project → Klantaanpassing vastleggen…* en
+   *Klantaanpassingen…*. Open: starten met een klantversie, keuze per botsing.
 9. De projectbrowser in Profielen en Transformaties (stap e). **Eerste deel gebouwd 22-11**:
    Profiel als container in de M3-taal (1.1.0), diagrammen als views, JSON afgeleid (§9). Tweede
    deel gebouwd 22-11: de activiteiten als gefilterde bomen op één project. Derde deel gebouwd

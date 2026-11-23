@@ -9,6 +9,10 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 ## [Unreleased]
 
 ### Toegevoegd
+- **Klantaanpassingen als delta** (vraagt api met `/api/studio/klantaanpassingen`): *Project → Klantaanpassing
+  vastleggen…* bewaart alleen wat een klant anders heeft dan de centrale versie; *Project → Klantaanpassingen…*
+  genereert de klantversie (basis + delta) of zet de aanpassing op een nieuwe centrale versie, met per wijziging past,
+  botst of al opgenomen.
 - **De rol ontwerper op centrale projecten** (vraagt api met de centrale regel): open je het profielen- of
   weergaveproject waarvan een versie is uitgebracht en ben je geen beheerder, dan legt de Studio uit dat je in een
   branch werkt; de server houdt MAIN dan alleen-lezen.

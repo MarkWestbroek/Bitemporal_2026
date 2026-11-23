@@ -210,6 +210,21 @@ export const centraleVersies = () => roep("/api/studio/centraal");
 export const haalCentraleVersie = (soort, versie) =>
   roep(`/api/studio/centraal/${encodeURIComponent(soort)}/${encodeURIComponent(versie)}`);
 
+/**
+ * Klantaanpassingen (stap 8, handlers/studio_klantaanpassing.go): de delta van een klant op een
+ * uitgebrachte versie. Vastleggen = een nieuwe, onveranderlijke versie (beheerder). 409 met reden
+ * versie_niet_hoger; 404 als de basisversie hier niet staat.
+ */
+export const legKlantAanpassingVast = ({ klant, soort, versie, basisVersie, delta, notitie = "" }) =>
+  roep("/api/studio/klantaanpassingen", { methode: "POST", body: { klant, soort, versie, basisVersie, delta, notitie } });
+
+/** Alle klantaanpassingen, zonder delta: `{aanpassingen: [{klant, soort, versie, basisVersie, eenheden, ouders, …}]}`. */
+export const klantAanpassingen = () => roep("/api/studio/klantaanpassingen");
+
+/** Eén klantaanpassing met `delta`. */
+export const haalKlantAanpassing = (klant, soort, versie) =>
+  roep(`/api/studio/klantaanpassingen/${encodeURIComponent(klant)}/${encodeURIComponent(soort)}/${encodeURIComponent(versie)}`);
+
 /** Aanmaken (versie 1). 409 als het id al bestaat. */
 export const maakProjectAan = ({ id, naam, inhoud }) =>
   roep("/api/studio/projecten", { methode: "POST", body: { id, naam, inhoud } });

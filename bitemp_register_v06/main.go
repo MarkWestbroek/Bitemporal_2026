@@ -417,6 +417,11 @@ func NewRouter() *gin.Engine {
 	router.POST("/api/studio/projecten/:id/uitbrengen", middleware.RequireRol("beheerder"), pLezen, handlers.MaakStudioProjectUitbrengenHandler())
 	router.GET("/api/studio/centraal", ingelogd, handlers.MaakStudioCentraalLijstHandler())
 	router.GET("/api/studio/centraal/:soort/:versie", ingelogd, handlers.MaakStudioCentraalOphalenHandler())
+	// Klantaanpassingen (stap 8): de delta van een klant op een uitgebrachte versie. Vastleggen
+	// door de beheerder (ook op een spiegel: daar woont de klant); lezen voor wie is ingelogd.
+	router.POST("/api/studio/klantaanpassingen", middleware.RequireRol("beheerder"), handlers.MaakStudioKlantAanpassingVastleggenHandler())
+	router.GET("/api/studio/klantaanpassingen", ingelogd, handlers.MaakStudioKlantAanpassingenLijstHandler())
+	router.GET("/api/studio/klantaanpassingen/:klant/:soort/:versie", ingelogd, handlers.MaakStudioKlantAanpassingOphalenHandler())
 	// Actuele stand van één profiel, nagespeeld door de render-sidecar (studio_project_model.go).
 	router.GET("/api/studio/projecten/:id/model/:profiel", ingelogd, pLezen, handlers.MaakStudioProjectModelHandler())
 	// SSE-kanaal (stap 2, onderdeel 5): live operaties van anderen; de hub hangt aan het log.
