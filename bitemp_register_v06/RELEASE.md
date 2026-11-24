@@ -8,13 +8,45 @@
 
 ---
 
-## Nog niet uitgebracht (api)
+## api 0.32.1 / devloop 0.35.1 (2026-11-24)
 
+Akkoord Mark 24-11 ("ja, graag C&M&release, app wel, pf niet"). Devloop 0.35.1 is api 0.32.1 met
+studio 0.48.0 en render 0.6.0 (ongewijzigd).
+
+- **Een database die niet klaar is, is geen "geen actieve versie"** (FUNDAMENT 24-11, op verzoek
+  van Mark). Na een herstart van de node startte de API op Fundament vóór PostgreSQL klaar was
+  ("the database system is shutting down"). De startup-rebuild las dat als "geen actieve
+  schema-versie", de API stopte binnen enkele seconden, en de devloop-entrypoint zette het
+  baseline-model terug, zonder de inrichtingsdomeinen. Het register gaf 404 tot een handmatige
+  herstart. Nu (`db_wachten.go`, `handlers/rebuild_core.go`, `scripts/devloop-entrypoint.sh`):
+  - alleen "geen rij met status `active`" of "geen tabel `schema_versies`" (verse database) is
+    geen actieve versie; elke andere leesfout is een databasefout;
+  - de startup-rebuild en de API-start wachten op de database met oplopende pauzes (1, 2, 4, 8 s,
+    daarna 15 s) tot `DB_WACHT_TIJD` (standaard `5m`) om is, en stoppen dan met **exit 44**;
+  - de entrypoint stopt de container bij 44, zonder terug te vallen op het baseline-model;
+    Kubernetes start hem opnieuw;
+  - valt de database weg tijdens de databaseproef van de startup-rebuild, dan wordt de versie
+    niet als mislukt gemarkeerd (anders sloeg elke volgende start haar over);
+  - een leesfout op `gebouwde_domeinen` werd stil gelezen als "geen lijst, bouw alle domeinen";
+    nu is het ook een databasefout.
 - **Rolnamen in de 403-melding** (FUNDAMENT 23-11): "Onvoldoende rechten. Vereist: …, huidig: …"
   noemt de rol nu zoals de UI hem kent (`bouwer`, `lezer`, `beheerder`) in plaats van de oude
   alias (`editor`, `viewer`, `admin`) waarop de routes intern nog controleren. Wie "Vereist:
   editor" kreeg, kon die rol nergens kiezen. `middleware.ToekenbareNaam`; geen gedragswijziging.
-  Geen schemawijziging, geen rebuild, geen extra stap.
+
+Getest: unittests (`TestGeenActieveVersie`, `TestStartupRebuild_DatabaseWegIsGeenGeenVersie`,
+`TestDbPauze`, `TestProbeerTotDatabaseKlaar`); met de echte binary: zonder database geeft
+`startup-rebuild` na de wachttijd exit 44, een database die na 6 s opkomt wordt na 4 pogingen
+gevonden en de rebuild gaat door, de API en `dbproef` geven zonder database ook exit 44. De
+entrypoint is alleen op syntax gecontroleerd, niet in een container gedraaid.
+
+Uitrol:
+- **Schemawijziging: nee.**
+- **Rebuild uit het Studio-project: nee.**
+- **Andere stap: nee.** Optioneel `DB_WACHT_TIJD` (standaard 5 minuten). Op Kubernetes: de
+  `startupProbe` ruimer dan `DB_WACHT_TIJD` plus de rebuildtijd.
+- App: `bitemp-go-api:0.32.1` via `update.sh`. pf: niet uitgerold. Fundament:
+  `bitemp-devloop:0.35.1`, door FUNDAMENT.
 
 ---
 

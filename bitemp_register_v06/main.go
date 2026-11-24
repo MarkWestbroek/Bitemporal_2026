@@ -76,11 +76,13 @@ func main() {
 		fmt.Println("WARNING: REGISTRATIE_TIJD=synthetisch in productiecontext — registraties krijgen fictieve demo-tijdstippen; zet REGISTRATIE_TIJD=klok voor echte implementaties")
 	}
 
-	// Establish a connection to the PostgreSQL database
-	db, err := connectToDatabase()
+	// Verbinding met PostgreSQL. Is de database (nog) niet klaar, dan wachten we (db_wachten.go);
+	// lukt dat niet binnen DB_WACHT_TIJD, dan exitcode 44: de devloop-entrypoint stopt de
+	// container dan zonder terug te vallen op het baseline-model.
+	db, err := verbindMetDatabase("start")
 	if err != nil {
-		fmt.Println("Failed to connect to the database:", err)
-		return
+		fmt.Println("FATAL: geen database:", err)
+		os.Exit(handlers.ExitCodeDatabaseNietBereikbaar)
 	}
 	fmt.Println("Succesfully connected to the database.")
 	defer db.Close()
@@ -89,6 +91,12 @@ func main() {
 	err = dbsetup.CreateTables(db)
 	if err != nil {
 		fmt.Println("Failed to create table:", err)
+		// Viel de database weg tijdens de tabelaanmaak, dan ligt het niet aan het model.
+		if pingErr := dbBereikbaar(db); pingErr != nil {
+			fmt.Println("FATAL: database weggevallen tijdens de tabelaanmaak:", pingErr)
+			db.Close()
+			os.Exit(handlers.ExitCodeDatabaseNietBereikbaar)
+		}
 		return
 	}
 	fmt.Println("Table(s) created successfully or they were already present.")
@@ -169,14 +177,24 @@ func main() {
 
 // dbproef: zie main en dbsetup/proef.go. Exit 0 = het model past op de database.
 func dbproef() int {
+	// Exit 44: de database was niet bereikbaar; dat zegt niets over het model (de rebuild
+	// markeert de versie dan niet als mislukt).
 	db, err := connectToDatabase()
 	if err != nil {
 		fmt.Println("DBPROEF MISLUKT: database niet bereikbaar:", err)
-		return 1
+		return handlers.ExitCodeDatabaseNietBereikbaar
 	}
 	defer db.Close()
+	if err := dbBereikbaar(db); err != nil {
+		fmt.Println("DBPROEF MISLUKT: database niet bereikbaar:", err)
+		return handlers.ExitCodeDatabaseNietBereikbaar
+	}
 	if err := dbsetup.Proef(context.Background(), db); err != nil {
 		fmt.Println("DBPROEF MISLUKT:", err)
+		if pingErr := dbBereikbaar(db); pingErr != nil {
+			fmt.Println("DBPROEF: database weggevallen tijdens de proef:", pingErr)
+			return handlers.ExitCodeDatabaseNietBereikbaar
+		}
 		return 1
 	}
 	fmt.Println("DBPROEF OK: tabelaanmaak slaagt op deze database (teruggedraaid)")
@@ -198,28 +216,55 @@ func zelftest() (code int) {
 }
 
 // startupRebuild voert de startup-rebuild uit (zie main) en geeft de exitcode voor de entrypoint.
+//
+// Een database die niet bereikbaar of niet leesbaar is, is iets anders dan "geen actieve
+// schema-versie" (Fundament 24-11-2026): dan proberen we opnieuw met oplopende pauzes, en na
+// DB_WACHT_TIJD volgt exitcode 44. De ingebakken code (baseline) start dan NIET; de entrypoint
+// stopt de container en Kubernetes start hem opnieuw.
 func startupRebuild() int {
 	fmt.Println("=== Startup-rebuild: actieve schema-versie vergelijken met de gebouwde code ===")
+	code := 0
+	err := probeerTotDatabaseKlaar("startup-rebuild", func() error {
+		c, dbFout := startupRebuildPoging()
+		code = c
+		return dbFout
+	})
+	if err != nil {
+		fmt.Println("startup-rebuild: database niet bereikbaar; de container stopt (exit 44) zonder terugval op het baseline-model:", err)
+		return handlers.ExitCodeDatabaseNietBereikbaar
+	}
+	return code
+}
+
+// startupRebuildPoging is één poging. dbFout != nil: de database was niet bereikbaar of niet
+// leesbaar, opnieuw proberen. Anders is code de exitcode voor de entrypoint.
+func startupRebuildPoging() (code int, dbFout error) {
 	db, err := connectToDatabase()
 	if err != nil {
-		fmt.Println("startup-rebuild: geen databaseverbinding, ingebakken code wordt gestart:", err)
-		return 0
+		return 0, err
 	}
 	defer db.Close()
+	if err := dbBereikbaar(db); err != nil {
+		return 0, err
+	}
 	handlers.DB = db
+	defer func() { handlers.DB = nil }()
 	herbouwd, stappen, err := handlers.VoerStartupRebuildUit()
 	for _, stap := range stappen {
 		fmt.Println("  -", stap)
 	}
 	if err != nil {
+		if errors.Is(err, handlers.ErrDatabaseNietLeesbaar) {
+			return 0, err
+		}
 		fmt.Println("startup-rebuild MISLUKT; ingebakken code wordt gestart:", err)
-		return 0
+		return 0, nil
 	}
 	if herbouwd {
 		fmt.Println("=== Startup-rebuild voltooid: nieuwe binary wordt gestart ===")
-		return handlers.ExitCodeStartupHerbouwd
+		return handlers.ExitCodeStartupHerbouwd, nil
 	}
-	return 0
+	return 0, nil
 }
 
 func loadDotEnvIfPresent() {

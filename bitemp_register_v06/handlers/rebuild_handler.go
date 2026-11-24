@@ -184,7 +184,7 @@ func laadLaatsteSchemaVersieJSONOpStatus(status model.SchemaVersieStatus) ([]byt
 		Scan(ctx)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return nil, "", fmt.Errorf("geen schema-versie gevonden met status %q", status)
+			return nil, "", fmt.Errorf("%w met status %q", errGeenSchemaVersie, status)
 		}
 		return nil, "", fmt.Errorf("kan laatste schema-versie met status %q niet ophalen: %w", status, err)
 	}
