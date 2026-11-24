@@ -122,6 +122,22 @@ test("scenario bewaren in het project, terugkiezen, afspelen en toetsen aan de v
   await expect(verwachting).toContainText("via = Stel beschikking op");
   await foto(page, "sm-2-verwachting");
 
+  // Voorwaarden in de verwachting (24-11): operatoren in plaats van precies gelijk; wat niet klopt,
+  // noemt de voorwaarde en wat er gevonden is.
+  await page.getByTestId("sim-stop").click();
+  await scenario.fill(JSON.stringify({ ...gpk4, verwacht: { ...gpk4.verwacht, aanvraagnummer: { gevuld: true }, ingediendOp: { "<": "1900-01-01" } } }, null, 2));
+  await page.getByTestId("sim-start").click();
+  await page.getByTestId("sim-loop").click();
+  await expect(verwachting).toHaveAttribute("data-klopt", "false");
+  await expect(verwachting).toContainText("ingediendOp: verwacht < 1900-01-01, gevonden");
+  await page.getByTestId("sim-stop").click();
+  await scenario.fill(JSON.stringify({ ...gpk4, verwacht: { ...gpk4.verwacht, aanvraagnummer: { gevuld: true }, ingediendOp: { ">=": "2000-01-01" } } }, null, 2));
+  await page.getByTestId("sim-start").click();
+  await page.getByTestId("sim-loop").click();
+  await expect(verwachting).toHaveAttribute("data-klopt", "true");
+  await expect(verwachting).toContainText("aanvraagnummer is gevuld");
+  await expect(verwachting).toContainText("ingediendOp ≥ 2000-01-01");
+
   // Het model is te zien in Modelleren: het scenario-diagram tekent zonder fouten.
   await page.getByTestId("sim-stop").click();
   await page.evaluate((naam) => {

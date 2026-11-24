@@ -697,7 +697,7 @@ function Main() {
           <div style={{ marginTop: 6, color: verwachting.klopt ? "#16a34a" : TOKEN_KLEUR.vast }} data-testid="sim-verwachting" data-klopt={String(verwachting.klopt)}>
             {verwachting.klopt ? "✓ De afloop klopt met de verwachting van het scenario" : "! De afloop wijkt af van de verwachting van het scenario"}
             {": "}
-            {verwachting.punten.map((p) => (p.klopt ? `${p.wat} = ${typeof p.verwacht === "string" ? p.verwacht : JSON.stringify(p.verwacht)}` : `${p.wat}: verwacht ${JSON.stringify(p.verwacht)}, gevonden ${JSON.stringify(p.gevonden)}`)).join("; ")}
+            {verwachting.punten.map((p) => (p.klopt ? `${p.wat} ${p.toon}` : `${p.wat}: verwacht ${p.toon}, gevonden ${JSON.stringify(p.gevonden)}`)).join("; ")}
           </div>
         )}
         {S.fout && <div style={{ color: TOKEN_KLEUR.vast, marginTop: 6 }}>{S.fout}</div>}

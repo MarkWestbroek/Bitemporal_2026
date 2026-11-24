@@ -473,8 +473,8 @@ export function draaiTestset() {
       const t = sim.toestand();
       const toets = toetsVerwachting(scenario.verwacht, { stand, variabelen: t.variabelen, object: t.objecten[scenario.start?.id || "startobject"]?.data || {}, log: sim.log });
       if (!toets) uit.push({ ...rij, uitkomst: "geen verwachting", tekst: `eindigt als ${stand.soort}` });
-      else if (toets.klopt) uit.push({ ...rij, uitkomst: "klopt", tekst: toets.punten.map((p) => `${p.wat} = ${typeof p.verwacht === "string" ? p.verwacht : JSON.stringify(p.verwacht)}`).join("; ") });
-      else uit.push({ ...rij, uitkomst: "wijkt af", tekst: toets.punten.filter((p) => !p.klopt).map((p) => `${p.wat}: verwacht ${JSON.stringify(p.verwacht)}, gevonden ${JSON.stringify(p.gevonden)}`).join("; ") });
+      else if (toets.klopt) uit.push({ ...rij, uitkomst: "klopt", tekst: toets.punten.map((p) => `${p.wat} ${p.toon}`).join("; ") });
+      else uit.push({ ...rij, uitkomst: "wijkt af", tekst: toets.punten.filter((p) => !p.klopt).map((p) => `${p.wat}: verwacht ${p.toon}, gevonden ${JSON.stringify(p.gevonden)}`).join("; ") });
     } catch (e) {
       uit.push({ ...rij, uitkomst: "fout", tekst: e.message });
     }

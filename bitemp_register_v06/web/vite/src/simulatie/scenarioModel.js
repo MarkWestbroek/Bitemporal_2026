@@ -17,6 +17,7 @@
  * Puur.
  */
 import { GATSOORTEN } from "../diagramprofielen/simulatie/descriptor.js";
+import { toonVoorwaarde, voldoet } from "./voorwaarde.js";
 
 const lijst = (elements) => Object.values(elements || {});
 const json = (w) => JSON.stringify(w, null, 2);
@@ -268,11 +269,12 @@ export function scenarioNaarModel(scenario, { elements = {}, simulatieId = null,
  * Klopt de afloop van een run met de verwachting van het scenario? Getoetst wordt waar de run
  * stopt (het einde of het gat, op naam), of hij langs een stap kwam (`via`) en de verwachte
  * waarden: een naam (of pad met punten) in de procesvariabelen, anders op het startobject, anders
- * één niveau diep in een variabele (`leges` vindt `tarief.leges`). De `reden` is uitleg en
- * wordt niet getoetst.
+ * één niveau diep in een variabele (`leges` vindt `tarief.leges`). Een verwachte waarde mag een
+ * voorwaarde zijn (`{"leges": {">": 100}}`, zie `voorwaarde.js`). De `reden` is uitleg en wordt
+ * niet getoetst. Elk punt heeft een `toon`: de verwachting als tekst (`= Beschikt`, `> 100`).
  * @param {any} verwacht - `scenario.verwacht`
  * @param {{stand: any, variabelen?: Record<string, any>, object?: Record<string, any>, log?: any[]}} afloop
- * @returns {{klopt: boolean, punten: {wat: string, verwacht: any, gevonden: any, klopt: boolean}[]}|null} null = geen verwachting
+ * @returns {{klopt: boolean, punten: {wat: string, verwacht: any, toon: string, gevonden: any, klopt: boolean}[]}|null} null = geen verwachting
  */
 export function toetsVerwachting(verwacht, { stand, variabelen = {}, object = {}, log = [] }) {
   if (!verwacht || !Object.keys(verwacht).length) return null;
@@ -280,22 +282,22 @@ export function toetsVerwachting(verwacht, { stand, variabelen = {}, object = {}
   const punten = [];
   if (einde !== undefined) {
     const eindes = stand?.soort === "uitkomst" ? stand.eindes.map((e) => e.einde) : stand?.soort === "uitzondering" ? stand.bij : [];
-    punten.push({ wat: "einde", verwacht: einde, gevonden: eindes.join(", ") || `(${stand?.soort || "geen"})`, klopt: eindes.includes(einde) });
+    punten.push({ wat: "einde", verwacht: einde, toon: toonVoorwaarde(einde), gevonden: eindes.join(", ") || `(${stand?.soort || "geen"})`, klopt: eindes.includes(einde) });
   }
   if (gat !== undefined) {
     const gaten = stand?.soort === "gat" ? stand.gaten.map((g) => g.naam || g.plek) : [];
-    punten.push({ wat: "gat", verwacht: gat, gevonden: gaten.join(", ") || `(${stand?.soort || "geen"})`, klopt: gaten.includes(gat) });
+    punten.push({ wat: "gat", verwacht: gat, toon: toonVoorwaarde(gat), gevonden: gaten.join(", ") || `(${stand?.soort || "geen"})`, klopt: gaten.includes(gat) });
   }
   if (via !== undefined) {
     const langs = log.some((r) => r.wat === via);
-    punten.push({ wat: "via", verwacht: via, gevonden: langs ? via : "(niet langsgekomen)", klopt: langs });
+    punten.push({ wat: "via", verwacht: via, toon: toonVoorwaarde(via), gevonden: langs ? via : "(niet langsgekomen)", klopt: langs });
   }
   for (const [naam, waarde] of Object.entries(waarden)) {
     const pad = naam.split(".");
     const uit = (bron) => pad.reduce((o, k) => (o == null ? undefined : o[k]), bron);
     const genest = () => Object.values(variabelen).map((v) => (v && typeof v === "object" ? uit(v) : undefined)).find((v) => v !== undefined);
     const gevonden = uit(variabelen) !== undefined ? uit(variabelen) : uit(object) !== undefined ? uit(object) : genest();
-    punten.push({ wat: naam, verwacht: waarde, gevonden: gevonden === undefined ? "(geen waarde)" : gevonden, klopt: JSON.stringify(gevonden) === JSON.stringify(waarde) });
+    punten.push({ wat: naam, verwacht: waarde, toon: toonVoorwaarde(waarde), gevonden: gevonden === undefined ? "(geen waarde)" : gevonden, klopt: voldoet(gevonden, waarde) });
   }
   return { klopt: punten.every((p) => p.klopt), punten };
 }
