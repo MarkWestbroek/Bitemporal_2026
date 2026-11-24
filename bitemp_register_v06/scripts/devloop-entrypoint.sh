@@ -10,10 +10,16 @@
 # code de container permanent onbruikbaar maakt.
 #
 # Elke andere exit code na een succesvolle langlopende start stopt de container.
+#
+# Exit code 44 (database niet bereikbaar, na DB_WACHT_TIJD wachten; db_wachten.go) is nooit
+# een reden om het baseline-model terug te zetten: de container stopt, Kubernetes start hem
+# opnieuw. Aanleiding: Fundament 24-11-2026, de API startte vóór PostgreSQL klaar was en de
+# devloop viel terug op het baseline-model zonder de inrichtingsdomeinen.
 
 set -e
 
 CRASH_THRESHOLD_SECONDS=${CRASH_THRESHOLD_SECONDS:-10}
+EXIT_DATABASE_NIET_BEREIKBAAR=44
 
 echo "=== Devloop entrypoint ==="
 echo "Werkdirectory: $(pwd)"
@@ -68,6 +74,8 @@ if [ "${DEVLOOP_CONTAINER:-}" = "true" ] && [ "${STARTUP_REBUILD:-true}" != "fal
     case "$RC" in
         43) echo "=== Startup-rebuild: code opnieuw gegenereerd en gebouwd ===" ;;
         0)  echo "=== Startup-rebuild: niets te doen (of overgeslagen) ===" ;;
+        44) echo "=== Startup-rebuild: database niet bereikbaar; container stopt (geen terugval op baseline) ==="
+            exit $EXIT_DATABASE_NIET_BEREIKBAAR ;;
         *)  echo "=== Startup-rebuild eindigde met exit code $RC; ingebakken binary wordt gestart ===" ;;
     esac
 fi
@@ -88,6 +96,12 @@ while true; do
         echo ""
         echo "=== Exit code 42: rebuild voltooid, API herstarten... ==="
         continue
+    fi
+
+    if [ "$EXIT_CODE" -eq "$EXIT_DATABASE_NIET_BEREIKBAAR" ]; then
+        echo ""
+        echo "=== Exit code 44: database niet bereikbaar; container stopt (geen terugval op baseline) ==="
+        exit $EXIT_DATABASE_NIET_BEREIKBAAR
     fi
 
     # Crash-detectie: als de binary binnen de drempel stopt, rollback en herstart.

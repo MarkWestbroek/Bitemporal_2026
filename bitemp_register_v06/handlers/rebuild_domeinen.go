@@ -287,11 +287,16 @@ func laadGebouwdeDomeinenVanActieveVersie(ctx context.Context) ([]model.GebouwdD
 	var waarde sql.NullString
 	err := DB.NewRaw(`SELECT gebouwde_domeinen::text FROM schema_versies WHERE status = ? ORDER BY id DESC LIMIT 1`,
 		model.SchemaVersieStatusActive).Scan(ctx, &waarde)
-	if err == sql.ErrNoRows || !waarde.Valid || strings.TrimSpace(waarde.String) == "" || waarde.String == "null" {
+	if err == sql.ErrNoRows {
 		return nil, nil
 	}
+	// Eerst de fout, dan de lege waarde: bij een leesfout is waarde ook leeg, en dat was
+	// "geen lijst" (alle domeinen bouwen) in plaats van een fout (24-11-2026).
 	if err != nil {
 		return nil, err
+	}
+	if !waarde.Valid || strings.TrimSpace(waarde.String) == "" || waarde.String == "null" {
+		return nil, nil
 	}
 	var g []model.GebouwdDomein
 	if err := json.Unmarshal([]byte(waarde.String), &g); err != nil {

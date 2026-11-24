@@ -309,7 +309,30 @@ container gegenereerd was. Daarom roept `scripts/devloop-entrypoint.sh` in conta
    opnieuw** gebouwd (anders kost elke herstart minuten en loopt de pod in een lus). Een andere
    actieve versie, of het bestand verwijderen, heft dat op.
 
-Reken op 1–3 minuten extra starttijd bij een verschil (Kubernetes: `startupProbe` ruim zetten).
+**Database niet klaar is geen "geen actieve versie"** (aanleiding Fundament 24-11-2026: na een
+herstart van de node startte de API vóór PostgreSQL klaar was, de startup-rebuild las de fout als
+"geen versie" en de devloop viel terug op het baseline-model zonder de inrichtingsdomeinen). Nu
+geldt (`db_wachten.go`):
+
+- Alleen "geen rij met status `active`" of "geen tabel `schema_versies`" (verse database) is
+  *geen actieve versie*. Elke andere fout bij het lezen (verbinding geweigerd, "the database
+  system is shutting down/starting up", ook bij het lezen van `gebouwde_domeinen`) is een
+  databasefout.
+- Bij een databasefout probeert de startup-rebuild opnieuw met oplopende pauzes (1, 2, 4, 8 s,
+  daarna elke 15 s) tot `DB_WACHT_TIJD` om is (Go-duur, standaard `5m`). Daarna exit **44**: de
+  entrypoint stopt de container, Kubernetes start hem opnieuw. De ingebakken code start dan
+  **niet**.
+- De API zelf wacht bij het starten op dezelfde manier op de database, en stopt met exit 44 als
+  die wegblijft of wegvalt tijdens de tabelaanmaak. De entrypoint zet bij 44 het baseline-model
+  **niet** terug (de crash-terugval geldt alleen voor een snelle crash met een andere code).
+- Valt de database weg tijdens de databaseproef van de startup-rebuild (`dbproef` geeft dan 44),
+  dan wordt de versie niet als mislukt gemarkeerd; de volgende start bouwt haar gewoon.
+
+Een `initContainer` die met `pg_isready` op de database wacht, vangt het meeste al op; deze regel
+dekt ook een database die vlak daarna nog herstart.
+
+Reken op 1–3 minuten extra starttijd bij een verschil (Kubernetes: `startupProbe` ruim zetten,
+en ruimer dan `DB_WACHT_TIJD` als de database traag opkomt).
 Uitzetten met `STARTUP_REBUILD=false`. De exit-42-herstart ná een `/admin/rebuild` loopt hier
 niet opnieuw doorheen (de stap staat vóór de loop).
 

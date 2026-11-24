@@ -15,6 +15,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -30,6 +31,25 @@ import (
 // ExitCodeStartupHerbouwd is de exitcode van `startup-rebuild` als er een nieuwe binary staat
 // (de entrypoint start die dan). 0 = niets te doen of mislukt (de ingebakken binary start).
 const ExitCodeStartupHerbouwd = 43
+
+// ExitCodeDatabaseNietBereikbaar (44): de database bleef onbereikbaar (main.go, db_wachten.go).
+// Van `startup-rebuild`, van de API zelf en van `dbproef`. De devloop-entrypoint stopt de
+// container dan zonder terug te vallen op het baseline-model (Fundament 24-11-2026).
+const ExitCodeDatabaseNietBereikbaar = 44
+
+// ErrDatabaseNietLeesbaar: de startup-rebuild kon de database niet lezen. Dat is iets anders
+// dan "geen actieve schema-versie": de aanroeper probeert opnieuw en valt nooit terug op de
+// ingebakken code.
+var ErrDatabaseNietLeesbaar = errors.New("database niet leesbaar")
+
+// errGeenSchemaVersie: er is (nog) geen schema-versie met de gevraagde status.
+var errGeenSchemaVersie = errors.New("geen schema-versie gevonden")
+
+// geenActieveVersie: de fout betekent "er is geen actieve versie", niet "de database is niet
+// te lezen". Een verse database zonder tabel schema_versies (42P01) telt ook als geen versie.
+func geenActieveVersie(err error) bool {
+	return errors.Is(err, errGeenSchemaVersie) || sqlstateVan(err) == "42P01"
+}
 
 // actieveSchemaMarker (in _baseline/) bevat de hash van het model waaruit de huidige code
 // gebouwd is, zodat de startup-rebuild niet twee keer hetzelfde bouwt.
@@ -221,6 +241,10 @@ func voerCodegenEnBuildUit(appDir string, modelBytes []byte, domeinRuns []Rebuil
 		stappen = append(stappen, fmt.Sprintf("Databaseproef van het nieuwe model mislukt: %v", err))
 		os.Remove(nieuw)
 		rollback()
+		var exitErr *exec.ExitError
+		if errors.As(err, &exitErr) && exitErr.ExitCode() == ExitCodeDatabaseNietBereikbaar {
+			return stappen, uit, fmt.Errorf("%w: de database was niet bereikbaar tijdens de databaseproef — niets geactiveerd, model teruggedraaid", ErrDatabaseNietLeesbaar)
+		}
 		return stappen, uit, fmt.Errorf("het nieuwe model past niet op de database (dbproef: %v) — niets geactiveerd, model teruggedraaid; zie build_output", err)
 	}
 	stappen = append(stappen, "Databaseproef geslaagd (tabelaanmaak in een teruggedraaide transactie)")
@@ -355,8 +379,12 @@ func VoerStartupRebuildUit() (herbouwd bool, stappen []string, err error) {
 
 	modelBytes, melding, err := laadLaatsteSchemaVersieJSONOpStatus(model.SchemaVersieStatusActive)
 	if err != nil {
-		stappen = append(stappen, "Geen actieve schema-versie in de database; ingebakken code wordt gebruikt ("+err.Error()+")")
-		return false, stappen, nil
+		if geenActieveVersie(err) {
+			stappen = append(stappen, "Geen actieve schema-versie in de database; ingebakken code wordt gebruikt ("+err.Error()+")")
+			return false, stappen, nil
+		}
+		stappen = append(stappen, "Actieve schema-versie niet te lezen: "+err.Error())
+		return false, stappen, fmt.Errorf("%w: %v", ErrDatabaseNietLeesbaar, err)
 	}
 	stappen = append(stappen, melding)
 
@@ -383,7 +411,9 @@ func VoerStartupRebuildUit() (herbouwd bool, stappen []string, err error) {
 	var houden []string
 	gebouwd, err := laadGebouwdeDomeinenVanActieveVersie(context.Background())
 	if err != nil {
-		stappen = append(stappen, "Waarschuwing: domeinenlijst van de actieve versie niet leesbaar ("+err.Error()+"); alle domeinen van het model bouwen")
+		// Niet "alle domeinen bouwen": een leesfout is meestal een database die wegvalt.
+		stappen = append(stappen, "Domeinenlijst van de actieve versie niet te lezen: "+err.Error())
+		return false, stappen, fmt.Errorf("%w: %v", ErrDatabaseNietLeesbaar, err)
 	}
 	if len(gebouwd) > 0 {
 		for _, g := range gebouwd {
@@ -402,8 +432,12 @@ func VoerStartupRebuildUit() (herbouwd bool, stappen []string, err error) {
 	s2, uit, err := voerCodegenEnBuildUit(appDir, modelBytes, runs, houden)
 	stappen = append(stappen, s2...)
 	if err != nil {
-		_ = os.WriteFile(mislukteSchemaMarkerPad(appDir), []byte(hash+"\n"), 0644)
-		return false, stappen, fmt.Errorf("%v\n%s", err, strings.TrimSpace(string(uit)))
+		// Viel de database weg tijdens de databaseproef, dan ligt het niet aan deze versie:
+		// niet als mislukt markeren (anders wordt ze bij elke volgende start overgeslagen).
+		if !errors.Is(err, ErrDatabaseNietLeesbaar) {
+			_ = os.WriteFile(mislukteSchemaMarkerPad(appDir), []byte(hash+"\n"), 0644)
+		}
+		return false, stappen, fmt.Errorf("%w\n%s", err, strings.TrimSpace(string(uit)))
 	}
 	os.Remove(mislukteSchemaMarkerPad(appDir))
 	return true, stappen, nil
