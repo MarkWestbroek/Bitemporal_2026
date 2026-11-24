@@ -145,4 +145,9 @@ test("toetsVerwachting: GPK 1 komt uit waar het scenario het verwacht; een ander
   assert.equal(fout.klopt, false);
   assert.deepEqual(fout.punten.map((p) => [p.wat, p.klopt]), [["einde", false], ["via", false], ["aanvraagnummer", true], ["ontvankelijkheid.ontvankelijk", true], ["ontvankelijk", true]]);
   assert.equal(toetsVerwachting(null, afloop), null);
+  // Voorwaarden (§12.5 punt 6): operatoren in plaats van precies gelijk.
+  const op = toetsVerwachting({ aanvraagnummer: { gevuld: true }, "ontvankelijkheid.ontvankelijk": { "≠": true }, einde: "Beschikt" }, afloop);
+  assert.deepEqual(op.punten.map((p) => [p.wat, p.toon, p.klopt]), [["einde", "= Beschikt", false], ["aanvraagnummer", "is gevuld", true], ["ontvankelijkheid.ontvankelijk", "≠ true", true]]);
+  assert.equal(toetsVerwachting({ aanvraagnummer: { in: ["GPK-2026-0001", "GPK-2026-0002"] } }, afloop).klopt, true);
+  assert.equal(toetsVerwachting({ aanvraagnummer: { bevat: "XYZ" } }, afloop).klopt, false);
 });

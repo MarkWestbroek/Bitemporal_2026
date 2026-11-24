@@ -8,6 +8,12 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
 
+### Toegevoegd
+- **Simulatie: voorwaarden in de verwachting** (24-11): naast een precieze waarde kan een scenario nu verwachten
+  dat een waarde groter of kleiner is (`{"leges": {">": 100}}`), tussen twee grenzen ligt, ongelijk is, in een
+  lijst staat, gevuld of leeg is, of iets bevat. De afloop, de testset en de tekening tonen het leesbaar
+  (`leges > 100`).
+
 ## [studio/v0.48.0] — 2026-11-23
 
 Samen met api 0.32.0 en render 0.6.0. De centrale projecten (plan "Sidecar-project", stappen 1–10):

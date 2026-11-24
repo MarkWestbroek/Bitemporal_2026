@@ -151,7 +151,8 @@ export const elementTypes = [
       { key: "bij", label: "bij (element)", datatype: "element-verwijzing" },
       { key: "plek", label: "bij (naam)", datatype: "string", placeholder: "de naam van het einde of het gat" },
       { key: "via", label: "komt langs (naam van een stap)", datatype: "string" },
-      { key: "waarden", label: "verwachte waarden (json)", datatype: "tekst" },
+      // Een waarde mag een voorwaarde zijn: operatoren als sleutel (simulatie/voorwaarde.js, 24-11).
+      { key: "waarden", label: "verwachte waarden (json)", datatype: "tekst", placeholder: "{\"leges\": 50, \"status\": {\"≠\": \"afgewezen\"}, \"bedrag\": {\">=\": 50, \"<=\": 150}}" },
       { key: "reden", label: "reden (uitleg)", datatype: "tekst" },
       KLEUR_VELD,
     ],

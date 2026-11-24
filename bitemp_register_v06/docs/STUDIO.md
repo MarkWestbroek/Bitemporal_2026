@@ -2429,6 +2429,14 @@ dag vervangen).
     het `einde` of het `gat` waar hij stopt, `via` (een stap waar hij langs moet komen) en verwachte
     waarden (in de procesvariabelen, op het startobject, of één niveau diep in een variabele). De `reden` is
     uitleg en wordt niet getoetst (`toetsVerwachting`).
+  - **Voorwaarden in de verwachting** (24-11, naar de run state van EA): een verwachte waarde is óf een gewone
+    waarde (precies gelijk), óf een object met operatoren als sleutel. Meer operatoren gelden samen.
+    `{"leges": {">": 100}}`, `{"bedrag": {">=": 50, "<=": 150}}`, `{"status": {"≠": "afgewezen"}}`,
+    `{"status": {"in": ["a", "b"]}}` (en `niet in`), `{"kenmerk": {"gevuld": true}}` (`false` = leeg),
+    `{"naam": {"bevat": "Jan"}}` (tekst of lijst). Getallen vergelijken als getal, ook als tekst (`"120" > 100`);
+    de rest als tekst, zodat ISO-datums op volgorde staan. Een object met andere sleutels is een gewone
+    samengestelde waarde. De tekening, de regel onder de stand en de testset tonen de voorwaarde leesbaar
+    (`bedrag ≥ 50 en ≤ 150`, `kenmerk is gevuld`). Code: `simulatie/voorwaarde.js`.
   - **Subjecten:** een scenario uit het project draait op de subjecten van zijn simulatie: alleen die
     BPMN-diagrammen doen mee als proces. In het paneel Objecten staat "Draait op N processen (de subjecten
     van …)". Een simulatie zonder subjecten, of een scenario uit de ingebakken lijst, draait op alle processen

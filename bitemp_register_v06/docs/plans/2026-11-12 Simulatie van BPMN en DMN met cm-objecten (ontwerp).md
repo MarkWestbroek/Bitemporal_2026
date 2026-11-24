@@ -1182,7 +1182,7 @@ canvas, als instanties in een objectdiagram) valt samen met "instanties tekenen"
 3. Een subject dat geen diagram is (use case-realisatie), en een lezer per taal voor activity en sequence.
 4. (Gedaan 16-11: de Waterstede-scenario's staan in het demo-project op app en zijn uit de ingebakken lijst.)
 5. Zonder e-dienstmodel: hoe een relatie in het object is ingebed (nu onbekend).
-6. Operatoren in de Verwachting (`leges > 100`), naar de run state van EA.
+6. (Gedaan 24-11: operatoren in de Verwachting, `{"leges": {">": 100}}`; zie STUDIO.md en `simulatie/voorwaarde.js`.)
 7. Afgeleide velden (`/weergavenaam`) in de objectweergave: de simulatie rekent ze nog niet uit.
 
 ## Referenties

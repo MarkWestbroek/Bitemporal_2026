@@ -4,6 +4,7 @@
  * (bibliotheek-`rechthoek`) met eigen inhoud per type (`hooks.inhoudsregels` in descriptor.js),
  * getekend door de motor. Pure `.js`.
  */
+import { toonVoorwaarde } from "../../simulatie/voorwaarde.js";
 import { registreerShapeType } from "../../diagramcore/types/shapeType.js";
 import "../../diagramcore/tekenaar/bibliotheek.js";
 
@@ -17,7 +18,7 @@ const label = (ref, context) => (ref && typeof context?.verwijzingLabel === "fun
 const regel = (tekst, extra = {}) => ({ delen: [{ tekst, soort: "mono", kleur: GEDEMPT, ...extra }] });
 
 /** Json leesbaar inkorten: de sleutels van een object, of de waarde zelf. */
-export function jsonKort(tekst, max = 4) {
+export function jsonKort(tekst, max = 4, toon = null) {
   const t = String(tekst ?? "").trim();
   if (!t) return [];
   try {
@@ -25,7 +26,7 @@ export function jsonKort(tekst, max = 4) {
     if (w && typeof w === "object" && !Array.isArray(w)) {
       const paren = Object.entries(w);
       const kort = (v) => (v !== null && typeof v === "object" ? (Array.isArray(v) ? `[${v.length}]` : "{…}") : JSON.stringify(v));
-      const uit = paren.slice(0, max).map(([k, v]) => `${k} = ${kort(v)}`);
+      const uit = paren.slice(0, max).map(([k, v]) => (toon ? `${k} ${toon(v)}` : `${k} = ${kort(v)}`));
       if (paren.length > max) uit.push(`… nog ${paren.length - max}`);
       return uit;
     }
@@ -78,7 +79,7 @@ export function verwachtingInhoud(element, context = {}) {
   const bij = label(d.bij, context) || d.plek;
   if (bij) uit.push({ divider: true, ...regel(`${d.soort === "gat" ? "gat" : "einde"}: ${bij}`) });
   if (d.via) uit.push({ divider: !uit.length, ...regel(`via ${d.via}`) });
-  jsonKort(d.waarden).forEach((t, i) => uit.push({ divider: i === 0, ...regel(t) }));
+  jsonKort(d.waarden, 4, toonVoorwaarde).forEach((t, i) => uit.push({ divider: i === 0, ...regel(t) }));
   if (d.reden) uit.push({ divider: true, delen: [{ tekst: String(d.reden), soort: "tekst", kleur: "#334155", veld: "reden" }] });
   return uit;
 }
