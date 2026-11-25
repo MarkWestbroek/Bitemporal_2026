@@ -289,6 +289,14 @@ export const IconSHACL05 = (p) => (
   </svg>
 );
 
+/* Cedar: een policykaart met een vinkje (permit) en een schild-rand (toegang). */
+export const IconCedar05 = (p) => (
+  <svg {...base} {...p}>
+    <path d="M12 2.5 19.5 5v6.2c0 4.6-3.2 8.4-7.5 10.3-4.3-1.9-7.5-5.7-7.5-10.3V5Z" />
+    <path d="m8.5 12 2.5 2.5 4.5-5" />
+  </svg>
+);
+
 /* ERD (0.5): twee entiteitsdozen, verbonden door de kraaienpoot zelf —
    het symbool dat deze notatie herkenbaar maakt. */
 export const IconERD05 = (p) => (

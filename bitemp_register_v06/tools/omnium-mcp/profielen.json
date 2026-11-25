@@ -4046,6 +4046,209 @@
    ]
   },
   {
+   "id": "cedar05",
+   "naam": "Cedar",
+   "diagramTypeId": "cedar",
+   "elementen": [
+    {
+     "id": "policy",
+     "label": "Policy",
+     "omschrijving": "Een Cedar-policy (permit of forbid). Bewerk de Cedar-tekst; scope, condities en de pijlen naar het schema volgen eruit.",
+     "eigenschappen": [
+      "tekst",
+      "titel",
+      "beschrijving",
+      "status"
+     ]
+    },
+    {
+     "id": "entiteittype",
+     "label": "Entiteittype",
+     "omschrijving": "Een entiteittype uit het Cedar-schema; de attributen zijn de regels, `in` (memberOfTypes) een pijl.",
+     "eigenschappen": [
+      "tags",
+      "afgeleid",
+      "beschrijving"
+     ],
+     "velden": [
+      {
+       "id": "attributen",
+       "soort": "attribuut",
+       "fieldType": "attribuut"
+      }
+     ]
+    },
+    {
+     "id": "actie",
+     "label": "Actie",
+     "omschrijving": "Een actie uit het Cedar-schema (naam = het id); appliesTo als pijlen, `in` (memberOf) naar een actiegroep.",
+     "eigenschappen": [
+      "actietype",
+      "context",
+      "afgeleid",
+      "beschrijving"
+     ]
+    },
+    {
+     "id": "commontype",
+     "label": "Common type",
+     "omschrijving": "Een benoemd type uit het schema (commonTypes).",
+     "eigenschappen": [
+      "definitie",
+      "beschrijving"
+     ]
+    },
+    {
+     "id": "boundary",
+     "label": "Kader"
+    },
+    {
+     "id": "constraint",
+     "label": "Constraint",
+     "omschrijving": "Regel die het standaardarsenaal niet kan uitdrukken (UML Constraint), tussen {…}; koppel hem met annotatie-lijnen aan wat hij beperkt (bv. {xor} tussen twee relaties).",
+     "eigenschappen": [
+      "specificatie",
+      "taal"
+     ]
+    },
+    {
+     "id": "diagramverwijzing",
+     "label": "Diagramverwijzing",
+     "omschrijving": "Verwijst naar een ander diagram (ook in een andere taal); dubbelklik opent het."
+    }
+   ],
+   "connectoren": [
+    {
+     "id": "lid",
+     "label": "in (memberOf)",
+     "regels": [
+      {
+       "bron": [
+        "entiteittype",
+        "actie"
+       ],
+       "doel": [
+        "entiteittype",
+        "actie"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "geldtVoor",
+     "label": "appliesTo",
+     "regels": [
+      {
+       "bron": [
+        "actie"
+       ],
+       "doel": [
+        "entiteittype"
+       ]
+      }
+     ],
+     "eigenschappen": [
+      "rol"
+     ]
+    },
+    {
+     "id": "scope",
+     "label": "scope (afgeleid)",
+     "regels": [
+      {
+       "bron": [
+        "policy"
+       ],
+       "doel": [
+        "entiteittype",
+        "actie"
+       ]
+      }
+     ],
+     "eigenschappen": [
+      "rol"
+     ]
+    },
+    {
+     "id": "notitielijn",
+     "label": "Annotatie-lijn",
+     "omschrijving": "Van een notitie of constraint naar het element waar hij over gaat (UML annotatedElement / constrainedElement).",
+     "regels": [
+      {
+       "bron": [
+        "constraint"
+       ],
+       "doel": [
+        "policy",
+        "entiteittype",
+        "actie",
+        "commontype",
+        "boundary",
+        "constraint",
+        "diagramverwijzing"
+       ]
+      }
+     ]
+    }
+   ],
+   "layouts": [
+    {
+     "id": "cedar-lagen",
+     "label": "Auto-layout"
+    }
+   ],
+   "layoutTypen": [
+    {
+     "id": "policy",
+     "minBreedte": 380
+    },
+    {
+     "id": "entiteittype"
+    },
+    {
+     "id": "actie"
+    },
+    {
+     "id": "commontype"
+    },
+    {
+     "id": "boundary"
+    },
+    {
+     "id": "lid",
+     "isConnector": true
+    },
+    {
+     "id": "geldtVoor",
+     "isConnector": true
+    },
+    {
+     "id": "scope",
+     "isConnector": true
+    },
+    {
+     "id": "notitie",
+     "minBreedte": 100,
+     "minHoogte": 44
+    },
+    {
+     "id": "constraint",
+     "minBreedte": 100,
+     "minHoogte": 44
+    },
+    {
+     "id": "notitielijn",
+     "isConnector": true,
+     "aard": "annotatie"
+    },
+    {
+     "id": "diagramverwijzing",
+     "minBreedte": 120,
+     "minHoogte": 44
+    }
+   ]
+  },
+  {
    "id": "cmmn05",
    "naam": "CMMN",
    "diagramTypeId": "cmmn",

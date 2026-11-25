@@ -127,6 +127,12 @@ geeft het doel van de aanvraag nog niet door, dus een voorwaarde erop zou nooit 
   `… toestemming gaat voor.` of `… de eerste regel geldt.` — bij die laatste is
   de volgorde van de regels de prioriteit. Vergelijkbaar met de *combining
   algorithms* van XACML (deny-overrides, permit-overrides, first-applicable).
+- **"Is" bij een kenmerk met meer waarden** (besluit Mark 25-11): "de rol van de aanvrager is
+  behandelaar" betekent bij een persoon met meer rollen "heeft de rol behandelaar", dus één van
+  de waarden is behandelaar. Toegangsspraak schrijft geen `contains` of `in`: dat is de
+  programmeervorm (Cedar: `principal.functioneleRollen.contains("behandelaar")`). De vertaling
+  naar Cedar (plan *Cedar als M2*, fase 2) zet "is" op een meerwaardig kenmerk om in
+  `.contains(…)` en terug.
 - **Uitbreidbaar per domein**: vergelijkingen ("valt geheel binnen"),
   handelingen en plichten komen uit registers, niet uit de grammatica.
 

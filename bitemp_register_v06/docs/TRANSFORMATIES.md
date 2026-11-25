@@ -51,6 +51,8 @@ bron- en doelelement.
 | export | **SHACL-model → Turtle** | code: schrijver (`shacl/schrijver.js`), semantische rondreis |
 | transform | **Canoniek model → SHACL-shapes** (met kruisverbanden "genereert"); komt het model uit SHACL, dan gaat wat ongewijzigd is letterlijk terug (rondgang, `shacl/herkomst.js`) | code (`shacl/vanCanoniek.js`), zie plan *Linked data als M2* §12 fase 3 en 3b |
 | transform | **SHACL-shapes → canoniek model (UML)** (met kruisverbanden "genereert") | code (`shacl/naarCanoniek.js`), zie plan *Linked data als M2* §12 fase 3b |
+| import | **Cedar → Cedar-model**: Cedar-tekst, Cedar-JSON (policyset, policy, schema) of een Open FTV-policylijst; zonder schema wordt het afgeleid uit de policies | code: eigen lezer (`cedar/lezer.js`, EST gelijk aan cedar-wasm 4.15) + adapter (`cedar/adapter.js`, `cedar/cedarRegistry.js`); ook in het menu van de Cedar-activiteit; plan *Cedar als M2* fase 1 |
+| export | **Cedar-model → Cedar (tekst)**, **→ JSON-policyset**, **→ Open FTV-policylijst**, **→ Cedar-schema (JSON)** | code: schrijver (`cedar/schrijver.js`); een ongewijzigde policy gaat letterlijk terug, de Open FTV-lijst byte voor byte |
 | export | Map → JSON, Map → Markdown-overzicht | code |
 | export | Map → document (per documentsjabloon één transformatie, `document-<id>`) | sjabloon-renderer (`transformatie/sjabloon/`), zie *plans/2026-10-09 Documentsjablonen* |
 | export | **Use case-model → Mermaid flowchart** | **graafbeeld + regelset + toepasser + schrijver** (§3, §6) — de terugweg van de import, roundtrip getest |
