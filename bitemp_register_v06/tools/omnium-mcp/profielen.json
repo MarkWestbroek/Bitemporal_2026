@@ -4084,6 +4084,7 @@
      "omschrijving": "Een actie uit het Cedar-schema (naam = het id); appliesTo als pijlen, `in` (memberOf) naar een actiegroep.",
      "eigenschappen": [
       "actietype",
+      "handeling",
       "context",
       "afgeleid",
       "beschrijving"

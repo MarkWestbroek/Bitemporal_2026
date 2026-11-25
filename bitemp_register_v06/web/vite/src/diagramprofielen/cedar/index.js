@@ -40,6 +40,8 @@ const fieldTypes = [
       { key: "naam", label: "attribuut", datatype: "string", verplicht: true },
       { key: "typeLabel", label: "type (String, Long, Bool, Set<String>, een entiteittype, …)", datatype: "string" },
       { key: "optioneel", label: "optioneel (required: false)", datatype: "boolean" },
+      // Toegangsspraak (fase 2): de naam van het kenmerk in de zin; leeg = afgeleid ("…Rollen" → "rol").
+      { key: "kenmerk", label: "kenmerk in Toegangsspraak (leeg: afgeleid, …rollen → rol)", datatype: "string" },
     ],
   },
   { id: "cedarregel", viewer: "tekst", properties: [{ key: "naam", datatype: "string" }] },
@@ -120,6 +122,8 @@ const elementTypes = [
     icoon: "handeling",
     properties: [
       { key: "actietype", label: "type (Action, NS::Action; PABC: name)", datatype: "string" },
+      // Toegangsspraak (fase 2): de actielijst van het profiel is de woordenschat; één woord per actie.
+      { key: "handeling", label: "handeling in Toegangsspraak (één woord; leeg: laatste deel van de naam)", datatype: "string" },
       { key: "context", label: "context (Cedar-schema JSON, record)", datatype: "tekst" },
       AFGELEID,
       BESCHRIJVING,
@@ -290,6 +294,8 @@ export function cedarPosities({ ids, elements }) {
 export const cedarDiagramType = {
   id: CEDAR_ID,
   label: "Cedar",
+  // 1.1.0: handeling (actie) en kenmerk (attribuut) voor de vertaling met Toegangsspraak.
+  versie: "1.1.0",
   style: "uml-klassiek",
   randAanhechting: "zwevend",
   fieldTypes,

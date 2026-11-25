@@ -52,6 +52,7 @@ bron- en doelelement.
 | transform | **Canoniek model → SHACL-shapes** (met kruisverbanden "genereert"); komt het model uit SHACL, dan gaat wat ongewijzigd is letterlijk terug (rondgang, `shacl/herkomst.js`) | code (`shacl/vanCanoniek.js`), zie plan *Linked data als M2* §12 fase 3 en 3b |
 | transform | **SHACL-shapes → canoniek model (UML)** (met kruisverbanden "genereert") | code (`shacl/naarCanoniek.js`), zie plan *Linked data als M2* §12 fase 3b |
 | import | **Cedar → Cedar-model**: Cedar-tekst, Cedar-JSON (policyset, policy, schema) of een Open FTV-policylijst; zonder schema wordt het afgeleid uit de policies | code: eigen lezer (`cedar/lezer.js`, EST gelijk aan cedar-wasm 4.15) + adapter (`cedar/adapter.js`, `cedar/cedarRegistry.js`); ook in het menu van de Cedar-activiteit; plan *Cedar als M2* fase 1 |
+| tussen | **Cedar-model ↔ Toegangsspraak** (export "Cedar-model → Toegangsspraak", import "Toegangsspraak → Cedar-model") | regelsets + bouwers, §8.3; plan *Cedar als M2* fase 2 |
 | export | **Cedar-model → Cedar (tekst)**, **→ JSON-policyset**, **→ Open FTV-policylijst**, **→ Cedar-schema (JSON)** | code: schrijver (`cedar/schrijver.js`); een ongewijzigde policy gaat letterlijk terug, de Open FTV-lijst byte voor byte |
 | export | Map → JSON, Map → Markdown-overzicht | code |
 | export | Map → document (per documentsjabloon één transformatie, `document-<id>`) | sjabloon-renderer (`transformatie/sjabloon/`), zie *plans/2026-10-09 Documentsjablonen* |
@@ -627,6 +628,73 @@ aansluiten zodra het profiel ze vastlegt:
 | Een partij kan ook een **interne actor** zijn: een medewerker, een afdeling of een geautomatiseerde medewerker | een afdeling is een kenmerk van de aanvrager; een geautomatiseerde medewerker een eigen soort aanvrager | niet onderscheiden |
 | Een **asset** is een gegevenstype of een gegeven; een **asset collection** een populatie of een dataset. Open vraag (Mark): een verzameling en een type kunnen over hetzelfde gaan | een gegevenstype is een deel van het register (entiteit, gegevenselement, veld); een populatie is "alle gegevens van … waarvan …", dus een begrip met `waarvan` | naar naam en `odrl:partOf`-keten, zonder onderscheid tussen type en populatie |
 | Het profiel gaat **vergelijkingen** benoemen (niet uitputtend). Staat er een in het profiel, gebruik die; heb je een andere nodig, gebruik die en stel hem eventueel voor | de import herkent de vergelijkingen van het profiel naast die van ODRL; de export schrijft de naam van het profiel waar die er is, en houdt `ts:` voor de rest (kandidaten voor een voorstel: begint met, eindigt op, bevat, ligt tussen, is bekend, bestaat) | alleen `odrl:` en `ts:` zijn bekend; een vergelijking uit een ander vocabulaire is niet te vertalen |
+
+### 8.3 Cedar ↔ Toegangsspraak (2026-11-25)
+
+Fase 2 van het plan *Cedar als M2*. De eerste vertaling **tussen** twee Studio-talen in deze vorm,
+in beide richtingen. Toegangsspraak is de spil: naar ODRL gaat het daarna via §8.
+
+| Deel | Waar | Wat |
+|---|---|---|
+| woordenschat | `diagramprofielen/cedar/woordenschat.js` | het Cedar-model als woordenschat, in beide richtingen dezelfde. **Handelingen**: de acties (veld `handeling`; leeg = het laatste deel van de naam). **Kenmerken**: de attributen (veld `kenmerk`; leeg = afgeleid, `…Rollen` → "rol"). **Meerwaardig**: een attribuut van type `Set<…>` |
+| lezer (heen) | `cedar/cedarGraaf.js` | de EST van elke policy als brongraaf: policy, scope, actie, conditie (de `when` uit elkaar gelegd op `&&`), conditiegroep (`\|\|`) |
+| regelsets | `cedar/toegangsspraakRegels.js` | `CEDAR_NAAR_TOEGANGSSPRAAK` en `TOEGANGSSPRAAK_NAAR_CEDAR`, met de tabellen variabele ↔ anker en vergelijking ↔ Cedar-vorm |
+| bouwer (heen) | `cedar/naarToegangsspraak.js` | plan → beleid (AST) → `renderBeleid` |
+| graafbeeld (terug) | `toegangsspraak/graaf.js` | ongewijzigd, hetzelfde als voor ODRL |
+| schrijver (terug) | `cedar/vanToegangsspraak.js` | plan → EST per regel; groeperen tot policies; vergelijken met de basis |
+
+**Afbeelding.** Deze keuzes zijn gemaakt:
+
+- permit ↔ toestemming en forbid ↔ verbod. Cedar weigert standaard en daar wint het verbod. Dat
+  is hetzelfde als een beleid zonder `Standaard:` en `Bij conflict:`.
+- Een attribuut van de principal is een kenmerk van de aanvrager. Een attribuut van de resource is
+  een kenmerk van de gegevens, een attribuut van de context een kenmerk van de aanvraag.
+- `principal.functioneleRollen.contains("x")` ↔ `Iemand met rol "x"`. Het besluit van Mark staat
+  in TOEGANGSSPRAAK.md: "is" op een meerwaardig kenmerk betekent "één van de waarden is".
+- `resource is T` ↔ "alle gegevens van een T". `resource == T::"x"` ↔ ook "de id van de gegevens
+  is "x"". `resource in Pad::"a.b"` ↔ een registerpad.
+- `Doel:` wordt `context.doel == "…"`, op elke permit.
+
+Een regel heeft één handeling. Een policy met meer acties wordt daarom meer regels, met de naam
+"<policy> <handeling>". De terugweg voegt regels samen tot één policy als hun naam (zonder het
+woord) gelijk is en hun inhoud ook.
+
+**Het Cedar-model is de basis.** Zegt een policy hetzelfde als de policy met die naam in het
+model, dan gaat de oorspronkelijke tekst terug. De annotaties (`@reason`) en de velden van Open FTV
+blijven dan ook staan. Zo is de rondreis letterlijk; het is hetzelfde principe als de brontekst bij
+ODRL (§8.1). Per policy volgt een van deze uitkomsten:
+
+| Uitkomst | Wanneer |
+|---|---|
+| ongewijzigd | de policy zegt hetzelfde als in het model |
+| gewijzigd | de inhoud is nieuw; annotaties en velden komen uit het model, met een melding dat `@reason` misschien niet meer klopt |
+| nieuw | er was geen policy met deze naam; zonder Open FTV krijgt hij `@id` |
+| behouden | de policy kon niet in Toegangsspraak (heenweg: weggelaten) en blijft staan |
+| vervallen | de policy kon wel in Toegangsspraak, maar staat niet meer in de tekst; er volgt een melding |
+
+**Nooit ongemerkt ruimer**, zoals bij de ODRL-import (§8.2). Een toestemming met iets wat de
+andere kant niet kan zeggen, valt weg; het beleid wordt dan strenger. Een verbod verliest alleen dat
+stuk en geldt dus vaker, wat ook strenger is. Beide met een melding. Zo'n onderdeel is:
+
+- heen: `unless`, een methode, extensie of `if`, of `resource in` een entiteit;
+- terug: de betrokkene, een bestaansvraag, een plicht, `xof`, `Bij conflict:` (een fout) of een
+  waarde met een aanhalingsteken.
+
+Een onderdeel waarvoor de regelset geen regel heeft, telt ook als onvertaalbaar. Het valt nooit
+stil weg. Een policy die nooit geldt (`when { false }`) valt weg zonder dat de betekenis verandert.
+
+**Uitkomst op de 26 PABC-policies** (lokaal, privé):
+
+- 25 vertaald, tot één beleid met 55 regels en 7 handelingen;
+- het startbeleid blijft behouden;
+- de Open FTV-lijst komt byte voor byte terug;
+- de Toegangsspraak gaat zonder verlies door naar ODRL-AP-NL.
+
+**In de Studio:** *Transformeren*, export "Cedar-model → Toegangsspraak" (een download) en import
+"Toegangsspraak → Cedar-model". De import werkt het Cedar-model in de doelmap bij; zonder Cedar-model
+daar kent de taal de handelingen niet. De regelsets staan in de catalogus onder *tussen*.
+
+Tests: `cedar/toegangsspraak.test.js` (11, waarvan één alleen lokaal) en e2e 81.
 
 ## 9. Viewer, editor en de Transformatie-entiteit (ontwerp, 2026-10-06)
 

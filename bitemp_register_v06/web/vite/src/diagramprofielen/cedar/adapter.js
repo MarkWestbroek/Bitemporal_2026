@@ -260,6 +260,12 @@ function leidSchema(ests, elements, meldingen) {
         return;
       }
       if (k === "like") return zet(v.left, "String");
+      // `resource has x`: het attribuut bestaat (optioneel), type onbekend.
+      if (k === "has" && (v.left?.Var === "principal" || v.left?.Var === "resource")) {
+        const attr = Array.isArray(v.attr) ? v.attr[0] : v.attr;
+        for (const t of v.left.Var === "principal" ? pt : rt) if (!type(t).has(attr)) type(t).set(attr, "?");
+        return;
+      }
       if (Array.isArray(v)) return v.forEach((x) => zet(x));
       if (v && typeof v === "object") for (const x of Object.values(v)) if (x && typeof x === "object") zet(x);
     };

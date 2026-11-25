@@ -131,7 +131,7 @@ geeft het doel van de aanvraag nog niet door, dus een voorwaarde erop zou nooit 
   behandelaar" betekent bij een persoon met meer rollen "heeft de rol behandelaar", dus één van
   de waarden is behandelaar. Toegangsspraak schrijft geen `contains` of `in`: dat is de
   programmeervorm (Cedar: `principal.functioneleRollen.contains("behandelaar")`). De vertaling
-  naar Cedar (plan *Cedar als M2*, fase 2) zet "is" op een meerwaardig kenmerk om in
+  naar Cedar (plan *Cedar als M2*, fase 2; TRANSFORMATIES.md §8.3, gebouwd) zet "is" op een meerwaardig kenmerk om in
   `.contains(…)` en terug.
 - **Uitbreidbaar per domein**: vergelijkingen ("valt geheel binnen"),
   handelingen en plichten komen uit registers, niet uit de grammatica.

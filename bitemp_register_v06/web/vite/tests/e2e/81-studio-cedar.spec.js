@@ -77,3 +77,42 @@ test("PABC-voorbeeld: meldingen, kaarten op het diagram, export gelijk en na een
   expect(tekst).toContain('@reason("medewerkers: domein voorbeeld-a")\nforbid (');
   expect(tekst.match(/^permit \(/gm).length).toBe(4);
 });
+
+// Fase 2: Cedar ↔ Toegangsspraak via het transformatiepaneel. De Open FTV-lijst in een map, naar
+// Toegangsspraak (download), de tekst bewerken, terug in dezelfde map: de gewijzigde policy houdt
+// @reason, de rest blijft letterlijk, en de Open FTV-export geeft de bewerkte lijst.
+const LIJST = path.resolve(hier, "../../src/diagramprofielen/cedar/fixtures/pabc-voorbeeld.openftv.json");
+
+test("Toegangsspraak heen en terug in een map; ongewijzigde policies letterlijk", async ({ page }) => {
+  await openStudio(page);
+  await cedar(page, "return true;");
+  const map = await page.evaluate(async () => {
+    const { useModellerenStore: ms } = await import(location.origin + "/viz/react/src/studio/activities/modellerenActivity.jsx");
+    return ms.getState().nieuweMap("PABC");
+  });
+  const run = (richting, id, arg) =>
+    page.evaluate(async ({ richting, id, arg }) => {
+      const { getTransformaties } = await import(location.origin + "/viz/react/src/studio/activities/transformatieRegistry.js");
+      const r = await getTransformaties(richting).find((t) => t.id === id).run(arg);
+      return { status: r.status, summary: r.summary };
+    }, { richting, id, arg });
+
+  const lijst = readFileSync(LIJST, "utf8");
+  expect((await run("import", "import-cedar", { bron: { naam: "pabc.openftv.json", tekst: lijst }, doelMap: map })).summary).toMatch(/^5 policies/);
+
+  let download = page.waitForEvent("download");
+  const heen = await run("export", "export-cedar-toegangsspraak", { bronMap: map, mapNaam: "PABC" });
+  expect(heen.summary).toMatch(/PABC\.toegangsspraak\.txt geschreven: 4 policies vertaald/);
+  const tekst = readFileSync(await (await download).path(), "utf8");
+  expect(tekst).toContain('Iemand met rol "medewerkers" mag alle gegevens van een pabc entiteittype raadpleger');
+
+  const terug = await run("import", "import-toegangsspraak-cedar", { bron: { naam: "pabc.txt", tekst: tekst.replace('"voorbeeld-b"', '"voorbeeld-c"') }, doelMap: map });
+  expect(terug.summary).toBe("3 ongewijzigd, 1 gewijzigd, 0 nieuw, 1 behouden.");
+  const gewijzigd = await cedar(page, 'return st.elements["pol_voorbeeld_medewerkers_domein-b"].data.tekst;');
+  expect(gewijzigd).toMatch(/^@reason\("medewerkers: domein voorbeeld-b"\)\npermit \([\s\S]*contains\("voorbeeld-c"\)/);
+
+  download = page.waitForEvent("download");
+  await run("export", "export-cedar-openftv", { bronMap: map, mapNaam: "PABC" });
+  const uit = readFileSync(await (await download).path(), "utf8");
+  expect(uit).toBe(lijst.replace(/\r\n/g, "\n").replace('contains(\\"voorbeeld-b\\")', 'contains(\\"voorbeeld-c\\")'));
+});

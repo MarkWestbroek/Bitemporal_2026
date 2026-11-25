@@ -12,6 +12,7 @@
  * Geen stores: dit bestand is in de node-testrunner te laden.
  */
 import { registreerRegelset } from "../../transformatie/regelsetCatalogus.js";
+import { CEDAR_NAAR_TOEGANGSSPRAAK, TOEGANGSSPRAAK_NAAR_CEDAR } from "../../diagramprofielen/cedar/toegangsspraakRegels.js";
 import { leesMermaidFlowcharts } from "../../transformatie/mermaidFlowchart.js";
 import { planNaarMermaid } from "../../transformatie/mermaidSchrijver.js";
 import { leesBpmn } from "../../transformatie/bpmnXml.js";
@@ -112,6 +113,10 @@ registreerRegelset(ODRL_AP_NL_NAAR_TOEGANGSSPRAAK, {
     uitleg: "Plak ODRL in Turtle (ODRL-AP-NL).",
   },
 });
+// Cedar ↔ Toegangsspraak (TRANSFORMATIES.md §8.3). De bouwers hebben het Cedar-model als woordenschat
+// (acties, kenmerken) nodig; proefdraaien op geplakte tekst kan daarom (nog) niet.
+registreerRegelset(CEDAR_NAAR_TOEGANGSSPRAAK, { richting: "tussen", bestand: "diagramprofielen/cedar/toegangsspraakRegels.js" });
+registreerRegelset(TOEGANGSSPRAAK_NAAR_CEDAR, { richting: "tussen", bestand: "diagramprofielen/cedar/toegangsspraakRegels.js" });
 registreerRegelset(CANONIEK_NAAR_OBJECTTYPE, { richting: "uit", bestand: "diagramprofielen/canoniek-uml/objecttypeRegels.js" });
 registreerRegelset(CANONIEK_NAAR_FORMULIER, { richting: "uit", bestand: "diagramprofielen/canoniek-uml/formulierRegels.js" });
 registreerRegelset(CANONIEK_NAAR_ZAAKTYPE, { richting: "uit", bestand: "diagramprofielen/canoniek-uml/zaaktypeRegels.js", schema: ZAAKTYPE_SCHRIJVER_SCHEMA, schrijver: "zaaktype-schrijver (diagramprofielen/canoniek-uml/zaaktypeArtefact.js)" });
@@ -127,5 +132,8 @@ export function geenProefUitleg(vermelding) {
       : "Deze regelset bestaat uit instellingen die een schrijver leest; er zijn geen regels om proef te draaien. De instellingen hebben nog geen beschrijving, dus je ziet ze als JSON.";
   }
   if (vermelding?.regelset?.id === TOEGANGSSPRAAK_NAAR_ODRL_AP_NL.id) return "De bron is een toegangsbeleid uit Toegangverlening; proefdraaien hier volgt.";
+  if ([CEDAR_NAAR_TOEGANGSSPRAAK.id, TOEGANGSSPRAAK_NAAR_CEDAR.id].includes(vermelding?.regelset?.id)) {
+    return "De bouwers lezen het Cedar-model als woordenschat (de actielijst en de kenmerken); gebruik Transformeren met een map die een Cedar-model bevat.";
+  }
   return SAMENGESTELD;
 }

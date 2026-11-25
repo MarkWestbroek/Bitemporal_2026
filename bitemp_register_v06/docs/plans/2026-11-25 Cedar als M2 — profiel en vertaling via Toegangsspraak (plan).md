@@ -1,6 +1,6 @@
 # Cedar als M2: profiel en vertaling via Toegangsspraak (plan)
 
-Status 25-11-2026: **fase 1 gebouwd** (branch `feat/cedar-profiel`), fase 2 en 3 open.
+Status 25-11-2026: **fase 1 en 2 gebouwd** (branch `feat/cedar-profiel`; fase 1 in 5b7b6902), fase 3 open.
 Opdracht van Mark (25-11), op voorstel van de sessie ODRL.
 
 ## Aanleiding
@@ -20,9 +20,9 @@ naar ODRL via de bestaande keten Toegangsspraak → ODRL-AP-NL (TRANSFORMATIES.m
 | Lezer en schrijver | **Eigen JS**, geen `@cedar-policy/cedar-wasm`. De officiële parser (4.15) weigert alle PABC-policies: die schrijven een actie als `name::"zaakafhandelcomponent/behandelaar"`, terwijl Cedar een actie van type `Action` eist (`name::Action::"…"`). Open FTV gebruikt cedar-go v1.8.0 (go.mod), dat het wel aanneemt. De eigen lezer leest beide en geeft dezelfde EST als cedar-wasm (gecontroleerd); de adapter meldt de afwijking en verandert de vorm niet. Bijkomend: geen 4,4 MB wasm in de Studio. cedar-wasm kan later terug als optionele strikte controle. |
 | Opslag | Per policy de **Cedar-tekst** (het bewerkvlak) en de **EST** (JSON-vorm van Cedar), die eruit volgt. Ongewijzigd terugschrijven geeft dezelfde bytes. |
 | Schema | Lezen als Cedar-schema (JSON). PABC heeft **geen schema** (de PDP draait zonder; de entiteiten komen per verzoek via AuthZEN). Dan leidt de adapter het af uit de policies: typen uit de scope, attributen en hun type uit de condities, acties met appliesTo. Gemarkeerd als `afgeleid`. |
-| Applicatierollen ↔ handelingen | **Eigen actielijst in het profiel** (Mark 25-11), geen vaste tabel met werkwoorden: de acties uit het schema (of afgeleid) zijn de woordenschat. Fase 2. |
+| Applicatierollen ↔ handelingen | **Eigen actielijst in het profiel** (Mark 25-11), geen vaste tabel met werkwoorden: de acties uit het schema (of afgeleid) zijn de woordenschat. Per actie één woord in het veld `handeling`; leeg = het laatste deel van de naam (`…/behandelaar` → `behandelaar`). |
 | `contains` ↔ "is" | "Is" op een kenmerk met meer waarden betekent "heeft de rol / één van de waarden is" (Mark 25-11); `contains` is de programmeervorm. Vastgelegd in TOEGANGSSPRAAK.md; de vertaling in fase 2. |
-| Betrokkene → `resource.<attr>` | In fase 1 en 2 weggelaten, met een melding: bij registerpaden als entiteiten is het record niet de resource. Later met Mark. |
+| Kenmerk van de resource | `resource.<attr>` ↔ een kenmerk van **de gegevens** ("de domeinen van de gegevens is …"), niet van de betrokkene: de betrokkene is de persoon over wie de gegevens gaan, en die kent Cedar niet (een voorwaarde erover: melding, permit valt weg). De proef van ODRL gebruikte "betrokkene"; ter bevestiging aan Mark. |
 | Testdata | **Verzonnen** PABC-vormige policies in `diagramprofielen/cedar/fixtures/` (rollen en domeinen bedacht). De echte 26 PABC-policies staan in de privé-repo van Fundament en komen niet in deze (publieke) repo; een test leest ze alleen lokaal en slaat over als het bestand er niet is. |
 | Grenzen | Geen koppeling met de PAP (lezen of schrijven via `/v1/policies`): dat loopt later via FUNDAMENT, schrijven alleen met akkoord van Mark. Geen wijzigingen in `toegang/`, `pep/`, `bundel.js` (van de sessie ODRL). De Go-PDP blijft de uitvoerder; Cedar is een uitwisselvorm. |
 
@@ -64,7 +64,21 @@ Getest:
 - render-svc: 49/49.
 - Alle unit-tests: 1932.
 
-## Fase 2: Cedar ↔ Toegangsspraak (open)
+## Fase 2: Cedar ↔ Toegangsspraak (gebouwd 25-11)
+
+Gebouwd zoals hieronder beschreven; de uitwerking staat in TRANSFORMATIES.md §8.3. Wat afwijkt van
+de proef van ODRL:
+
+- De heenweg leest de EST via de regelset, niet de tekst met een regex: elk Cedar-beleid gaat
+  erdoor, PABC is geen speciaal geval.
+- `@reason`, titel, beschrijving, regeling en pdps worden niet uit het patroon opnieuw opgebouwd.
+  Ze komen uit het Cedar-model als basis: een policy die hetzelfde zegt, gaat letterlijk terug.
+- Het startbeleid valt op de heenweg weg met een melding (de betekenis verandert niet) en blijft
+  op de terugweg staan.
+- De handelingen heten standaard naar de actie (`behandelaar`, `brp_zoeken`); een werkwoord als
+  "behandelen" is een keuze per actie in het veld `handeling`.
+
+De oorspronkelijke opzet:
 
 In de transformatievorm lezer → regelset → toepasser (zoals Toegangsspraak → ODRL-AP-NL):
 
@@ -119,6 +133,9 @@ Vorm uit de proef van de sessie ODRL (scratch `pabc/omzetten.mjs`, niet in de re
   geen doel.
 
 ## Fase 3: Cedar → ODRL via Toegangsspraak (open)
+
+Voorproef in fase 2: de Toegangsspraak van het PABC-voorbeeld gaat zonder verlies door de bestaande
+export (test in `cedar/toegangsspraak.test.js`). De controle met pyshacl staat nog open.
 
 Cedar → Toegangsspraak (fase 2) → ODRL-AP-NL (bestaande regelset `odrlApNlRegels.js`; de rol als
 `apnl:rolAanvrager` in een verfijning op de handeling). Controle met pyshacl tegen de SHACL-kern
