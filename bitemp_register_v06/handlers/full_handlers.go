@@ -282,6 +282,10 @@ func verrijkResponseMetWeergavenamen(c *gin.Context, entities any, entityMeta mo
 		isSlice = true
 	}
 
+	// Het doel wordt gelezen op hetzelfde formele peilmoment als de rest van het antwoord
+	// (?t= / ?peiltijdstip=, anders nu; effectiefPeil, net als de afgeleide relaties).
+	peil, _ := effectiefPeil(c)
+
 	for _, target := range targets {
 		// Verzamel alle FK-IDs uit alle entiteiten
 		fkIDs := make(map[int]bool)
@@ -312,7 +316,7 @@ func verrijkResponseMetWeergavenamen(c *gin.Context, entities any, entityMeta mo
 			idList = append(idList, id)
 		}
 
-		weergaveMap, err := laadWeergavenamenVoorEntiteiten(c, target.doelMeta, idList)
+		weergaveMap, err := laadWeergavenamenVoorEntiteiten(c, target.doelMeta, idList, peil)
 		if err != nil {
 			continue // bij fout: gewoon doorgaan zonder verrijking
 		}
@@ -357,21 +361,28 @@ func verrijkResponseMetWeergavenamen(c *gin.Context, entities any, entityMeta mo
 
 // laadWeergavenamenVoorEntiteiten laadt doelentiteiten en berekent hun weergavenaam.
 // Retourneert een map van ID → weergavenaam-string.
-func laadWeergavenamenVoorEntiteiten(c *gin.Context, doelMeta model.TypeMeta, ids []int) (map[int]string, error) {
+//
+// Formele tijd (sinds 25-11-2026): het doel en zijn gegevenselementen worden gelezen zoals ze
+// op peil geregistreerd stonden. Een doel dat op peil is afgevoerd (of nog niet bestond)
+// staat niet in de map, zodat het relatie-item geen weergavenaam krijgt. Tot dan las deze
+// functie zonder tijdfilter: een relatie naar een afgevoerde Koppeling toonde nog haar naam,
+// alsof ze bestond, en bij een gewijzigde naam kon een oude versie de weergavenaam leveren.
+func laadWeergavenamenVoorEntiteiten(c *gin.Context, doelMeta model.TypeMeta, ids []int, peil time.Time) (map[int]string, error) {
 	if doelMeta.SliceFactory == nil {
 		return nil, fmt.Errorf("SliceFactory ontbreekt voor %s", doelMeta.Typenaam)
 	}
 
 	targetEntities := doelMeta.SliceFactory()
 	query := DB.NewSelect().Model(targetEntities)
-	query = addOnderliggendeRelations(query, doelMeta, nil)
-	err := query.Where(doelMeta.IDKolom+" IN (?)", bun.In(ids)).Scan(c.Request.Context())
+	query = applyFormeleTijdFilterVoorModel(query, doelMeta.Typenaam, peil)
+	query = addOnderliggendeRelations(query, doelMeta, &peil)
+	err := query.Where("?TableAlias.? IN (?)", bun.Ident(doelMeta.IDKolom), bun.In(ids)).Scan(c.Request.Context())
 	if err != nil {
 		return nil, err
 	}
 
 	// Post-load hub-kinderen
-	if err := laadHubKinderenNaQuery(c, targetEntities, doelMeta, nil); err != nil {
+	if err := laadHubKinderenNaQuery(c, targetEntities, doelMeta, &peil); err != nil {
 		return nil, err
 	}
 

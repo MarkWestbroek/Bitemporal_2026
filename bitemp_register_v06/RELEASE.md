@@ -8,6 +8,28 @@
 
 ---
 
+## api 0.32.2 / devloop 0.35.2 (2026-11-25)
+
+Akkoord Mark 25-11 ("ja, C&M&release, app wel, pf niet"). Devloop 0.35.2 is api 0.32.2 met
+studio 0.48.0 en render 0.6.0 (ongewijzigd).
+
+- **Weergavenaam van een afgevoerd relatiedoel** (INRICHTEN_VIZ 25-11, op verzoek van Mark).
+  `GET /full/...` las het doel van een relatie zonder formeel tijdfilter. Een relatie naar een
+  afgevoerde entiteit (bv. EDienstversie → afgevoerde Koppeling) toonde zo nog de naam van het doel,
+  alsof het bestond; na een naamswijziging kon zelfs een oude naam verschijnen. Nu leest
+  `laadWeergavenamenVoorEntiteiten` (`handlers/full_handlers.go`) het doel en zijn GE's op het
+  peilmoment van de vraag (`effectiefPeil`: `peiltijdstip`/`t`, anders nu). Een afgevoerd doel
+  geeft geen `weergavenaam`. GraphQL las het doel al op nu. Proef op een wegwerp-database
+  (Organisatie → contactpersoon Persoon): main toonde na de afvoer van de persoon de oude naam
+  "Jansen"; nu geen naam, en met een peiltijdstip vóór de afvoer de toen geldende naam.
+
+Uitrol:
+- **Schemawijziging: nee.**
+- **Rebuild uit het Studio-project: nee.**
+- **Andere stap: nee.**
+- App: `bitemp-go-api:0.32.2` via `update.sh`. pf: niet uitgerold. Fundament:
+  `bitemp-devloop:0.35.2`, door FUNDAMENT.
+
 ## api 0.32.1 / devloop 0.35.1 (2026-11-24)
 
 Akkoord Mark 24-11 ("ja, graag C&M&release, app wel, pf niet"). Devloop 0.35.1 is api 0.32.1 met
