@@ -2,6 +2,11 @@
 .gitignore
 .vscode
 
+# Geheimen nooit in een image (de devloop-image bevat de hele broncode). Alleen de voorbeelden mogen mee.
+**/.env
+**/.env.*
+!**/.env*.example
+
 app
 # rebuild-kopieën van model/ (devloop maakt zelf een verse baseline; zie Dockerfile.devloop)
 _baseline
