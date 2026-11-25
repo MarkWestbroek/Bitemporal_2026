@@ -928,6 +928,17 @@ De full-entity endpoints (`GET /full/{pad}`, `GET /full/{pad}/:id`) werken versc
 
 > **Let op**: de huidige default toont dus ook afgevoerde records, met de actuele afgeleide `opvoer`/`afvoer`-waarden. Er is nog geen "actueel"-filter dat standaard alleen niet-afgevoerde representaties toont zonder expliciet peiltijdstip.
 
+### Weergavenaam van een relatiedoel
+
+Een relatie-item naar een entiteit met een weergaveveld krijgt `weergavenaam`: de naam van het
+doel. Sinds api 0.32.2 (25-11-2026) wordt het doel gelezen op het formele
+peilmoment van de vraag (`peiltijdstip`/`t`), en **zonder peiltijdstip op nu**, ook al toont de
+rest van het antwoord dan de hele geschiedenis. Een doel dat op dat moment is afgevoerd, levert
+geen `weergavenaam`: het relatie-item heeft dan alleen het doel-id. Dat is het teken van een
+hangende verwijzing (de relatie zelf is niet mee afgevoerd). Bij een gewijzigde naam komt de naam
+die op dat moment gold. Daarvoor werd het doel zonder tijdfilter gelezen: een afgevoerd doel
+behield zijn naam, soms zelfs een oude. GraphQL las het doel al op nu.
+
 ### Peilmoment-formule (`t`)
 
 De `t`-parameter wordt omgezet naar een tijdstip via:
