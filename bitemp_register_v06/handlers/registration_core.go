@@ -157,6 +157,11 @@ func RegistreerCore(ctx context.Context, db *bun.DB, req model.RegistreerRequest
 	if rerr := controleerBeheerdomein(ctx, req.Wijzigingen); rerr != nil {
 		return RegistreerResult{}, rerr
 	}
+	// Schrijffilter per account (registration_schrijffilter.go): een serviceaccount met een
+	// filter mag alleen de typen raken die op zijn patronen passen (REGISTRATIE_SCHRIJFFILTER).
+	if rerr := controleerSchrijffilter(ctx, tx, &req); rerr != nil {
+		return RegistreerResult{}, rerr
+	}
 
 	// B.A.2: valideer alle representaties op basis van V3Datatype-regels.
 	// In strict-modus → eerste fout = HTTP 422 + rollback. In lenient/warnings-only

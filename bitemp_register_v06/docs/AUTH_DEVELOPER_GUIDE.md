@@ -902,6 +902,57 @@ Een wijziging werkt binnen 30 seconden (cache in de middleware, §3.5a).
 - Seed en migratie registreren als systeemaanroep (`middleware.AlsSysteem`).
 - Registraties hebben (nog) geen actor-veld; bron `gebruikersbeheer` markeert seed en migratie.
 
+### Schrijffilter per account (serviceaccounts)
+
+Sinds api 0.33.0 (besluit Mark 25-11-2026). Een serviceaccount dat moet registreren heeft de rol
+`bouwer` nodig, en die mag overal schrijven. Met een schrijffilter mag zo'n account alleen een
+paar typen raken. Aanleiding: het account `omnium-koppelaar` van de inrichtingssite (Imprint,
+omgevingswizard), dat Koppeling, Component en Omgeving schrijft.
+
+De lijst staat in de omgevingsvariabele van de API (`middleware/schrijffilter.go`):
+
+```bash
+REGISTRATIE_SCHRIJFFILTER="omnium-koppelaar=koppeling*,component*,omgeving*,edienstversiekoppeling"
+# meer accounts: scheiden met ';'
+```
+
+- **Patroon:** een typenaam (hoofdletterongevoelig, zoals in `MetaRegistry`) of een voorvoegsel
+  met `*` aan het eind. `koppeling*` dekt `Koppeling`, `KoppelingNaam`, `KoppelingNaam_Data`, …;
+  `component*` dekt ook `Componentversie*`. Een relatie telt onder haar eigen typenaam:
+  `EDienstversieKoppeling` (de relatie vanaf de e-dienstversie) valt níet onder `koppeling*` en
+  staat er daarom los in.
+- **Wat het account mag:** alleen `POST /registratie/`. Elke andere route die meer dan `lezer`
+  vraagt, geeft `403 {reden: "schrijffilter"}` (`ControleerRol`): `PATCH /registraties`, de
+  gegenereerde POST/PATCH/DELETE-routes, GraphQL-mutaties, de schema-routes, uploads, de
+  EA-import, Studio-projecten. Lezen blijft zoals de rol het toestaat.
+- **Wat de engine controleert** (`handlers/registration_schrijffilter.go`, in `RegistreerCore`):
+  elk type in de registratie moet op een patroon passen, bij opvoer en afvoer, ook de GE's en
+  relaties die genest in een opvoer zitten (en `_Aanvang`/`_Einde`/`_Data`), bij een correctie,
+  en bij een ongedaanmaking: dan de typen van de wijzigingen die ongedaan worden gemaakt. Anders
+  `403` als `application/problem+json` (RFC 9457, zoals de 422 van de validatie), met
+  `code: "schrijffilter"` en per geweigerd type één regel in `invalidParams`:
+
+  ```json
+  {"type": "https://api.bitemporeel/problemen/schrijffilter", "title": "Schrijffilter", "status": 403,
+   "detail": "account omnium-koppelaar mag deze typen niet schrijven: Persoon, Persoon_Aanvang (toegestaan: organisatie*, contactpersoon)",
+   "instance": "/registratie/", "code": "schrijffilter",
+   "invalidParams": [{"name": "Persoon", "code": "type_niet_toegestaan", "reason": "Persoon valt niet onder het schrijffilter van omnium-koppelaar (toegestaan: …)"}, …]}
+  ```
+
+  Een geweigerde route (bv. PATCH) geeft de gewone vorm van de middleware:
+  `{"error": "Account … heeft een schrijffilter en mag alleen registreren via POST /registratie/.", "reden": "schrijffilter"}`.
+- **Ongeldige waarde** (bv. `*` midden in een patroon, een account dubbel): de API meldt bij de
+  start `FOUT schrijffilter: …`, en elk account dat in de waarde genoemd wordt, mag dan niets
+  schrijven tot de waarde is hersteld (fail-closed). Een patroon waar geen type op past, geeft
+  bij de start `LET OP: geen type in het model past op …` (bv. vóór de rebuild die het type
+  toevoegt); het account mag dan de andere typen wel.
+- **Wie zet het:** wie de API uitrolt (op app de `.env` van de stack, op Fundament de
+  deployment). Wijzigen vraagt een herstart; het staat niet in het register. Het account zelf
+  maakt een beheerder aan zoals elk ander (rol `bouwer`, §Gebruiker aanmaken). Zonder
+  `AUTH_ENABLED` geldt het filter niet (dev).
+- **Later:** het schrijfpad van de toegangsbundel (TOEGANGSSPRAAK.md, fase 2) is het eindbeeld;
+  dit filter kan daarin opgaan.
+
 ### Inloggen
 
 `POST /api/auth/login` zoekt de gebruikersnaam in het register, controleert het wachtwoord uit

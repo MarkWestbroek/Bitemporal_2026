@@ -8,6 +8,29 @@
 
 ---
 
+## api 0.33.0 / devloop 0.36.0 (2026-11-25)
+
+Akkoord Mark 25-11 ("ja, C&M&release schrijffilter, app wel, pf niet"). Devloop 0.36.0 is api
+0.33.0 met studio 0.48.0 (plus ongereleasede Studio-commits op main) en render 0.6.0.
+
+- **Schrijffilter per account** (besluit Mark 25-11, op advies van BACKEND; voor het account
+  `omnium-koppelaar` van de inrichtingssite). `REGISTRATIE_SCHRIJFFILTER="account=patroon,…;…"`
+  (`middleware/schrijffilter.go`, `handlers/registration_schrijffilter.go`): zo'n account mag
+  alleen via `POST /registratie/` schrijven, en daar alleen typen die op een patroon passen
+  (opvoer, afvoer, genest, correctie, ongedaanmaking). Andere schrijfroutes geven 403 met
+  `reden: schrijffilter`. Ongeldige waarde = de genoemde accounts mogen niets (fail-closed), met
+  een `FOUT`-regel bij de start. Zie AUTH_DEVELOPER_GUIDE §Schrijffilter.
+  Getest: unittests (`TestParseSchrijffilter`, `TestTypeToegestaan`,
+  `TestSchrijffilterVoor_OngeldigIsFailClosed`, `TestSchrijffilterUitContext`,
+  `TestControleerRol_Schrijffilter`, `TestTypenInWijzigingen_GenestTeltMee`,
+  `TestWeigerBuitenFilter_OngeldigFilter`) en een proef met AUTH_ENABLED op een wegwerp-database:
+  toegestane opvoer en afvoer slagen, een ander type (ook als `_Aanvang`) geeft 403, een
+  ongedaanmaking van andermans registratie op het beheerdomein 403 en van een eigen registratie
+  200; PATCH /registraties, POST /api/schema/model, DELETE /organisaties/1 en een GraphQL-mutatie
+  403; lezen 200.
+  Geen schemawijziging, geen rebuild; extra stap: `REGISTRATIE_SCHRIJFFILTER` zetten waar het
+  account gebruikt wordt.
+
 ## api 0.32.2 / devloop 0.35.2 (2026-11-25)
 
 Akkoord Mark 25-11 ("ja, C&M&release, app wel, pf niet"). Devloop 0.35.2 is api 0.32.2 met
