@@ -116,6 +116,52 @@ function importeerMetGeneralisaties(v3) {
 }
 
 /**
+ * Rondgang-id → store-id, voor de elementen waarvan die verschillen (een hernoeming in de Studio).
+ * Eerst op uuid; daarna verbindingen zonder uuid op soort + (vertaalde) uiteinden, als dat er
+ * precies één in de store aanwijst.
+ * @param {Record<string, any>} rondgang - de elementen van importeerV3(exporteerV3(store))
+ * @param {Record<string, any>} store - de elementen van de store
+ * @returns {Map<string, string>}
+ */
+export function naarStoreIds(rondgang, store) {
+  const opUuid = new Map();
+  for (const el of Object.values(store)) if (el?.data?.uuid) opUuid.set(el.data.uuid, el.id);
+  const naar = new Map();
+  const zonder = [];
+  for (const [id, el] of Object.entries(rondgang)) {
+    const doel = el?.data?.uuid ? opUuid.get(el.data.uuid) : undefined;
+    if (doel) {
+      if (doel !== id) naar.set(id, doel);
+    } else if (!store[id]) zonder.push(el);
+  }
+  const opUiteinden = new Map();
+  for (const el of Object.values(store)) {
+    if (!el?.source || !el?.target) continue;
+    const k = `${el.elementType}:${el.source}~${el.target}`;
+    opUiteinden.set(k, opUiteinden.has(k) ? null : el.id); // null = niet eenduidig
+  }
+  for (const el of zonder) {
+    if (!el?.source || !el?.target) continue;
+    const doel = opUiteinden.get(`${el.elementType}:${naar.get(el.source) || el.source}~${naar.get(el.target) || el.target}`);
+    if (doel) naar.set(el.id, doel);
+  }
+  return naar;
+}
+
+/**
+ * Zet de bestaande kant van een plan (idMap-waarden, bestaandId) op de store-ids.
+ * @param {ReturnType<typeof vergelijkMetStore>} plan
+ * @param {Map<string, string>} naar
+ */
+function herschrijfOpStoreIds(plan, naar) {
+  if (!naar.size) return;
+  for (const [k, v] of plan.idMap) if (naar.has(v)) plan.idMap.set(k, /** @type {string} */ (naar.get(v)));
+  for (const r of [...plan.elementen.gewijzigd, ...plan.elementen.verdwenen]) {
+    if (naar.has(r.bestaandId)) r.bestaandId = naar.get(r.bestaandId);
+  }
+}
+
+/**
  * @param {any} v3 - V3-bestand ({model_naam, model}) of het model zelf
  * @param {{elements?: Record<string, any>, diagrams?: Record<string, any>}} state - de canoniek-uml-store
  */
@@ -148,6 +194,12 @@ export function planV3Import(v3, state) {
     verdwenenDiagram: null,
     opUiteinden: VOLGT_UITEINDEN,
   });
+
+  // De rondgang leidt ids af uit de huidige namen; een in de Studio hernoemd element houdt in de
+  // store zijn oude id (ComponentVersie, naam Componentversie). Zet de bestaande kant van het plan
+  // terug op de echte store-ids, anders landt een wijziging of een nieuwe relatie op een id dat
+  // niet bestaat (melding FUNDAMENT 25-11).
+  herschrijfOpStoreIds(plan, naarStoreIds(genormaliseerd.elements || {}, bestaandeEl));
 
   // Een id dat de rondgang niet meeneemt (bv. een relatie zonder herleidbare bron) maar
   // wel in de store staat: geen "nieuw" (dat botst), maar "gewijzigd" op dat id.

@@ -191,3 +191,56 @@ test("delta-import: erft ook voor een nieuwe entiteit die op geen meegebracht di
   const { plan: opnieuw } = planV3Import(v3, store.getState());
   assert.deepEqual([...opnieuw.elementen.nieuw, ...opnieuw.elementen.gewijzigd].map((r) => r.id), []);
 });
+
+// ─────────────── een in de Studio hernoemd element (melding FUNDAMENT 25-11) ───────────────
+// Het store-id volgt de oude naam (ComponentVersie), de rondgang de nieuwe (Componentversie).
+// Wijzigingen en nieuwe relaties moeten op het echte store-id landen, niet op een id dat niet bestaat.
+test("delta-import op een in de Studio hernoemde entiteit: GE-wijziging en nieuwe relatie landen op de store-ids", () => {
+  const store = createDiagramStore();
+  store.getState().laadModel(importeerV3(CG_TEST));
+  vulUuids(store);
+  const ge = Object.values(store.getState().elements).find((e) => e.elementType !== "compositie" && e.id.startsWith("Gehandicaptenparkeerkaart_"));
+  assert.ok(ge, "GPK heeft een GE");
+  store.getState().updateElementen({ Gehandicaptenparkeerkaart: { naam: "Parkeerkaart" } });
+  assert.ok(store.getState().elements.Gehandicaptenparkeerkaart, "id blijft de oude naam");
+
+  const v3 = exporteerV3(store.getState()).v3;
+  const ent = v3.model.entiteiten.find((e) => e.typenaam === "Parkeerkaart");
+  assert.ok(ent, "de export draagt de nieuwe naam");
+  ent.gegevenselementen[0].velden[0].description = "na de hernoeming gewijzigd";
+  ent.gegevenselementen.push({ naam: "KaartOpmerking", meervoud: "kaart_opmerkingen", momentvoorkomen: "enkelvoudig", velden: [{ naam: "tekst", type: "string" }] });
+
+  const voor = Object.keys(store.getState().elements).length;
+  const { plan, uit } = pasToe(store, v3);
+  const st = store.getState();
+  const gewijzigd = plan.elementen.gewijzigd.filter((r) => r.verschillen.length && r.verschillen[0] !== "(niet vergelijkbaar)");
+  for (const r of gewijzigd) assert.ok(st.elements[r.bestaandId], `bestaandId ${r.bestaandId} staat in de store`);
+  assert.ok(gewijzigd.some((r) => r.bestaandId === ge.id), `de GE-wijziging landt op ${ge.id}: ${gewijzigd.map((r) => r.bestaandId)}`);
+  assert.deepEqual(uit.overgeslagen || [], [], "niets stil overgeslagen");
+  const veld = exporteerV3(st).v3.model.entiteiten.find((e) => e.typenaam === "Parkeerkaart").gegevenselementen.find((g) => g.naam === ge.naam?.split("_").pop() || g.naam === ent.gegevenselementen[0].naam).velden[0];
+  assert.equal(veld.description, "na de hernoeming gewijzigd");
+  // De nieuwe GE hangt met een compositie aan het echte store-id.
+  const nieuweGe = Object.values(st.elements).find((e) => e.naam === "KaartOpmerking" || e.id.endsWith("_KaartOpmerking"));
+  assert.ok(nieuweGe, "nieuwe GE toegevoegd");
+  assert.ok(Object.values(st.elements).some((e) => e.elementType === "compositie" && e.source === "Gehandicaptenparkeerkaart" && e.target === nieuweGe.id),
+    "compositie vanaf het store-id Gehandicaptenparkeerkaart");
+  assert.ok(!Object.values(st.elements).some((e) => e.source === "Parkeerkaart" || e.target === "Parkeerkaart"), "geen lijn naar een id dat niet bestaat");
+  assert.equal(Object.keys(st.elements).length, voor + uit.toegevoegd);
+});
+
+test("pasPlanToe meldt een patch of connector op een id dat niet bestaat", () => {
+  const store = createDiagramStore();
+  store.getState().laadModel(importeerV3(CG_TEST));
+  const plan = { idMap: new Map([["Spook_GE", "Spook_GE"]]),
+    elementen: { nieuw: [{ id: "lijn1", naam: "", elementType: "associatie" }], gewijzigd: [{ id: "Spook_GE", bestaandId: "Spook_GE", naam: "Spook_GE" }], verdwenen: [] },
+    diagrammen: { nieuw: [], gewijzigd: [], verdwenen: [] } };
+  const model = { elements: {
+    Spook_GE: { id: "Spook_GE", naam: "Spook_GE", elementType: "gegevenselement", data: {} },
+    lijn1: { id: "lijn1", naam: "", elementType: "associatie", source: "Bestaatniet", target: "Gehandicaptenparkeerkaart", data: {} },
+  }, diagrams: {} };
+  const uit = pasPlanToe(store.getState(), model, plan, { aan: new Set(["el:Spook_GE", "el:lijn1"]) });
+  assert.equal(uit.bijgewerkt, 0, "niets bijgewerkt dat niet bestaat");
+  assert.equal(uit.toegevoegd, 0);
+  assert.deepEqual(uit.overgeslagen.map((o) => o.id).sort(), ["Spook_GE", "lijn1"]);
+  assert.ok(uit.overgeslagen.every((o) => o.reden));
+});

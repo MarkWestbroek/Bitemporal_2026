@@ -10,7 +10,7 @@ import { getProfieltypen } from "../profieltypeRegistry.js";
 import { vraagKeuze, vraagReview, toonMelding } from "../naamDialog.jsx";
 import { apiBase } from "../../shared/apiBase.js";
 import { planV3Import, bouwV3ReviewBoom, metVolgendeVerbindingen } from "../../diagramprofielen/canoniek-uml/v3DeltaImport.js";
-import { pasPlanToe } from "../../diagramprofielen/ea/vergelijkImport.js";
+import { pasPlanToe, overgeslagenTekst } from "../../diagramprofielen/ea/vergelijkImport.js";
 import { bladSleutels } from "../../diagramprofielen/ea/reviewBoom.js";
 /** Descriptor-id van canoniek-uml (zoals diagramprofielen/canoniek-uml/index.js). */
 const CANONIEK_UML_ID = "canoniek-uml";
@@ -98,9 +98,11 @@ export async function importeerV3InProject() {
     if (uit.toegevoegd || uit.diagrammenToegevoegd) delen.push(`${uit.toegevoegd} elementen en ${uit.diagrammenToegevoegd} diagrammen nieuw`);
     if (uit.bijgewerkt || uit.diagrammenBijgewerkt) delen.push(`${uit.bijgewerkt + uit.diagrammenBijgewerkt} bijgewerkt`);
     if (uit.verwijderd) delen.push(`${uit.verwijderd} verwijderd`);
+    const overgeslagen = overgeslagenTekst(uit.overgeslagen);
     await toonMelding({
       titel: "V3-model geïmporteerd",
-      tekst: `${gehaald.bron}: ${delen.join(", ") || "niets"}. Ongedaan maken kan met Ctrl+Z (per stap).\nNieuwe diagrammen staan in de root van de projectboom.`,
+      tekst: `${gehaald.bron}: ${delen.join(", ") || "niets"}. Ongedaan maken kan met Ctrl+Z (per stap).\nNieuwe diagrammen staan in de root van de projectboom.` +
+        (overgeslagen ? `\n\nLet op — ${overgeslagen}` : ""),
     });
   } catch (e) {
     await toonMelding({ titel: "Import mislukt", tekst: String(e?.message || e) });

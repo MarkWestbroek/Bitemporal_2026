@@ -14,6 +14,13 @@ De single source of truth voor het nummer is `package.json` `"version"`.
   lijst staat, gevuld of leeg is, of iets bevat. De afloop, de testset en de tekening tonen het leesbaar
   (`leges > 100`).
 
+### Hersteld
+- **V3-import in project op een hernoemd element** (25-11, melding FUNDAMENT): heette een entiteit in de
+  Studio anders dan haar id (ComponentVersie → Componentversie), dan landde een wijziging op een id dat
+  niet bestond ("2 bijgewerkt", maar niets veranderd) en viel een nieuwe relatie vanaf die entiteit stil
+  weg. De import zet de ids nu via de uuid terug op die van het project. Wat toch niet toegepast kan
+  worden, meldt de import (V3 en EA) aan het eind.
+
 ## [studio/v0.48.0] — 2026-11-23
 
 Samen met api 0.32.0 en render 0.6.0. De centrale projecten (plan "Sidecar-project", stappen 1–10):
