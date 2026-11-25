@@ -1,0 +1,62 @@
+[
+ {
+  "id": "voorbeeld.beheerders.alle",
+  "language": "cedar",
+  "status": "deployed",
+  "metadata": {
+   "description": "Verzonnen voorbeeld in PABC-vorm: Voorbeeld beheerders: alle entiteittypen",
+   "pdps": [],
+   "regeling": "voorbeeld",
+   "title": "Voorbeeld beheerders: alle entiteittypen"
+  },
+  "data": "@reason(\"beheerders: alle entiteittypen\")\npermit (\n    principal is pabc_gebruiker,\n    action in [name::\"zaakafhandelcomponent/administrator\", name::\"zaakafhandelcomponent/beheerder\"],\n    resource is pabc_entiteittype\n)\nwhen {\n    principal.functioneleRollen.contains(\"beheerders\")\n};\n"
+ },
+ {
+  "id": "voorbeeld.medewerkers.domein-a",
+  "language": "cedar",
+  "status": "deployed",
+  "metadata": {
+   "description": "Verzonnen voorbeeld in PABC-vorm: Voorbeeld medewerkers: domein voorbeeld-a",
+   "pdps": [],
+   "regeling": "voorbeeld",
+   "title": "Voorbeeld medewerkers: domein voorbeeld-a"
+  },
+  "data": "@reason(\"medewerkers: domein voorbeeld-a\")\npermit (\n    principal is pabc_gebruiker,\n    action in [name::\"zaakafhandelcomponent/behandelaar\", name::\"zaakafhandelcomponent/raadpleger\"],\n    resource is pabc_entiteittype\n)\nwhen {\n    principal.functioneleRollen.contains(\"medewerkers\") &&\n    resource.domeinen.contains(\"voorbeeld-a\")\n};\n"
+ },
+ {
+  "id": "voorbeeld.medewerkers.domein-b",
+  "language": "cedar",
+  "status": "deployed",
+  "metadata": {
+   "description": "Verzonnen voorbeeld in PABC-vorm: Voorbeeld medewerkers: domein voorbeeld-b",
+   "pdps": [],
+   "regeling": "voorbeeld",
+   "title": "Voorbeeld medewerkers: domein voorbeeld-b"
+  },
+  "data": "@reason(\"medewerkers: domein voorbeeld-b\")\npermit (\n    principal is pabc_gebruiker,\n    action in [name::\"zaakafhandelcomponent/raadpleger\"],\n    resource is pabc_entiteittype\n)\nwhen {\n    principal.functioneleRollen.contains(\"medewerkers\") &&\n    resource.domeinen.contains(\"voorbeeld-b\")\n};\n"
+ },
+ {
+  "id": "voorbeeld.medewerkers.applicatie",
+  "language": "cedar",
+  "status": "deployed",
+  "metadata": {
+   "description": "Verzonnen voorbeeld in PABC-vorm: Voorbeeld medewerkers: zaakafhandelcomponent",
+   "pdps": [],
+   "regeling": "voorbeeld",
+   "title": "Voorbeeld medewerkers: zaakafhandelcomponent"
+  },
+  "data": "@reason(\"medewerkers: zaakafhandelcomponent zonder entiteittype\")\npermit (\n    principal is pabc_gebruiker,\n    action in [name::\"zaakafhandelcomponent/brp_zoeken\"],\n    resource == pabc_applicatie::\"zaakafhandelcomponent\"\n)\nwhen {\n    principal.functioneleRollen.contains(\"medewerkers\")\n};\n"
+ },
+ {
+  "id": "voorbeeld.startbeleid",
+  "language": "cedar",
+  "status": "deployed",
+  "metadata": {
+   "description": "Verzonnen voorbeeld in PABC-vorm: Startbeleid (uitgezet)",
+   "pdps": [],
+   "regeling": "voorbeeld",
+   "title": "Startbeleid (uitgezet)"
+  },
+  "data": "@reason(\"startbeleid uitgezet: de voorbeeldpolicies beslissen\")\npermit (\n    principal,\n    action,\n    resource\n)\nwhen { false };\n"
+ }
+]

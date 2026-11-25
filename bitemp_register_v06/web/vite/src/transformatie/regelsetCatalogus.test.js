@@ -4,9 +4,9 @@ import { alleRegelsets, regelsetsPerRichting, getRegelsetVermelding, regelRijen,
 import "../studio/activities/regelsetsIngebouwd.js";
 import { geenProefUitleg } from "../studio/activities/regelsetsIngebouwd.js";
 
-test("de catalogus kent de elf ingebouwde regelsets, in twee vormen, alle geldig", () => {
+test("de catalogus kent de dertien ingebouwde regelsets, in twee vormen, alle geldig", () => {
   const alle = alleRegelsets();
-  assert.equal(alle.length, 11);
+  assert.equal(alle.length, 13);
   assert.deepEqual(alle.filter((v) => v.vorm === "instellingen").map((v) => v.regelset.id).sort(), ["bpmn-naar-gzac", "canoniek-naar-gzac-dossier", "canoniek-naar-zaaktype"]);
   for (const v of alle) {
     assert.equal(v.vindplaats, "ingebouwd");
@@ -16,10 +16,11 @@ test("de catalogus kent de elf ingebouwde regelsets, in twee vormen, alle geldig
   }
 });
 
-test("de lijst is ingedeeld op richting: in, tussen, uit (Mark 23-11; tussen is nog leeg)", () => {
+test("de lijst is ingedeeld op richting: in, tussen, uit (Mark 23-11; tussen sinds Cedar ↔ Toegangsspraak)", () => {
   const groepen = regelsetsPerRichting();
-  assert.deepEqual(groepen.map((g) => [g.id, g.vermeldingen.length]), [["in", 4], ["uit", 7]]);
-  assert.ok(groepen[1].vermeldingen.some((v) => v.regelset.id === "usecase-naar-mermaid-flowchart"));
+  assert.deepEqual(groepen.map((g) => [g.id, g.vermeldingen.length]), [["in", 4], ["tussen", 2], ["uit", 7]]);
+  assert.ok(groepen[1].vermeldingen.some((v) => v.regelset.id === "cedar-naar-toegangsspraak"));
+  assert.ok(groepen[2].vermeldingen.some((v) => v.regelset.id === "usecase-naar-mermaid-flowchart"));
 });
 
 test("een oude richting leest als de nieuwe", () => {
