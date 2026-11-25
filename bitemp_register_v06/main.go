@@ -76,6 +76,17 @@ func main() {
 		fmt.Println("WARNING: REGISTRATIE_TIJD=synthetisch in productiecontext — registraties krijgen fictieve demo-tijdstippen; zet REGISTRATIE_TIJD=klok voor echte implementaties")
 	}
 
+	// Schrijffilter per account (middleware/schrijffilter.go, REGISTRATIE_SCHRIJFFILTER).
+	{
+		typen := make([]string, 0, len(model.MetaRegistry))
+		for naam := range model.MetaRegistry {
+			typen = append(typen, naam)
+		}
+		if regel := middleware.BeschrijfSchrijffilter(typen); regel != "" {
+			fmt.Println(regel)
+		}
+	}
+
 	// Verbinding met PostgreSQL. Is de database (nog) niet klaar, dan wachten we (db_wachten.go);
 	// lukt dat niet binnen DB_WACHT_TIJD, dan exitcode 44: de devloop-entrypoint stopt de
 	// container dan zonder terug te vallen op het baseline-model.

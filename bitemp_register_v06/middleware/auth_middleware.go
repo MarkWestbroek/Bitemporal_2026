@@ -220,6 +220,18 @@ func ControleerRol(c *gin.Context, minimaalRol string) bool {
 		})
 		return false
 	}
+	// Schrijffilter per account (schrijffilter.go): zo'n account mag boven de rol lezer alleen
+	// POST /registratie/; welke typen het daar mag raken, controleert de registratie-engine.
+	if RolNiveau(minimaalRol) > RolNiveau("lezer") {
+		if _, beperkt := SchrijffilterVoor(claims.Gebruikersnaam); beperkt &&
+			!(c.Request.Method == http.MethodPost && c.FullPath() == SchrijffilterRoute) {
+			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{
+				"error": fmt.Sprintf("Account %s heeft een schrijffilter en mag alleen registreren via POST %s.", claims.Gebruikersnaam, SchrijffilterRoute),
+				"reden": "schrijffilter",
+			})
+			return false
+		}
+	}
 	return true
 }
 

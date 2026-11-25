@@ -22,7 +22,7 @@ import (
 )
 
 // APIVersion is de huidige API-versie (SemVer).
-const APIVersion = "0.32.2"
+const APIVersion = "0.33.0"
 
 // oasMap is een shorthand voor een geordende map in de OAS-structuur.
 type oasMap = map[string]any

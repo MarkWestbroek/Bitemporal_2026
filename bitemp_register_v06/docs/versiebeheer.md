@@ -160,7 +160,9 @@ dat, en forceert `git branch -D` het (met opzet).
   **`studio/v0.14.0`** (2026-10-07: project op de server, operatielaag, projectboom-fixes) en
   **`studio/v0.13.0`** (2026-10-07: canvas-bediening — inline hernoemen, verbind-modus, kaders,
   taakbalken op een rij); zie `web/vite/CHANGELOG.md`.
-- Backend: **`api/v0.32.2`** (2026-11-25: de weergavenaam van een relatiedoel volgt het formele
+- Backend: **`api/v0.33.0`** (2026-11-25: schrijffilter per account, `REGISTRATIE_SCHRIJFFILTER`;
+  devloop-image 0.36.0).
+- Daarvoor: `api/v0.32.2` (2026-11-25: de weergavenaam van een relatiedoel volgt het formele
   peilmoment; een afgevoerd doel geeft geen naam meer; devloop-image 0.35.2).
   Daarvoor **`api/v0.32.1`** (2026-11-24: de API en de startup-rebuild wachten op een database die
   nog niet klaar is en vallen nooit meer terug op het baseline-model (exit 44); rolnamen in de
