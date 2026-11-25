@@ -1,0 +1,8 @@
+# Plaatsvervanger voor de vocabulaire van ODRL-AP-NL (werkgroep FTV), alleen voor de controle met
+# de SHACL-kern: de kern vraagt bij odrl:leftOperand een odrl:LeftOperand (sh:class), en de
+# AP-NL-vocabulaire die apnl:rolAanvrager zo typeert is hier niet beschikbaar. Geen definitie van
+# onze kant; vervang dit bestand door de echte vocabulaire zodra die er is. Zie README.md, "Proef".
+@prefix odrl: <http://www.w3.org/ns/odrl/2/> .
+@prefix apnl: <https://standaarden.overheid.nl/odrl-ap-nl/> .
+
+apnl:rolAanvrager a odrl:LeftOperand .

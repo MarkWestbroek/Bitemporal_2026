@@ -1,6 +1,6 @@
 # Cedar als M2: profiel en vertaling via Toegangsspraak (plan)
 
-Status 25-11-2026: **fase 1 en 2 gebouwd** (branch `feat/cedar-profiel`; fase 1 in 5b7b6902), fase 3 open.
+Status 25-11-2026: **fase 1, 2 en 3 gebouwd** (branch `feat/cedar-profiel`; fase 1 in 5b7b6902, fase 2 in dcdb5934).
 Opdracht van Mark (25-11), op voorstel van de sessie ODRL.
 
 ## Aanleiding
@@ -132,10 +132,30 @@ Vorm uit de proef van de sessie ODRL (scratch `pabc/omzetten.mjs`, niet in de re
 - **Doel.** Een beleid met `Doel:` wordt `context.doel == "…"` op elke permit. PABC zelf heeft
   geen doel.
 
-## Fase 3: Cedar → ODRL via Toegangsspraak (open)
+## Fase 3: Cedar → ODRL via Toegangsspraak (gebouwd 25-11)
 
-Voorproef in fase 2: de Toegangsspraak van het PABC-voorbeeld gaat zonder verlies door de bestaande
-export (test in `cedar/toegangsspraak.test.js`). De controle met pyshacl staat nog open.
+`cedar/naarOdrl.js` is de keten Cedar → Toegangsspraak → ODRL-AP-NL, zonder eigen afbeelding. In de
+Studio: *Transformeren*, "Cedar-model → ODRL (ODRL-AP-NL, Turtle)". Het PABC-voorbeeld ligt vast als
+gouden bestand (`fixtures/pabc-voorbeeld.odrl.ttl`).
+
+Controle met pyshacl 0.40.2 tegen de SHACL-kern, ook de meta-SHACL. Het script is
+`model-exchange/linked-data/valideer-odrl.py`.
+
+| Bestand | Uitkomst |
+|---|---|
+| het voorbeeld | conform |
+| de 26 echte policies (lokaal) | conform |
+
+Daarvoor moeten twee dingen bij het beleid:
+
+- de W3C-vocabulaire `ODRL22.ttl`, voor de types die `sh:class` vraagt;
+- `apnl-plaatsvervanger.ttl`, die `apnl:rolAanvrager` het type `odrl:LeftOperand` geeft.
+
+De plaatsvervanger is nodig omdat de vocabulaire van ODRL-AP-NL er nog niet is. Zonder dat type
+komt er één melding per rolvoorwaarde; dat geldt voor elke export uit Toegangsspraak, niet alleen
+voor Cedar.
+
+Oorspronkelijke opzet:
 
 Cedar → Toegangsspraak (fase 2) → ODRL-AP-NL (bestaande regelset `odrlApNlRegels.js`; de rol als
 `apnl:rolAanvrager` in een verfijning op de handeling). Controle met pyshacl tegen de SHACL-kern

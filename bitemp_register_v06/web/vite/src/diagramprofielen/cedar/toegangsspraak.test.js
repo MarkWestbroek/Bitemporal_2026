@@ -13,7 +13,7 @@ import { toegangsspraakNaarCedar, pasPoliciesToe } from "./vanToegangsspraak.js"
 import { cedarWoordenschat, standaardWoord, standaardKenmerk } from "./woordenschat.js";
 import { CEDAR_NAAR_TOEGANGSSPRAAK, TOEGANGSSPRAAK_NAAR_CEDAR } from "./toegangsspraakRegels.js";
 import { valideerRegelset } from "../../transformatie/regels.js";
-import { toegangsspraakNaarOdrl } from "../../toegangsspraak/odrlExport.js";
+import { cedarNaarOdrl } from "./naarOdrl.js";
 
 const hier = path.dirname(fileURLToPath(import.meta.url));
 const lees = (f) => readFileSync(path.resolve(hier, "fixtures", f), "utf8");
@@ -210,12 +210,23 @@ test("eigen woord per actie (veld handeling); twee keer hetzelfde woord is een f
   assert.ok(cedarWoordenschat(m.elements).meldingen.some((x) => x.niveau === "fout" && /hetzelfde woord "raadpleger"/.test(x.bericht)));
 });
 
-test("de Toegangsspraak gaat door naar ODRL-AP-NL zonder verlies (voorproef fase 3)", () => {
-  const heen = cedarNaarToegangsspraak(vanCedar(LIJST), { naam: "PABC" });
-  const odrl = toegangsspraakNaarOdrl(heen.tekst, { modelNaam: "pabc" });
-  assert.equal(odrl.ok, true);
-  assert.deepEqual(odrl.trace.filter((t) => t.actie === "geen-regel" || t.actie === "overgeslagen"), []);
-  assert.match(odrl.turtle, /apnl:rolAanvrager/);
+test("fase 3: Cedar → ODRL-AP-NL via Toegangsspraak, gelijk aan het gouden bestand", () => {
+  // Het gouden bestand is met pyshacl tegen de SHACL-kern gecontroleerd: conform, met ODRL22.ttl en
+  // apnl-plaatsvervanger.ttl erbij (model-exchange/linked-data/valideer-odrl.py).
+  const r = cedarNaarOdrl(vanCedar(LIJST), { naam: "PABC" });
+  assert.equal(r.ok, true);
+  assert.deepEqual(r.verloren, []);
+  assert.equal(r.turtle, lees("pabc-voorbeeld.odrl.ttl").replace(/\r\n/g, "\n"));
+  assert.match(r.turtle, /odrl:leftOperand apnl:rolAanvrager/);
+  assert.match(r.turtle, /rdf:value ts:behandelaar/);
+  // Wat Toegangsspraak niet kan zeggen, staat in de meldingen van de keten.
+  const alg = cedarNaarOdrl(vanCedar(ALGEMEEN), { naam: "Dossiers" });
+  assert.equal(alg.ok, true);
+  assert.ok(alg.meldingen.some((x) => /^ip: niet vertaald/.test(x.bericht)));
+  // Niets te zeggen: geen ODRL.
+  const niets = cedarNaarOdrl(vanCedar('permit (principal, action, resource) when { context.ip.isLoopback() };'), { naam: "x" });
+  assert.equal(niets.ok, false);
+  assert.equal(niets.turtle, "");
 });
 
 // Alleen lokaal: de echte PABC-policies staan in de privé-repo van Fundament en komen niet in deze

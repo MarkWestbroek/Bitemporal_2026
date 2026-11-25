@@ -83,7 +83,7 @@ test("PABC-voorbeeld: meldingen, kaarten op het diagram, export gelijk en na een
 // @reason, de rest blijft letterlijk, en de Open FTV-export geeft de bewerkte lijst.
 const LIJST = path.resolve(hier, "../../src/diagramprofielen/cedar/fixtures/pabc-voorbeeld.openftv.json");
 
-test("Toegangsspraak heen en terug in een map; ongewijzigde policies letterlijk", async ({ page }) => {
+test("Toegangsspraak heen en terug in een map; ongewijzigde policies letterlijk; ODRL-AP-NL", async ({ page }) => {
   await openStudio(page);
   await cedar(page, "return true;");
   const map = await page.evaluate(async () => {
@@ -105,6 +105,12 @@ test("Toegangsspraak heen en terug in een map; ongewijzigde policies letterlijk"
   expect(heen.summary).toMatch(/PABC\.toegangsspraak\.txt geschreven: 4 policies vertaald/);
   const tekst = readFileSync(await (await download).path(), "utf8");
   expect(tekst).toContain('Iemand met rol "medewerkers" mag alle gegevens van een pabc entiteittype raadpleger');
+
+  // Fase 3: dezelfde map als ODRL-AP-NL (via Toegangsspraak), gelijk aan het gouden bestand.
+  download = page.waitForEvent("download");
+  expect((await run("export", "export-cedar-odrl", { bronMap: map, mapNaam: "PABC" })).summary).toBe("PABC.odrl.ttl geschreven, 1 melding(en).");
+  const odrl = readFileSync(await (await download).path(), "utf8");
+  expect(odrl).toBe(readFileSync(path.resolve(hier, "../../src/diagramprofielen/cedar/fixtures/pabc-voorbeeld.odrl.ttl"), "utf8").replace(/\r\n/g, "\n"));
 
   const terug = await run("import", "import-toegangsspraak-cedar", { bron: { naam: "pabc.txt", tekst: tekst.replace('"voorbeeld-b"', '"voorbeeld-c"') }, doelMap: map });
   expect(terug.summary).toBe("3 ongewijzigd, 1 gewijzigd, 0 nieuw, 1 behouden.");

@@ -141,3 +141,23 @@ ODRL-AP-NL-vocabulaire ontbreekt hier). De eerste is opgelost op 08-11: een regi
 eronder is nu `odrl:AssetCollection`. Wat overblijft, zijn termen uit ODRL-AP-NL zonder type
 (`apnl:rolAanvrager`, `apnl:verwerkingsverzoek`, `apnl:conformsToPolicy`); die verdwijnen met
 de AP-NL-vocabulaire erbij.
+
+**Met het script (25-11).** `valideer-odrl.py` voegt beleid en vocabulaire samen en valideert met
+meta-SHACL en `sh:sparql`. De ODRL-vocabulaire staat niet in de repo; haal haar bij het W3C
+(`https://www.w3.org/ns/odrl/2/ODRL22.ttl`). `apnl-plaatsvervanger.ttl` geeft `apnl:rolAanvrager`
+het type `odrl:LeftOperand`, tot de vocabulaire van ODRL-AP-NL er is:
+
+```sh
+python valideer-odrl.py beleid.odrl.ttl --vocab ODRL22.ttl --vocab apnl-plaatsvervanger.ttl
+```
+
+Uitkomst voor Cedar → ODRL (plan *Cedar als M2*, fase 3):
+
+| Bestand | Uitkomst |
+|---|---|
+| het PABC-voorbeeld (`web/vite/src/diagramprofielen/cedar/fixtures/pabc-voorbeeld.odrl.ttl`) | conform |
+| de 26 echte PABC-policies (lokaal) | conform |
+
+Zonder de plaatsvervanger komt er één melding per voorwaarde op de rol: `apnl:rolAanvrager` heeft
+geen type. Zonder de ODRL-vocabulaire komen alleen meldingen van `sh:class`. `odrl22-kern.fout.ttl`
+blijft niet conform.

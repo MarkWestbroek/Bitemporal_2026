@@ -52,6 +52,7 @@ bron- en doelelement.
 | transform | **Canoniek model → SHACL-shapes** (met kruisverbanden "genereert"); komt het model uit SHACL, dan gaat wat ongewijzigd is letterlijk terug (rondgang, `shacl/herkomst.js`) | code (`shacl/vanCanoniek.js`), zie plan *Linked data als M2* §12 fase 3 en 3b |
 | transform | **SHACL-shapes → canoniek model (UML)** (met kruisverbanden "genereert") | code (`shacl/naarCanoniek.js`), zie plan *Linked data als M2* §12 fase 3b |
 | import | **Cedar → Cedar-model**: Cedar-tekst, Cedar-JSON (policyset, policy, schema) of een Open FTV-policylijst; zonder schema wordt het afgeleid uit de policies | code: eigen lezer (`cedar/lezer.js`, EST gelijk aan cedar-wasm 4.15) + adapter (`cedar/adapter.js`, `cedar/cedarRegistry.js`); ook in het menu van de Cedar-activiteit; plan *Cedar als M2* fase 1 |
+| export | **Cedar-model → ODRL (ODRL-AP-NL, Turtle)** | keten via Toegangsspraak (`cedar/naarOdrl.js`), §8.3; pyshacl-conform tegen de SHACL-kern; plan *Cedar als M2* fase 3 |
 | tussen | **Cedar-model ↔ Toegangsspraak** (export "Cedar-model → Toegangsspraak", import "Toegangsspraak → Cedar-model") | regelsets + bouwers, §8.3; plan *Cedar als M2* fase 2 |
 | export | **Cedar-model → Cedar (tekst)**, **→ JSON-policyset**, **→ Open FTV-policylijst**, **→ Cedar-schema (JSON)** | code: schrijver (`cedar/schrijver.js`); een ongewijzigde policy gaat letterlijk terug, de Open FTV-lijst byte voor byte |
 | export | Map → JSON, Map → Markdown-overzicht | code |
@@ -693,6 +694,20 @@ stil weg. Een policy die nooit geldt (`when { false }`) valt weg zonder dat de b
 **In de Studio:** *Transformeren*, export "Cedar-model → Toegangsspraak" (een download) en import
 "Toegangsspraak → Cedar-model". De import werkt het Cedar-model in de doelmap bij; zonder Cedar-model
 daar kent de taal de handelingen niet. De regelsets staan in de catalogus onder *tussen*.
+
+**Door naar ODRL (fase 3).** `cedar/naarOdrl.js` maakt geen eigen afbeelding: het is de keten
+Cedar → Toegangsspraak → ODRL-AP-NL (§8). In het paneel heet dat "Cedar-model → ODRL (ODRL-AP-NL,
+Turtle)". De rol komt als `apnl:rolAanvrager` in een verfijning op de handeling. Een kenmerk van de
+gegevens wordt een voorwaarde op de regel; de handelingen worden eigen termen (`ts:behandelaar`).
+
+De uitvoer is met pyshacl gecontroleerd tegen de SHACL-kern
+(`model-exchange/linked-data/valideer-odrl.py`, README daar):
+
+- het PABC-voorbeeld is **conform**, ook de shapes zelf (meta-SHACL);
+- de 26 echte policies zijn ook conform (lokaal);
+- daarvoor moeten de W3C-vocabulaire en een plaatsvervanger voor `apnl:rolAanvrager` erbij.
+
+Het voorbeeld ligt vast als gouden bestand (`cedar/fixtures/pabc-voorbeeld.odrl.ttl`).
 
 Tests: `cedar/toegangsspraak.test.js` (11, waarvan één alleen lokaal) en e2e 81.
 

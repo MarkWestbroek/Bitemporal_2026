@@ -10,11 +10,13 @@
  *   export "Cedar-model → Toegangsspraak" en import "Toegangsspraak → Cedar-model" (fase 2,
  *          TRANSFORMATIES.md §8.3). De import werkt het Cedar-model in de doelmap bij: dat is de
  *          woordenschat (acties, kenmerken) en de basis (ongewijzigde policies gaan letterlijk terug).
+ *   export "Cedar-model → ODRL (ODRL-AP-NL, Turtle)" (fase 3): via Toegangsspraak, naarOdrl.js.
  */
 import { registreerTransformatie } from "../../studio/activities/transformatieRegistry.js";
 import { hernoemBotsendeIds } from "../../diagramcore/model/hernoemBotsendeIds.js";
 import { vanCedar, naarCedar, lijktOpCedar } from "./adapter.js";
 import { cedarNaarToegangsspraak } from "./naarToegangsspraak.js";
+import { cedarNaarOdrl } from "./naarOdrl.js";
 import { toegangsspraakNaarCedar, pasPoliciesToe } from "./vanToegangsspraak.js";
 import { cedarPosities } from "./index.js";
 
@@ -92,6 +94,30 @@ export function registreerCedarTransformaties({ getProfieltype, getModellerenSta
         status: meldingen.some((m) => m.niveau !== "info") ? "warning" : "success",
         summary: `${bestand} geschreven: ${vertaald.length} policies vertaald${meldingen.length ? `, ${meldingen.length} melding(en)` : ""}.`,
         diagnostics: meldingen.map(naarDiagnostic),
+      };
+    },
+  });
+
+  registreerTransformatie({
+    id: "export-cedar-odrl",
+    label: "Cedar-model → ODRL (ODRL-AP-NL, Turtle)",
+    richting: "export",
+    profielTypes: [CEDAR_PROFIEL_ID],
+    toelichting:
+      "Via Toegangsspraak naar ODRL volgens ODRL-AP-NL (fase 3): de rol wordt apnl:rolAanvrager op de handeling, een kenmerk van de " +
+      "gegevens een voorwaarde op de regel, de handelingen eigen termen (ts:). Wat Toegangsspraak niet kan zeggen staat in de meldingen.",
+    run: async ({ bronMap, mapNaam }) => {
+      const deel = collectMapModel(bronMap)?.[CEDAR_PROFIEL_ID];
+      if (!deel || !Object.keys(deel.elements || {}).length) throw new Error("Geen Cedar-elementen in deze map.");
+      const naam = String(mapNaam || "Cedar");
+      const r = cedarNaarOdrl(deel, { naam });
+      if (!r.turtle) return { status: "error", summary: "Geen ODRL gemaakt.", diagnostics: r.meldingen.map(naarDiagnostic) };
+      const bestand = `${naam.replace(/[^\w.-]+/g, "-").replace(/^-+|-+$/g, "") || "cedar"}.odrl.ttl`;
+      download?.(bestand, r.turtle);
+      return {
+        status: r.ok && !r.meldingen.some((m) => m.niveau !== "info") ? "success" : "warning",
+        summary: `${bestand} geschreven${r.meldingen.length ? `, ${r.meldingen.length} melding(en)` : ""}.`,
+        diagnostics: r.meldingen.map(naarDiagnostic),
       };
     },
   });

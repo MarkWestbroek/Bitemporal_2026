@@ -1,0 +1,251 @@
+# PABC — Toegangsspraak → ODRL (ODRL-AP-NL), regelset toegangsspraak-naar-odrl-ap-nl v3.
+# Gegenereerd; niet met de hand wijzigen.
+#
+#   Beleid "PABC".
+#     Standaard: weigeren.
+#
+#     Regel "voorbeeld.beheerders.alle administrator".
+#       Iemand met rol "beheerders" mag alle gegevens van een pabc entiteittype administrator.
+#
+#     Regel "voorbeeld.beheerders.alle beheerder".
+#       Iemand met rol "beheerders" mag alle gegevens van een pabc entiteittype beheerder.
+#
+#     Regel "voorbeeld.medewerkers.domein-a behandelaar".
+#       Iemand met rol "medewerkers" mag alle gegevens van een pabc entiteittype behandelaar
+#       als de domeinen van de gegevens "voorbeeld-a" is.
+#
+#     Regel "voorbeeld.medewerkers.domein-a raadpleger".
+#       Iemand met rol "medewerkers" mag alle gegevens van een pabc entiteittype raadpleger
+#       als de domeinen van de gegevens "voorbeeld-a" is.
+#
+#     Regel "voorbeeld.medewerkers.domein-b".
+#       Iemand met rol "medewerkers" mag alle gegevens van een pabc entiteittype raadpleger
+#       als de domeinen van de gegevens "voorbeeld-b" is.
+#
+#     Regel "voorbeeld.medewerkers.applicatie".
+#       Iemand met rol "medewerkers" mag alle gegevens van een pabc applicatie brp_zoeken
+#       als de id van de gegevens "zaakafhandelcomponent" is.
+
+@prefix odrl:   <http://www.w3.org/ns/odrl/2/> .
+@prefix rdf:    <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:   <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd:    <http://www.w3.org/2001/XMLSchema#> .
+@prefix skos:   <http://www.w3.org/2004/02/skos/core#> .
+@prefix dct:    <http://purl.org/dc/terms/> .
+@prefix prov:   <http://www.w3.org/ns/prov#> .
+@prefix dpv:    <https://w3id.org/dpv#> .
+@prefix schema: <https://schema.org/> .
+@prefix apnl:   <https://standaarden.overheid.nl/odrl-ap-nl/> .
+@prefix ts:     <https://omnium.example/toegangsspraak/> .
+@prefix reg:    <https://omnium.example/register/PABC/> .
+@prefix b:      <https://omnium.example/toegangsbeleid/pabc/> .
+
+# ── Het beleid ────────────────────────────────────────────────────────────────
+
+b:beleid a odrl:Set ;
+    dct:title "PABC"@nl ;
+    odrl:uid b:beleid ;
+    odrl:profile apnl:profiel , ts:profiel ;
+    dct:description "Geschreven in Toegangsspraak (klare taal) en daaruit vertaald naar ODRL. Elke regel draagt zijn oorspronkelijke zin als beschrijving."@nl ;
+    odrl:conflict odrl:prohibit ;
+    ts:brontekst """Beleid "PABC".
+  Standaard: weigeren.
+
+  Regel "voorbeeld.beheerders.alle administrator".
+    Iemand met rol "beheerders" mag alle gegevens van een pabc entiteittype administrator.
+
+  Regel "voorbeeld.beheerders.alle beheerder".
+    Iemand met rol "beheerders" mag alle gegevens van een pabc entiteittype beheerder.
+
+  Regel "voorbeeld.medewerkers.domein-a behandelaar".
+    Iemand met rol "medewerkers" mag alle gegevens van een pabc entiteittype behandelaar
+    als de domeinen van de gegevens "voorbeeld-a" is.
+
+  Regel "voorbeeld.medewerkers.domein-a raadpleger".
+    Iemand met rol "medewerkers" mag alle gegevens van een pabc entiteittype raadpleger
+    als de domeinen van de gegevens "voorbeeld-a" is.
+
+  Regel "voorbeeld.medewerkers.domein-b".
+    Iemand met rol "medewerkers" mag alle gegevens van een pabc entiteittype raadpleger
+    als de domeinen van de gegevens "voorbeeld-b" is.
+
+  Regel "voorbeeld.medewerkers.applicatie".
+    Iemand met rol "medewerkers" mag alle gegevens van een pabc applicatie brp_zoeken
+    als de id van de gegevens "zaakafhandelcomponent" is.
+""" ;
+    odrl:permission b:regel-voorbeeld-beheerders-alle-administrator , b:regel-voorbeeld-beheerders-alle-beheerder , b:regel-voorbeeld-medewerkers-domein-a-behandelaar , b:regel-voorbeeld-medewerkers-domein-a-raadpleger , b:regel-voorbeeld-medewerkers-domein-b , b:regel-voorbeeld-medewerkers-applicatie .
+
+# ── Regels en plichten ────────────────────────────────────────────────────────
+
+b:regel-voorbeeld-beheerders-alle-administrator a odrl:Permission ;
+    dct:title "voorbeeld.beheerders.alle administrator"@nl ;
+    odrl:uid b:regel-voorbeeld-beheerders-alle-administrator ;
+    dct:description "Iemand met rol \"beheerders\" mag alle gegevens van een pabc entiteittype administrator."@nl ;
+    ts:volgorde 1 ;
+    odrl:action b:handeling-voorbeeld-beheerders-alle-administrator ;
+    odrl:assignee b:groep-rol-beheerders ;
+    odrl:target reg:PabcEntiteittype .
+
+b:handeling-voorbeeld-beheerders-alle-administrator a odrl:Action ;
+    rdf:value ts:administrator ;
+    odrl:refinement b:vw-aanvrager-rol-beheerders .
+
+b:regel-voorbeeld-beheerders-alle-beheerder a odrl:Permission ;
+    dct:title "voorbeeld.beheerders.alle beheerder"@nl ;
+    odrl:uid b:regel-voorbeeld-beheerders-alle-beheerder ;
+    dct:description "Iemand met rol \"beheerders\" mag alle gegevens van een pabc entiteittype beheerder."@nl ;
+    ts:volgorde 2 ;
+    odrl:action b:handeling-voorbeeld-beheerders-alle-beheerder ;
+    odrl:assignee b:groep-rol-beheerders ;
+    odrl:target reg:PabcEntiteittype .
+
+b:handeling-voorbeeld-beheerders-alle-beheerder a odrl:Action ;
+    rdf:value ts:beheerder ;
+    odrl:refinement b:vw-aanvrager-rol-beheerders .
+
+b:regel-voorbeeld-medewerkers-domein-a-behandelaar a odrl:Permission ;
+    dct:title "voorbeeld.medewerkers.domein-a behandelaar"@nl ;
+    odrl:uid b:regel-voorbeeld-medewerkers-domein-a-behandelaar ;
+    dct:description "Iemand met rol \"medewerkers\" mag alle gegevens van een pabc entiteittype behandelaar als de domeinen van de gegevens \"voorbeeld-a\" is."@nl ;
+    ts:volgorde 3 ;
+    odrl:action b:handeling-voorbeeld-medewerkers-domein-a-behandelaar ;
+    odrl:assignee b:groep-rol-medewerkers ;
+    odrl:target reg:PabcEntiteittype ;
+    odrl:constraint b:vw-de-domeinen-van-de-gegevens-is-voorbeeld-a .
+
+b:handeling-voorbeeld-medewerkers-domein-a-behandelaar a odrl:Action ;
+    rdf:value ts:behandelaar ;
+    odrl:refinement b:vw-aanvrager-rol-medewerkers .
+
+b:regel-voorbeeld-medewerkers-domein-a-raadpleger a odrl:Permission ;
+    dct:title "voorbeeld.medewerkers.domein-a raadpleger"@nl ;
+    odrl:uid b:regel-voorbeeld-medewerkers-domein-a-raadpleger ;
+    dct:description "Iemand met rol \"medewerkers\" mag alle gegevens van een pabc entiteittype raadpleger als de domeinen van de gegevens \"voorbeeld-a\" is."@nl ;
+    ts:volgorde 4 ;
+    odrl:action b:handeling-voorbeeld-medewerkers-domein-a-raadpleger ;
+    odrl:assignee b:groep-rol-medewerkers ;
+    odrl:target reg:PabcEntiteittype ;
+    odrl:constraint b:vw-de-domeinen-van-de-gegevens-is-voorbeeld-a .
+
+b:handeling-voorbeeld-medewerkers-domein-a-raadpleger a odrl:Action ;
+    rdf:value ts:raadpleger ;
+    odrl:refinement b:vw-aanvrager-rol-medewerkers .
+
+b:regel-voorbeeld-medewerkers-domein-b a odrl:Permission ;
+    dct:title "voorbeeld.medewerkers.domein-b"@nl ;
+    odrl:uid b:regel-voorbeeld-medewerkers-domein-b ;
+    dct:description "Iemand met rol \"medewerkers\" mag alle gegevens van een pabc entiteittype raadpleger als de domeinen van de gegevens \"voorbeeld-b\" is."@nl ;
+    ts:volgorde 5 ;
+    odrl:action b:handeling-voorbeeld-medewerkers-domein-b ;
+    odrl:assignee b:groep-rol-medewerkers ;
+    odrl:target reg:PabcEntiteittype ;
+    odrl:constraint b:vw-de-domeinen-van-de-gegevens-is-voorbeeld-b .
+
+b:handeling-voorbeeld-medewerkers-domein-b a odrl:Action ;
+    rdf:value ts:raadpleger ;
+    odrl:refinement b:vw-aanvrager-rol-medewerkers .
+
+b:regel-voorbeeld-medewerkers-applicatie a odrl:Permission ;
+    dct:title "voorbeeld.medewerkers.applicatie"@nl ;
+    odrl:uid b:regel-voorbeeld-medewerkers-applicatie ;
+    dct:description "Iemand met rol \"medewerkers\" mag alle gegevens van een pabc applicatie brp_zoeken als de id van de gegevens \"zaakafhandelcomponent\" is."@nl ;
+    ts:volgorde 6 ;
+    odrl:action b:handeling-voorbeeld-medewerkers-applicatie ;
+    odrl:assignee b:groep-rol-medewerkers ;
+    odrl:target reg:PabcApplicatie ;
+    odrl:constraint b:vw-de-id-van-de-gegevens-is-zaakafhandelcomponent .
+
+b:handeling-voorbeeld-medewerkers-applicatie a odrl:Action ;
+    rdf:value ts:brp_zoeken ;
+    odrl:refinement b:vw-aanvrager-rol-medewerkers .
+
+# ── Voorwaarden (benoemd, dus herbruikbaar en realiseerbaar) ──────────────────
+
+b:vw-aanvrager-rol-beheerders a odrl:Constraint ;
+    rdfs:label "de rol van de aanvrager is \"beheerders\""@nl ;
+    odrl:leftOperand apnl:rolAanvrager ;
+    odrl:operator odrl:eq ;
+    odrl:rightOperand "beheerders" .
+
+b:vw-aanvrager-rol-medewerkers a odrl:Constraint ;
+    rdfs:label "de rol van de aanvrager is \"medewerkers\""@nl ;
+    odrl:leftOperand apnl:rolAanvrager ;
+    odrl:operator odrl:eq ;
+    odrl:rightOperand "medewerkers" .
+
+b:vw-de-domeinen-van-de-gegevens-is-voorbeeld-a a odrl:Constraint ;
+    rdfs:label "de domeinen van de gegevens is \"voorbeeld-a\""@nl ;
+    odrl:leftOperand ts:gegevens.domeinen ;
+    odrl:operator odrl:eq ;
+    odrl:rightOperand "voorbeeld-a" .
+
+b:vw-de-domeinen-van-de-gegevens-is-voorbeeld-b a odrl:Constraint ;
+    rdfs:label "de domeinen van de gegevens is \"voorbeeld-b\""@nl ;
+    odrl:leftOperand ts:gegevens.domeinen ;
+    odrl:operator odrl:eq ;
+    odrl:rightOperand "voorbeeld-b" .
+
+b:vw-de-id-van-de-gegevens-is-zaakafhandelcomponent a odrl:Constraint ;
+    rdfs:label "de id van de gegevens is \"zaakafhandelcomponent\""@nl ;
+    odrl:leftOperand ts:gegevens.id ;
+    odrl:operator odrl:eq ;
+    odrl:rightOperand "zaakafhandelcomponent" .
+
+# ── Wie en wat: begrippen uit de beleidstekst ─────────────────────────────────
+
+b:groep-rol-beheerders a odrl:PartyCollection ;
+    rdfs:label "rol beheerders"@nl ;
+    skos:definition "iemand met rol \"beheerders\""@nl ;
+    odrl:refinement b:vw-aanvrager-rol-beheerders .
+
+b:groep-rol-medewerkers a odrl:PartyCollection ;
+    rdfs:label "rol medewerkers"@nl ;
+    skos:definition "iemand met rol \"medewerkers\""@nl ;
+    odrl:refinement b:vw-aanvrager-rol-medewerkers .
+
+# ── Het register: paden als assets met partOf ─────────────────────────────────
+
+reg:PabcEntiteittype a odrl:Asset , ts:Entiteit ;
+    rdfs:label "een pabc entiteittype"@nl ;
+    dct:identifier "PabcEntiteittype" .
+
+reg:PabcApplicatie a odrl:Asset , ts:Entiteit ;
+    rdfs:label "een pabc applicatie"@nl ;
+    dct:identifier "PabcApplicatie" .
+
+# ── Woordenschat van Toegangsspraak (labels komen uit de klare taal) ──────────
+
+ts:administrator a odrl:Action , skos:Concept ;
+    rdfs:label "administrator"@nl ;
+    odrl:includedIn odrl:use .
+
+ts:Entiteit a rdfs:Class , skos:Concept ;
+    rdfs:label "entiteit"@nl .
+
+ts:beheerder a odrl:Action , skos:Concept ;
+    rdfs:label "beheerder"@nl ;
+    odrl:includedIn odrl:use .
+
+ts:behandelaar a odrl:Action , skos:Concept ;
+    rdfs:label "behandelaar"@nl ;
+    odrl:includedIn odrl:use .
+
+ts:gegevens.domeinen a odrl:LeftOperand , skos:Concept ;
+    rdfs:label "de domeinen van de gegevens"@nl ;
+    skos:definition "Waarde in de opgevraagde gegevens; pas te toetsen met de gegevens in handen."@nl .
+
+ts:raadpleger a odrl:Action , skos:Concept ;
+    rdfs:label "raadpleger"@nl ;
+    odrl:includedIn odrl:use .
+
+ts:brp_zoeken a odrl:Action , skos:Concept ;
+    rdfs:label "brp_zoeken"@nl ;
+    odrl:includedIn odrl:use .
+
+ts:gegevens.id a odrl:LeftOperand , skos:Concept ;
+    rdfs:label "de id van de gegevens"@nl ;
+    skos:definition "Waarde in de opgevraagde gegevens; pas te toetsen met de gegevens in handen."@nl .
+
+ts:profiel a odrl:Profile ;
+    dct:title "Toegangsspraak-woordenschat (Omnium Studio, werkversie)"@nl ;
+    dct:description "De termen die Toegangsspraak nodig heeft bovenop ODRL 2.2 en ODRL-AP-NL: operanden uit de van-vorm, een paar vergelijkingen en handelingen. Elk label is de zinsnede uit de klare taal."@nl .
