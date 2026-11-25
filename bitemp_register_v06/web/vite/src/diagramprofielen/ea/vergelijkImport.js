@@ -265,12 +265,17 @@ export function herschrijfOpBestaandeIds(model, idMap) {
  * @param {ReturnType<typeof vergelijkMetStore>} plan
  * @param {{aan: Set<string>, behoudData?: (sleutel: string) => boolean}} keuzes - sleutels `el:<importId>` / `di:<importId>` / `weg:<bestaandId>` die aan staan;
  *   `behoudData`: data-sleutels die de bron niet kent en dus blijven staan (V3 kent bv. geen uitwerking/verwijstNaar)
- * @returns {{toegevoegd: number, bijgewerkt: number, verwijderd: number, diagrammenToegevoegd: number, diagrammenBijgewerkt: number}}
+ * @returns {{toegevoegd: number, bijgewerkt: number, verwijderd: number, diagrammenToegevoegd: number, diagrammenBijgewerkt: number,
+ *   overgeslagen: {id: string, naam: string, reden: string}[]}} - `overgeslagen`: aangevinkt maar niet
+ *   toegepast (een patch op een id dat niet in de store staat, een verbinding naar een uiteinde dat
+ *   er niet is); de aanroeper meldt het, zodat niets stil wegvalt (melding FUNDAMENT 25-11)
  */
 export function pasPlanToe(st, model, plan, keuzes) {
   const aan = keuzes?.aan || new Set();
   const her = herschrijfOpBestaandeIds(model, plan.idMap);
-  const uit = { toegevoegd: 0, bijgewerkt: 0, verwijderd: 0, diagrammenToegevoegd: 0, diagrammenBijgewerkt: 0 };
+  const uit = { toegevoegd: 0, bijgewerkt: 0, verwijderd: 0, diagrammenToegevoegd: 0, diagrammenBijgewerkt: 0,
+    /** @type {{id: string, naam: string, reden: string}[]} */ overgeslagen: [] };
+  const sla = (id, naam, reden) => uit.overgeslagen.push({ id, naam: naam || id, reden });
 
   // 1. Nieuw (aangevinkt): in één keer via importeerModel. Een nieuwe
   //    connector naar een niet-aangevinkt nieuw element valt af.
@@ -280,8 +285,11 @@ export function pasPlanToe(st, model, plan, keuzes) {
   for (const id of nieuweEl) {
     const el = her.elements[id];
     if (!el) continue;
-    if (el.source && !st.elements?.[el.source] && !nieuweEl.has(el.source)) continue;
-    if (el.target && !st.elements?.[el.target] && !nieuweEl.has(el.target)) continue;
+    const mist = [el.source, el.target].find((x) => x && !st.elements?.[x] && !nieuweEl.has(x));
+    if (mist) {
+      sla(id, el.naam, `uiteinde ${mist} staat niet in het project en komt ook niet mee`);
+      continue;
+    }
     elements[el.id] = el;
   }
   const diagrams = {};
@@ -302,8 +310,11 @@ export function pasPlanToe(st, model, plan, keuzes) {
   for (const r of plan.elementen.gewijzigd) {
     if (!aan.has(`el:${r.id}`)) continue;
     const el = her.elements[r.bestaandId];
-    if (!el) continue;
-    const bestaand = st.elements?.[r.bestaandId] || {};
+    if (!el || !st.elements?.[r.bestaandId]) {
+      sla(r.bestaandId, r.naam, `${r.bestaandId} staat niet in het project`);
+      continue;
+    }
+    const bestaand = st.elements[r.bestaandId];
     // Lokale data (labelposities, z-volgorde, gedaante) blijft staan; wat EA
     // niet meer levert (bv. knikken die weg zijn, een tag) gaat weg — de
     // store merget data per sleutel, dus expliciet op undefined zetten.
@@ -359,6 +370,18 @@ export function pasPlanToe(st, model, plan, keuzes) {
     uit.verwijderd += 1;
   }
   return uit;
+}
+
+/**
+ * Leesbare melding voor `pasPlanToe(...).overgeslagen`; leeg als er niets is overgeslagen.
+ * @param {{id: string, naam: string, reden: string}[] | undefined} lijst
+ * @param {number} [max] - zoveel regels, daarna "en nog n"
+ */
+export function overgeslagenTekst(lijst, max = 5) {
+  if (!lijst?.length) return "";
+  const regels = lijst.slice(0, max).map((o) => `${o.naam}: ${o.reden}`);
+  if (lijst.length > max) regels.push(`en nog ${lijst.length - max}`);
+  return `${lijst.length} niet toegepast — ${regels.join("; ")}`;
 }
 
 /** Standaardkeuze: alles aan behalve "verdwenen" (weghalen vraagt een bewuste vink). */

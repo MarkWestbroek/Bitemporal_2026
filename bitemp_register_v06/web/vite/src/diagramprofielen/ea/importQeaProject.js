@@ -23,7 +23,7 @@ import { pakketPad } from "./qeaHulp.js";
 import { eaLezersVoor, wortelPakket, telOvergeslagen, heeftMimStereotypen } from "./eaLezers.js";
 import { vraagKeuze, toonMelding } from "../../studio/naamDialog.jsx";
 import { getProfieltype } from "../../studio/profieltypeRegistry.js";
-import { vergelijkMetStore, pasPlanToe, standaardKeuzes, herschrijfOpBestaandeIds } from "./vergelijkImport.js";
+import { vergelijkMetStore, pasPlanToe, standaardKeuzes, herschrijfOpBestaandeIds, overgeslagenTekst } from "./vergelijkImport.js";
 import { deelboomPakketten } from "./qeaHulp.js";
 import { vraagReview } from "../../studio/naamDialog.jsx";
 import { bouwReviewBoom, bladSleutels } from "./reviewBoom.js";
@@ -166,6 +166,7 @@ export async function verdeelOverProfielen(bron, packageId, pakketLabel = "", { 
       meldingen.push(`${naam}: import geweigerd — ${e?.message || e}`);
       continue;
     }
+    if (uitkomst.overgeslagen?.length) meldingen.push(`${naam}: ${overgeslagenTekst(uitkomst.overgeslagen)}`);
     profielen[naam] = {
       elementen: uitkomst.toegevoegd,
       bijgewerkt: uitkomst.bijgewerkt + uitkomst.diagrammenBijgewerkt,

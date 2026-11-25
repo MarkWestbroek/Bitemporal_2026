@@ -74,7 +74,7 @@ test("tweede import van hetzelfde pakket: alles ongewijzigd, niets toegevoegd, i
   assert.equal(plan2.diagrammen.ongewijzigd.length, 2);
   assert.equal(plan2.elementen.verdwenen.length, 0);
   const uit = pasPlanToe(st, model2, plan2, standaardKeuzes(plan2));
-  assert.deepEqual(uit, { toegevoegd: 0, bijgewerkt: 0, verwijderd: 0, diagrammenToegevoegd: 0, diagrammenBijgewerkt: 0 });
+  assert.deepEqual(uit, { toegevoegd: 0, bijgewerkt: 0, verwijderd: 0, diagrammenToegevoegd: 0, diagrammenBijgewerkt: 0, overgeslagen: [] });
   assert.deepEqual(Object.keys(st.elements).sort(), idsVoor);
 });
 

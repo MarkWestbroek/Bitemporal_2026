@@ -1163,7 +1163,13 @@ fase 2 een **bewerkbare sandbox**:
   staan; identiteit via `uuid`, anders de naam (BACKLOG §40). `erft` wordt daarbij een
   `generalisatie`-connector (`gen_<sub>__<super>`), ook als de store niet leeg is (fix 10-11; eerder
   ging overerving verloren met het afgeleide Overzicht). De connector komt rechtstreeks uit `erft`,
-  ook voor een entiteit die op geen meegebracht diagram staat. Een V3.1-veld zonder `goType` en zonder
+  ook voor een entiteit die op geen meegebracht diagram staat. Een in de Studio **hernoemd** element
+  houdt in de store zijn oude id (`ComponentVersie`, naam *Componentversie*), terwijl de vergelijking
+  ids uit de huidige namen afleidt; `naarStoreIds` zet die via `uuid` (verbindingen zonder uuid via
+  hun uiteinden) terug op de echte store-ids, zodat een wijziging of nieuwe relatie daar landt (fix
+  25-11, melding FUNDAMENT). Wat `pasPlanToe` toch niet kan toepassen (een patch op een id dat niet
+  bestaat, een relatie naar een ontbrekend uiteinde) staat in `overgeslagen` en komt in de
+  slotmelding, ook bij de EA-import; eerder viel het stil weg. Een V3.1-veld zonder `goType` en zonder
   `verplicht` is optioneel; alleen een goType zonder `*` maakt een veld zonder `verplicht` verplicht
   (`store/adapters.js`, conform `docs/v3_1_runtime.md`). De **veldkiezer** (ModelPicker) in DMN, bericht en BPMN leest
   het canonieke model van het project (met uuid's); een FieldRef volgt een hernoeming via zijn uuid,

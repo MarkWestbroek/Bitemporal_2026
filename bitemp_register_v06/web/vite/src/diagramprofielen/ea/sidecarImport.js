@@ -29,7 +29,7 @@ import {
 } from "../../studio/sync/operaties.js";
 import { maakStructuurStore, nieuwMapIdNode, zonderWeesPlaatsingen } from "../../studio/sync/structuurKern.js";
 import { leesPerProfiel, wortelPakket, telOvergeslagen } from "./eaLezers.js";
-import { vergelijkMetStore, pasPlanToe, standaardKeuzes, herschrijfOpBestaandeIds } from "./vergelijkImport.js";
+import { vergelijkMetStore, pasPlanToe, standaardKeuzes, herschrijfOpBestaandeIds, overgeslagenTekst } from "./vergelijkImport.js";
 import { plaatsEaInProjectboomPlan, mapPadPlan } from "./eaProjectboom.js";
 import { deelboomPakketten } from "./qeaHulp.js";
 import { normaliseerMarks, heeftMarks, patchMarks as patchMarksPuur } from "../../marks/marks.js";
@@ -231,6 +231,7 @@ export function importeerInStand(stand, bron, { packageId = 0, doelPad = "", ver
       verslag.meldingen.push(`${naam}: import geweigerd — ${e?.message || e}`);
       continue;
     }
+    if (uitkomst.overgeslagen?.length) verslag.meldingen.push(`${naam}: ${overgeslagenTekst(uitkomst.overgeslagen)}`);
     const na = api.getState();
     const storeNaam = modelStoreNaam(profiel);
     const el = diffMap(voor.elements, na.elements);
